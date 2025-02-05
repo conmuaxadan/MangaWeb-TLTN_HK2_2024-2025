@@ -1,12 +1,10 @@
 package com.raindrop.identity_service.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.validation.constraints.Size;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.Set;
 
 @Entity
 @Data
@@ -21,4 +19,5 @@ public class User {
     String username;
     String password;
     String email;
+    Set<String> roles;
 }

@@ -3,6 +3,7 @@ package com.raindrop.identity_service.service;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.UserResponse;
 import com.raindrop.identity_service.entity.User;
+import com.raindrop.identity_service.enums.Role;
 import com.raindrop.identity_service.exception.AppException;
 import com.raindrop.identity_service.exception.ErrorCode;
 import com.raindrop.identity_service.mapper.IUserMapper;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,14 +25,17 @@ import java.util.stream.Collectors;
 public class UserService {
     IUserRepository userRepository;
     IUserMapper userMapper;
+    PasswordEncoder passwordEncoder;
 
     public UserResponse createUser(UserRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
         User user = userMapper.toUser(request);
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        HashSet<String> roles = new HashSet<>();
+        roles.add(Role.USER.name());
+        user.setRoles(roles);
         return userMapper.toUserResponse(userRepository.save(user));
     }
 

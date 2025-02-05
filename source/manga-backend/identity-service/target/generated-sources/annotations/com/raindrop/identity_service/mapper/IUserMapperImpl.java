@@ -3,12 +3,14 @@ package com.raindrop.identity_service.mapper;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.UserResponse;
 import com.raindrop.identity_service.entity.User;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import javax.annotation.processing.Generated;
 import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-02-04T20:07:47+0700",
+    date = "2025-02-05T20:59:53+0700",
     comments = "version: 1.6.3, compiler: javac, environment: Java 21.0.5 (Oracle Corporation)"
 )
 @Component
@@ -40,6 +42,10 @@ public class IUserMapperImpl implements IUserMapper {
         userResponse.id( user.getId() );
         userResponse.username( user.getUsername() );
         userResponse.email( user.getEmail() );
+        Set<String> set = user.getRoles();
+        if ( set != null ) {
+            userResponse.roles( new LinkedHashSet<String>( set ) );
+        }
 
         return userResponse.build();
     }

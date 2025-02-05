@@ -11,7 +11,6 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface IUserMapper {
     User toUser(UserRequest request);
-    @Mapping(ignore = true, target = "password")
     UserResponse toUserResponse(User user);
     void updateUser(@MappingTarget User user, UserRequest request);
 }

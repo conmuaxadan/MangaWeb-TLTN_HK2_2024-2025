@@ -8,11 +8,13 @@ import com.raindrop.identity_service.mapper.IUserMapper;
 import com.raindrop.identity_service.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
+import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.factory.Mappers;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/users")
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+@Slf4j
 public class UserController {
      UserService userService;
      IUserMapper userMapper;
@@ -35,6 +38,11 @@ public class UserController {
     
     @GetMapping()
     ApiResponse<List<UserResponse>> getAllUsers() {
+        var authentication =  SecurityContextHolder.getContext().getAuthentication();
+
+        log.info("User: {}", authentication.getName());
+        log.info("Roles: {}", authentication.getAuthorities().stream().map(Object::toString).collect(Collectors.joining(", ")));
+
         ApiResponse<List<UserResponse>> response = new ApiResponse<>();
         response.setResult(userService.getAllUsers());
         return response;
