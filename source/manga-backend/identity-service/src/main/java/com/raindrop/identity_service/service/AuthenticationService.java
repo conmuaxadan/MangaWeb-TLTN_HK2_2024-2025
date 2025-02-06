@@ -9,7 +9,6 @@ import com.raindrop.identity_service.dto.request.AuthenticationRequest;
 import com.raindrop.identity_service.dto.request.IntrospectRequest;
 import com.raindrop.identity_service.dto.response.AuthenticationResponse;
 import com.raindrop.identity_service.dto.response.IntrospectResponse;
-import com.raindrop.identity_service.dto.response.UserResponse;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.exception.AppException;
 import com.raindrop.identity_service.exception.ErrorCode;
@@ -27,7 +26,6 @@ import org.springframework.util.CollectionUtils;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.Date;
 import java.util.StringJoiner;
 
@@ -64,7 +62,7 @@ public class AuthenticationService {
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
         if (!authenticated) {
-            throw new AppException(ErrorCode.UNCATEGORIZED);
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
 
         var token = generateToken(user);
