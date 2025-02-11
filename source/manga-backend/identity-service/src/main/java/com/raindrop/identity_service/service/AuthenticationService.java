@@ -12,7 +12,7 @@ import com.raindrop.identity_service.dto.response.IntrospectResponse;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.exception.AppException;
 import com.raindrop.identity_service.exception.ErrorCode;
-import com.raindrop.identity_service.repository.IUserRepository;
+import com.raindrop.identity_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -34,7 +33,7 @@ import java.util.StringJoiner;
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
 public class AuthenticationService {
-    IUserRepository userRepository;
+    UserRepository userRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -100,9 +99,9 @@ public class AuthenticationService {
     private String buildScope(User user) {
 
         StringJoiner joiner = new StringJoiner(" ");
-        if (!CollectionUtils.isEmpty(user.getRoles())) {
-            user.getRoles().forEach(joiner::add);
-        }
+//        if (!CollectionUtils.isEmpty(user.getRoles())) {
+//            user.getRoles().forEach(joiner::add);
+//        }
 
         return joiner.toString();
     }

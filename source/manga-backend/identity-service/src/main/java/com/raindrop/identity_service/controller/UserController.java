@@ -3,17 +3,13 @@ package com.raindrop.identity_service.controller;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.ApiResponse;
 import com.raindrop.identity_service.dto.response.UserResponse;
-import com.raindrop.identity_service.entity.User;
-import com.raindrop.identity_service.mapper.IUserMapper;
+import com.raindrop.identity_service.mapper.UserMapper;
 import com.raindrop.identity_service.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.extern.slf4j.Slf4j;
-import org.mapstruct.factory.Mappers;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserController {
      UserService userService;
-     IUserMapper userMapper;
+     UserMapper UserMapper;
 
     @PostMapping()
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserRequest request) {
@@ -58,7 +54,7 @@ public class UserController {
     @PutMapping()
     ApiResponse<UserResponse> updateUser(@RequestBody UserRequest request) {
         ApiResponse<UserResponse> response = new ApiResponse<>();
-        response.setResult(userMapper.toUserResponse(userService.updateUser(request)));
+//        response.setResult(userMapper.toUserResponse(userService.updateUser(request)));
         return response;
     }
 

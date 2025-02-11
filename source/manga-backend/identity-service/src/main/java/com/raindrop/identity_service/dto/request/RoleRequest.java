@@ -1,7 +1,6 @@
-package com.raindrop.identity_service.dto.response;
+package com.raindrop.identity_service.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.raindrop.identity_service.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,9 +15,8 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserResponse {
-    String id;
-    String username;
-    String email;
-    Set<Role> roles;
+public class RoleRequest {
+    String name;
+    String description;
+    Set<String> permissions;
 }

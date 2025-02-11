@@ -28,7 +28,8 @@ public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/users",
             "/auth/login",
-            "/auth/introspect"
+            "/auth/introspect",
+            "permissions"
     };
 
     @Value("${jwt.signerKey}")
