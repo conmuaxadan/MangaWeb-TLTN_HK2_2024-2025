@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,4 +17,5 @@ public class UserRequest {
     @Size(min = 8, message = "PASSWORD_INVALID")
     String password;
     String email;
+    List<String> roles;
 }

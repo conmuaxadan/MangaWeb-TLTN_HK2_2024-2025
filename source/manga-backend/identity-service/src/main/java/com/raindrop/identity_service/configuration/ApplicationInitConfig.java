@@ -1,5 +1,6 @@
 package com.raindrop.identity_service.configuration;
 
+import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.repository.UserRepository;
 import lombok.AccessLevel;
@@ -24,12 +25,12 @@ public class ApplicationInitConfig {
     ApplicationRunner applicationRunner(UserRepository userRepository) {
         return args -> {
             if (!userRepository.existsByUsername("admin")) {
-                var roles = new HashSet<String>();
-                roles.add("ADMIN");
+                var roles = new HashSet<Role>();
+                roles.add(Role.builder().name("ADMIN").build());
                 User user = User.builder()
                         .username("admin")
                         .password(passwordEncoder.encode("admin"))
-//                        .roles(roles)
+                        .roles(roles)
                         .build();
 
                 userRepository.save(user);

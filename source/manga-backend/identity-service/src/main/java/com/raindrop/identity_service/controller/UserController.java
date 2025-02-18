@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserController {
      UserService userService;
-     UserMapper UserMapper;
+     UserMapper userMapper;
 
     @PostMapping()
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserRequest request) {
@@ -54,7 +54,7 @@ public class UserController {
     @PutMapping()
     ApiResponse<UserResponse> updateUser(@RequestBody UserRequest request) {
         ApiResponse<UserResponse> response = new ApiResponse<>();
-//        response.setResult(userMapper.toUserResponse(userService.updateUser(request)));
+        response.setResult(userMapper.toUserResponse(userService.updateUser(request)));
         return response;
     }
 
