@@ -10,11 +10,9 @@ import lombok.AccessLevel;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -27,52 +25,49 @@ public class UserController {
 
     @PostMapping()
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserRequest request) {
-        ApiResponse<UserResponse> response = new ApiResponse<>();
-        response.setResult(userService.createUser(request));
-        return response;
+        return ApiResponse.<UserResponse>builder()
+                .message("User created successfully")
+                .result(userService.createUser(request))
+                .build();
     }
     
     @GetMapping()
     ApiResponse<List<UserResponse>> getAllUsers() {
-        var authentication =  SecurityContextHolder.getContext().getAuthentication();
-
-        log.info("User: {}", authentication.getName());
-        log.info("Roles: {}", authentication.getAuthorities().stream().map(Object::toString).collect(Collectors.joining(", ")));
-
-        ApiResponse<List<UserResponse>> response = new ApiResponse<>();
-        response.setResult(userService.getAllUsers());
-        return response;
+        return ApiResponse.<List<UserResponse>>builder()
+                .message("Users retrieved successfully")
+                .result(userService.getAllUsers())
+                .build();
     }
 
     @GetMapping("/{username}")
     ApiResponse<UserResponse> getUserByUsername(@PathVariable String username) {
-        ApiResponse<UserResponse> response = new ApiResponse<>();
-        response.setResult(userService.getUserByUsername(username));
-        return response;
+        return ApiResponse.<UserResponse>builder()
+                .message("User retrieved successfully")
+                .result(userService.getUserByUsername(username))
+                .build();
     }
 
     @PutMapping()
     ApiResponse<UserResponse> updateUser(@RequestBody UserRequest request) {
-        ApiResponse<UserResponse> response = new ApiResponse<>();
-        response.setResult(userMapper.toUserResponse(userService.updateUser(request)));
-        return response;
+        return ApiResponse.<UserResponse>builder()
+                .message("User updated successfully")
+                .result(userMapper.toUserResponse(userService.updateUser(request)))
+                .build();
     }
 
     @DeleteMapping()
-    ApiResponse<String> deleteUser(@RequestBody UserRequest request) {
-        ApiResponse<String> response = new ApiResponse<>();
-        try {
-            userService.deleteUser(request);
-            response.setMessage("User deleted");
-        } catch (Exception e) {
-        }
-        return response;
+    ApiResponse<Void> deleteUser(@RequestBody UserRequest request) {
+        userService.deleteUser(request);
+        return ApiResponse.<Void>builder()
+                .message("User deleted successfully")
+                .build();
     }
 
     @GetMapping("/myInfo")
     ApiResponse<UserResponse> getMyInfo() {
-        ApiResponse<UserResponse> response = new ApiResponse<>();
-        response.setResult(userService.getMyInfo());
-        return response;
+        return ApiResponse.<UserResponse>builder()
+                .message("User retrieved successfully")
+                .result(userService.getMyInfo())
+                .build();
     }
 }

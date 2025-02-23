@@ -2,10 +2,10 @@ package com.raindrop.identity_service.service;
 
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.UserResponse;
+import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
-import com.raindrop.identity_service.enums.Role;
 import com.raindrop.identity_service.exception.AppException;
-import com.raindrop.identity_service.exception.ErrorCode;
+import com.raindrop.identity_service.enums.ErrorCode;
 import com.raindrop.identity_service.mapper.UserMapper;
 import com.raindrop.identity_service.repository.RoleRepository;
 import com.raindrop.identity_service.repository.UserRepository;
@@ -40,12 +40,11 @@ public class UserService {
         }
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        HashSet<String> roles = new HashSet<>();
-        roles.add(Role.USER.name());
-//        user.setRoles(roles);
+        var roles = new HashSet<Role>();
+        roles.add(Role.builder().name("USER").build());
         return userMapper.toUserResponse(userRepository.save(user));
     }
-//    @PreAuthorize("hasRole('ADMIN')")
+
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public List<UserResponse> getAllUsers() {
         log.info("Getting all users");
@@ -57,6 +56,7 @@ public class UserService {
         return userMapper.toUserResponse(userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found")));
     }
 
+    @PostAuthorize("returnObject.username == authentication.name")
     public User updateUser(UserRequest request) {
         User user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
         if (request.getPassword() == null && request.getEmail() == null) {
@@ -71,11 +71,13 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public void deleteUser(UserRequest request) {
         User user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
         userRepository.delete(user);
     }
 
+    @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse getMyInfo() {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();

@@ -32,7 +32,6 @@ public class ApplicationInitConfig {
                         .password(passwordEncoder.encode("admin"))
                         .roles(roles)
                         .build();
-
                 userRepository.save(user);
                 log.warn("Admin user created with password: admin");
             }

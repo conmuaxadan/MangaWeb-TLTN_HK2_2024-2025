@@ -1,6 +1,7 @@
 package com.raindrop.identity_service.exception;
 
 import com.raindrop.identity_service.dto.response.ApiResponse;
+import com.raindrop.identity_service.enums.ErrorCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;

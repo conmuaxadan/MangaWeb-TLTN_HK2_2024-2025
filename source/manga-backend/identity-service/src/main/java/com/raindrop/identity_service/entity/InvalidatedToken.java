@@ -1,10 +1,11 @@
 package com.raindrop.identity_service.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Set;
+import java.util.Date;
 
 @Entity
 @Data
@@ -12,10 +13,8 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Role {
+public class InvalidatedToken {
     @Id
-    String name;
-    String description;
-    @ManyToMany
-    Set<Permission> permissions;
+    String id;
+    Date expiryTime;
 }

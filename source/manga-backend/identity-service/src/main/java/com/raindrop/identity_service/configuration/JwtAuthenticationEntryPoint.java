@@ -2,7 +2,7 @@ package com.raindrop.identity_service.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.raindrop.identity_service.dto.response.ApiResponse;
-import com.raindrop.identity_service.exception.ErrorCode;
+import com.raindrop.identity_service.enums.ErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

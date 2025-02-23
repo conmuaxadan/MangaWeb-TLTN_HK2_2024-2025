@@ -1,5 +1,7 @@
 package com.raindrop.identity_service.exception;
 
+import com.raindrop.identity_service.enums.ErrorCode;
+
 public class AppException extends RuntimeException {
 
     public AppException(ErrorCode errorCode) {

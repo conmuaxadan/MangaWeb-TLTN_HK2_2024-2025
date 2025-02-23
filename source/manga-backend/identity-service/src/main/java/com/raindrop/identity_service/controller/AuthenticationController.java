@@ -3,6 +3,7 @@ package com.raindrop.identity_service.controller;
 import com.nimbusds.jose.JOSEException;
 import com.raindrop.identity_service.dto.request.AuthenticationRequest;
 import com.raindrop.identity_service.dto.request.IntrospectRequest;
+import com.raindrop.identity_service.dto.request.LogoutRequest;
 import com.raindrop.identity_service.dto.response.ApiResponse;
 import com.raindrop.identity_service.dto.response.AuthenticationResponse;
 import com.raindrop.identity_service.dto.response.IntrospectResponse;
@@ -37,6 +38,13 @@ public class AuthenticationController {
         var result = authenticationService.introspect(request);
         return ApiResponse.<IntrospectResponse>builder()
                 .result(result)
+                .build();
+    }
+
+    @PostMapping("/logout")
+    ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
+        authenticationService.logout(request);
+        return ApiResponse.<Void>builder()
                 .build();
     }
 }
