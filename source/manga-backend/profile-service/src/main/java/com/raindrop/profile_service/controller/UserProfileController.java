@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserProfileController {
     UserProfileService userProfileService;
 
-    @PostMapping("users/")
+    @PostMapping("users")
     ApiResponse<UserProfileResponse> createProfile(@RequestBody UserProfileRequest request) {
         return ApiResponse.<UserProfileResponse>builder().result(userProfileService.createProfile(request)).build();
     }

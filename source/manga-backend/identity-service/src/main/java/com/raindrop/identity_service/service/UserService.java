@@ -6,9 +6,11 @@ import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.exception.AppException;
 import com.raindrop.identity_service.enums.ErrorCode;
+import com.raindrop.identity_service.mapper.ProfileMapper;
 import com.raindrop.identity_service.mapper.UserMapper;
 import com.raindrop.identity_service.repository.RoleRepository;
 import com.raindrop.identity_service.repository.UserRepository;
+import com.raindrop.identity_service.repository.httpclient.ProfileClient;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -33,6 +35,8 @@ public class UserService {
     UserMapper userMapper;
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
+    ProfileClient profileClient;
+    ProfileMapper profileMapper;
 
     public UserResponse createUser(UserRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -42,7 +46,13 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         var roles = new HashSet<Role>();
         roles.add(Role.builder().name("USER").build());
-        return userMapper.toUserResponse(userRepository.save(user));
+        user = userRepository.save(user);
+
+        var profileRequest = profileMapper.toUserProfileRequest(request);
+        profileRequest.setUserId(user.getId());
+        var profileResponse = profileClient.createProfile(profileRequest);
+        log.info("Profile created: {}", profileResponse.toString());
+        return userMapper.toUserResponse(user);
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")

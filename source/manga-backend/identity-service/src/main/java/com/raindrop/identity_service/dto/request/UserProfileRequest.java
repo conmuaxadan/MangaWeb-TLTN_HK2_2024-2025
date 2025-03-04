@@ -1,4 +1,4 @@
-package com.raindrop.profile_service.dto.request;
+package com.raindrop.identity_service.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
