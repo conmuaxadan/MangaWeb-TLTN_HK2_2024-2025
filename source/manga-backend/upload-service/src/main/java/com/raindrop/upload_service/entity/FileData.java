@@ -1,9 +1,6 @@
 package com.raindrop.upload_service.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -13,12 +10,13 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class File {
+public class FileData {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
+
     String name;
     String type;
-    String url;
-    long size;
+    String filePath;
+
 }

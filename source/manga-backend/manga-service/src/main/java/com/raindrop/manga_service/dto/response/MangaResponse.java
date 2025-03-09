@@ -5,6 +5,7 @@ import com.raindrop.manga_service.entity.Genre;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
@@ -15,8 +16,11 @@ import java.util.Set;
 public class MangaResponse {
     String id;
     String title;
+    String anotherTitle;
     String author;
+    int likes;
     String description;
     Set<Genre> genres;
     Set<Chapter> chapters;
+    LocalDateTime updatedAt;
 }

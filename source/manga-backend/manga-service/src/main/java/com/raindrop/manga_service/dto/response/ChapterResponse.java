@@ -3,6 +3,8 @@ package com.raindrop.manga_service.dto.response;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,4 +15,5 @@ public class ChapterResponse {
     String title;
     String content;
     String mangaId;
+    LocalDateTime updatedAt;
 }

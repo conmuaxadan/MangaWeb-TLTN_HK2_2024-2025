@@ -1,4 +1,4 @@
-package com.raindrop.upload_service.dto.response;
+package com.raindrop.api_gateway.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,8 +8,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FileResponse {
-    String id;
-    String name;
-    String filePath;
+public class IntrospectRequest {
+    String token;
 }

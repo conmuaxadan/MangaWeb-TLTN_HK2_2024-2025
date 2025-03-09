@@ -1,110 +1,78 @@
 package com.raindrop.upload_service.service;
 
-import com.raindrop.upload_service.dto.request.FileRequest;
-import com.raindrop.upload_service.dto.response.FileResponse;
-import com.raindrop.upload_service.entity.File;
-import com.raindrop.upload_service.mapper.FileMapper;
-import com.raindrop.upload_service.repository.FileRepository;
+import com.raindrop.upload_service.entity.FileData;
+import com.raindrop.upload_service.repository.FileDataRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @Slf4j
 public class FileService {
-    FileRepository fileRepository;
-    FileMapper fileMapper;
+    FileDataRepository fileDataRepository;
+    final String FOLDER_PATH = "C:/Users/Ra1ndr0p/Desktop/uploads/";
 
-    public FileResponse upload(FileRequest request) {
+    public String uploadFileToFileSystem(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File is null or empty");
+        }
+
+        // Xử lý tên file
+        String originalFileName = file.getOriginalFilename();
+        if (originalFileName == null) {
+            throw new IllegalArgumentException("File name cannot be null");
+        }
+        String jpgFileName = originalFileName.contains(".")
+                ? originalFileName.substring(0, originalFileName.lastIndexOf('.')) + ".jpg"
+                : originalFileName + ".jpg";
+
+        // Tạo đường dẫn file an toàn
+        String filePath = Paths.get(FOLDER_PATH, jpgFileName).toString();
+
         try {
-            MultipartFile multipartFile = request.getFile();
-            String fileName = StringUtils.hasText(request.getName())
-                    ? request.getName()
-                    : multipartFile.getOriginalFilename();
-
-            File file = File.builder()
-                    .name(fileName)
-                    .type(multipartFile.getContentType())
-                    .size(multipartFile.getSize())
-                    .url(saveFileToStorage(multipartFile))
-                    .build();
-
-            fileRepository.save(file);
-            return fileMapper.toFileResponse(file);
-        } catch (IOException e) {
-            log.error("Failed to upload file: {}", e.getMessage());
-            throw new RuntimeException("Failed to upload file", e);
-        }
-    }
-
-    private String saveFileToStorage(MultipartFile file) throws IOException {
-        String uploadDir = "uploads";
-        Path uploadPath = Paths.get(uploadDir);
-
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
-        String filePath = uploadDir + "/" + file.getOriginalFilename();
-        Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
-        return filePath;
-    }
-
-    public List<FileResponse> uploadZipFile(MultipartFile zipFile) {
-        List<FileResponse> fileResponses = new ArrayList<>();
-
-        try (ZipInputStream zipInputStream = new ZipInputStream(zipFile.getInputStream())) {
-            ZipEntry zipEntry;
-            while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-                if (!zipEntry.isDirectory()) {
-                    String fileName = UUID.randomUUID().toString();
-                    Path filePath = Paths.get("uploads", fileName);
-                    Files.copy(zipInputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
-
-                    File file = File.builder()
-                            .name(fileName)
-                            .type(Files.probeContentType(filePath))
-                            .url(filePath.toString().replace("\\", "/"))
-                            .size(Files.size(filePath))
-                            .build();
-                    fileRepository.save(file);
-                    fileResponses.add(fileMapper.toFileResponse(file));
-                }
-                zipInputStream.closeEntry();
+            // Đọc và ghi file ảnh
+            BufferedImage bufferedImage = ImageIO.read(file.getInputStream());
+            if (bufferedImage == null) {
+                throw new IOException("Invalid image file");
             }
+            File outputFile = new File(filePath);
+            ImageIO.write(bufferedImage, "jpg", outputFile);
+
+            // Lưu vào database sau khi ghi file thành công
+            FileData fileData = fileDataRepository.save(FileData.builder()
+                    .name(jpgFileName)
+                    .type("image/jpeg")
+                    .filePath(filePath)
+                    .build());
+
+            return "Uploaded: " + filePath;
         } catch (IOException e) {
-            log.error("Failed to upload and extract zip file: {}", e.getMessage());
-            throw new RuntimeException("Failed to upload and extract zip file", e);
+            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
         }
-
-        return fileResponses;
     }
 
-    public FileResponse getFileById(String id) {
-        File file = fileRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("File not found"));
-        return fileMapper.toFileResponse(file);
-    }
-
-    public void deleteFile(String id) {
-        fileRepository.deleteById(id);
+    public byte[] downloadFileFromFileSystem(String fileName) {
+        Optional<FileData> fileData = fileDataRepository.findByName(fileName);
+        String filePath = fileData.get().getFilePath();
+        try {
+            byte[] images = Files.readAllBytes(new java.io.File(filePath).toPath());
+            return images;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
