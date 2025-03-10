@@ -2,6 +2,7 @@ package com.raindrop.identity_service.configuration;
 
 import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
+import com.raindrop.identity_service.repository.RoleRepository;
 import com.raindrop.identity_service.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +23,11 @@ public class ApplicationInitConfig {
     PasswordEncoder passwordEncoder;
 
     @Bean
-    ApplicationRunner applicationRunner(UserRepository userRepository) {
+    ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository) {
         return args -> {
+            if (!roleRepository.existsByName("ADMIN")) {
+                roleRepository.save(Role.builder().name("ADMIN").build());
+            }
             if (!userRepository.existsByUsername("admin")) {
                 var roles = new HashSet<Role>();
                 roles.add(Role.builder().name("ADMIN").build());

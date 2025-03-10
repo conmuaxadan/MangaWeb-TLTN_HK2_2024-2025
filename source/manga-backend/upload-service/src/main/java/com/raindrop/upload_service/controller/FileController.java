@@ -1,7 +1,5 @@
 package com.raindrop.upload_service.controller;
 
-import com.raindrop.upload_service.dto.response.ApiResponse;
-import com.raindrop.upload_service.dto.response.FileDataResponse;
 import com.raindrop.upload_service.service.FileService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +20,9 @@ public class FileController {
     FileService fileService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<FileDataResponse> uploadFileToFileSystem(@RequestParam("image") MultipartFile file) {
-        return ApiResponse.<FileDataResponse>builder()
-                .message("File uploaded successfully")
-                .result(fileService.uploadFileToFileSystem(file))
-                .build();
+    public ResponseEntity<?> uploadFileToFileSystem(@RequestParam("image") MultipartFile file) {
+        String uploadImage = fileService.uploadFileToFileSystem(file);
+        return new ResponseEntity<>(uploadImage, HttpStatus.OK);
     }
 
     @GetMapping("/{fileName}")
