@@ -1,5 +1,6 @@
 package com.raindrop.upload_service.service;
 
+import com.raindrop.upload_service.dto.response.FileDataResponse;
 import com.raindrop.upload_service.entity.FileData;
 import com.raindrop.upload_service.repository.FileDataRepository;
 import lombok.AccessLevel;
@@ -24,25 +25,23 @@ import java.util.Optional;
 public class FileService {
     FileDataRepository fileDataRepository;
     final String FOLDER_PATH = "C:/Users/Ra1ndr0p/Desktop/uploads/";
+    final String baseUrl = "http://localhost:8084";
 
-    public String uploadFileToFileSystem(MultipartFile file) {
+    public FileDataResponse uploadFileToFileSystem(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File is null or empty");
         }
 
-        // Xử lý tên file
-        String originalFileName = file.getOriginalFilename();
-        if (originalFileName == null) {
-            throw new IllegalArgumentException("File name cannot be null");
-        }
-        String jpgFileName = originalFileName.contains(".")
-                ? originalFileName.substring(0, originalFileName.lastIndexOf('.')) + ".jpg"
-                : originalFileName + ".jpg";
-
-        // Tạo đường dẫn file an toàn
-        String filePath = Paths.get(FOLDER_PATH, jpgFileName).toString();
-
         try {
+            // Đầu tiên lưu vào database để lấy ID
+            FileData fileData = fileDataRepository.save(FileData.builder()
+                    .type("image/jpeg")
+                    .build());
+
+            // Sử dụng ID làm tên file
+            String jpgFileName = fileData.getId() + ".jpg";
+            String filePath = Paths.get(FOLDER_PATH, jpgFileName).toString();
+
             // Đọc và ghi file ảnh
             BufferedImage bufferedImage = ImageIO.read(file.getInputStream());
             if (bufferedImage == null) {
@@ -51,14 +50,14 @@ public class FileService {
             File outputFile = new File(filePath);
             ImageIO.write(bufferedImage, "jpg", outputFile);
 
-            // Lưu vào database sau khi ghi file thành công
-            FileData fileData = fileDataRepository.save(FileData.builder()
-                    .name(jpgFileName)
-                    .type("image/jpeg")
-                    .filePath(filePath)
-                    .build());
+            // Cập nhật lại fileData với thông tin đường dẫn
+            fileData.setName(jpgFileName);
+            fileData.setFilePath(filePath);
+            fileDataRepository.save(fileData);
 
-            return "Uploaded: " + filePath;
+            return FileDataResponse.builder()
+                    .url(convertToUrl(jpgFileName))
+                    .build();
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
         }
@@ -73,6 +72,10 @@ public class FileService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String convertToUrl(String fileName) {
+        return String.format("%s/upload/files/%s", baseUrl, fileName);
     }
 
 }
