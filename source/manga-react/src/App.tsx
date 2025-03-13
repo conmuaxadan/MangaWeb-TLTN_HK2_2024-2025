@@ -1,17 +1,26 @@
-import Header from "./compoments/Header.tsx";
-import Banner from "./compoments/Banner.tsx";
-import MangaList from "./compoments/MangaList.tsx";
-import Footer from "./compoments/Footer.tsx";
+import {Route, Routes} from "react-router-dom"
+import {routes} from "./routes"
+
 
 function App() {
-  return (
-      <div className="bg-gray-900">
-        <Header/>
-        <Banner/>
-        <MangaList/>
-        <Footer/>
-      </div>
-  )
+    return (
+        <>
+            <Routes>
+                {routes.map((route, index) => (
+                    <Route
+                        key={index}
+                        path={route.path}
+                        element={(
+                            <route.Layout>
+                                <route.Component/>
+                            </route.Layout>
+                        )
+                        }
+                    />
+                ))}
+            </Routes>
+        </>
+    )
 }
 
 export default App
