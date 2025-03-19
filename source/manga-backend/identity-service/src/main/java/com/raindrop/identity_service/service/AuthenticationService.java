@@ -78,6 +78,19 @@ public class AuthenticationService {
                 .build();
     }
 
+    public AuthenticationResponse authenticateGG(AuthenticationRequest request) {
+        var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        var token = generateToken(user);
+
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authenticated(true)
+                .build();
+    }
+
+
+
     public void logout(LogoutRequest request) throws JOSEException, ParseException {
         var signToken = verifyToken(request.getToken());
 

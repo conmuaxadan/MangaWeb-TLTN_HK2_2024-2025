@@ -47,7 +47,6 @@ public class UserService {
         var roles = new HashSet<Role>();
         roles.add(Role.builder().name("USER").build());
         user = userRepository.save(user);
-
         var profileRequest = profileMapper.toUserProfileRequest(request);
         profileRequest.setUserId(user.getId());
         var profileResponse = profileClient.createProfile(profileRequest);
