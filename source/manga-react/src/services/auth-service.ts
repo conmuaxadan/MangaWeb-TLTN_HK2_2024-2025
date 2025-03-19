@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 import { toast } from "react-toastify";
+import {OAuthConfig} from "../configurations/configuration.ts";
 
 interface LoginResponse {
     token: string;
@@ -43,6 +44,38 @@ class AuthService {
             return false;
         }
     }
+
+    async googleLogin(code: string): Promise<LoginResponse | false> {
+        try {
+            const response = await this.api.post("/google-login", {
+                code,
+                redirectUri: OAuthConfig.redirectUri,
+            });
+            console.log("Response từ Google login:", response);
+
+            if (response.data.code !== 1000) {
+                toast.error(response.data.message || "Đăng nhập Google thất bại", { position: "top-right" });
+                return false;
+            }
+
+            const result = response.data.result;
+            if (!result || !result.authenticated) {
+                toast.error("Xác thực Google thất bại", { position: "top-right" });
+                return false;
+            }
+
+            return result; // Trả về { token, authenticated }
+        } catch (error) {
+            const axiosError = error as AxiosError;
+            console.error("Lỗi từ server (Google login):", axiosError.response);
+            return false;
+        }
+    }
+
+
 }
+
+
+
 
 export default new AuthService();

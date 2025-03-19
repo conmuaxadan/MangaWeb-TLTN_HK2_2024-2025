@@ -1,9 +1,19 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const Header = () => {
     const [showSearch, setShowSearch] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
+    const [isLogin, setIsLogin] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            setIsLogin(true);
+        }else{
+            setIsLogin(false);
+        }
+    }, []);
 
     const handleSearchClick = () => {
         setShowSearch(true);
@@ -19,6 +29,11 @@ const Header = () => {
 
     const handleMenuClick = () => {
         setShowMenu(!showMenu);
+    }
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        setIsLogin(false);
     }
 
 
@@ -83,11 +98,21 @@ const Header = () => {
                                     {showMenu && (
                                         <div
                                             className="min-w-30 bg-gray-700 absolute shadow-lg rounded-lg mt-2 right-0 overflow-hidden flex flex-col whitespace-nowrap text-white z-10">
-                                            <a href="/login"
-                                               className="p-2 text-white hover:bg-gray-100 hover:text-black">Đăng
-                                                nhập</a>
-                                            <a href="/register"
-                                               className="p-2 text-white hover:bg-gray-100 hover:text-black">Đăng ký</a>
+                                            {!isLogin ? (
+                                                <>
+
+                                                    <a href="/login"
+                                                       className="p-2 text-white hover:bg-gray-100 hover:text-black">Đăng
+                                                        nhập</a>
+                                                <a href="/register"
+                                                   className="p-2 text-white hover:bg-gray-100 hover:text-black">Đăng ký</a>
+                                                </>
+                                            ):(
+                                                <a href="/"
+                                                   onClick={handleLogout}
+                                                   className="p-2 text-white hover:bg-gray-100 hover:text-black">Đăng
+                                                    xuất</a>
+                                                )}
                                             <div className="lg:hidden flex flex-col">
                                                 <div className="border-b border-amber-50"></div>
                                                 <a href="/login"

@@ -34,19 +34,20 @@ const Banner = () => {
             slidesPerView={1}
             navigation
             loop={true}
+            className="rounded-2xl"
         >
             {mangaList.map((manga) => (
                 <SwiperSlide key={manga.id}>
 
                     <div
-                        className="mx-auto h-[250px] sm:h-[250px] md:h-[350px] lg:h-[500px] bg-center bg-no-repeat bg-cover relative rounded-2xl"
+                        className="mx-auto h-[250px] sm:h-[250px] md:h-[350px] lg:h-[500px] bg-center bg-no-repeat bg-cover relative"
                         style={{
                             backgroundImage: `url(${manga.image})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center'
                         }}>
                         <a href="/mangas/1">
-                            <div className="absolute w-full h-full top-0 left-0 bg-black opacity-50 rounded-2xl"/>
+                            <div className="absolute w-full h-full top-0 left-0 bg-black opacity-50"/>
                             <div className="w-full h-full flex p-4 relative z-20 items-end">
                                 <div className="flex flex-col space-y-5 items-baseline w-full md:w-[50%] ml-0 md:pl-20">
                                     <div className="flex flex-col space-y-4">

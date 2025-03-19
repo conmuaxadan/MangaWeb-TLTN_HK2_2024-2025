@@ -3,6 +3,7 @@ import {FormEvent, useState} from "react";
 import {toast} from "react-toastify";
 import {useNavigate} from "react-router-dom";
 import {saveString} from "../utils/localStorageUtil.ts";
+import {OAuthConfig} from "../configurations/configuration.ts";
 
 
 const Login = () => {
@@ -27,6 +28,11 @@ const Login = () => {
             toast.error("Đã xảy ra lỗi. Vui lòng thử lại.", { position: "top-right" });
         }
     };
+    const handleGoogleLogin = () => {
+        const scope = encodeURIComponent("email profile"); // Các scope bạn muốn
+        window.location.href = `${OAuthConfig.authUri}?client_id=${OAuthConfig.clientId}&redirect_uri=${OAuthConfig.redirectUri}&response_type=code&scope=${scope}`; // Redirect tới Google
+    };
+
     return (
         <div className="flex-grow min-h-screen bg-zinc-800">
             <div className="min-h-screen w-full flex justify-center items-center">
@@ -89,8 +95,10 @@ const Login = () => {
                             </button>
                         </div>
 
+
+
                         {/* Liên kết */}
-                        <div className="flex flex-col md:flex-row justify-center gap-4">
+                        <div className="flex flex-col md:flex-row justify-center gap-4 mb-8">
                             <a
                                 href="/request-reset-password"
                                 className="text-sm font-bold text-blue-500 hover:text-blue-700 transition"
@@ -104,6 +112,24 @@ const Login = () => {
                                 Đăng ký tài khoản
                             </a>
                         </div>
+
+                        <div className="w-full flex justify-center mb-2">
+                            <div className="text-sm font-bold text-blue-500 hover:text-blue-700 transition">
+                                Hoặc đăng nhập với
+                            </div>
+                        </div>
+
+                        <div className="w-full flex justify-center mb-8">
+                            <button
+                                type="button"
+                                onClick={handleGoogleLogin}
+                                className="px-8 py-3 bg-red-500 text-white rounded hover:bg-red-600 transition flex items-center gap-2"
+                            >
+                                <i className="fab fa-google"></i>
+                                Đăng nhập bằng Google
+                            </button>
+                        </div>
+
                     </form>
                 </div>
             </div>

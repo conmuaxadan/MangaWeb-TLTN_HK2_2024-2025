@@ -189,7 +189,7 @@ const MangaList: React.FC = () => {
         <div className="flex-grow min-h-screen">
             <div className="mx-2 py-8 lg:py-16">
                 <div className="common-container mb-8 lg:mb-12">
-                    <div className="uppercase font-bold text-xl text-gray-700">
+                    <div className="uppercase font-bold text-xl text-gray-300">
                         Mới cập nhật
                     </div>
                 </div>

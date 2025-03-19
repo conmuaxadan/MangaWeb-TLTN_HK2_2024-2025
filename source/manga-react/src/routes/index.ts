@@ -4,6 +4,7 @@ import Master from "../components/layouts/Master.tsx";
 import {IRoute} from "../interfaces/IRoute.ts";
 import {RouteType} from "../consts/RouteType.ts";
 import Register from "../components/Register.tsx";
+import Authenticate from "../components/Authenticate.tsx";
 
 export const routes: IRoute[] = [
     {
@@ -21,6 +22,13 @@ export const routes: IRoute[] = [
     {
         path: '/register',
         Component: Register,
+        Layout: Master,
+        routeType: RouteType.PUBLIC
+    },
+
+    {
+        path: '/authenticate',
+        Component: Authenticate,
         Layout: Master,
         routeType: RouteType.PUBLIC
     }
