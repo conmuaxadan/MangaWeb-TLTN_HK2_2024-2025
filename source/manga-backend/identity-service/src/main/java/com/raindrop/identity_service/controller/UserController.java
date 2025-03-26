@@ -23,7 +23,7 @@ public class UserController {
      UserService userService;
      UserMapper userMapper;
 
-    @PostMapping()
+    @PostMapping("/register")
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .message("User created successfully")
