@@ -20,3 +20,9 @@ spring:
             - Path=${app.api-prefix}/profile/**
           filters:
             - StripPrefix=2
+        - id: manga_service
+          uri: http://localhost:8082
+          predicates:
+            - Path=${app.api-prefix}/manga/**
+          filters:
+            - StripPrefix=2

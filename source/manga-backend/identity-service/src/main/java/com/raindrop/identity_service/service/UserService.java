@@ -11,6 +11,8 @@ import com.raindrop.identity_service.mapper.UserMapper;
 import com.raindrop.identity_service.repository.RoleRepository;
 import com.raindrop.identity_service.repository.UserRepository;
 import com.raindrop.identity_service.repository.httpclient.ProfileClient;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,6 +23,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.HashSet;
 import java.util.List;
@@ -49,8 +53,11 @@ public class UserService {
         user = userRepository.save(user);
         var profileRequest = profileMapper.toUserProfileRequest(request);
         profileRequest.setUserId(user.getId());
-        var profileResponse = profileClient.createProfile(profileRequest);
-        log.info("Profile created: {}", profileResponse.toString());
+
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var header = attributes.getRequest().getHeader("Authorization");
+
+        profileClient.createProfile(header,profileRequest);
         return userMapper.toUserResponse(user);
     }
 
