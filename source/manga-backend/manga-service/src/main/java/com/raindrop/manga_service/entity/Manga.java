@@ -25,7 +25,8 @@ public class Manga {
     String title;
     String anotherTitle;
     String author;
-    int likes;
+    int views;
+    int loves;
     String description;
     @ManyToMany
     Set<Genre> genres;

@@ -23,7 +23,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 @Component
 @Slf4j
@@ -51,7 +50,6 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         if (isPublicEndpoint(exchange.getRequest()))
            return chain.filter(exchange);
 
-
         //get token
         List<String> authHeader = exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION);
         if (CollectionUtils.isEmpty(authHeader)) {
@@ -59,6 +57,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         }
         String token = authHeader.getFirst().replace("Bearer", "").trim();
         log.info("Token: {}", token);
+
         //verify token
         identityService.introspect(token).subscribe(introspectResponseApiResponse -> {
             log.info("Result: {}", introspectResponseApiResponse.getResult().isValid());

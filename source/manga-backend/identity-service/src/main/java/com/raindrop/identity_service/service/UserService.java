@@ -11,8 +11,6 @@ import com.raindrop.identity_service.mapper.UserMapper;
 import com.raindrop.identity_service.repository.RoleRepository;
 import com.raindrop.identity_service.repository.UserRepository;
 import com.raindrop.identity_service.repository.httpclient.ProfileClient;
-import jakarta.servlet.Servlet;
-import jakarta.servlet.ServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -50,6 +48,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         var roles = new HashSet<Role>();
         roles.add(Role.builder().name("USER").build());
+        user.setRoles(roles);
         user = userRepository.save(user);
         var profileRequest = profileMapper.toUserProfileRequest(request);
         profileRequest.setUserId(user.getId());

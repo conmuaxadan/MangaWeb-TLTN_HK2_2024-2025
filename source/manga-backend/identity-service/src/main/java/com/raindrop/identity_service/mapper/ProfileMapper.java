@@ -7,7 +7,16 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface ProfileMapper {
-    @Mapping(target = "displayName", source = "username")
+    @Mapping(target = "displayName", expression = "java(getDisplayName(request))")
     @Mapping(target = "avatarUrl", constant = "null")
     UserProfileRequest toUserProfileRequest(UserRequest request);
+
+    default String getDisplayName(UserRequest request) {
+        if (request.getUsername() != null && !request.getUsername().isEmpty()) {
+            return request.getUsername();
+        } else {
+            String email = request.getEmail();
+            return email != null ? email.split("@")[0] : null;
+        }
+    }
 }
