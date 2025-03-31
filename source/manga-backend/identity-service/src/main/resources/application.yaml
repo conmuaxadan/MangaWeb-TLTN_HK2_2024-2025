@@ -19,6 +19,11 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  kafka:
+    bootstrap-servers: localhost:9094
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 jwt:
   signerKey: "o6lSCt2tIkiqLnuj/m+P/My5Nq4w6C47rvMCAQIXJp8+I4lxliuh/EMEFM/YS9Aa"
 app:

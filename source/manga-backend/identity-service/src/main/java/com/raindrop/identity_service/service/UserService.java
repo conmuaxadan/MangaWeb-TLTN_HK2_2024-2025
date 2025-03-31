@@ -1,5 +1,6 @@
 package com.raindrop.identity_service.service;
 
+import com.raindrop.event.UserProfileEvent;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.UserResponse;
 import com.raindrop.identity_service.entity.Role;
@@ -15,6 +16,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,6 +41,7 @@ public class UserService {
     PasswordEncoder passwordEncoder;
     ProfileClient profileClient;
     ProfileMapper profileMapper;
+    KafkaTemplate<String, Object> kafkaTemplate;
 
     public UserResponse createUser(UserRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -53,10 +56,19 @@ public class UserService {
         var profileRequest = profileMapper.toUserProfileRequest(request);
         profileRequest.setUserId(user.getId());
 
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        var header = attributes.getRequest().getHeader("Authorization");
+        UserProfileEvent profileEvent = UserProfileEvent.builder()
+                .userId(profileRequest.getUserId())
+                .displayName(profileRequest.getDisplayName())
+                .avatarUrl(profileRequest.getAvatarUrl())
+                .build();
 
-        profileClient.createProfile(header,profileRequest);
+//        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+//        var header = attributes.getRequest().getHeader("Authorization");
+//        profileClient.createProfile(header,profileRequest);
+
+        //Publish message to Kafka
+        kafkaTemplate.send("onboard-successful",profileEvent);
+
         return userMapper.toUserResponse(user);
     }
 
