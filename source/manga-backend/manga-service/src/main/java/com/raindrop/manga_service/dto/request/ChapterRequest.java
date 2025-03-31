@@ -2,6 +2,9 @@ package com.raindrop.manga_service.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -11,6 +14,6 @@ import lombok.experimental.FieldDefaults;
 public class ChapterRequest {
     int chapterNumber;
     String title;
-    String content;
+    List<MultipartFile> pages;
     String mangaId;
 }

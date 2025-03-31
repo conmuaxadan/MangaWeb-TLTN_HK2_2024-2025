@@ -8,6 +8,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -22,10 +24,12 @@ public class Chapter {
     String id;
     int chapterNumber;
     String title;
-    String content;
+    @ElementCollection
+    @CollectionTable(name = "chapter_pages", joinColumns = @JoinColumn(name = "chapter_id"))
+    @Column(name = "page_url")
+    List<String> pages;
     @ManyToOne
     Manga manga;
-
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;

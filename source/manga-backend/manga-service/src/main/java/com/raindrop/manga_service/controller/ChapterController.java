@@ -11,10 +11,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/chapters")
@@ -24,8 +25,23 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChapterController {
     ChapterService chapterService;
 
-    @PostMapping()
-    ApiResponse<ChapterResponse> createChapter(@RequestBody @Valid ChapterRequest request) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ApiResponse<ChapterResponse> createChapter(
+            @RequestParam("chapterNumber") String chapterNumber,
+            @RequestParam("mangaId") String mangaId,
+            @RequestParam("pages") List<MultipartFile> pages
+    ) {
+        ChapterRequest request = ChapterRequest.builder()
+                .chapterNumber(Integer.parseInt(chapterNumber))
+                .title("Chương " + chapterNumber)
+                .mangaId(mangaId)
+                .pages(pages)
+                .build();
+
+        log.info("Create chapter request: {}", request);
+
+
+
         return ApiResponse.<ChapterResponse>builder()
                 .message("Chapter created successfully")
                 .result(chapterService.createChapter(request))
