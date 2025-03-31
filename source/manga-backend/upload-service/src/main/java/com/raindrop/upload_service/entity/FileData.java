@@ -16,7 +16,6 @@ public class FileData {
     String id;
 
     String name;
-    String type;
     String filePath;
 
 }

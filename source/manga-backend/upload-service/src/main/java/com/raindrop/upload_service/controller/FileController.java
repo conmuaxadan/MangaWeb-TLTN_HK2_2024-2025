@@ -1,5 +1,7 @@
 package com.raindrop.upload_service.controller;
 
+import com.raindrop.upload_service.dto.response.ApiResponse;
+import com.raindrop.upload_service.dto.response.FileDataResponse;
 import com.raindrop.upload_service.service.FileService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/files")
@@ -20,16 +23,20 @@ public class FileController {
     FileService fileService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadFileToFileSystem(@RequestParam("image") MultipartFile file) {
-        String uploadImage = fileService.uploadFileToFileSystem(file);
-        return new ResponseEntity<>(uploadImage, HttpStatus.OK);
+    public ApiResponse<FileDataResponse> uploadImageToFIleSystem(@RequestParam("image")MultipartFile file) throws IOException {
+        FileDataResponse uploadImage = fileService.uploadFile(file);
+        return ApiResponse.<FileDataResponse>builder()
+                .result(uploadImage)
+                .build();
     }
 
     @GetMapping("/{fileName}")
-    public ResponseEntity<?> downloadFile(@PathVariable String fileName) {
-        byte[] image = fileService.downloadFileFromFileSystem(fileName);
+    public ResponseEntity<?> downloadImageFromFileSystem(@PathVariable String fileName) throws IOException {
+        byte[] imageData=fileService.readFile(fileName);
         return ResponseEntity.status(HttpStatus.OK)
-                .contentType(MediaType.valueOf("image/jpg"))
-                .body(image);
+                .contentType(MediaType.valueOf("image/png"))
+                .body(imageData);
+
     }
+
 }

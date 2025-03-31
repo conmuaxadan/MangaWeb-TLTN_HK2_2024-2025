@@ -1,5 +1,6 @@
 package com.raindrop.upload_service.service;
 
+import com.raindrop.upload_service.dto.response.FileDataResponse;
 import com.raindrop.upload_service.entity.FileData;
 import com.raindrop.upload_service.repository.FileDataRepository;
 import lombok.AccessLevel;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -14,8 +16,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -23,56 +27,57 @@ import java.util.Optional;
 @Slf4j
 public class FileService {
     FileDataRepository fileDataRepository;
-    final String FOLDER_PATH = "C:/Users/Ra1ndr0p/Desktop/uploads/";
+    final String FOLDER_PATH = "C:/uploads/";
 
-    public String uploadFileToFileSystem(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("File is null or empty");
-        }
+    public FileDataResponse uploadFile(MultipartFile file) throws IOException {
+        String fileExtension = StringUtils.getFilenameExtension(Objects.requireNonNull(file.getOriginalFilename()));
+        String fileName = Objects.isNull(fileExtension)
+                ? UUID.randomUUID().toString()
+                : UUID.randomUUID().toString() + "." + fileExtension;
 
-        // Xử lý tên file
-        String originalFileName = file.getOriginalFilename();
-        if (originalFileName == null) {
-            throw new IllegalArgumentException("File name cannot be null");
-        }
-        String jpgFileName = originalFileName.contains(".")
-                ? originalFileName.substring(0, originalFileName.lastIndexOf('.')) + ".jpg"
-                : originalFileName + ".jpg";
+        FileData fileData = fileDataRepository.save(FileData.builder()
+                        .name(fileName)
+                        .filePath(FOLDER_PATH + fileName)
+                .build());
 
-        // Tạo đường dẫn file an toàn
-        String filePath = Paths.get(FOLDER_PATH, jpgFileName).toString();
+        file.transferTo(new File(fileData.getFilePath()));
+        return FileDataResponse.builder()
+                .url("http://localhost:8084/upload/files/" + fileName)
+                .build();
+    }
 
-        try {
-            // Đọc và ghi file ảnh
-            BufferedImage bufferedImage = ImageIO.read(file.getInputStream());
-            if (bufferedImage == null) {
-                throw new IOException("Invalid image file");
-            }
-            File outputFile = new File(filePath);
-            ImageIO.write(bufferedImage, "jpg", outputFile);
+    public List<FileDataResponse> uploadFiles(List<MultipartFile> files) throws IOException {
+        List<FileDataResponse> uploadedFiles = new ArrayList<>();
 
-            // Lưu vào database sau khi ghi file thành công
+        for (MultipartFile file : files) {
+            String fileExtension = StringUtils.getFilenameExtension(Objects.requireNonNull(file.getOriginalFilename()));
+            String fileName = Objects.isNull(fileExtension)
+                    ? UUID.randomUUID().toString()
+                    : UUID.randomUUID().toString() + "." + fileExtension;
+
             FileData fileData = fileDataRepository.save(FileData.builder()
-                    .name(jpgFileName)
-                    .type("image/jpeg")
-                    .filePath(filePath)
+                    .name(fileName)
+                    .filePath(FOLDER_PATH + fileName)
                     .build());
 
-            return "Uploaded: " + filePath;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
+            file.transferTo(new File(fileData.getFilePath()));
+
+            uploadedFiles.add(FileDataResponse.builder()
+                    .url("http://localhost:8084/upload/media/" + fileName)
+                    .build());
         }
+
+        return uploadedFiles;
     }
 
-    public byte[] downloadFileFromFileSystem(String fileName) {
+
+    public byte[] readFile(String fileName) throws IOException {
         Optional<FileData> fileData = fileDataRepository.findByName(fileName);
-        String filePath = fileData.get().getFilePath();
-        try {
-            byte[] images = Files.readAllBytes(new java.io.File(filePath).toPath());
-            return images;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        String filePath=fileData.get().getFilePath();
+        byte[] images = Files.readAllBytes(new File(filePath).toPath());
+        return images;
     }
+
+
 
 }
