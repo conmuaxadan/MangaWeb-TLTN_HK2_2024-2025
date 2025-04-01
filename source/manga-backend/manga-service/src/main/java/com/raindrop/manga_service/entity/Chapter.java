@@ -24,11 +24,15 @@ public class Chapter {
     String id;
     int chapterNumber;
     String title;
-    @ElementCollection
-    @CollectionTable(name = "chapter_pages", joinColumns = @JoinColumn(name = "chapter_id"))
-    @Column(name = "page_url")
-    List<String> pages;
+    @ManyToMany
+    @JoinTable(
+            name = "chapter_pages", // Tên bảng trung gian
+            joinColumns = @JoinColumn(name = "chapter_id"), // Cột liên kết với Chapter
+            inverseJoinColumns = @JoinColumn(name = "page_id") // Cột liên kết với Page
+    )
+    Set<Page> pages;
     @ManyToOne
+    @JoinColumn(name = "manga_id", nullable = false)
     Manga manga;
     @Column(updatable = false)
     @CreatedDate

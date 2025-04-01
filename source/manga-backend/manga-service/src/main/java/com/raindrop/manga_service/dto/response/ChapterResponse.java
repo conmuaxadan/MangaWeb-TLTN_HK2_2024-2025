@@ -1,5 +1,6 @@
 package com.raindrop.manga_service.dto.response;
 
+import com.raindrop.manga_service.entity.Page;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -14,7 +15,7 @@ import java.util.List;
 public class ChapterResponse {
     int chapterNumber;
     String title;
-    List<String> pages;
+    List<PageResponse> pages;
     String mangaId;
     LocalDateTime updatedAt;
 }

@@ -29,13 +29,6 @@ public class MangaController {
                 .build();
     }
 
-    @GetMapping("/{title}")
-    ApiResponse<MangaResponse> getManga(@PathVariable String title) {
-        return ApiResponse.<MangaResponse>builder()
-                .message("Manga retrieved successfully")
-                .result(mangaService.getMangaByName(title))
-                .build();
-    }
 
     @GetMapping("/id/{id}")
     ApiResponse<MangaResponse> getMangaById(@PathVariable String id) {

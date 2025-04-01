@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -18,9 +19,10 @@ public class MangaResponse {
     String title;
     String anotherTitle;
     String author;
-    int likes;
+    int loves;
+    int views;
     String description;
-    Set<Genre> genres;
-    Set<Chapter> chapters;
+    List<String> genres;
+    List<String> chapters;
     LocalDateTime updatedAt;
 }

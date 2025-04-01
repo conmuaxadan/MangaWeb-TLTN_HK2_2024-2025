@@ -6,9 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface ChapterRepository extends JpaRepository<Chapter, String> {
     Chapter findByTitle(String title);
-    List<Chapter> findByManga(Manga manga);
     Optional<Chapter> findByMangaAndChapterNumber(Manga manga, int chapterNumber);
+    Set<Chapter> findByManga(Manga manga);
+    List<Chapter> findByMangaId(String mangaId);
 }
