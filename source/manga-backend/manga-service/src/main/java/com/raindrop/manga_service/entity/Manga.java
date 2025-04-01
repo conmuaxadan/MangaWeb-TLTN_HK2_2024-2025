@@ -9,6 +9,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -29,9 +30,9 @@ public class Manga {
     int loves;
     String description;
     @ManyToMany
-    Set<Genre> genres;
-    @OneToMany
-    Set<Chapter> chapters;
+    List<Genre> genres;
+    @OneToMany(mappedBy = "manga", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Chapter> chapters;
 
     @Column(updatable = false)
     @CreatedDate
