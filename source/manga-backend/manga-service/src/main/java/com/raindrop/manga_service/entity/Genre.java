@@ -9,6 +9,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -23,6 +25,9 @@ public class Genre {
     String id;
     String name;
     String description;
+
+    @ManyToMany(mappedBy = "genres")
+    List<Manga> mangas;
 
     @Column(updatable = false)
     @CreatedDate

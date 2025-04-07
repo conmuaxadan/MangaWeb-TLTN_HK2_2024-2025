@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FileDataRequest {
+public class FileInfoRequest {
     MultipartFile file;
     String name;
 }

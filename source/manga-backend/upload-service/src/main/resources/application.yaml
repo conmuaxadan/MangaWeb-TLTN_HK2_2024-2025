@@ -14,3 +14,7 @@ spring:
   web:
     resources:
       static-locations: file:uploads/,classpath:/static
+app:
+  upload:
+    manga: C:/uploads/manga/
+    user: C:/uploads/user/

@@ -8,6 +8,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -24,16 +25,14 @@ public class Chapter {
     String id;
     int chapterNumber;
     String title;
-    @ManyToMany
-    @JoinTable(
-            name = "chapter_pages", // Tên bảng trung gian
-            joinColumns = @JoinColumn(name = "chapter_id"), // Cột liên kết với Chapter
-            inverseJoinColumns = @JoinColumn(name = "page_id") // Cột liên kết với Page
-    )
-    Set<Page> pages;
+
+    @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Page> pages;
+
     @ManyToOne
     @JoinColumn(name = "manga_id", nullable = false)
     Manga manga;
+
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;

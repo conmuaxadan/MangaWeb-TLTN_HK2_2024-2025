@@ -15,7 +15,13 @@ public class Page {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
+
     @Column(name = "page_index", nullable = false)
     int index;
+
     String pageUrl;
+
+    @ManyToOne
+    @JoinColumn(name = "chapter_id", nullable = false)
+    Chapter chapter;
 }

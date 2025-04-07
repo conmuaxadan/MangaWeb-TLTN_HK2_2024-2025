@@ -5,11 +5,11 @@ import com.raindrop.manga_service.dto.response.MangaResponse;
 import com.raindrop.manga_service.entity.Chapter;
 import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.entity.Manga;
-import com.raindrop.manga_service.entity.Page;
 import com.raindrop.manga_service.mapper.MangaMapper;
 import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.repository.GenreRepository;
 import com.raindrop.manga_service.repository.MangaRepository;
+import com.raindrop.manga_service.repository.PageRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -28,10 +28,11 @@ public class MangaService {
     MangaMapper mangaMapper;
     GenreRepository genreRepository;
     ChapterRepository chapterRepository;
+    PageRepository pageRepository;
 
     public MangaResponse createManga(MangaRequest request) {
         var manga = mangaMapper.toManga(request);
-        List<Genre> genres = new ArrayList<>();
+        List<Genre> genres =new ArrayList<>();
         for (var genreName : request.getGenres()) {
             var genre = genreRepository.findByName(genreName);
             genres.add(genre);
@@ -49,7 +50,6 @@ public class MangaService {
 
     public MangaResponse getMangaById(String id) {
         Manga manga = mangaRepository.findById(id).orElseThrow();
-        List<Chapter> chapters = chapterRepository.findByMangaId(manga.getId());
         return MangaResponse.builder()
                 .id(manga.getId())
                 .title(manga.getTitle())
@@ -58,7 +58,7 @@ public class MangaService {
                 .loves(manga.getLoves())
                 .views(manga.getViews())
                 .genres(manga.getGenres().stream().map(Genre::getName).collect(Collectors.toList()))
-                .chapters(chapters.stream().sorted(Comparator.comparingInt(Chapter::getChapterNumber).reversed()).map(Chapter::getId).collect(Collectors.toList()))
+                .chapters(manga.getChapters().stream().map(Chapter::getId).collect(Collectors.toList()))
                 .updatedAt(manga.getUpdatedAt())
                 .build();
     }
