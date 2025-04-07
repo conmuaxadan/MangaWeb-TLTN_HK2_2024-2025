@@ -1,21 +1,16 @@
 package com.raindrop.upload_service.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.core.io.Resource;
 
-@Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FileData {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    String id;
-
-    String name;
-    String filePath;
-
+    String contentType;
+    Resource resource;
 }

@@ -54,8 +54,8 @@ public class MangaController {
                 .build();
     }
 
-    @DeleteMapping()
-    ApiResponse<Void> deleteManga(@RequestBody String id) {
+    @DeleteMapping("/{id}")
+    ApiResponse<Void> deleteManga(@PathVariable String id) {
         mangaService.deleteManga(id);
         return ApiResponse.<Void>builder()
                 .message("Manga deleted successfully")

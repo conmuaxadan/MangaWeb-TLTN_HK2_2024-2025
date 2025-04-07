@@ -40,8 +40,6 @@ public class ChapterController {
 
         log.info("Create chapter request: {}", request);
 
-
-
         return ApiResponse.<ChapterResponse>builder()
                 .message("Chapter created successfully")
                 .result(chapterService.createChapter(request))

@@ -14,3 +14,8 @@ spring:
 app:
   services:
     upload: http://localhost:8084/upload
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.hibernate.validator: DEBUG

@@ -1,24 +1,24 @@
 package com.raindrop.upload_service.service;
 
-import com.raindrop.upload_service.dto.response.FileDataResponse;
+import com.raindrop.upload_service.dto.response.FileInfoResponse;
 import com.raindrop.upload_service.entity.FileData;
+import com.raindrop.upload_service.entity.FileInfo;
 import com.raindrop.upload_service.repository.FileDataRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 @Service
@@ -27,55 +27,71 @@ import java.util.*;
 @Slf4j
 public class FileService {
     FileDataRepository fileDataRepository;
-    final String FOLDER_PATH = "C:/uploads/";
 
-    public FileDataResponse uploadFile(MultipartFile file) throws IOException {
+    @Value("${app.upload.manga}")
+    @NonFinal
+    String MANGA_FOLDER_PATH;
+
+    @Value("${app.upload.user}")
+    @NonFinal
+    String USER_FOLDER_PATH;
+
+    public FileInfoResponse uploadMangaFile(MultipartFile file) throws IOException {
         String fileExtension = StringUtils.getFilenameExtension(Objects.requireNonNull(file.getOriginalFilename()));
         String fileName = Objects.isNull(fileExtension)
                 ? UUID.randomUUID().toString()
                 : UUID.randomUUID().toString() + "." + fileExtension;
 
-        FileData fileData = fileDataRepository.save(FileData.builder()
+        FileInfo fileData = fileDataRepository.save(FileInfo.builder()
                         .name(fileName)
-                        .filePath(FOLDER_PATH + fileName)
+                        .filePath(MANGA_FOLDER_PATH + fileName)
+                        .fileType(file.getContentType())
                 .build());
 
         file.transferTo(new File(fileData.getFilePath()));
-        return FileDataResponse.builder()
-                .url("http://localhost:8084/upload/files/" + fileName)
+        return FileInfoResponse.builder()
+                .name(fileName)
                 .build();
     }
 
-    public List<FileDataResponse> uploadFiles(List<MultipartFile> files) throws IOException {
-        List<FileDataResponse> uploadedFiles = new ArrayList<>();
+    public FileInfoResponse uploadUserFile(MultipartFile file) throws IOException {
+        String fileExtension = StringUtils.getFilenameExtension(Objects.requireNonNull(file.getOriginalFilename()));
+        String fileName = Objects.isNull(fileExtension)
+                ? UUID.randomUUID().toString()
+                : UUID.randomUUID().toString() + "." + fileExtension;
 
-        for (MultipartFile file : files) {
-            String fileExtension = StringUtils.getFilenameExtension(Objects.requireNonNull(file.getOriginalFilename()));
-            String fileName = Objects.isNull(fileExtension)
-                    ? UUID.randomUUID().toString()
-                    : UUID.randomUUID().toString() + "." + fileExtension;
+        FileInfo fileData = fileDataRepository.save(FileInfo.builder()
+                .name(fileName)
+                .filePath(USER_FOLDER_PATH + fileName)
+                .build());
 
-            FileData fileData = fileDataRepository.save(FileData.builder()
-                    .name(fileName)
-                    .filePath(FOLDER_PATH + fileName)
-                    .build());
+        file.transferTo(new File(fileData.getFilePath()));
+        return FileInfoResponse.builder()
+                .name(fileName)
+                .build();
+    }
 
-            file.transferTo(new File(fileData.getFilePath()));
-
-            uploadedFiles.add(FileDataResponse.builder()
-                    .url("http://localhost:8084/upload/media/" + fileName)
-                    .build());
-        }
-
-        return uploadedFiles;
+    public FileData read(String fileName) throws IOException {
+        var file = fileDataRepository.findByName(fileName).orElseThrow();
+        return FileData.builder()
+                .contentType(file.getFileType())
+                .resource(new ByteArrayResource(readFile(fileName)))
+                .build();
     }
 
 
     public byte[] readFile(String fileName) throws IOException {
-        Optional<FileData> fileData = fileDataRepository.findByName(fileName);
+        Optional<FileInfo> fileData = fileDataRepository.findByName(fileName);
         String filePath=fileData.get().getFilePath();
         byte[] images = Files.readAllBytes(new File(filePath).toPath());
         return images;
+    }
+
+    public void deleteFile(String fileName) throws IOException {
+        Optional<FileInfo> fileData = fileDataRepository.findByName(fileName);
+        String filePath=fileData.get().getFilePath();
+        Files.deleteIfExists(Paths.get(filePath));
+        fileDataRepository.delete(fileData.get());
     }
 
 
