@@ -30,7 +30,7 @@ public class MangaController {
     }
 
 
-    @GetMapping("/id/{id}")
+    @GetMapping("/{id}")
     ApiResponse<MangaResponse> getMangaById(@PathVariable String id) {
         return ApiResponse.<MangaResponse>builder()
                 .message("Manga retrieved successfully")
@@ -38,7 +38,7 @@ public class MangaController {
                 .build();
     }
 
-    @GetMapping("/all")
+    @GetMapping()
     ApiResponse<List<MangaResponse>> getAllMangas() {
         return ApiResponse.<List<MangaResponse>>builder()
                 .message("Mangas retrieved successfully")
@@ -46,11 +46,11 @@ public class MangaController {
                 .build();
     }
 
-    @PutMapping("/{title}")
-    ApiResponse<MangaResponse> updateManga(@PathVariable String title, @RequestBody MangaRequest request) {
+    @PutMapping("/{id}")
+    ApiResponse<MangaResponse> updateManga(@PathVariable String id, @RequestBody MangaRequest request) {
         return ApiResponse.<MangaResponse>builder()
                 .message("Manga updated successfully")
-                .result(mangaService.updateManga(title, request))
+                .result(mangaService.updateManga(id, request))
                 .build();
     }
 

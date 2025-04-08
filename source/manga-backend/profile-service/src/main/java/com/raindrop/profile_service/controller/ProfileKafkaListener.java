@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @AllArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
-public class ProfileController {
+public class ProfileKafkaListener {
     UserProfileService userProfileService;
 
     @KafkaListener(topics = "onboard-successful")

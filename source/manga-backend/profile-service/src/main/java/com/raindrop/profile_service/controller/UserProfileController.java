@@ -11,26 +11,27 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/users")
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class UserProfileController {
     UserProfileService userProfileService;
 
-    @PostMapping("users")
+    @PostMapping
     ApiResponse<UserProfileResponse> createProfile(@RequestBody UserProfileRequest request) {
         return ApiResponse.<UserProfileResponse>builder()
                 .message("Create profile successfully")
                 .result(userProfileService.createProfile(request)).build();
     }
 
-    @GetMapping("users/{profileId}")
-    ApiResponse<UserProfileResponse> getProfile(@PathVariable String profileId) {
+    @GetMapping("/{id}")
+    ApiResponse<UserProfileResponse> getProfile(@PathVariable String id) {
         return ApiResponse.<UserProfileResponse>builder()
                 .message("Get profile successfully")
-                .result(userProfileService.getProfile(profileId)).build();
+                .result(userProfileService.getProfile(id)).build();
     }
 
-    @GetMapping("users")
+    @GetMapping
     ApiResponse<List<UserProfileResponse>> getAllProfiles() {
         return ApiResponse.<List<UserProfileResponse>>builder()
                 .message("Get all profiles successfully")

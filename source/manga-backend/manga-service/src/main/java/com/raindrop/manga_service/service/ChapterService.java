@@ -33,56 +33,6 @@ public class ChapterService {
     MangaRepository mangaRepository;
     PageRepository pageRepository;
 
-//    public ChapterResponse createChapter(ChapterRequest request) {
-//        if (request.getPages() == null || request.getPages().isEmpty()) {
-//            throw new IllegalArgumentException("Chapter must have at least one page");
-//        }
-//
-//        Manga manga = mangaRepository.findById(request.getMangaId())
-//                .orElseThrow(() -> new RuntimeException("Manga not found"));
-//
-//        // **Tạo và lưu các Page, sau đó gán vào Chapter**
-//        Set<Page> pages = new HashSet<>();
-//        for (int i = 0; i < request.getPages().size(); i++) {
-//            MultipartFile file = request.getPages().get(i);
-//            try {
-//                ApiResponse<FileDataResponse> apiResponse = uploadClient.uploadMedia(file);
-//                Page page = Page.builder()
-//                        .index(i)
-//                        .pageUrl(apiResponse.getResult().getUrl())
-//                        .build();
-//                page = pageRepository.save(page); // Lưu Page để có ID
-//                pages.add(page); // Thêm vào tập hợp pages
-//            } catch (Exception e) {
-//                log.error("Error uploading file [{}]: {}", i, e.getMessage());
-//                throw new RuntimeException("Failed to upload all images");
-//            }
-//        }
-//
-//        // **Tạo Chapter trước**
-//        Chapter chapter = Chapter.builder()
-//                .chapterNumber(request.getChapterNumber())
-//                .title(request.getTitle())
-//                .manga(manga)
-//                .pages(pages)
-//                .build();
-//        chapter = chapterRepository.save(chapter); // Lưu để lấy ID
-//
-//        // **Tạo response**
-//        return ChapterResponse.builder()
-//                .title(chapter.getTitle())
-//                .chapterNumber(chapter.getChapterNumber())
-//                .mangaId(chapter.getManga().getId())
-//                .pages(new ArrayList<>(chapter.getPages()).stream()
-//                        .sorted(Comparator.comparingInt(Page::getIndex))
-//                        .map(page -> PageResponse.builder()
-//                                .index(page.getIndex())
-//                                .pageUrl(page.getPageUrl())
-//                                .build())
-//                        .toList())
-//                .updatedAt(chapter.getUpdatedAt())
-//                .build();
-//    }
 public ChapterResponse createChapter(ChapterRequest request) {
     if (request.getPages() == null || request.getPages().isEmpty()) {
         throw new IllegalArgumentException("Chapter must have at least one page");
