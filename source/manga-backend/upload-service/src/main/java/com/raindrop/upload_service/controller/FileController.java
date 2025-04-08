@@ -17,14 +17,14 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 @RestController
-@RequestMapping()
+@RequestMapping("/files")
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @Slf4j
 public class FileController {
     FileService fileService;
 
-    @PostMapping(value = "mangas",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/manga", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<FileInfoResponse> uploadMangaFile(@RequestParam("image")MultipartFile file) throws IOException {
         FileInfoResponse uploadImage = fileService.uploadMangaFile(file);
         return ApiResponse.<FileInfoResponse>builder()
@@ -32,7 +32,7 @@ public class FileController {
                 .build();
     }
 
-    @PostMapping(value = "avatars",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<FileInfoResponse> uploadAvatarFile(@RequestParam("image")MultipartFile file) throws IOException {
         FileInfoResponse uploadImage = fileService.uploadUserFile(file);
         return ApiResponse.<FileInfoResponse>builder()

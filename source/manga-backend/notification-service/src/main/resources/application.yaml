@@ -1,0 +1,27 @@
+server:
+  port: 8085
+  servlet:
+    context-path: /notification
+
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/notification_service"
+    username: "root"
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+app:
+  email:
+    api-key:

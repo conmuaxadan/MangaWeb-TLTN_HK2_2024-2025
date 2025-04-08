@@ -11,9 +11,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 @FeignClient(name = "upload-service", url = "${app.services.upload}")
 public interface UploadClient {
-    @PostMapping(value = "/files",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/files/manga", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ApiResponse<FileDataResponse> uploadMedia(@RequestPart("image") MultipartFile file);
 
-    @DeleteMapping(value = "files/{fileName}")
+    @DeleteMapping(value = "/files/{fileName}")
     ApiResponse<Void> deleteMedia(@RequestPart("fileName") String fileName);
 }
