@@ -5,6 +5,8 @@ import com.raindrop.manga_service.dto.response.MangaResponse;
 import com.raindrop.manga_service.entity.Chapter;
 import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.entity.Manga;
+import com.raindrop.manga_service.enums.ErrorCode;
+import com.raindrop.manga_service.exception.AppException;
 import com.raindrop.manga_service.mapper.MangaMapper;
 import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.repository.GenreRepository;
@@ -31,10 +33,19 @@ public class MangaService {
     PageRepository pageRepository;
 
     public MangaResponse createManga(MangaRequest request) {
+        // Kiểm tra xem manga đã tồn tại chưa
+        Manga existingManga = mangaRepository.findByTitle(request.getTitle());
+        if (existingManga != null) {
+            throw new AppException(ErrorCode.MANGA_ALREADY_EXISTS);
+        }
+
         var manga = mangaMapper.toManga(request);
-        List<Genre> genres =new ArrayList<>();
+        List<Genre> genres = new ArrayList<>();
         for (var genreName : request.getGenres()) {
             var genre = genreRepository.findByName(genreName);
+            if (genre == null) {
+                throw new AppException(ErrorCode.GENRE_NOT_FOUND);
+            }
             genres.add(genre);
         }
         manga.setGenres(genres);
@@ -45,11 +56,15 @@ public class MangaService {
 
     public MangaResponse getMangaByName(String title) {
         var manga = mangaRepository.findByTitle(title);
+        if (manga == null) {
+            throw new AppException(ErrorCode.MANGA_NOT_FOUND);
+        }
         return mangaMapper.toMangaResponse(manga);
     }
 
     public MangaResponse getMangaById(String id) {
-        Manga manga = mangaRepository.findById(id).orElseThrow();
+        Manga manga = mangaRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
         return MangaResponse.builder()
                 .id(manga.getId())
                 .title(manga.getTitle())
@@ -69,12 +84,24 @@ public class MangaService {
     }
 
     public void deleteManga(String id) {
-        var manga = mangaRepository.findById(id).orElseThrow(() -> new RuntimeException("Manga not found"));
+        var manga = mangaRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
         mangaRepository.delete(manga);
     }
 
     public MangaResponse updateManga(String title, MangaRequest request) {
         var manga = mangaRepository.findByTitle(title);
+        if (manga == null) {
+            throw new AppException(ErrorCode.MANGA_NOT_FOUND);
+        }
+
+        // Kiểm tra xem title mới đã tồn tại chưa (nếu title thay đổi)
+        if (!title.equals(request.getTitle())) {
+            Manga existingManga = mangaRepository.findByTitle(request.getTitle());
+            if (existingManga != null) {
+                throw new AppException(ErrorCode.MANGA_ALREADY_EXISTS);
+            }
+        }
 
         manga.setTitle(request.getTitle());
         manga.setDescription(request.getDescription());

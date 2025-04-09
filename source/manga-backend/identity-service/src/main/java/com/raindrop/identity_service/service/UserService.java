@@ -44,15 +44,26 @@ public class UserService {
     KafkaTemplate<String, Object> kafkaTemplate;
 
     public UserResponse createUser(UserRequest request) {
+        log.info("Creating new user: {}", request.getUsername());
+
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            log.warn("User creation failed: Username already exists - {}", request.getUsername());
             throw new AppException(ErrorCode.USER_EXISTED);
         }
+
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // Assign default role
         var roles = new HashSet<Role>();
         roles.add(Role.builder().name("USER").build());
         user.setRoles(roles);
+
+        log.debug("Saving user to database: {}", request.getUsername());
         user = userRepository.save(user);
+        log.info("User saved successfully with ID: {}", user.getId());
+
+        // Prepare profile data
         var profileRequest = profileMapper.toUserProfileRequest(request);
         profileRequest.setUserId(user.getId());
 
@@ -67,6 +78,7 @@ public class UserService {
 //        profileClient.createProfile(header,profileRequest);
 
         //Publish message to Kafka
+        log.info("Sending user profile event to Kafka for user: {}", user.getUsername());
         kafkaTemplate.send("onboard-successful",profileEvent);
 
         return userMapper.toUserResponse(user);
@@ -75,12 +87,18 @@ public class UserService {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public List<UserResponse> getAllUsers() {
         log.info("Getting all users");
-        return userRepository.findAll().stream().map(userMapper::toUserResponse).collect(Collectors.toList());
+        List<UserResponse> users = userRepository.findAll().stream().map(userMapper::toUserResponse).collect(Collectors.toList());
+        log.info("Retrieved {} users", users.size());
+        return users;
     }
 
     @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse getUserByUsername(String username) {
-        return userMapper.toUserResponse(userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found")));
+        log.info("Getting user by username: {}", username);
+        return userMapper.toUserResponse(userRepository.findByUsername(username).orElseThrow(() -> {
+            log.warn("User not found: {}", username);
+            return new AppException(ErrorCode.USER_NOT_EXISTED);
+        }));
     }
 
     @PostAuthorize("returnObject.username == authentication.name")
@@ -100,15 +118,27 @@ public class UserService {
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public void deleteUser(UserRequest request) {
-        User user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
+        log.info("Admin attempting to delete user: {}", request.getUsername());
+        User user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> {
+            log.warn("Delete failed: User not found - {}", request.getUsername());
+            return new AppException(ErrorCode.USER_NOT_EXISTED);
+        });
+
         userRepository.delete(user);
+        log.info("User deleted successfully: {}", request.getUsername());
     }
 
     @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse getMyInfo() {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
-        User user = userRepository.findByUsername(name).orElseThrow(() -> new RuntimeException("User not found"));
+        log.info("User requesting their own information: {}", name);
+
+        User user = userRepository.findByUsername(name).orElseThrow(() -> {
+            log.warn("User info request failed: User not found in database - {}", name);
+            return new AppException(ErrorCode.USER_NOT_EXISTED);
+        });
+
         return userMapper.toUserResponse(user);
     }
 }

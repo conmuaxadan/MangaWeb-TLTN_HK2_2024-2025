@@ -8,6 +8,8 @@ import com.raindrop.manga_service.dto.response.PageResponse;
 import com.raindrop.manga_service.entity.Chapter;
 import com.raindrop.manga_service.entity.Manga;
 import com.raindrop.manga_service.entity.Page;
+import com.raindrop.manga_service.enums.ErrorCode;
+import com.raindrop.manga_service.exception.AppException;
 import com.raindrop.manga_service.mapper.ChapterMapper;
 import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.repository.MangaRepository;
@@ -35,11 +37,11 @@ public class ChapterService {
 
 public ChapterResponse createChapter(ChapterRequest request) {
     if (request.getPages() == null || request.getPages().isEmpty()) {
-        throw new IllegalArgumentException("Chapter must have at least one page");
+        throw new AppException(ErrorCode.CHAPTER_NO_PAGES);
     }
 
     Manga manga = mangaRepository.findById(request.getMangaId())
-            .orElseThrow(() -> new RuntimeException("Manga not found"));
+            .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
 
     // **Tạo Chapter trước để có ID**
     Chapter chapter = Chapter.builder()
@@ -64,7 +66,7 @@ public ChapterResponse createChapter(ChapterRequest request) {
             pages.add(page); // Thêm vào danh sách pages
         } catch (Exception e) {
             log.error("Error uploading file [{}]: {}", i, e.getMessage());
-            throw new RuntimeException("Failed to upload all images");
+            throw new AppException(ErrorCode.PAGE_UPLOAD_FAILED);
         }
     }
 
@@ -90,7 +92,7 @@ public ChapterResponse createChapter(ChapterRequest request) {
 
     public ChapterResponse getChapterById(String id) {
         Chapter chapter = chapterRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Chapter not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
         return chapterMapper.toChapterResponse(chapter);
     }
 
