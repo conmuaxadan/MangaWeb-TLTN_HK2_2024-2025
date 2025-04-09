@@ -78,6 +78,7 @@ public class MangaService {
                 .genres(manga.getGenres().stream().map(Genre::getName).collect(Collectors.toList()))
                 .chapters(manga.getChapters().stream().map(Chapter::getId).collect(Collectors.toList()))
                 .updatedAt(manga.getUpdatedAt())
+                .lastChapterAddedAt(manga.getLastChapterAddedAt())
                 .build();
     }
 

@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class GenreController {
     GenreService genreService;
 
     @PostMapping()
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     ApiResponse<GenreResponse> createGenre(@RequestBody @Valid GenreRequest request) {
         return ApiResponse.<GenreResponse>builder()
                 .message("Genre created successfully")
@@ -37,7 +39,7 @@ public class GenreController {
                 .build();
     }
 
-    @GetMapping("/all")
+    @GetMapping()
     ApiResponse<List<GenreResponse>> getAllGenres() {
         return ApiResponse.<List<GenreResponse>>builder()
                 .message("Genres retrieved successfully")
@@ -46,6 +48,7 @@ public class GenreController {
     }
 
     @PutMapping("/{name}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     ApiResponse<GenreResponse> updateGenre(@PathVariable String name, @RequestBody GenreRequest request) {
         return ApiResponse.<GenreResponse>builder()
                 .message("Genre updated successfully")
@@ -54,6 +57,7 @@ public class GenreController {
     }
 
     @DeleteMapping("/{name}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     ApiResponse<Void> deleteGenre(@PathVariable String name) {
         genreService.deleteGenre(name);
         return ApiResponse.<Void>builder()

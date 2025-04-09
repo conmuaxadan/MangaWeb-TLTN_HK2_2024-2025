@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class MangaController {
     MangaService mangaService;
 
     @PostMapping()
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     ApiResponse<MangaResponse> createManga(@RequestBody @Valid MangaRequest request) {
         return ApiResponse.<MangaResponse>builder()
                 .message("Manga created successfully")
@@ -63,6 +65,7 @@ public class MangaController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     ApiResponse<MangaResponse> updateManga(@PathVariable String id, @RequestBody MangaRequest request) {
         return ApiResponse.<MangaResponse>builder()
                 .message("Manga updated successfully")
@@ -71,6 +74,7 @@ public class MangaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     ApiResponse<Void> deleteManga(@PathVariable String id) {
         mangaService.deleteManga(id);
         return ApiResponse.<Void>builder()

@@ -24,4 +24,4 @@ spring:
 
 app:
   email:
-    api-key:
+    api-key: ${EMAIL_API_KEY:your-api-key-placeholder}

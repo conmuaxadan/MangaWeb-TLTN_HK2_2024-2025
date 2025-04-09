@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -73,6 +74,10 @@ public ChapterResponse createChapter(ChapterRequest request) {
     // **Cập nhật danh sách pages trong Chapter (đồng bộ hóa)**
     chapter.setPages(pages);
     chapterRepository.save(chapter); // Cập nhật Chapter với danh sách pages
+
+    // Cập nhật thời gian thêm chapter mới nhất của manga
+    manga.setLastChapterAddedAt(LocalDateTime.now());
+    mangaRepository.save(manga);
 
     // **Tạo response**
     return ChapterResponse.builder()
