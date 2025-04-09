@@ -9,6 +9,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,6 +46,19 @@ public class MangaController {
         return ApiResponse.<List<MangaResponse>>builder()
                 .message("Mangas retrieved successfully")
                 .result(mangaService.getAllMangas())
+                .build();
+    }
+
+    /**
+     * Lấy danh sách manga có phân trang
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga có phân trang
+     */
+    @GetMapping("/paginated")
+    ApiResponse<Page<MangaResponse>> getAllMangasPaginated(Pageable pageable) {
+        return ApiResponse.<Page<MangaResponse>>builder()
+                .message("Paginated mangas retrieved successfully")
+                .result(mangaService.getAllMangasPaginated(pageable))
                 .build();
     }
 

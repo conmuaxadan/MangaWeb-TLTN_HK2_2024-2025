@@ -18,6 +18,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -80,7 +83,23 @@ public class MangaService {
 
 
     public List<MangaResponse> getAllMangas() {
-        return mangaRepository.findAll().stream().map(mangaMapper::toMangaResponse).toList();
+        log.info("Getting all mangas");
+        List<Manga> mangas = mangaRepository.findAll();
+        log.info("Retrieved {} mangas", mangas.size());
+        return mangas.stream().map(mangaMapper::toMangaResponse).toList();
+    }
+
+    /**
+     * Lấy danh sách manga có phân trang
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga có phân trang
+     */
+    public Page<MangaResponse> getAllMangasPaginated(Pageable pageable) {
+        log.info("Getting paginated mangas with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        Page<Manga> mangasPage = mangaRepository.findAll(pageable);
+        Page<MangaResponse> mangaResponsePage = mangasPage.map(mangaMapper::toMangaResponse);
+        log.info("Retrieved {} mangas out of {} total", mangaResponsePage.getNumberOfElements(), mangaResponsePage.getTotalElements());
+        return mangaResponsePage;
     }
 
     public void deleteManga(String id) {

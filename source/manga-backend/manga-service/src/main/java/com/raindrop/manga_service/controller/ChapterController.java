@@ -45,4 +45,43 @@ public class ChapterController {
                 .result(chapterService.createChapter(request))
                 .build();
     }
+
+    /**
+     * Lấy chapter theo ID
+     * @param id ID của chapter
+     * @return Thông tin chapter
+     */
+    @GetMapping("/{id}")
+    ApiResponse<ChapterResponse> getChapterById(@PathVariable String id) {
+        return ApiResponse.<ChapterResponse>builder()
+                .message("Chapter retrieved successfully")
+                .result(chapterService.getChapterById(id))
+                .build();
+    }
+
+    /**
+     * Lấy tất cả chapter
+     * @return Danh sách tất cả chapter
+     */
+    @GetMapping()
+    ApiResponse<List<ChapterResponse>> getAllChapters() {
+        return ApiResponse.<List<ChapterResponse>>builder()
+                .message("Chapters retrieved successfully")
+                .result(chapterService.getAllChapters())
+                .build();
+    }
+
+    /**
+     * Lấy danh sách chapter của một manga
+     * @param mangaId ID của manga
+     * @return Danh sách chapter của manga
+     */
+    @GetMapping("/manga/{mangaId}")
+    ApiResponse<List<ChapterResponse>> getChaptersByMangaId(
+            @PathVariable String mangaId) {
+        return ApiResponse.<List<ChapterResponse>>builder()
+                .message("Chapters for manga retrieved successfully")
+                .result(chapterService.getChaptersByMangaId(mangaId))
+                .build();
+    }
 }

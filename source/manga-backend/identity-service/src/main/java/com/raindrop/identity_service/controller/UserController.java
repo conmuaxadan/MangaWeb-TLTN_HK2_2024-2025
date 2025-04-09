@@ -10,6 +10,9 @@ import lombok.AccessLevel;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,12 +33,26 @@ public class UserController {
                 .result(userService.createUser(request))
                 .build();
     }
-    
+
     @GetMapping()
     ApiResponse<List<UserResponse>> getAllUsers() {
         return ApiResponse.<List<UserResponse>>builder()
                 .message("Users retrieved successfully")
                 .result(userService.getAllUsers())
+                .build();
+    }
+
+    /**
+     * Lấy danh sách người dùng có phân trang
+     * @param pageable Thông tin phân trang
+     * @return Danh sách người dùng có phân trang
+     */
+    @GetMapping("/paginated")
+    ApiResponse<Page<UserResponse>> getAllUsersPaginated(
+            @PageableDefault(size = 10, sort = "username") Pageable pageable) {
+        return ApiResponse.<Page<UserResponse>>builder()
+                .message("Paginated users retrieved successfully")
+                .result(userService.getAllUsersPaginated(pageable))
                 .build();
     }
 

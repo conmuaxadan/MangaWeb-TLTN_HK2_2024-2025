@@ -96,6 +96,36 @@ public ChapterResponse createChapter(ChapterRequest request) {
         return chapterMapper.toChapterResponse(chapter);
     }
 
+    /**
+     * Lấy tất cả chapter
+     * @return Danh sách tất cả chapter
+     */
+    public List<ChapterResponse> getAllChapters() {
+        log.info("Getting all chapters");
+        List<Chapter> chapters = chapterRepository.findAll();
+        log.info("Retrieved {} chapters", chapters.size());
+        return chapters.stream().map(chapterMapper::toChapterResponse).toList();
+    }
 
+    /**
+     * Lấy danh sách chapter của một manga
+     * @param mangaId ID của manga
+     * @return Danh sách chapter của manga
+     */
+    public List<ChapterResponse> getChaptersByMangaId(String mangaId) {
+        log.info("Getting chapters for manga: {}", mangaId);
 
+        // Kiểm tra manga có tồn tại không
+        Manga manga = mangaRepository.findById(mangaId)
+                .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
+
+        Set<Chapter> chapters = chapterRepository.findByManga(manga);
+        List<ChapterResponse> chapterResponses = chapters.stream()
+                .sorted(Comparator.comparing(Chapter::getChapterNumber))
+                .map(chapterMapper::toChapterResponse)
+                .toList();
+
+        log.info("Retrieved {} chapters for manga: {}", chapterResponses.size(), mangaId);
+        return chapterResponses;
+    }
 }

@@ -10,6 +10,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -34,8 +36,23 @@ public class RoleService {
     }
 
     public List<RoleResponse> getAll() {
+        log.info("Getting all roles");
         var roles = roleRepository.findAll();
+        log.info("Retrieved {} roles", roles.size());
         return roles.stream().map(roleMapper::toRoleResponse).toList();
+    }
+
+    /**
+     * Lấy danh sách role có phân trang
+     * @param pageable Thông tin phân trang
+     * @return Danh sách role có phân trang
+     */
+    public Page<RoleResponse> getAllPaginated(Pageable pageable) {
+        log.info("Getting paginated roles with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        Page<Role> rolesPage = roleRepository.findAll(pageable);
+        Page<RoleResponse> roleResponsePage = rolesPage.map(roleMapper::toRoleResponse);
+        log.info("Retrieved {} roles out of {} total", roleResponsePage.getNumberOfElements(), roleResponsePage.getTotalElements());
+        return roleResponsePage;
     }
 
     public void delete(String role) {
