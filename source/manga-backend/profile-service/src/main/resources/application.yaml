@@ -21,5 +21,9 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
+
+app:
+  services:
+    manga: http://localhost:8083/manga
 jwt:
   signerKey: "o6lSCt2tIkiqLnuj/m+P/My5Nq4w6C47rvMCAQIXJp8+I4lxliuh/EMEFM/YS9Aa"

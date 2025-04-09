@@ -3,6 +3,8 @@ package com.raindrop.manga_service.service;
 import com.raindrop.manga_service.dto.request.GenreRequest;
 import com.raindrop.manga_service.dto.response.GenreResponse;
 import com.raindrop.manga_service.entity.Genre;
+import com.raindrop.manga_service.enums.ErrorCode;
+import com.raindrop.manga_service.exception.AppException;
 import com.raindrop.manga_service.mapper.GenreMapper;
 import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.repository.GenreRepository;
@@ -31,6 +33,9 @@ public class GenreService {
 
     public GenreResponse getGenre(String name){
         var genre = genreRepository.findByName(name);
+        if (genre == null) {
+            throw new AppException(ErrorCode.GENRE_NOT_FOUND);
+        }
         return genreMapper.toGenreResponse(genre);
     }
 
@@ -40,11 +45,17 @@ public class GenreService {
 
     public void deleteGenre(String name){
         var genre = genreRepository.findByName(name);
+        if (genre == null) {
+            throw new AppException(ErrorCode.GENRE_NOT_FOUND);
+        }
         genreRepository.delete(genre);
     }
 
     public GenreResponse updateGenre(String name, GenreRequest request){
         var genre = genreRepository.findByName(name);
+        if (genre == null) {
+            throw new AppException(ErrorCode.GENRE_NOT_FOUND);
+        }
         genre.setName(request.getName());
         genre.setDescription(request.getDescription());
         genreRepository.save(genre);

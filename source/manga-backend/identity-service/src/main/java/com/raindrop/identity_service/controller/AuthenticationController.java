@@ -13,6 +13,8 @@ import com.raindrop.identity_service.service.GoogleAuthService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,12 +27,14 @@ import java.text.ParseException;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+@Slf4j
 public class AuthenticationController {
     AuthenticationService authenticationService;
     GoogleAuthService googleAuthService;
 
     @PostMapping("/login")
-    ApiResponse<AuthenticationResponse> login(@RequestBody AuthenticationRequest request) {
+    ApiResponse<AuthenticationResponse> login(@RequestBody @Valid AuthenticationRequest request) {
+        log.info("Login attempt for user: {}", request.getUsername());
         var result = authenticationService.authenticate(request);
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(result)
@@ -38,7 +42,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/google-login")
-    public ApiResponse<AuthenticationResponse> googleLogin(@RequestBody GoogleLoginRequest request) throws Exception {
+    public ApiResponse<AuthenticationResponse> googleLogin(@RequestBody @Valid GoogleLoginRequest request) throws Exception {
+        log.info("Google login attempt with redirect URI: {}", request.getRedirectUri());
         var result = googleAuthService.googleLogin(request.getCode(), request.getRedirectUri());
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(result)
@@ -47,7 +52,8 @@ public class AuthenticationController {
 
 
     @PostMapping("/introspect")
-    ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request) throws ParseException, JOSEException {
+    ApiResponse<IntrospectResponse> introspect(@RequestBody @Valid IntrospectRequest request) throws ParseException, JOSEException {
+        log.debug("Token introspection request");
         var result = authenticationService.introspect(request);
         return ApiResponse.<IntrospectResponse>builder()
                 .result(result)
@@ -55,7 +61,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
+    ApiResponse<Void> logout(@RequestBody @Valid LogoutRequest request) throws ParseException, JOSEException {
+        log.info("Logout request received");
         authenticationService.logout(request);
         return ApiResponse.<Void>builder()
                 .build();

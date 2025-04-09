@@ -13,6 +13,9 @@ public enum ErrorCode {
     PASSWORD_INVALID(1004, "Password must be at least 8 characters", HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED(1005, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1006, "You dont have permission", HttpStatus.FORBIDDEN),
+    GOOGLE_AUTH_ERROR(1007, "Error during Google authentication", HttpStatus.BAD_REQUEST),
+    GOOGLE_TOKEN_ERROR(1008, "Error exchanging Google code for token", HttpStatus.BAD_REQUEST),
+    GOOGLE_USER_INFO_ERROR(1009, "Error retrieving user info from Google", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode httpStatusCode) {

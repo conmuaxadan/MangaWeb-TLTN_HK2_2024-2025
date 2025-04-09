@@ -49,27 +49,37 @@ public class AuthenticationService {
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
-        boolean invalid;
+        log.debug("Introspecting token");
+        boolean valid;
         try {
             verifyToken(token);
-            invalid = true;
+            valid = true;
+            log.debug("Token is valid");
         } catch (AppException e) {
-            invalid = false;
+            valid = false;
+            log.debug("Token is invalid: {}", e.getMessage());
         }
         return IntrospectResponse.builder()
-                .valid(invalid)
+                .valid(valid)
                 .build();
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        log.info("Authenticating user: {}", request.getUsername());
+        var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> {
+            log.warn("Authentication failed: User not found - {}", request.getUsername());
+            return new AppException(ErrorCode.USER_NOT_EXISTED);
+        });
+
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
         if (!authenticated) {
+            log.warn("Authentication failed: Invalid password for user {}", request.getUsername());
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
 
+        log.info("User authenticated successfully: {}", request.getUsername());
         var token = generateToken(user);
 
         return AuthenticationResponse.builder()
@@ -79,8 +89,13 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authenticateGG(AuthenticationRequest request) {
-        var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        log.info("Authenticating Google user: {}", request.getUsername());
+        var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> {
+            log.warn("Google authentication failed: User not found - {}", request.getUsername());
+            return new AppException(ErrorCode.USER_NOT_EXISTED);
+        });
 
+        log.info("Google user authenticated successfully: {}", request.getUsername());
         var token = generateToken(user);
 
         return AuthenticationResponse.builder()
@@ -92,45 +107,67 @@ public class AuthenticationService {
 
 
     public void logout(LogoutRequest request) throws JOSEException, ParseException {
+        log.info("Processing logout request");
         var signToken = verifyToken(request.getToken());
 
         String jit = signToken.getJWTClaimsSet().getJWTID();
+        String subject = signToken.getJWTClaimsSet().getSubject();
         Date expirationTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+        log.info("Invalidating token for user: {}", subject);
 
         InvalidatedToken invalidatedToken = InvalidatedToken.builder()
                 .id(jit)
                 .expiryTime(expirationTime)
                 .build();
         invalidatedTokenRepository.save(invalidatedToken);
+
+        log.info("User logged out successfully: {}", subject);
     }
 
     private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
+        log.debug("Verifying token");
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
 
         Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        String subject = signedJWT.getJWTClaimsSet().getSubject();
+        String tokenId = signedJWT.getJWTClaimsSet().getJWTID();
 
         var verified = signedJWT.verify(verifier);
-        if (!(verified && expirationTime.after(new Date()))) {
+        if (!verified) {
+            log.warn("Token verification failed: Invalid signature");
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+        if (expirationTime.before(new Date())) {
+            log.warn("Token verification failed: Token expired for user {}", subject);
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
+        if (invalidatedTokenRepository.existsById(tokenId)) {
+            log.warn("Token verification failed: Token has been invalidated for user {}", subject);
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        log.debug("Token verified successfully for user: {}", subject);
         return signedJWT;
     }
 
     private String generateToken(User user) {
+        log.debug("Generating token for user: {}", user.getUsername());
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
+
+        String tokenId = UUID.randomUUID().toString();
+        Date issuedAt = new Date();
+        Date expirationTime = new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli());
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
                 .issuer("raindrop.com")
-                .issueTime(new Date())
-                .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
-                .jwtID(UUID.randomUUID().toString())
+                .issueTime(issuedAt)
+                .expirationTime(expirationTime)
+                .jwtID(tokenId)
                 .claim("scope", buildScope(user))
                 .build();
 
@@ -140,9 +177,11 @@ public class AuthenticationService {
 
         try {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
+            log.info("Token generated successfully for user: {}, expires at: {}",
+                    user.getUsername(), expirationTime);
             return jwsObject.serialize();
         } catch (JOSEException e) {
-            log.error("Error signing token", e);
+            log.error("Error signing token for user: {}", user.getUsername(), e);
             throw new RuntimeException(e);
         }
     }

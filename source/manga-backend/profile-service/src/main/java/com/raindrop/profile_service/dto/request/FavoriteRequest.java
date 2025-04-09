@@ -1,15 +1,15 @@
-package com.raindrop.identity_service.dto.request;
+package com.raindrop.profile_service.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class IntrospectRequest {
-    @NotBlank(message = "Token is required")
-    String token;
+public class FavoriteRequest {
+    @NotBlank(message = "Manga ID is required")
+    String mangaId;
 }

@@ -13,7 +13,7 @@ spring:
     show-sql: true
 app:
   services:
-    upload: http://localhost:8084/upload
+    upload: http://localhost:8083/upload
 
 logging:
   level:
