@@ -68,7 +68,7 @@ public class AuthenticationService {
         log.info("Authenticating user: {}", request.getUsername());
         var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> {
             log.warn("Authentication failed: User not found - {}", request.getUsername());
-            return new AppException(ErrorCode.USER_NOT_EXISTED);
+            return new AppException(ErrorCode.INVALID_CREDENTIALS);
         });
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
@@ -76,7 +76,7 @@ public class AuthenticationService {
 
         if (!authenticated) {
             log.warn("Authentication failed: Invalid password for user {}", request.getUsername());
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         log.info("User authenticated successfully: {}", request.getUsername());
