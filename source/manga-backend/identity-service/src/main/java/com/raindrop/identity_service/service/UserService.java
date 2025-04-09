@@ -26,6 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -90,6 +93,20 @@ public class UserService {
         List<UserResponse> users = userRepository.findAll().stream().map(userMapper::toUserResponse).collect(Collectors.toList());
         log.info("Retrieved {} users", users.size());
         return users;
+    }
+
+    /**
+     * Lấy danh sách người dùng có phân trang
+     * @param pageable Thông tin phân trang
+     * @return Danh sách người dùng có phân trang
+     */
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public Page<UserResponse> getAllUsersPaginated(Pageable pageable) {
+        log.info("Getting paginated users with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        Page<User> usersPage = userRepository.findAll(pageable);
+        Page<UserResponse> userResponsePage = usersPage.map(userMapper::toUserResponse);
+        log.info("Retrieved {} users out of {} total", userResponsePage.getNumberOfElements(), userResponsePage.getTotalElements());
+        return userResponsePage;
     }
 
     @PostAuthorize("returnObject.username == authentication.name")

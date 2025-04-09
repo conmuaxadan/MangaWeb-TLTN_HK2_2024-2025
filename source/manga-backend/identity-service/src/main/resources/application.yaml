@@ -19,6 +19,14 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  data:
+    web:
+      pageable:
+        default-page-size: 10
+        max-page-size: 100
+        page-parameter: page
+        size-parameter: size
+        one-indexed-parameters: false
   kafka:
     bootstrap-servers: localhost:9094
     producer:
