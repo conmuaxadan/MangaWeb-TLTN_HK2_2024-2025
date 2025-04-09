@@ -25,7 +25,7 @@ public class TokenCleanupService {
      * Dọn dẹp các token đã hết hạn mỗi giờ
      * Sử dụng cron expression: "0 0 * * * *" (chạy vào phút 0 của mỗi giờ)
      */
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 */5 * * * *")
     @Transactional
     public void cleanupExpiredTokens() {
         log.info("Starting scheduled cleanup of expired tokens");

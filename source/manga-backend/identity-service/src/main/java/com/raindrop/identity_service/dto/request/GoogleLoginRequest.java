@@ -10,9 +10,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GoogleLoginRequest {
-    @NotBlank(message = "Authorization code is required")
+    @NotBlank(message = "CODE_REQUIRED")
     String code;
 
-    @NotBlank(message = "Redirect URI is required")
+    @NotBlank(message = "REDIRECT_URI_REQUIRED")
     String redirectUri;
 }

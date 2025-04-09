@@ -2,6 +2,7 @@ package com.raindrop.identity_service.repository;
 
 import com.raindrop.identity_service.entity.InvalidatedToken;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Date;
@@ -20,6 +21,7 @@ public interface InvalidatedTokenRepository extends JpaRepository<InvalidatedTok
      * Xóa tất cả các token đã hết hạn trước một thời điểm cụ thể
      * @param date Thời điểm so sánh
      */
+    @Modifying
     @Query("DELETE FROM InvalidatedToken t WHERE t.expiryTime < ?1")
     void deleteAllExpiredBefore(Date date);
 }

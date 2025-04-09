@@ -122,7 +122,7 @@ public class UserService {
     public User updateUser(UserRequest request) {
         User user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
         if (request.getPassword() == null && request.getEmail() == null) {
-            throw new RuntimeException("At least one of password or email must be provided");
+            throw new AppException(ErrorCode.VALIDATION_ERROR);
         }
         userMapper.updateUser(user, request);
         user.setPassword(new BCryptPasswordEncoder(10).encode(request.getPassword()));

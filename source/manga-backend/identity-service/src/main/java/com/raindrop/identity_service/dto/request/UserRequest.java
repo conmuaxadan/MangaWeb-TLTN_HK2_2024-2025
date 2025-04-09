@@ -15,18 +15,18 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserRequest {
-    @NotBlank(message = "Username is required")
-    @Size(min = 5, message = "USERNAME_INVALID")
-    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Username can only contain letters, numbers, dots, underscores, and hyphens")
+    @NotBlank(message = "USERNAME_REQUIRED")
+    @Size(min = 5, message = "USERNAME_TOO_SHORT")
+    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "USERNAME_INVALID")
     String username;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "PASSWORD_INVALID")
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$", message = "Password must contain at least one digit, one lowercase, one uppercase, and one special character")
+    @NotBlank(message = "PASSWORD_REQUIRED")
+    @Size(min = 8, message = "PASSWORD_TOO_SHORT")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$", message = "PASSWORD_INVALID")
     String password;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "EMAIL_REQUIRED")
+    @Email(message = "EMAIL_INVALID")
     String email;
     List<String> roles;
 }
