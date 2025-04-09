@@ -22,7 +22,10 @@ spring:
         default-sort: title,asc
 app:
   services:
-    upload: http://localhost:8083/upload
+    upload: http://localhost:8084/upload
+
+jwt:
+  signerKey: "o6lSCt2tIkiqLnuj/m+P/My5Nq4w6C47rvMCAQIXJp8+I4lxliuh/EMEFM/YS9Aa"
 
 logging:
   level:

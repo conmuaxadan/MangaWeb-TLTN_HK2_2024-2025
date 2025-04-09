@@ -25,4 +25,5 @@ public class MangaResponse {
     List<String> genres;
     List<String> chapters;
     LocalDateTime updatedAt;
+    LocalDateTime lastChapterAddedAt;
 }

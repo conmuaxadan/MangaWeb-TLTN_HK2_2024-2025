@@ -42,4 +42,7 @@ public class Manga {
     LocalDateTime createdAt;
     @LastModifiedDate
     LocalDateTime updatedAt;
+
+    // Thời gian thêm chapter mới nhất
+    LocalDateTime lastChapterAddedAt;
 }

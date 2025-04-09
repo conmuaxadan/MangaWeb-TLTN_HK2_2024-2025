@@ -1,5 +1,5 @@
 server:
-  port: 8083
+  port: 8084
   servlet:
     context-path: /upload
 spring:
@@ -18,3 +18,6 @@ app:
   upload:
     manga: C:/uploads/manga/
     user: C:/uploads/user/
+
+jwt:
+  signerKey: "o6lSCt2tIkiqLnuj/m+P/My5Nq4w6C47rvMCAQIXJp8+I4lxliuh/EMEFM/YS9Aa"

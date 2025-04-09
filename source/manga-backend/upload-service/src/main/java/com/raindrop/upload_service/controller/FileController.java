@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -25,6 +26,7 @@ public class FileController {
     FileService fileService;
 
     @PostMapping(value = "/manga", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MODERATOR')")
     public ApiResponse<FileInfoResponse> uploadMangaFile(@RequestParam("image")MultipartFile file) throws IOException {
         FileInfoResponse uploadImage = fileService.uploadMangaFile(file);
         return ApiResponse.<FileInfoResponse>builder()
@@ -33,6 +35,7 @@ public class FileController {
     }
 
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MODERATOR')")
     public ApiResponse<FileInfoResponse> uploadAvatarFile(@RequestParam("image")MultipartFile file) throws IOException {
         FileInfoResponse uploadImage = fileService.uploadUserFile(file);
         return ApiResponse.<FileInfoResponse>builder()
@@ -50,6 +53,7 @@ public class FileController {
     }
 
     @DeleteMapping("/{fileName}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ApiResponse<Void> deleteImageFromFileSystem(@PathVariable String fileName) throws IOException {
         fileService.deleteFile(fileName);
         return ApiResponse.<Void>builder()
