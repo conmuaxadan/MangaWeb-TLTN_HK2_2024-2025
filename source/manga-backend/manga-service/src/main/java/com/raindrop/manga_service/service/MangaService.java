@@ -6,6 +6,7 @@ import com.raindrop.manga_service.entity.Chapter;
 import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.entity.Manga;
 import com.raindrop.manga_service.enums.ErrorCode;
+import com.raindrop.event.MangaInfoEvent;
 import com.raindrop.manga_service.exception.AppException;
 import com.raindrop.manga_service.mapper.MangaMapper;
 import com.raindrop.manga_service.repository.ChapterRepository;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +36,7 @@ public class MangaService {
     GenreRepository genreRepository;
     ChapterRepository chapterRepository;
     PageRepository pageRepository;
+    KafkaProducer kafkaProducer;
 
     public MangaResponse createManga(MangaRequest request) {
         // Kiểm tra xem manga đã tồn tại chưa
@@ -52,7 +55,17 @@ public class MangaService {
             genres.add(genre);
         }
         manga.setGenres(genres);
-        mangaRepository.save(manga);
+        manga = mangaRepository.save(manga);
+
+        // Send manga info event to Kafka
+        MangaInfoEvent mangaInfoEvent = MangaInfoEvent.builder()
+                .mangaId(manga.getId())
+                .title(manga.getTitle())
+                .description(manga.getDescription())
+                .author(manga.getAuthor())
+                .coverUrl(manga.getCoverUrl())
+                .build();
+        kafkaProducer.sendMangaInfo(mangaInfoEvent);
 
         return mangaMapper.toMangaResponse(manga);
     }

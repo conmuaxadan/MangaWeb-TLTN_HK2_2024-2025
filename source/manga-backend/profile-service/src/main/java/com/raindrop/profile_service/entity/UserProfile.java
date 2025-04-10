@@ -17,6 +17,7 @@ public class UserProfile {
     String id;
     @Column(name = "user_id", nullable = true)
     String userId;
+    String email;
     String displayName;
     String avatarUrl;
 }
