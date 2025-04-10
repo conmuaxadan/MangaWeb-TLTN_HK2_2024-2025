@@ -46,6 +46,7 @@ public class UserService {
     ProfileMapper profileMapper;
     KafkaTemplate<String, Object> kafkaTemplate;
 
+
     public UserResponse createUser(UserRequest request) {
         log.info("Creating new user: {}", request.getUsername());
 
@@ -72,9 +73,12 @@ public class UserService {
 
         UserProfileEvent profileEvent = UserProfileEvent.builder()
                 .userId(profileRequest.getUserId())
+                .email(profileRequest.getEmail())
                 .displayName(profileRequest.getDisplayName())
                 .avatarUrl(profileRequest.getAvatarUrl())
                 .build();
+
+        log.info("Creating user profile for user: {}", profileEvent.getEmail());
 
 //        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
 //        var header = attributes.getRequest().getHeader("Authorization");

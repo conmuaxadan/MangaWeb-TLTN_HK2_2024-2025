@@ -11,7 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SendEmailRequest {
-//    List<Recipient> to;
     Recipient to;
     String subject;
     String htmlContent;

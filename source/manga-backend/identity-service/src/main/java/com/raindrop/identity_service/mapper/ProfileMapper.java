@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 public interface ProfileMapper {
     @Mapping(target = "displayName", expression = "java(getDisplayName(request))")
     @Mapping(target = "avatarUrl", constant = "null")
+    @Mapping(target = "email", source = "email")
     UserProfileRequest toUserProfileRequest(UserRequest request);
 
     default String getDisplayName(UserRequest request) {

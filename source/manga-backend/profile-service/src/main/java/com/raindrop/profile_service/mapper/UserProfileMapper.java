@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface UserProfileMapper {
+    @Mapping(target = "email", source = "email")
     UserProfile toUserProfile(UserProfileRequest userProfileRequest);
     @Mapping(target = "id", source = "id")
     UserProfileResponse toUserProfileResponse(UserProfile userProfile);

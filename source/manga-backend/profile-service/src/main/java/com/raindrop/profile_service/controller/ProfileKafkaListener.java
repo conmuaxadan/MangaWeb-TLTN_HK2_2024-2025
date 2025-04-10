@@ -21,6 +21,7 @@ public class ProfileKafkaListener {
     public void listenUserProfile(UserProfileEvent message) {
         UserProfileRequest request = UserProfileRequest.builder()
                 .userId(message.getUserId())
+                .email(message.getEmail())
                 .displayName(message.getDisplayName())
                 .avatarUrl(message.getAvatarUrl())
                 .build();
