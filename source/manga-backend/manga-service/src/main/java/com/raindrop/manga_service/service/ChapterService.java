@@ -1,6 +1,5 @@
 package com.raindrop.manga_service.service;
 
-import com.raindrop.event.ChapterInfoEvent;
 import com.raindrop.manga_service.dto.request.ChapterRequest;
 import com.raindrop.manga_service.dto.response.ApiResponse;
 import com.raindrop.manga_service.dto.response.ChapterResponse;
@@ -21,7 +20,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -37,7 +37,6 @@ public class ChapterService {
     UploadClient uploadClient;
     MangaRepository mangaRepository;
     PageRepository pageRepository;
-    KafkaProducer kafkaProducer;
 
 public ChapterResponse createChapter(ChapterRequest request) {
     if (request.getPages() == null || request.getPages().isEmpty()) {
@@ -53,17 +52,20 @@ public ChapterResponse createChapter(ChapterRequest request) {
             .title(request.getTitle())
             .manga(manga)
             .build();
-    chapter = chapterRepository.save(chapter); // Lưu Chapter để có ID
+    chapter = chapterRepository.save(chapter);
+
+    ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    var header = attributes.getRequest().getHeader("Authorization");
 
     // **Tạo và lưu các Page, gán Chapter cho từng Page**
     List<Page> pages = new ArrayList<>();
     for (int i = 0; i < request.getPages().size(); i++) {
         MultipartFile file = request.getPages().get(i);
         try {
-            ApiResponse<FileDataResponse> apiResponse = uploadClient.uploadMedia(file);
+            ApiResponse<FileDataResponse> apiResponse = uploadClient.uploadMedia(header, file);
             Page page = Page.builder()
                     .index(i)
-                    .pageUrl(apiResponse.getResult().getUrl())
+                    .pageUrl(apiResponse.getResult().getName())
                     .chapter(chapter) // Gán Chapter cho Page
                     .build();
             page = pageRepository.save(page); // Lưu Page
@@ -81,15 +83,6 @@ public ChapterResponse createChapter(ChapterRequest request) {
     // Cập nhật thời gian thêm chapter mới nhất của manga
     manga.setLastChapterAddedAt(LocalDateTime.now());
     mangaRepository.save(manga);
-
-    // Gửi thông tin chapter qua Kafka
-    ChapterInfoEvent chapterInfoEvent = ChapterInfoEvent.builder()
-            .chapterId(chapter.getId())
-            .mangaId(manga.getId())
-            .chapterNumber(chapter.getChapterNumber())
-            .title(chapter.getTitle())
-            .build();
-    kafkaProducer.sendChapterInfo(chapterInfoEvent);
 
     // **Tạo response**
     return ChapterResponse.builder()

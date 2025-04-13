@@ -2,11 +2,9 @@ package com.raindrop.manga_service.service;
 
 import com.raindrop.manga_service.dto.request.GenreRequest;
 import com.raindrop.manga_service.dto.response.GenreResponse;
-import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.enums.ErrorCode;
 import com.raindrop.manga_service.exception.AppException;
 import com.raindrop.manga_service.mapper.GenreMapper;
-import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.repository.GenreRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

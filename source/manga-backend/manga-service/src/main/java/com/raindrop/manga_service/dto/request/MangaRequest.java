@@ -6,6 +6,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 
@@ -18,6 +19,6 @@ public class MangaRequest {
     String title;
     String author;
     String description;
+    MultipartFile cover;
     Set<String> genres;
-    Set<String> chapters;
 }

@@ -26,9 +26,9 @@ spring:
             - Path=${app.api-prefix}/manga/**
           filters:
             - StripPrefix=2
-        - id: notification_service
-          uri: http://localhost:8085
+        - id: upload_service
+          uri: http://localhost:8084
           predicates:
-            - Path=${app.api-prefix}/notification/**
+            - Path=${app.api-prefix}/upload/**
           filters:
             - StripPrefix=2

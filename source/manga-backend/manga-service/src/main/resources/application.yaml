@@ -2,6 +2,9 @@ server:
   port: 8082
   servlet:
     context-path: /manga
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 1000MB
 spring:
   datasource:
     url: "jdbc:mysql://localhost:3306/manga_service"
@@ -24,9 +27,31 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
 app:
   services:
     upload: http://localhost:8084/upload
+
+feign:
+  httpclient:
+    enabled: true
+    max-connections: 200
+    max-connections-per-route: 50
+    disable-ssl-validation: true
+  client:
+    config:
+      default:
+        connectTimeout: 60000
+        readTimeout: 60000
+        loggerLevel: full
+      upload-service:
+        connectTimeout: 120000
+        readTimeout: 120000
+        loggerLevel: full
+        decode404: true
 
 jwt:
   signerKey: "o6lSCt2tIkiqLnuj/m+P/My5Nq4w6C47rvMCAQIXJp8+I4lxliuh/EMEFM/YS9Aa"
@@ -35,3 +60,6 @@ logging:
   level:
     org.springframework.web: DEBUG
     org.hibernate.validator: DEBUG
+    feign: DEBUG
+    feign.Logger: DEBUG
+    org.apache.http: DEBUG

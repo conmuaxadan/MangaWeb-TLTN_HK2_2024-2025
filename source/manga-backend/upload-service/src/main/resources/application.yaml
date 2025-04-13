@@ -2,6 +2,13 @@ server:
   port: 8084
   servlet:
     context-path: /upload
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 1000MB
+  tomcat:
+    max-http-form-post-size: 1000MB
+    max-swallow-size: 1000MB
+
 spring:
   datasource:
     url: "jdbc:mysql://localhost:3306/upload_service"

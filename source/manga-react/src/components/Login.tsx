@@ -2,23 +2,33 @@ import authService from "../services/auth-service.ts";
 import {FormEvent, useState} from "react";
 import {toast} from "react-toastify";
 import {useNavigate} from "react-router-dom";
-import {saveString} from "../utils/localStorageUtil.ts";
 import {OAuthConfig} from "../configurations/configuration.ts";
+import { useAuth } from "../contexts/AuthContext";
 
 
 const Login = () => {
     const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        // Kiểm tra các trường dữ liệu
+        if (!username || !password) {
+            toast.error("Vui lòng điền đầy đủ thông tin", { position: "top-right" });
+            return;
+        }
+
         try {
+            setIsLoading(true);
             const response = await authService.login(username, password);
             if (response !== false) { // response sẽ là LoginResponse hoặc false
                 toast.success("Đăng nhập thành công!", { position: "top-right" });
                 console.log("Token:", response.token);
-                saveString("token", response.token);
+                login(response.token);
                 navigate("/");
             } else {
                 console.log("Đăng nhập thất bại");
@@ -26,6 +36,8 @@ const Login = () => {
         } catch (error) {
             console.error("Lỗi không mong muốn:", error);
             toast.error("Đã xảy ra lỗi. Vui lòng thử lại.", { position: "top-right" });
+        } finally {
+            setIsLoading(false);
         }
     };
     const handleGoogleLogin = () => {
@@ -89,9 +101,10 @@ const Login = () => {
                         <div className="w-full flex justify-center mb-8">
                             <button
                                 type="submit"
-                                className="px-8 py-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                                className="px-8 py-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                disabled={isLoading}
                             >
-                                Đăng nhập
+                                {isLoading ? "Đang xử lý..." : "Đăng nhập"}
                             </button>
                         </div>
 
@@ -123,7 +136,8 @@ const Login = () => {
                             <button
                                 type="button"
                                 onClick={handleGoogleLogin}
-                                className="px-8 py-3 bg-red-500 text-white rounded hover:bg-red-600 transition flex items-center gap-2"
+                                className="px-8 py-3 bg-red-500 text-white rounded hover:bg-red-600 transition flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                disabled={isLoading}
                             >
                                 <i className="fab fa-google"></i>
                                 Đăng nhập bằng Google

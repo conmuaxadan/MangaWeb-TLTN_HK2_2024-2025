@@ -36,6 +36,7 @@ public enum ErrorCode {
     FILE_UPLOAD_FAILED(2401, "Failed to upload file", HttpStatus.INTERNAL_SERVER_ERROR),
     FILE_TYPE_NOT_SUPPORTED(2402, "File type not supported", HttpStatus.BAD_REQUEST),
     FILE_SIZE_EXCEEDED(2403, "File size exceeded", HttpStatus.BAD_REQUEST),
+    COVER_UPLOAD_FAILED(2404, "Failed to upload cover image", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // External service errors (2500-2599)
     UPLOAD_SERVICE_ERROR(2501, "Error communicating with upload service", HttpStatus.INTERNAL_SERVER_ERROR);
