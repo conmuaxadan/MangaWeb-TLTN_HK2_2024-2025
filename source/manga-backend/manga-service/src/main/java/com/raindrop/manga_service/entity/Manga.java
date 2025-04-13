@@ -26,13 +26,19 @@ public class Manga {
     String id;
     @NotBlank
     String title;
-    String anotherTitle;
     @NotBlank
     String author;
     int views;
     int loves;
+    String coverUrl;
+    @Column(columnDefinition = "TEXT")
     String description;
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+        name = "manga_genres",
+        joinColumns = @JoinColumn(name = "manga_id"),
+        inverseJoinColumns = @JoinColumn(name = "genre_id")
+    )
     List<Genre> genres;
     @OneToMany(mappedBy = "manga", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     List<Chapter> chapters;

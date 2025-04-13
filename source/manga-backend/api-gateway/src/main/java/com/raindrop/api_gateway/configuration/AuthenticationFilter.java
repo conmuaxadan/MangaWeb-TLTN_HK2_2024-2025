@@ -36,8 +36,10 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     String[] publicEndpoints = {
             "/identity/users/register",
             "/identity/auth/login",
-            "/notification/emails"
-
+            "/identity/auth/introspect",
+            "/identity/auth/logout",
+            "/identity/auth/google-login",
+            "/upload/files"
     };
 
     @Value("${app.api-prefix}")
@@ -79,7 +81,23 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicEndpoint(ServerHttpRequest request) {
-        return Arrays.stream(publicEndpoints).anyMatch(s -> request.getURI().getPath().matches(apiPrefix+s));
+        String path = request.getURI().getPath();
+        log.info("Checking path: {}", path);
+
+        return Arrays.stream(publicEndpoints).anyMatch(endpoint -> {
+            // Nếu endpoint kết thúc bằng "/", kiểm tra xem path có bắt đầu bằng endpoint không
+            if (endpoint.endsWith("/")) {
+                return path.startsWith(apiPrefix + endpoint);
+            }
+            // Nếu endpoint là "/upload/files", kiểm tra xem path có bắt đầu bằng "/upload/files/" không
+            else if (endpoint.equals("/upload/files")) {
+                return path.startsWith(apiPrefix + endpoint + "/");
+            }
+            // Nếu không, kiểm tra xem path có khớp với endpoint không
+            else {
+                return path.equals(apiPrefix + endpoint);
+            }
+        });
     }
 
     Mono<Void> unauthenticated(ServerHttpResponse response) {

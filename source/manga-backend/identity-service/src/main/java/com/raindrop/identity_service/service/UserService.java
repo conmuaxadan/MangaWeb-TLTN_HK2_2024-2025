@@ -1,6 +1,6 @@
 package com.raindrop.identity_service.service;
 
-import com.raindrop.event.UserProfileEvent;
+import com.raindrop.common.event.UserProfileEvent;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.UserResponse;
 import com.raindrop.identity_service.entity.Role;

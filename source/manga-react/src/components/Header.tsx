@@ -1,19 +1,11 @@
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { useAuth } from '../contexts/AuthContext';
 
 const Header = () => {
     const [showSearch, setShowSearch] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
-    const [isLogin, setIsLogin] = useState(false);
-
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            setIsLogin(true);
-        }else{
-            setIsLogin(false);
-        }
-    }, []);
+    const { isLogin, logout } = useAuth();
 
     const handleSearchClick = () => {
         setShowSearch(true);
@@ -32,8 +24,7 @@ const Header = () => {
     }
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        setIsLogin(false);
+        logout();
     }
 
 

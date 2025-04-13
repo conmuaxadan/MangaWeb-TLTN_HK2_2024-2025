@@ -1,7 +1,6 @@
-package com.raindrop.profile_service.controller;
+package com.raindrop.profile_service.listener;
 
-
-import com.raindrop.event.UserProfileEvent;
+import com.raindrop.common.event.UserProfileEvent;
 import com.raindrop.profile_service.dto.request.UserProfileRequest;
 import com.raindrop.profile_service.service.UserProfileService;
 import lombok.AllArgsConstructor;

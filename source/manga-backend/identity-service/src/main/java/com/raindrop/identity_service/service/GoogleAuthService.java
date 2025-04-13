@@ -2,6 +2,7 @@ package com.raindrop.identity_service.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.raindrop.common.event.UserProfileEvent;
 import com.raindrop.identity_service.dto.request.AuthenticationRequest;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.AuthenticationResponse;
@@ -9,6 +10,7 @@ import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.enums.ErrorCode;
 import com.raindrop.identity_service.exception.AppException;
+import com.raindrop.identity_service.mapper.ProfileMapper;
 import com.raindrop.identity_service.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,6 +39,8 @@ public class GoogleAuthService {
     final AuthenticationService authenticationService;
     final UserRepository userRepository;
     final PasswordEncoder passwordEncoder;
+    final ProfileMapper profileMapper;
+    final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Value("${google.client-id}")
     String clientId;
@@ -132,6 +137,20 @@ public class GoogleAuthService {
                         .roles(roles)
                         .build();
                 userRepository.save(user);
+
+
+                UserProfileEvent profileEvent = UserProfileEvent.builder()
+                        .userId(user.getId())
+                        .email(user.getEmail())
+                        .displayName(name)
+                        .avatarUrl(null)
+                        .build();
+
+                log.info("Creating user profile for user: {}", profileEvent.getEmail());
+
+                //Publish message to Kafka
+                log.info("Sending user profile event to Kafka for user: {}", user.getUsername());
+                kafkaTemplate.send("onboard-successful",profileEvent);
                 log.info("New user created successfully: {}", email);
             }
 
@@ -206,4 +225,5 @@ public class GoogleAuthService {
         // Tạm thời trả về chuỗi đơn giản, thay bằng JWT nếu cần
         return "jwt-token-for-" + googleId;
     }
+
 }

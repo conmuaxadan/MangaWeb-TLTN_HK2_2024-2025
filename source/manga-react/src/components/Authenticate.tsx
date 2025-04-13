@@ -2,11 +2,12 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import authService from "../services/auth-service.ts";
-import { saveString } from "../utils/localStorageUtil.ts";
+import { useAuth } from "../contexts/AuthContext";
 
 const Authenticate = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     useEffect(() => {
         const code = searchParams.get("code");
@@ -23,7 +24,7 @@ const Authenticate = () => {
             const response = await authService.googleLogin(code);
             if (response !== false) {
                 toast.success("Đăng nhập bằng Google thành công!", { position: "top-right", autoClose:1000 });
-                saveString("token", response.token);
+                login(response.token);
                 navigate("/");
             } else {
                 toast.error("Đăng nhập Google thất bại.", { position: "top-right",autoClose:1000 });

@@ -1,16 +1,12 @@
-import avtar from '../assets/avt.jpg';
-import avtar1 from '../assets/avt1.jpg';
-import avtar2 from '../assets/avt2.jpg';
-import avtar3 from '../assets/avt3.jpg';
-import avtar4 from '../assets/avt4.jpg';
-import avtar5 from '../assets/avt5.jpg';
-import avtar6 from '../assets/avt6.jpg';
-import avtar7 from '../assets/avt7.jpg';
-import * as React from 'react';
+import { useEffect, useState } from 'react';
 import MangaCard from './MangaCard';
+import mangaService from '../services/manga-service';
+import { formatDistanceToNow } from 'date-fns';
+import { vi } from 'date-fns/locale';
 
-interface Manga {
-    id: number;
+// Định nghĩa interface cho dữ liệu manga đã được xử lý
+interface MangaCardData {
+    id: string;
     title: string;
     image: string;
     chapter: string;
@@ -19,172 +15,49 @@ interface Manga {
     chapterLink: string;
 }
 
-const mangaList: Manga[] = [
-    {
-        id: 1,
-        title: "JoJo's Bizarre Adventure Part 7",
-        image: avtar1,
-        chapter: 'C. 95',
-        timeAgo: '18 phút trước',
-        link: '/mangas/1',
-        chapterLink: '/mangas/1/chapters/1001',
-    },
-    {
-        id: 2,
-        title: 'Naruto',
-        image: avtar2,
-        chapter: 'C. 700',
-        timeAgo: '29 phút trước',
-        link: '/mangas/2',
-        chapterLink: '/mangas/2/chapters/1002',
-    },
-    {
-        id: 3,
-        title: 'One Piece',
-        image: avtar,
-        chapter: 'C. 1090',
-        timeAgo: '39 phút trước',
-        link: '/mangas/3',
-        chapterLink: '/mangas/3/chapters/1003',
-    },
-    {
-        id: 4,
-        title: 'Dragon Ball',
-        image: avtar4,
-        chapter: 'C. 519',
-        timeAgo: '1 giờ trước',
-        link: '/mangas/4',
-        chapterLink: '/mangas/4/chapters/1004',
-    },
-    {
-        id: 5,
-        title: 'Bleach',
-        image: avtar3,
-        chapter: 'C. 686',
-        timeAgo: '2 giờ trước',
-        link: '/mangas/5',
-        chapterLink: '/mangas/5/chapters/1005',
-    },
-    {
-        id: 6,
-        title: 'Attack on Titan',
-        image: avtar5,
-        chapter: 'C. 139',
-        timeAgo: '3 giờ trước',
-        link: '/mangas/6',
-        chapterLink: '/mangas/6/chapters/1006',
-    },
-    {
-        id: 7,
-        title: 'Fairy Tail',
-        image: avtar6,
-        chapter: 'C. 545',
-        timeAgo: '4 giờ trước',
-        link: '/mangas/7',
-        chapterLink: '/mangas/7/chapters/1007',
-    },
-    {
-        id: 8,
-        title: 'Fullmetal Alchemist',
-        image: avtar7,
-        chapter: 'C. 108',
-        timeAgo: '5 giờ trước',
-        link: '/mangas/8',
-        chapterLink: '/mangas/8/chapters/1008',
-    },
-    {
-        id: 9,
-        title: "JoJo's Bizarre Adventure Part 7",
-        image: avtar1,
-        chapter: 'C. 95',
-        timeAgo: '18 phút trước',
-        link: '/mangas/1',
-        chapterLink: '/mangas/1/chapters/1001',
-    },
-    {
-        id: 10,
-        title: 'Naruto',
-        image: avtar2,
-        chapter: 'C. 700',
-        timeAgo: '29 phút trước',
-        link: '/mangas/2',
-        chapterLink: '/mangas/2/chapters/1002',
-    },
-    {
-        id: 11,
-        title: 'One Piece',
-        image: avtar,
-        chapter: 'C. 1090',
-        timeAgo: '39 phút trước',
-        link: '/mangas/3',
-        chapterLink: '/mangas/3/chapters/1003',
-    },
-    {
-        id: 12,
-        title: 'Dragon Ball',
-        image: avtar4,
-        chapter: 'C. 519',
-        timeAgo: '1 giờ trước',
-        link: '/mangas/4',
-        chapterLink: '/mangas/4/chapters/1004',
-    },
-    {
-        id: 13,
-        title: 'Bleach',
-        image: avtar3,
-        chapter: 'C. 686',
-        timeAgo: '2 giờ trước',
-        link: '/mangas/5',
-        chapterLink: '/mangas/5/chapters/1005',
-    },
-    {
-        id: 14,
-        title: 'Attack on Titan',
-        image: avtar5,
-        chapter: 'C. 139',
-        timeAgo: '3 giờ trước',
-        link: '/mangas/6',
-        chapterLink: '/mangas/6/chapters/1006',
-    },
-    {
-        id: 15,
-        title: 'Fairy Tail',
-        image: avtar6,
-        chapter: 'C. 545',
-        timeAgo: '4 giờ trước',
-        link: '/mangas/7',
-        chapterLink: '/mangas/7/chapters/1007',
-    },
-    {
-        id: 16,
-        title: 'Fullmetal Alchemist',
-        image: avtar7,
-        chapter: 'C. 108',
-        timeAgo: '5 giờ trước',
-        link: '/mangas/8',
-        chapterLink: '/mangas/8/chapters/1008',
-    },
-    {
-        id: 17,
-        title: 'Fullmetal Alchemist',
-        image: avtar7,
-        chapter: 'C. 108',
-        timeAgo: '5 giờ trước',
-        link: '/mangas/8',
-        chapterLink: '/mangas/8/chapters/1008',
-    },
-    {
-        id: 18,
-        title: 'Fullmetal Alchemist',
-        image: avtar7,
-        chapter: 'C. 108',
-        timeAgo: '5 giờ trước',
-        link: '/mangas/8',
-        chapterLink: '/mangas/8/chapters/1008',
-    }
-];
-
 const MangaList: React.FC = () => {
+    const [mangaList, setMangaList] = useState<MangaCardData[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchMangaSummaries = async () => {
+            try {
+                setLoading(true);
+                const result = await mangaService.getMangaSummaries(0, 18, "lastChapterAddedAt,desc");
+
+                if (result) {
+                    // Chuyển đổi dữ liệu từ API sang định dạng phù hợp với MangaCard
+                    const processedData = result.content.map(manga => ({
+                        id: manga.id,
+                        title: manga.title,
+                        image: manga.coverUrl || '/images/default-manga-cover.jpg',
+                        chapter: manga.lastChapterNumber ? `C. ${manga.lastChapterNumber}` : 'Chưa có chapter',
+                        timeAgo: manga.lastChapterAddedAt
+                            ? formatDistanceToNow(new Date(manga.lastChapterAddedAt), { addSuffix: true, locale: vi })
+                            : 'Chưa cập nhật',
+                        link: `/mangas/${manga.id}`,
+                        chapterLink: manga.lastChapterNumber
+                            ? `/mangas/${manga.id}/chapters/${manga.lastChapterNumber}`
+                            : `/mangas/${manga.id}`
+                    }));
+
+                    setMangaList(processedData);
+                    setError(null);
+                } else {
+                    setError("Không thể tải danh sách manga");
+                }
+            } catch (err) {
+                console.error("Lỗi khi tải danh sách manga:", err);
+                setError("Đã xảy ra lỗi khi tải danh sách manga");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMangaSummaries();
+    }, []);
+
     return (
         <div className="flex-grow min-h-screen">
             <div className="mx-2 py-8 lg:py-16">
@@ -195,11 +68,19 @@ const MangaList: React.FC = () => {
                 </div>
 
                 <div className="common-container">
-                    <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4">
-                        {mangaList.map((manga) => (
-                            <MangaCard key={manga.id} manga={manga}/>
-                        ))}
-                    </div>
+                    {loading ? (
+                        <div className="flex justify-center items-center h-64">
+                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                        </div>
+                    ) : error ? (
+                        <div className="text-red-500 text-center py-8">{error}</div>
+                    ) : (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4">
+                            {mangaList.map((manga) => (
+                                <MangaCard key={manga.id} manga={manga}/>
+                            ))}
+                        </div>
+                    )}
                 </div>
                 <div className="flex justify-end mt-5">
                     <a

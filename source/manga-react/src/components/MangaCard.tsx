@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface Manga {
-    id: number;
+    id: string;
     title: string;
     image: string;
     chapter: string;
@@ -22,7 +22,7 @@ const MangaCard: React.FC<MangaCardProps> = ({ manga }) => {
                 className="block rounded-lg shadow hover:shadow-lg transition-shadow duration-200 overflow-hidden relative pb-[150%]"
             >
                 <img
-                    src={manga.image}
+                    src={"http://localhost:8888/api/v1/upload/files/"+manga.image}
                     alt={manga.title}
                     loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover"
