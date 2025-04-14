@@ -1,11 +1,11 @@
 package com.raindrop.manga_service.controller;
 
+import com.raindrop.manga_service.dto.request.AdvancedSearchRequest;
 import com.raindrop.manga_service.dto.request.MangaRequest;
 import com.raindrop.manga_service.dto.response.ApiResponse;
 import com.raindrop.manga_service.dto.response.MangaResponse;
 import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
 import com.raindrop.manga_service.service.MangaService;
-import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -131,6 +131,23 @@ public class MangaController {
         mangaService.deleteManga(id);
         return ApiResponse.<Void>builder()
                 .message("Manga deleted successfully")
+                .build();
+    }
+
+    /**
+     * Tìm kiếm nâng cao manga
+     * @param searchRequest Yêu cầu tìm kiếm nâng cao
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga phù hợp với điều kiện tìm kiếm
+     */
+    @PostMapping("/advanced-search")
+    ApiResponse<Page<MangaResponse>> advancedSearch(
+            @RequestBody AdvancedSearchRequest searchRequest,
+            @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return ApiResponse.<Page<MangaResponse>>builder()
+                .message("Advanced search results retrieved successfully")
+                .result(mangaService.advancedSearch(searchRequest, pageable))
                 .build();
     }
 }

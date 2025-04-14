@@ -23,4 +23,8 @@ public class CommentResponse {
 
     // Thông tin bổ sung
     String userAvatarUrl;
+
+    // Thông tin về manga và chapter
+    String mangaTitle;
+    String chapterNumber;
 }

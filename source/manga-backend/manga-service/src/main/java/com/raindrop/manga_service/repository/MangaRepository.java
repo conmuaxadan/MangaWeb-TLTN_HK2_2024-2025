@@ -2,6 +2,7 @@ package com.raindrop.manga_service.repository;
 
 import com.raindrop.manga_service.entity.Manga;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-public interface MangaRepository extends JpaRepository<Manga, String> {
+public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecificationExecutor<Manga> {
     Manga findByTitle(String name);
     Optional<Manga> findById(String mangaId);
 

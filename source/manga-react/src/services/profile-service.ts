@@ -57,6 +57,110 @@ class ProfileService {
     }
 
     /**
+     * Cập nhật thông tin profile
+     * @param data Thông tin cần cập nhật
+     * @returns Thông tin profile đã cập nhật hoặc null nếu thất bại
+     */
+    async updateProfile(data: { displayName: string }): Promise<UserProfileResponse | null> {
+        try {
+            const apiResponse = await profileHttpClient.put<ApiResponse<UserProfileResponse>>('/users/me', data);
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể cập nhật thông tin profile", { position: "top-right" });
+                return null;
+            }
+
+            toast.success("Cập nhật thông tin thành công", { position: "top-right" });
+            return apiResponse.result;
+        } catch (error) {
+            console.error("Lỗi cập nhật thông tin profile:", error);
+            toast.error("Không thể cập nhật thông tin profile", { position: "top-right" });
+            return null;
+        }
+    }
+
+    /**
+     * Upload avatar
+     * @param file File ảnh avatar
+     * @returns URL của avatar hoặc null nếu thất bại
+     */
+    async uploadAvatar(file: File): Promise<string | null> {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const apiResponse = await profileHttpClient.post<ApiResponse<{ url: string }>>('/users/avatar', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể upload avatar", { position: "top-right" });
+                return null;
+            }
+
+            toast.success("Upload avatar thành công", { position: "top-right" });
+            return apiResponse.result.url;
+        } catch (error) {
+            console.error("Lỗi upload avatar:", error);
+            toast.error("Không thể upload avatar", { position: "top-right" });
+            return null;
+        }
+    }
+
+    /**
+     * Đổi mật khẩu
+     * @param oldPassword Mật khẩu cũ
+     * @param newPassword Mật khẩu mới
+     * @returns true nếu đổi mật khẩu thành công, false nếu thất bại
+     */
+    async changePassword(oldPassword: string, newPassword: string): Promise<boolean> {
+        try {
+            const apiResponse = await profileHttpClient.post<ApiResponse<void>>('/users/change-password', {
+                oldPassword,
+                newPassword
+            });
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể đổi mật khẩu", { position: "top-right" });
+                return false;
+            }
+
+            toast.success("Đổi mật khẩu thành công", { position: "top-right" });
+            return true;
+        } catch (error) {
+            console.error("Lỗi đổi mật khẩu:", error);
+            toast.error("Không thể đổi mật khẩu", { position: "top-right" });
+            return false;
+        }
+    }
+
+    /**
+     * Lấy danh sách bình luận của người dùng hiện tại
+     * @param page Số trang
+     * @param size Số lượng bình luận trên mỗi trang
+     * @returns Danh sách bình luận có phân trang hoặc null nếu thất bại
+     */
+    async getMyComments(page: number = 0, size: number = 20): Promise<ApiResponse<any> | null> {
+        try {
+            const apiResponse = await profileHttpClient.get<ApiResponse<any>>(
+                `/comments/me?page=${page}&size=${size}&sort=createdAt,desc`
+            );
+
+            if (apiResponse.code !== 1000) {
+                console.error(apiResponse.message || "Không thể lấy danh sách bình luận");
+                return null;
+            }
+
+            return apiResponse;
+        } catch (error) {
+            console.error(`Lỗi lấy danh sách bình luận của tôi:`, error);
+            return null;
+        }
+    }
+
+    /**
      * Cập nhật thông tin profile của người dùng
      * @param request Thông tin profile cần cập nhật
      * @returns Thông tin profile đã cập nhật hoặc null nếu thất bại
@@ -232,6 +336,29 @@ class ProfileService {
     }
 
     /**
+     * Lấy danh sách bình luận mới nhất
+     * @param limit Số lượng bình luận cần lấy
+     * @returns Danh sách bình luận mới nhất hoặc null nếu thất bại
+     */
+    async getLatestComments(limit: number = 10): Promise<ApiResponse<any> | null> {
+        try {
+            const apiResponse = await profileHttpClient.get<ApiResponse<any>>(
+                `/comments/latest?size=${limit}&sort=createdAt,desc`
+            );
+
+            if (apiResponse.code !== 1000) {
+                console.error(apiResponse.message || "Không thể lấy danh sách bình luận mới nhất");
+                return null;
+            }
+
+            return apiResponse;
+        } catch (error) {
+            console.error(`Lỗi lấy danh sách bình luận mới nhất:`, error);
+            return null;
+        }
+    }
+
+    /**
      * Đếm số bình luận của một manga
      * @param mangaId ID của manga
      * @returns Tổng số bình luận hoặc 0 nếu thất bại
@@ -259,7 +386,7 @@ class ProfileService {
      * @param size Số lượng bình luận trên mỗi trang
      * @returns Danh sách bình luận có phân trang hoặc null nếu thất bại
      */
-    async getCommentsByChapterId(chapterId: string, page: number = 0, size: number = 20): Promise<ApiResponse<any> | null> {
+    async getCommentsByChapterId(chapterId: string, page: number = 0, size: number = 10): Promise<ApiResponse<any> | null> {
         try {
             const apiResponse = await profileHttpClient.get<ApiResponse<any>>(
                 `/comments/chapter/${chapterId}?page=${page}&size=${size}&sort=createdAt,desc`

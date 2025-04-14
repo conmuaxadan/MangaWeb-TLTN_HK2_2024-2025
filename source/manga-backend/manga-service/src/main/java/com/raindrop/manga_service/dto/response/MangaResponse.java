@@ -24,6 +24,8 @@ public class MangaResponse {
     String description;
     List<String> genres;
     List<String> chapters;
+    Integer yearOfRelease;
+    String status;
     LocalDateTime updatedAt;
     LocalDateTime lastChapterAddedAt;
 }

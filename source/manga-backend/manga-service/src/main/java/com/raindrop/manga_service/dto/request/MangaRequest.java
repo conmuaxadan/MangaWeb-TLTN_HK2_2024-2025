@@ -21,4 +21,6 @@ public class MangaRequest {
     String description;
     MultipartFile cover;
     Set<String> genres;
+    Integer yearOfRelease;
+    String status;
 }

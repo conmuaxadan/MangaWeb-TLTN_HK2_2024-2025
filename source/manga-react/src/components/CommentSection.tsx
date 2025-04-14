@@ -20,8 +20,9 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editText, setEditText] = useState<string>('');
   const { isLogin, user } = useAuth();
-  const [page, setPage] = useState<number>(0);
-  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
 
   // Lấy danh sách bình luận
   const fetchComments = async (pageNum: number = 0) => {
@@ -31,18 +32,16 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
 
       // Khởi tạo một mảng rỗng nếu không có dữ liệu trả về
       const commentData = response?.result?.content || [];
+      setComments(commentData);
 
-      if (pageNum === 0) {
-        setComments(commentData);
-      } else {
-        setComments(prev => [...prev, ...commentData]);
-      }
-
-      // Kiểm tra xem còn bình luận để tải không
+      // Cập nhật thông tin phân trang
       if (response?.result) {
-        setHasMore(!response.result.last); // Sử dụng thuộc tính last của Page
+        setTotalPages(response.result.totalPages || 0);
+        setTotalElements(response.result.totalElements || 0);
+        setCurrentPage(pageNum);
       } else {
-        setHasMore(false);
+        setTotalPages(0);
+        setTotalElements(0);
       }
     } catch (error) {
       console.error('Lỗi khi tải bình luận:', error);
@@ -129,12 +128,26 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
     }
   };
 
-  // Tải thêm bình luận
-  const handleLoadMore = () => {
-    if (!loading && hasMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
+  // Chuyển đến trang trước
+  const handlePrevPage = () => {
+    if (!loading && currentPage > 0) {
+      const prevPage = currentPage - 1;
+      fetchComments(prevPage);
+    }
+  };
+
+  // Chuyển đến trang tiếp theo
+  const handleNextPage = () => {
+    if (!loading && currentPage < totalPages - 1) {
+      const nextPage = currentPage + 1;
       fetchComments(nextPage);
+    }
+  };
+
+  // Chuyển đến trang cụ thể
+  const handleGoToPage = (pageNumber: number) => {
+    if (!loading && pageNumber >= 0 && pageNumber < totalPages) {
+      fetchComments(pageNumber);
     }
   };
 
@@ -148,9 +161,13 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
       {/* Form gửi bình luận */}
       <form onSubmit={handleSubmitComment} className="mb-6">
         <div className="flex items-start">
-          <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3 flex-shrink-0">
-            {isLogin && user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt={user.displayName} className="w-10 h-10 rounded-full" />
+          <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
+            {isLogin ? (
+              <img
+                src={user?.avatarUrl || "/images/avt_default.jpg"}
+                alt={user?.displayName || 'User'}
+                className="w-full h-full object-cover"
+              />
             ) : (
               <FontAwesomeIcon icon={faUser} className="text-gray-300" />
             )}
@@ -195,15 +212,18 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
           </div>
         ) : (
           <>
+            <div className="text-sm text-gray-400 mb-4">
+              Hiển thị {safeComments.length} / {totalElements} bình luận
+            </div>
             {safeComments.map((comment) => (
               <div key={comment.id} className="bg-gray-700 rounded-lg p-4">
                 <div className="flex items-start">
-                  <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3 flex-shrink-0">
-                    {comment.userAvatarUrl ? (
-                      <img src={comment.userAvatarUrl} alt={comment.username} className="w-10 h-10 rounded-full" />
-                    ) : (
-                      <FontAwesomeIcon icon={faUser} className="text-gray-300" />
-                    )}
+                  <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
+                    <img
+                      src={comment.userAvatarUrl || "/images/avt_default.jpg"}
+                      alt={comment.username}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="flex-grow">
                     <div className="flex justify-between items-start">
@@ -265,15 +285,58 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
               </div>
             ))}
 
-            {/* Nút tải thêm */}
-            {hasMore && (
-              <div className="text-center mt-4">
+
+            {/* Phân trang */}
+            {totalPages > 0 && (
+              <div className="flex justify-center items-center mt-6 space-x-2">
                 <button
-                  onClick={handleLoadMore}
-                  className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                  disabled={loading}
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 0 || loading}
+                  className="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors disabled:opacity-50"
                 >
-                  {loading ? 'Đang tải...' : 'Tải thêm bình luận'}
+                  &laquo; Trước
+                </button>
+
+                {/* Hiển thị các nút trang */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  // Tính toán các trang để hiển thị
+                  let pageToShow;
+                  if (totalPages <= 5) {
+                    // Nếu tổng số trang <= 5, hiển thị tất cả các trang
+                    pageToShow = i;
+                  } else if (currentPage < 3) {
+                    // Nếu đang ở 3 trang đầu, hiển thị 5 trang đầu
+                    pageToShow = i;
+                  } else if (currentPage > totalPages - 3) {
+                    // Nếu đang ở 3 trang cuối, hiển thị 5 trang cuối
+                    pageToShow = totalPages - 5 + i;
+                  } else {
+                    // Hiển thị 2 trang trước, trang hiện tại, và 2 trang sau
+                    pageToShow = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageToShow}
+                      onClick={() => handleGoToPage(pageToShow)}
+                      disabled={currentPage === pageToShow || loading}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                        currentPage === pageToShow
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-700 text-white hover:bg-gray-600'
+                      } disabled:opacity-50`}
+                    >
+                      {pageToShow + 1}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages - 1 || loading}
+                  className="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors disabled:opacity-50"
+                >
+                  Tiếp &raquo;
                 </button>
               </div>
             )}

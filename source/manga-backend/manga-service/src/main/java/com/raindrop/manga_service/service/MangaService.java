@@ -1,5 +1,6 @@
 package com.raindrop.manga_service.service;
 
+import com.raindrop.manga_service.dto.request.AdvancedSearchRequest;
 import com.raindrop.manga_service.dto.request.MangaRequest;
 import com.raindrop.manga_service.dto.response.MangaResponse;
 import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
@@ -13,16 +14,21 @@ import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.repository.GenreRepository;
 import com.raindrop.manga_service.repository.MangaRepository;
 import com.raindrop.manga_service.repository.httpclient.UploadClient;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,6 +57,11 @@ public class MangaService {
 
         // Khởi tạo danh sách genres rỗng
         manga.setGenres(new ArrayList<>());
+
+        // Thiết lập năm phát hành và tình trạng
+        manga.setYearOfRelease(request.getYearOfRelease());
+        manga.setStatus(request.getStatus());
+
         manga = mangaRepository.save(manga);
 
         // Xử lý genres
@@ -107,6 +118,8 @@ public class MangaService {
                 .coverUrl(manga.getCoverUrl())
                 .genres(manga.getGenres().stream().map(Genre::getName).collect(Collectors.toList()))
                 .chapters(manga.getChapters().stream().map(Chapter::getId).collect(Collectors.toList()))
+                .yearOfRelease(manga.getYearOfRelease())
+                .status(manga.getStatus())
                 .updatedAt(manga.getUpdatedAt())
                 .lastChapterAddedAt(manga.getLastChapterAddedAt())
                 .build();
@@ -183,6 +196,8 @@ public class MangaService {
         manga.setTitle(request.getTitle());
         manga.setDescription(request.getDescription());
         manga.setAuthor(request.getAuthor());
+        manga.setYearOfRelease(request.getYearOfRelease());
+        manga.setStatus(request.getStatus());
 
         // Xử lý genres - xóa tất cả genres hiện tại và thêm lại các genres mới
         manga.getGenres().clear(); // Xóa tất cả genres hiện tại
@@ -200,6 +215,60 @@ public class MangaService {
         }
         mangaRepository.save(manga);
         return mangaMapper.toMangaResponse(manga);
+    }
+
+    /**
+     * Tìm kiếm nâng cao manga
+     * @param searchRequest Yêu cầu tìm kiếm nâng cao
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga phù hợp với điều kiện tìm kiếm
+     */
+    public Page<MangaResponse> advancedSearch(AdvancedSearchRequest searchRequest, Pageable pageable) {
+        log.info("Advanced search with request: {}", searchRequest);
+
+        // Tạo Specification để xây dựng truy vấn động
+        Specification<Manga> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Tìm kiếm theo tiêu đề
+            if (searchRequest.getTitle() != null && !searchRequest.getTitle().isEmpty()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("title")),
+                        "%" + searchRequest.getTitle().toLowerCase() + "%"));
+            }
+
+            // Tìm kiếm theo tác giả
+            if (searchRequest.getAuthor() != null && !searchRequest.getAuthor().isEmpty()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("author")),
+                        "%" + searchRequest.getAuthor().toLowerCase() + "%"));
+            }
+
+            // Tìm kiếm theo thể loại
+            if (searchRequest.getGenres() != null && !searchRequest.getGenres().isEmpty()) {
+                Join<Object, Object> genresJoin = root.join("genres", JoinType.INNER);
+                predicates.add(genresJoin.get("name").in(searchRequest.getGenres()));
+            }
+
+            // Tìm kiếm theo năm phát hành
+            if (searchRequest.getYearOfRelease() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("yearOfRelease"), searchRequest.getYearOfRelease()));
+            }
+
+            // Tìm kiếm theo tình trạng
+            if (searchRequest.getStatus() != null && !searchRequest.getStatus().isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("status"), searchRequest.getStatus()));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        // Thực hiện tìm kiếm với Specification và Pageable
+        Page<Manga> mangaPage = mangaRepository.findAll(spec, pageable);
+        log.info("Found {} mangas matching the search criteria", mangaPage.getTotalElements());
+
+        // Chuyển đổi kết quả sang DTO
+        return mangaPage.map(mangaMapper::toMangaResponse);
     }
 
 }

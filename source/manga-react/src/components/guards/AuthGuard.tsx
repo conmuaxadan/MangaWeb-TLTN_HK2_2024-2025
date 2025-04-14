@@ -12,17 +12,22 @@ const AuthGuard = ({ children, requireAuth }: AuthGuardProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Nếu route yêu cầu đăng nhập và người dùng chưa đăng nhập
-    if (requireAuth && !isLogin) {
+    // Kiểm tra token trực tiếp từ localStorage
+    const token = localStorage.getItem('token');
+    const hasToken = !!token;
+
+    // Nếu route yêu cầu đăng nhập và không có token
+    if (requireAuth && !hasToken) {
       navigate('/login', { replace: true });
+      return;
     }
 
     // Chỉ chuyển hướng người dùng đã đăng nhập khỏi các trang login và register
     const authPages = ['/login', '/register', '/authenticate'];
-    if (!requireAuth && isLogin && authPages.includes(window.location.pathname)) {
+    if (!requireAuth && hasToken && authPages.includes(window.location.pathname)) {
       navigate('/', { replace: true });
     }
-  }, [isLogin, navigate, requireAuth]);
+  }, [navigate, requireAuth]);
 
   return <>{children}</>;
 };

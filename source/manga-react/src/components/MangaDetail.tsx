@@ -156,7 +156,7 @@ const MangaDetail: React.FC = () => {
                   {/* Đọc ngay button for mobile */}
                   <div className="mt-4 md:hidden">
                     <Link
-                      to={chapters.length > 0 ? `/mangas/${manga.id}/chapters/${chapters[chapters.length - 1].chapterNumber}` : '#'}
+                      to={chapters.length > 0 ? `/mangas/${manga.id}/chapters/${chapters[chapters.length - 1].id}` : '#'}
                       className={`w-full justify-center whitespace-nowrap rounded-md font-medium transition-colors
                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
                       disabled:pointer-events-none disabled:opacity-50 flex h-auto items-center gap-4
@@ -220,7 +220,7 @@ const MangaDetail: React.FC = () => {
                   {/* Đọc ngay button for desktop */}
                   <li className="hidden md:block pt-4">
                     <Link
-                      to={chapters.length > 0 ? `/mangas/${manga.id}/chapters/${chapters[chapters.length - 1].chapterNumber}` : '#'}
+                      to={chapters.length > 0 ? `/mangas/${manga.id}/chapters/${chapters[chapters.length - 1].id}` : '#'}
                       className={`justify-center whitespace-nowrap rounded-md font-medium transition-colors
                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
                       disabled:pointer-events-none disabled:opacity-50 flex h-auto items-center gap-4
@@ -281,9 +281,9 @@ const MangaDetail: React.FC = () => {
                             <div>
                               <Link
                                   className="text-blue-400 transition hover:text-blue-300 font-medium block"
-                                  to={`/mangas/${manga.id}/chapters/${chapter.chapterNumber}`}
+                                  to={`/mangas/${manga.id}/chapters/${chapter.id}`}
                               >
-                                Chapter {chapter.chapterNumber}: {chapter.title}
+                                 {chapter.title}
                               </Link>
                               <div className="md:hidden flex justify-between mt-2 text-gray-400 text-xs">
                                 <span>{formatDistanceToNow(new Date(chapter.updatedAt), {addSuffix: true, locale: vi})}</span>

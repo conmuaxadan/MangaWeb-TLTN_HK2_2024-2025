@@ -1,8 +1,12 @@
 // User Profile Response
 export interface UserProfileResponse {
     id: string;
+    userId: string;
+    email: string;
     displayName: string;
     avatarUrl?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 // User Profile Request

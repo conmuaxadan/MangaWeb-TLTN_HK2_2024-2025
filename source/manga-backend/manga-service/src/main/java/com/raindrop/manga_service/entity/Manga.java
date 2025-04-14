@@ -43,6 +43,12 @@ public class Manga {
     @OneToMany(mappedBy = "manga", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     List<Chapter> chapters;
 
+    // Năm phát hành
+    Integer yearOfRelease;
+
+    // Tình trạng (đang tiến hành, đã hoàn thành, tạm ngưng)
+    String status;
+
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;

@@ -21,7 +21,8 @@ public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/users",
             "/comments/chapter/{chapterId}",
-            "/comments/count/manga/{mangaId}"
+            "/comments/count/manga/{mangaId}",
+            "/comments/latest"
     };
 
     @Autowired
@@ -30,7 +31,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
-                request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                request.requestMatchers(HttpMethod.GET, "/comments/latest", "/comments/chapter/{chapterId}", "/comments/count/manga/{mangaId}").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .anyRequest()
                         .authenticated());
 

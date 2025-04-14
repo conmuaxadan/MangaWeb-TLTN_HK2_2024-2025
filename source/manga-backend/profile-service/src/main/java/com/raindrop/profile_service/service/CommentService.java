@@ -1,12 +1,16 @@
 package com.raindrop.profile_service.service;
 
 import com.raindrop.profile_service.dto.request.CommentRequest;
+import com.raindrop.profile_service.dto.response.manga.ApiResponse;
+import com.raindrop.profile_service.dto.response.ChapterInfoResponse;
 import com.raindrop.profile_service.dto.response.CommentResponse;
+import com.raindrop.profile_service.dto.response.MangaInfoResponse;
 import com.raindrop.profile_service.entity.Comment;
 import com.raindrop.profile_service.entity.UserProfile;
 import com.raindrop.profile_service.mapper.CommentMapper;
 import com.raindrop.profile_service.repository.CommentRepository;
 import com.raindrop.profile_service.repository.UserProfileRepository;
+import com.raindrop.profile_service.repository.httpclient.MangaClient;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -30,6 +34,7 @@ public class CommentService {
     CommentRepository commentRepository;
     CommentMapper commentMapper;
     UserProfileRepository userProfileRepository;
+    MangaClient mangaClient;
 
     /**
      * Tạo bình luận mới
@@ -192,7 +197,7 @@ public class CommentService {
             throw new AccessDeniedException("You don't have permission to update this comment");
         }
 
-        // Tìm profile của người dùng nếu chưa có profileId
+        // Tìm profile của người dùng nếu chưa acó profileId
         String profileId = comment.getProfileId();
         String avatarUrl = null;
 
@@ -221,5 +226,59 @@ public class CommentService {
         response.setUserAvatarUrl(avatarUrl);
 
         return response;
+    }
+
+    /**
+     * Lấy danh sách bình luận mới nhất
+     * @param pageable Thông tin phân trang
+     * @return Danh sách bình luận mới nhất có phân trang
+     */
+    public Page<CommentResponse> getLatestComments(Pageable pageable) {
+        log.info("Getting latest comments with page size: {}", pageable.getPageSize());
+        Page<Comment> comments = commentRepository.findAllByOrderByCreatedAtDesc(pageable);
+        log.info("Retrieved {} latest comments", comments.getContent().size());
+
+        return comments.map(comment -> {
+            CommentResponse response = commentMapper.toCommentResponse(comment);
+
+            // Lấy avatar của người dùng từ profileId nếu có
+            if (comment.getProfileId() != null) {
+                userProfileRepository.findById(comment.getProfileId())
+                    .ifPresent(profile -> response.setUserAvatarUrl(profile.getAvatarUrl()));
+            } else {
+                // Nếu không có profileId, thử tìm bằng userId
+                userProfileRepository.findByUserId(comment.getUserId())
+                    .ifPresent(profile -> {
+                        response.setUserAvatarUrl(profile.getAvatarUrl());
+                        response.setProfileId(profile.getId());
+
+                        // Cập nhật profileId trong comment
+                        comment.setProfileId(profile.getId());
+                        commentRepository.save(comment);
+                    });
+            }
+
+            // Lấy thông tin manga
+            try {
+                ApiResponse<MangaInfoResponse> mangaResponse = mangaClient.getMangaById(comment.getMangaId());
+                if (mangaResponse != null && mangaResponse.getCode() == 2000 && mangaResponse.getResult() != null) {
+                    response.setMangaTitle(mangaResponse.getResult().getTitle());
+                }
+            } catch (Exception e) {
+                log.error("Error getting manga info for ID {}: {}", comment.getMangaId(), e.getMessage());
+            }
+
+            // Lấy thông tin chapter
+            try {
+                ApiResponse<ChapterInfoResponse> chapterResponse = mangaClient.getChapterById(comment.getChapterId());
+                if (chapterResponse != null && chapterResponse.getCode() == 2000 && chapterResponse.getResult() != null) {
+                    response.setChapterNumber(String.valueOf(chapterResponse.getResult().getChapterNumber()));
+                }
+            } catch (Exception e) {
+                log.error("Error getting chapter info for ID {}: {}", comment.getChapterId(), e.getMessage());
+            }
+
+            return response;
+        });
     }
 }
