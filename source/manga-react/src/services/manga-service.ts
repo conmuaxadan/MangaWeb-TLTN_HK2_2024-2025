@@ -141,6 +141,28 @@ class MangaService {
     }
 
     /**
+     * Tăng lượt xem của chapter
+     * @param id ID của chapter
+     * @returns Thông tin chapter sau khi cập nhật lượt xem hoặc null nếu thất bại
+     */
+    async incrementChapterViews(id: string): Promise<ChapterResponse | null> {
+        try {
+            const apiResponse = await mangaHttpClient.post<ApiResponse<ChapterResponse>>(`/chapters/${id}/view`);
+
+            if (apiResponse.code !== 2000) {
+                // Không hiển thị thông báo lỗi vì đây là tính năng ngầm
+                console.error(`Lỗi khi tăng lượt xem chapter ID ${id}:`, apiResponse.message);
+                return null;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi khi tăng lượt xem chapter ID ${id}:`, error);
+            return null;
+        }
+    }
+
+    /**
      * Lấy danh sách tất cả thể loại
      * @returns Danh sách thể loại hoặc null nếu thất bại
      */

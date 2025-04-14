@@ -277,14 +277,14 @@ const MangaDetail: React.FC = () => {
                               </Link>
                               <div className="md:hidden flex justify-between mt-2 text-gray-400 text-xs">
                                 <span>{formatDistanceToNow(new Date(chapter.updatedAt), {addSuffix: true, locale: vi})}</span>
-                                <span>{Math.floor(Math.random() * 1000) + 100} lượt xem</span>
+                                <span>{chapter.views || 0} lượt xem</span>
                               </div>
                             </div>
                             <div className="no-wrap hidden md:block text-center text-gray-400">
                               {formatDistanceToNow(new Date(chapter.updatedAt), {addSuffix: true, locale: vi})}
                             </div>
                             <div className="hidden md:block text-right text-gray-400">
-                              {Math.floor(Math.random() * 1000) + 100} {/* Giả lập lượt xem */}
+                              {chapter.views || 0} lượt xem
                             </div>
                           </li>
                       ))

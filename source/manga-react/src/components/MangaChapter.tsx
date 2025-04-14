@@ -10,7 +10,8 @@ import {
   faChevronRight,
   faList,
   faAngleUp,
-  faComments
+  faComments,
+  faEye
 } from '@fortawesome/free-solid-svg-icons';
 import './MangaChapter.css';
 
@@ -121,6 +122,15 @@ const MangaChapter: React.FC = () => {
             return;
           }
           setPages(chapterData.pages || []);
+
+          // Tăng lượt xem của chapter
+          try {
+            await mangaService.incrementChapterViews(currentChapter.id);
+            console.log('Tăng lượt xem thành công cho chapter ID:', currentChapter.id);
+          } catch (err) {
+            console.error('Lỗi khi tăng lượt xem:', err);
+            // Không hiển thị lỗi cho người dùng vì đây là tính năng ngầm
+          }
         }
 
         setError(null);
@@ -224,6 +234,9 @@ const MangaChapter: React.FC = () => {
             <div className="mt-2">
               <span>Chương {chapter.chapterNumber}</span>
               {chapter.title && <span>: {chapter.title}</span>}
+            </div>
+            <div className="mt-1 text-sm text-gray-400">
+              <FontAwesomeIcon icon={faEye} className="mr-1" /> {chapter.views || 0} lượt xem
             </div>
           </h1>
 

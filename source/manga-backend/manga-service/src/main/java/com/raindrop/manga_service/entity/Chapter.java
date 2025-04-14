@@ -25,6 +25,7 @@ public class Chapter {
     String id;
     int chapterNumber;
     String title;
+    int views;
 
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Page> pages;

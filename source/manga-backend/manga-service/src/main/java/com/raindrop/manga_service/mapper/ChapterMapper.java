@@ -15,6 +15,8 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface ChapterMapper {
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "views", source = "views")
     ChapterResponse toChapterResponse(Chapter chapter);
 
 }

@@ -21,12 +21,16 @@ public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/mangas",
             "/mangas/paginated",
+            "/mangas/summaries",
             "/mangas/{id}",
             "/chapters",
             "/chapters/{id}",
+            "/chapters/{id}/view",
             "/chapters/manga/{mangaId}",
+            "/chapters/manga",
             "/genres",
-            "/genres/{id}"
+            "/genres/{id}",
+            "/genres/{name}"
     };
 
     @Autowired

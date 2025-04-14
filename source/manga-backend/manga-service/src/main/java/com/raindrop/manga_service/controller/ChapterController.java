@@ -62,6 +62,19 @@ public class ChapterController {
     }
 
     /**
+     * Tăng lượt xem của chapter
+     * @param id ID của chapter
+     * @return Thông tin chapter sau khi cập nhật lượt xem
+     */
+    @PostMapping("/{id}/view")
+    ApiResponse<ChapterResponse> incrementChapterViews(@PathVariable String id) {
+        return ApiResponse.<ChapterResponse>builder()
+                .message("Chapter views incremented successfully")
+                .result(chapterService.incrementChapterViews(id))
+                .build();
+    }
+
+    /**
      * Lấy tất cả chapter
      * @return Danh sách tất cả chapter
      */

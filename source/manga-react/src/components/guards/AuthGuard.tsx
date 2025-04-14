@@ -16,9 +16,10 @@ const AuthGuard = ({ children, requireAuth }: AuthGuardProps) => {
     if (requireAuth && !isLogin) {
       navigate('/login', { replace: true });
     }
-    
-    // Nếu route không cho phép người dùng đã đăng nhập (như trang login) và người dùng đã đăng nhập
-    if (!requireAuth && isLogin) {
+
+    // Chỉ chuyển hướng người dùng đã đăng nhập khỏi các trang login và register
+    const authPages = ['/login', '/register', '/authenticate'];
+    if (!requireAuth && isLogin && authPages.includes(window.location.pathname)) {
       navigate('/', { replace: true });
     }
   }, [isLogin, navigate, requireAuth]);

@@ -1,18 +1,20 @@
-import Home from "../components/Home.tsx";
-import Login from "../components/Login.tsx";
 import Master from "../components/layouts/Master.tsx";
 import {IRoute} from "../interfaces/IRoute.ts";
-import Register from "../components/Register.tsx";
-import Authenticate from "../components/Authenticate.tsx";
-import MangaDetail from "../components/MangaDetail.tsx";
-import MangaChapter from "../components/MangaChapter.tsx";
+import {
+    HomePage,
+    LoginPage,
+    RegisterPage,
+    AuthenticatePage,
+    MangaDetailPage,
+    MangaChapterPage
+} from "../pages";
 
 // Định nghĩa các route cho ứng dụng
 export const routes: IRoute[] = [
     // Route công khai - không yêu cầu đăng nhập
     {
         path: '/',
-        Component: Home,
+        Component: HomePage,
         Layout: Master,
         requireAuth: false
     },
@@ -20,19 +22,19 @@ export const routes: IRoute[] = [
     // Route xác thực - không cho phép người dùng đã đăng nhập truy cập
     {
         path: '/login',
-        Component: Login,
+        Component: LoginPage,
         Layout: Master,
         requireAuth: false
     },
     {
         path: '/register',
-        Component: Register,
+        Component: RegisterPage,
         Layout: Master,
         requireAuth: false
     },
     {
         path: '/authenticate',
-        Component: Authenticate,
+        Component: AuthenticatePage,
         Layout: Master,
         requireAuth: false
     },
@@ -40,17 +42,17 @@ export const routes: IRoute[] = [
     // Route chi tiết manga
     {
         path: '/mangas/:id',
-        Component: MangaDetail,
+        Component: MangaDetailPage,
         Layout: Master,
-        requireAuth: true
+        requireAuth: false
     },
 
     // Route hiển thị chapter
     {
         path: '/mangas/:id/chapters/:chapterNumber',
-        Component: MangaChapter,
+        Component: MangaChapterPage,
         Layout: Master,
-        requireAuth: true
+        requireAuth: false
     },
 
     // Có thể thêm các route yêu cầu đăng nhập ở đây
