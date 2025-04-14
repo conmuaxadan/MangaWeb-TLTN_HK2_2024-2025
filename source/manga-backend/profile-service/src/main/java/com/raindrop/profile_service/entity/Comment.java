@@ -1,4 +1,4 @@
-package com.raindrop.manga_service.entity;
+package com.raindrop.profile_service.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,35 +8,46 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 @Entity
+@Table(name = "comments")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
-public class Chapter {
+public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    int chapterNumber;
-    String title;
-    int views;
 
-    @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<Page> pages;
+    @Column(name = "user_id", nullable = false)
+    String userId;
 
-    @ManyToOne
-    @JoinColumn(name = "manga_id", nullable = false)
-    Manga manga;
+    @Column(name = "profile_id")
+    String profileId;
 
-    @Column(updatable = false)
+    @Column(name = "chapter_id", nullable = false)
+    String chapterId;
+
+    @Column(name = "manga_id", nullable = false)
+    String mangaId;
+
+    @Column(name = "username")
+    String username;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
+    String content;
+
+    @Column(name = "created_at", updatable = false)
     @CreatedDate
     LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
     @LastModifiedDate
     LocalDateTime updatedAt;
+
+    @Version
+    Integer version;
 }

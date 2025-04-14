@@ -107,6 +107,33 @@ public ChapterResponse createChapter(ChapterRequest request) {
     }
 
     /**
+     * Tăng lượt xem của chapter và cập nhật tổng lượt xem của manga
+     * @param id ID của chapter
+     * @return Thông tin chapter sau khi cập nhật lượt xem
+     */
+    public ChapterResponse incrementChapterViews(String id) {
+        log.info("Incrementing views for chapter: {}", id);
+
+        // Kiểm tra chapter có tồn tại không
+        Chapter chapter = chapterRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
+
+        // Tăng lượt xem của chapter mà không cập nhật thời gian updatedAt
+        chapterRepository.incrementViews(id);
+
+        // Cập nhật tổng lượt xem của manga mà không cập nhật thời gian updatedAt
+        mangaRepository.incrementViews(chapter.getManga().getId());
+
+        // Lấy lại chapter đã cập nhật lượt xem
+        chapter = chapterRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
+
+        log.info("Views updated for chapter: {}, new views: {}", id, chapter.getViews());
+        log.info("Total views updated for manga: {}, new total views: {}", chapter.getManga().getId(), chapter.getManga().getViews());
+
+        return chapterMapper.toChapterResponse(chapter);
+    }
+
+    /**
      * Lấy tất cả chapter
      * @return Danh sách tất cả chapter
      */

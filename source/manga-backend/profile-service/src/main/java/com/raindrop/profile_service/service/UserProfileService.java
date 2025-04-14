@@ -30,7 +30,18 @@ public class UserProfileService {
     }
 
     public UserProfileResponse getProfile(String id) {
-        UserProfile userProfile = userProfileRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        UserProfile userProfile = userProfileRepository.findById(id).orElseThrow(() -> new RuntimeException("User profile not found"));
+        return userProfileMapper.toUserProfileResponse(userProfile);
+    }
+
+    /**
+     * Lấy thông tin profile của người dùng theo user ID
+     * @param userId ID của người dùng (từ identity service)
+     * @return Thông tin profile của người dùng
+     */
+    public UserProfileResponse getProfileByUserId(String userId) {
+        UserProfile userProfile = userProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User profile not found for user ID: " + userId));
         return userProfileMapper.toUserProfileResponse(userProfile);
     }
 

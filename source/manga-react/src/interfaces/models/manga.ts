@@ -37,6 +37,7 @@ export interface ChapterResponse {
     id?: string;
     chapterNumber: number;
     title: string;
+    views: number;
     pages: ChapterPageResponse[];
     mangaId: string;
     updatedAt: string;

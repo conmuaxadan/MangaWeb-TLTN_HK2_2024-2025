@@ -90,20 +90,31 @@ class AuthService {
     }
 
     /**
-     * Lấy thông tin người dùng hiện tại
+     * Lấy thông tin người dùng hiện tại từ JWT token
      * @returns Thông tin người dùng hoặc false nếu thất bại
      */
-    async getCurrentUser(): Promise<UserResponse | false> {
+    getCurrentUser(): { userId: string, email: string } | false {
         try {
-            const apiResponse = await identityHttpClient.get<ApiResponse<UserResponse>>('/users/myInfo');
-
-            if (apiResponse.code !== 1000) {
+            const token = localStorage.getItem('token');
+            if (!token) {
                 return false;
             }
 
-            return apiResponse.result;
+            // Giải mã JWT token (phần payload)
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+
+            const payload = JSON.parse(jsonPayload);
+
+            return {
+                userId: payload.sub, // ID người dùng là subject của token
+                email: payload.email // Email được thêm vào claim
+            };
         } catch (error) {
-            console.error("Lỗi lấy thông tin người dùng:", error);
+            console.error("Lỗi giải mã JWT token:", error);
             return false;
         }
     }

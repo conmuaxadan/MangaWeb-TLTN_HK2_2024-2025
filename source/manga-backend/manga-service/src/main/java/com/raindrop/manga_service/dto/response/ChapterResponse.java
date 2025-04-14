@@ -13,8 +13,10 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ChapterResponse {
+    String id;
     int chapterNumber;
     String title;
+    int views;
     List<PageResponse> pages;
     String mangaId;
     LocalDateTime updatedAt;

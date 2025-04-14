@@ -19,7 +19,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
-            "/users"
+            "/users",
+            "/comments/chapter/{chapterId}",
+            "/comments/count/manga/{mangaId}"
     };
 
     @Autowired

@@ -10,9 +10,11 @@ import {
   faChevronRight,
   faList,
   faAngleUp,
-  faComments
+  faComments,
+  faEye
 } from '@fortawesome/free-solid-svg-icons';
 import './MangaChapter.css';
+import CommentSection from './CommentSection';
 
 const MangaChapter: React.FC = () => {
   const { id, chapterNumber } = useParams<{ id: string; chapterNumber: string }>();
@@ -121,6 +123,15 @@ const MangaChapter: React.FC = () => {
             return;
           }
           setPages(chapterData.pages || []);
+
+          // Tăng lượt xem của chapter
+          try {
+            await mangaService.incrementChapterViews(currentChapter.id);
+            console.log('Tăng lượt xem thành công cho chapter ID:', currentChapter.id);
+          } catch (err) {
+            console.error('Lỗi khi tăng lượt xem:', err);
+            // Không hiển thị lỗi cho người dùng vì đây là tính năng ngầm
+          }
         }
 
         setError(null);
@@ -224,6 +235,9 @@ const MangaChapter: React.FC = () => {
             <div className="mt-2">
               <span>Chương {chapter.chapterNumber}</span>
               {chapter.title && <span>: {chapter.title}</span>}
+            </div>
+            <div className="mt-1 text-sm text-gray-400">
+              <FontAwesomeIcon icon={faEye} className="mr-1" /> {chapter.views || 0} lượt xem
             </div>
           </h1>
 
@@ -333,6 +347,15 @@ const MangaChapter: React.FC = () => {
           >
             <FontAwesomeIcon icon={faAngleUp} className="mr-2" /> Lên đầu
           </button>
+        </div>
+      </div>
+
+      {/* Comment Section */}
+      <div className="mt-8 w-full flex justify-center">
+        <div className="max-w-screen-sm w-full">
+          {chapter && manga && (
+            <CommentSection chapterId={chapter.id || ''} mangaId={manga.id} />
+          )}
         </div>
       </div>
 

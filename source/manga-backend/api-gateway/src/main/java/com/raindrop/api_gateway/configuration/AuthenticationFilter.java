@@ -35,11 +35,25 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     @NonFinal
     String[] publicEndpoints = {
             "/identity/users/register",
+            "/identity/users/myInfo",
             "/identity/auth/login",
             "/identity/auth/introspect",
-            "/identity/auth/logout",
             "/identity/auth/google-login",
-            "/upload/files"
+            "/manga/mangas",
+            "/manga/mangas/paginated",
+            "/manga/mangas/summaries",
+            "/manga/mangas/{id}",
+            "/manga/chapters",
+            "/manga/chapters/manga/{mangaId}",
+            "/manga/chapters/manga",
+            "/manga/chapters/{id}",
+            "/manga/chapters/{id}/view",
+            "/manga/genres",
+            "/manga/genres/{name}",
+            "/profile/comments/chapter/{chapterId}",
+            "/profile/comments/count/manga/{mangaId}",
+            "/upload/files",
+            "/upload/files/{fileName}"
     };
 
     @Value("${app.api-prefix}")
@@ -92,6 +106,12 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             // Nếu endpoint là "/upload/files", kiểm tra xem path có bắt đầu bằng "/upload/files/" không
             else if (endpoint.equals("/upload/files")) {
                 return path.startsWith(apiPrefix + endpoint + "/");
+            }
+            // Nếu endpoint chứa tham số "{id}", chuyển đổi thành biểu thức regex và kiểm tra
+            else if (endpoint.contains("{") && endpoint.contains("}")) {
+                String regex = apiPrefix + endpoint.replaceAll("\\{[^/]+\\}", "[^/]+");
+                log.info("Regex pattern: {}, Path: {}, Matches: {}", regex, path, path.matches(regex));
+                return path.matches(regex);
             }
             // Nếu không, kiểm tra xem path có khớp với endpoint không
             else {
