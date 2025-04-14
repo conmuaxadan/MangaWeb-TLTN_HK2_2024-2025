@@ -42,3 +42,24 @@ export interface FavoriteMangaResponse {
     mangaTitle: string;
     mangaCoverUrl?: string;
 }
+
+// Comment Request
+export interface CommentRequest {
+    mangaId: string;
+    chapterId: string;
+    content: string;
+}
+
+// Comment Response
+export interface CommentResponse {
+    id: string;
+    userId: string;
+    profileId?: string;
+    username: string;
+    chapterId: string;
+    mangaId: string;
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+    userAvatarUrl?: string;
+}

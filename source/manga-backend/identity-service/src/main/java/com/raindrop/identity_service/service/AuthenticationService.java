@@ -163,12 +163,13 @@ public class AuthenticationService {
         Date expirationTime = new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli());
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getUsername())
+                .subject(user.getId())
                 .issuer("raindrop.com")
                 .issueTime(issuedAt)
                 .expirationTime(expirationTime)
                 .jwtID(tokenId)
                 .claim("scope", buildScope(user))
+                .claim("email", user.getEmail())
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());

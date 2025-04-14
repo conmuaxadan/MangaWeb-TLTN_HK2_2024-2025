@@ -31,6 +31,18 @@ public class UserProfileController {
                 .result(userProfileService.getProfile(id)).build();
     }
 
+    /**
+     * Lấy thông tin profile của người dùng theo user ID
+     * @param userId ID của người dùng (từ identity service)
+     * @return Thông tin profile của người dùng
+     */
+    @GetMapping("/by-user-id/{userId}")
+    ApiResponse<UserProfileResponse> getProfileByUserId(@PathVariable String userId) {
+        return ApiResponse.<UserProfileResponse>builder()
+                .message("Get profile by user ID successfully")
+                .result(userProfileService.getProfileByUserId(userId)).build();
+    }
+
     @GetMapping
     ApiResponse<List<UserProfileResponse>> getAllProfiles() {
         return ApiResponse.<List<UserProfileResponse>>builder()

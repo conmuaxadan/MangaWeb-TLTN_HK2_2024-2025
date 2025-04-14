@@ -35,6 +35,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     @NonFinal
     String[] publicEndpoints = {
             "/identity/users/register",
+            "/identity/users/myInfo",
             "/identity/auth/login",
             "/identity/auth/introspect",
             "/identity/auth/google-login",
@@ -49,6 +50,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/manga/chapters/{id}/view",
             "/manga/genres",
             "/manga/genres/{name}",
+            "/profile/comments/chapter/{chapterId}",
+            "/profile/comments/count/manga/{mangaId}",
             "/upload/files",
             "/upload/files/{fileName}"
     };

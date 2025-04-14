@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import mangaService from '../services/manga-service';
+import profileService from '../services/profile-service';
 import { MangaResponse, ChapterResponse } from '../interfaces/models/manga';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faHeart, faEye, faClock, faUser, faRss, faTags, faPen, faList } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faHeart, faEye, faClock, faUser, faRss, faTags, faPen, faList, faComment } from '@fortawesome/free-solid-svg-icons';
 
 const MangaDetail: React.FC = () => {
   const {id} = useParams<{ id: string }>();
   const [manga, setManga] = useState<MangaResponse | null>(null);
   const [chapters, setChapters] = useState<ChapterResponse[]>([]);
+  const [totalComments, setTotalComments] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -42,6 +44,10 @@ const MangaDetail: React.FC = () => {
           );
           setChapters(sortedChapters);
         }
+
+        // Lấy tổng số bình luận
+        const commentsCount = await profileService.countCommentsByMangaId(id);
+        setTotalComments(commentsCount);
 
         setError(null);
       } catch (err) {
@@ -112,6 +118,10 @@ const MangaDetail: React.FC = () => {
                 <span className="flex items-center">
                   <FontAwesomeIcon icon={faEye} className="mr-2 text-blue-500"/>
                   <span className="text-white">{manga.views || 0}</span>
+                </span>
+                <span className="flex items-center">
+                  <FontAwesomeIcon icon={faComment} className="mr-2 text-yellow-500"/>
+                  <span className="text-white">{totalComments || 0}</span>
                 </span>
               </div>
               <span className="flex items-center">

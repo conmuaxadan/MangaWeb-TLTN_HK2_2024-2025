@@ -14,6 +14,7 @@ import {
   faEye
 } from '@fortawesome/free-solid-svg-icons';
 import './MangaChapter.css';
+import CommentSection from './CommentSection';
 
 const MangaChapter: React.FC = () => {
   const { id, chapterNumber } = useParams<{ id: string; chapterNumber: string }>();
@@ -346,6 +347,15 @@ const MangaChapter: React.FC = () => {
           >
             <FontAwesomeIcon icon={faAngleUp} className="mr-2" /> Lên đầu
           </button>
+        </div>
+      </div>
+
+      {/* Comment Section */}
+      <div className="mt-8 w-full flex justify-center">
+        <div className="max-w-screen-sm w-full">
+          {chapter && manga && (
+            <CommentSection chapterId={chapter.id || ''} mangaId={manga.id} />
+          )}
         </div>
       </div>
 

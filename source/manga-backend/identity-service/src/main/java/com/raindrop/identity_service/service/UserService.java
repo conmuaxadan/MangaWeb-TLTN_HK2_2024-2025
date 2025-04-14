@@ -149,9 +149,13 @@ public class UserService {
         log.info("User deleted successfully: {}", request.getUsername());
     }
 
-    @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse getMyInfo() {
         var context = SecurityContextHolder.getContext();
+        if (context.getAuthentication() == null || context.getAuthentication().getName() == null) {
+            log.warn("User info request failed: No authentication found");
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
         String name = context.getAuthentication().getName();
         log.info("User requesting their own information: {}", name);
 
