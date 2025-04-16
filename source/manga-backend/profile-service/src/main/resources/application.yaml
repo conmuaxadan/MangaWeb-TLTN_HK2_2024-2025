@@ -24,6 +24,24 @@ spring:
 
 app:
   services:
-    manga: http://localhost:8083/manga
+    manga: http://localhost:8082/manga
 jwt:
   signerKey: "o6lSCt2tIkiqLnuj/m+P/My5Nq4w6C47rvMCAQIXJp8+I4lxliuh/EMEFM/YS9Aa"
+
+feign:
+  httpclient:
+    enabled: true
+    max-connections: 200
+    max-connections-per-route: 50
+    disable-ssl-validation: true
+  client:
+    config:
+      default:
+        connectTimeout: 60000
+        readTimeout: 60000
+        loggerLevel: full
+      manga-service:
+        connectTimeout: 60000
+        readTimeout: 60000
+        loggerLevel: full
+        decode404: true

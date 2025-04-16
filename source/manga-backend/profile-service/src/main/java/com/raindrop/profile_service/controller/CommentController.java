@@ -11,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -53,7 +54,7 @@ public class CommentController {
     @GetMapping("/chapter/{chapterId}")
     public ApiResponse<Page<CommentResponse>> getCommentsByChapterId(
             @PathVariable String chapterId,
-            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return ApiResponse.<Page<CommentResponse>>builder()
                 .message("Comments retrieved successfully")
@@ -130,6 +131,21 @@ public class CommentController {
         return ApiResponse.<CommentResponse>builder()
                 .message("Comment updated successfully")
                 .result(commentService.updateComment(userId, commentId, content))
+                .build();
+    }
+
+    /**
+     * Lấy danh sách bình luận mới nhất
+     * @param pageable Thông tin phân trang
+     * @return Danh sách bình luận mới nhất có phân trang
+     */
+    @GetMapping("/latest")
+    public ApiResponse<Page<CommentResponse>> getLatestComments(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ApiResponse.<Page<CommentResponse>>builder()
+                .message("Latest comments retrieved successfully")
+                .result(commentService.getLatestComments(pageable))
                 .build();
     }
 }

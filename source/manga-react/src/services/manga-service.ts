@@ -6,7 +6,8 @@ import {
     ChapterResponse,
     GenreResponse,
     PageResponse,
-    MangaSummaryResponse
+    MangaSummaryResponse,
+    AdvancedSearchRequest
 } from "../interfaces/models/manga";
 
 class MangaService {
@@ -230,6 +231,43 @@ class MangaService {
             return apiResponse.result;
         } catch (error) {
             console.error(`Lỗi tìm kiếm manga với từ khóa '${keyword}':`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Tìm kiếm nâng cao manga
+     * @param searchRequest Các tham số tìm kiếm nâng cao
+     * @param page Số trang
+     * @param size Số lượng item trên mỗi trang
+     * @returns Danh sách manga phù hợp với điều kiện tìm kiếm hoặc null nếu thất bại
+     */
+    async advancedSearch(
+        searchRequest: AdvancedSearchRequest,
+        page: number = 0,
+        size: number = 10
+    ): Promise<PageResponse<MangaResponse> | null> {
+        try {
+            const apiResponse = await mangaHttpClient.post<ApiResponse<PageResponse<MangaResponse>>>(
+                `/mangas/advanced-search?page=${page}&size=${size}`,
+                searchRequest
+            );
+
+            if (apiResponse.code !== 2000) {
+                toast.error(apiResponse.message || "Không thể tìm kiếm manga", { position: "top-right" });
+                return null;
+            }
+
+            // Thêm ảnh mặc định cho các manga không có coverUrl
+            apiResponse.result.content.forEach(manga => {
+                if (!manga.coverUrl) {
+                    manga.coverUrl = '/images/default-manga-cover.jpg';
+                }
+            });
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error("Lỗi tìm kiếm nâng cao manga:", error);
             return null;
         }
     }

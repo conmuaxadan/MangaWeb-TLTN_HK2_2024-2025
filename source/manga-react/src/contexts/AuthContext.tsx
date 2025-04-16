@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                                 userId: tokenInfo.userId,
                                 email: tokenInfo.email,
                                 displayName: tokenInfo.email.split('@')[0], // Tạo displayName từ email
-                                avatarUrl: null
+                                avatarUrl: "/images/avt_default.jpg"
                             });
                         }
                     } catch (error) {
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                             userId: tokenInfo.userId,
                             email: tokenInfo.email,
                             displayName: tokenInfo.email.split('@')[0], // Tạo displayName từ email
-                            avatarUrl: null
+                            avatarUrl: "/images/avt_default.jpg"
                         });
                     }
                 }

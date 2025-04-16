@@ -18,4 +18,7 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
 
     // Đếm số bình luận theo mangaId
     long countByMangaId(String mangaId);
+
+    // Lấy danh sách bình luận mới nhất
+    Page<Comment> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }

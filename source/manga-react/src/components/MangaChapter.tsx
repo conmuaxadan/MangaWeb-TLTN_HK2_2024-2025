@@ -10,14 +10,13 @@ import {
   faChevronRight,
   faList,
   faAngleUp,
-  faComments,
   faEye
 } from '@fortawesome/free-solid-svg-icons';
 import './MangaChapter.css';
 import CommentSection from './CommentSection';
 
 const MangaChapter: React.FC = () => {
-  const { id, chapterNumber } = useParams<{ id: string; chapterNumber: string }>();
+  const { id, chapterId } = useParams<{ id: string; chapterId: string }>();
   const [manga, setManga] = useState<MangaResponse | null>(null);
   const [chapter, setChapter] = useState<ChapterResponse | null>(null);
   const [nextChapter, setNextChapter] = useState<ChapterResponse | null>(null);
@@ -62,12 +61,15 @@ const MangaChapter: React.FC = () => {
   // Danh sách trang của chapter
   const [pages, setPages] = useState<ChapterPageResponse[]>([]);
 
+  // Lưu trữ tất cả các chapter để sử dụng cho nút "Chương đầu tiên"
+  const [chapters, setChapters] = useState<ChapterResponse[]>([]);
+
   useEffect(() => {
     const fetchChapterData = async () => {
       try {
         setLoading(true);
-        if (!id || !chapterNumber) {
-          setError('Không tìm thấy ID manga hoặc số chapter');
+        if (!id || !chapterId) {
+          setError('Không tìm thấy ID manga hoặc ID chapter');
           return;
         }
 
@@ -88,10 +90,10 @@ const MangaChapter: React.FC = () => {
 
         // Sắp xếp chapter theo số chapter tăng dần
         const sortedChapters = [...chaptersData].sort((a, b) => a.chapterNumber - b.chapterNumber);
+        setChapters(sortedChapters);
 
-        // Tìm chapter hiện tại
-        const currentChapterNum = parseFloat(chapterNumber);
-        const currentChapter = sortedChapters.find(c => c.chapterNumber === currentChapterNum);
+        // Tìm chapter hiện tại bằng ID
+        const currentChapter = sortedChapters.find(c => c.id === chapterId);
 
         if (!currentChapter) {
           setError('Không tìm thấy chapter này');
@@ -101,7 +103,7 @@ const MangaChapter: React.FC = () => {
         setChapter(currentChapter);
 
         // Tìm chapter kế tiếp và chapter trước
-        const currentIndex = sortedChapters.findIndex(c => c.chapterNumber === currentChapterNum);
+        const currentIndex = sortedChapters.findIndex(c => c.id === chapterId);
 
         if (currentIndex < sortedChapters.length - 1) {
           setNextChapter(sortedChapters[currentIndex + 1]);
@@ -144,7 +146,7 @@ const MangaChapter: React.FC = () => {
     };
 
     fetchChapterData();
-  }, [id, chapterNumber]);
+  }, [id, chapterId]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -186,7 +188,7 @@ const MangaChapter: React.FC = () => {
         <div className="chapter-navbar-actions">
           {prevChapter && (
             <Link
-              to={`/mangas/${manga.id}/chapters/${prevChapter.chapterNumber}`}
+              to={`/mangas/${manga.id}/chapters/${prevChapter.id}`}
               className="chapter-navbar-button"
               title="Chương trước"
             >
@@ -212,7 +214,7 @@ const MangaChapter: React.FC = () => {
 
           {nextChapter && (
             <Link
-              to={`/mangas/${manga.id}/chapters/${nextChapter.chapterNumber}`}
+              to={`/mangas/${manga.id}/chapters/${nextChapter.id}`}
               className="chapter-navbar-button"
               title="Chương sau"
             >
@@ -247,7 +249,7 @@ const MangaChapter: React.FC = () => {
               <div>
                 {prevChapter ? (
                   <Link
-                    to={`/mangas/${manga.id}/chapters/${prevChapter.chapterNumber}`}
+                    to={`/mangas/${manga.id}/chapters/${prevChapter.id}`}
                     className="chapter-navigation-button bg-gray-700 hover:bg-blue-600 text-white flex items-center justify-center"
                   >
                     <FontAwesomeIcon icon={faChevronLeft} className="mr-2" />
@@ -266,7 +268,7 @@ const MangaChapter: React.FC = () => {
               <div>
                 {nextChapter ? (
                   <Link
-                    to={`/mangas/${manga.id}/chapters/${nextChapter.chapterNumber}`}
+                    to={`/mangas/${manga.id}/chapters/${nextChapter.id}`}
                     className="chapter-navigation-button bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center"
                   >
                     Chương sau
@@ -315,7 +317,7 @@ const MangaChapter: React.FC = () => {
       <div className="mt-12 w-full flex justify-center">
         {nextChapter ? (
           <Link
-            to={`/mangas/${manga.id}/chapters/${nextChapter.chapterNumber}`}
+            to={`/mangas/${manga.id}/chapters/${nextChapter.id}`}
             className="button w-full max-w-screen-sm button-primary py-4 px-4 text-center bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-all duration-300"
           >
             <div className="uppercase font-bold text-lg">Xem tiếp chương {nextChapter.chapterNumber}</div>
@@ -334,8 +336,11 @@ const MangaChapter: React.FC = () => {
         <div className="max-w-screen-sm w-full flex gap-3">
           <button
             onClick={() => {
-              // Giả sử chương cũ nhất là chương 1
-              window.location.href = `/mangas/${manga.id}/chapters/1`;
+              // Lấy chapter đầu tiên (có chương số nhỏ nhất)
+              const firstChapter = chapters.sort((a, b) => a.chapterNumber - b.chapterNumber)[0];
+              if (firstChapter) {
+                window.location.href = `/mangas/${manga.id}/chapters/${firstChapter.id}`;
+              }
             }}
             className="uppercase button bg-gray-700 hover:bg-gray-600 text-gray-200 w-full px-3 py-2 text-center rounded-md transition-colors duration-300 flex items-center justify-center"
           >
@@ -349,6 +354,23 @@ const MangaChapter: React.FC = () => {
           </button>
         </div>
       </div>
+      {/* Footer Info */}
+      <div className="chapter-info mt-12">
+        <div className="max-w-md mx-auto text-center">
+          <div className="mb-3">
+            Bạn đang xem và đọc truyện tranh manga <strong>{manga.title}</strong> tại R-Manga.
+          </div>
+          <div className="mb-3">
+            Chương (chapter, chap) hiện tại mà bạn đang đọc là <strong>chapter {chapter.chapterNumber}</strong>
+            <span> ({chapter.title})</span>.
+          </div>
+          {nextChapter && (
+              <div className="mb-3">
+                <span>Chương kế tiếp của truyện là <strong>chapter {nextChapter.chapterNumber}</strong></span>
+              </div>
+          )}
+        </div>
+      </div>
 
       {/* Comment Section */}
       <div className="mt-8 w-full flex justify-center">
@@ -359,28 +381,7 @@ const MangaChapter: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer Info */}
-      <div className="chapter-info mt-12">
-        <div className="max-w-md mx-auto text-center">
-          <div className="mb-3">
-            Bạn đang xem và đọc truyện tranh manga (manhua, manhwa) <strong>{manga.title}</strong> tại MangaApp.
-          </div>
-          <div className="mb-3">
-            Chương (chapter, chap) hiện tại mà bạn đang đọc là <strong>chapter {chapter.chapterNumber}</strong>
-            <span> ({chapter.title})</span>.
-          </div>
-          {nextChapter && (
-            <div className="mb-3">
-              <span>Chương kế tiếp của truyện là <strong>chapter {nextChapter.chapterNumber}</strong></span>
-            </div>
-          )}
-          <div className="mt-4 pt-3 border-t border-gray-700">
-            <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors duration-300 inline-flex items-center">
-              <FontAwesomeIcon icon={faComments} className="mr-2" /> Bình luận về chương này
-            </a>
-          </div>
-        </div>
-      </div>
+
     </main>
   );
 };

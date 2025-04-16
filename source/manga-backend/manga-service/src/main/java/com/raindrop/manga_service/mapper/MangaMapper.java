@@ -25,10 +25,14 @@ public interface MangaMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "lastChapterAddedAt", ignore = true)
+    @Mapping(target = "yearOfRelease", source = "yearOfRelease")
+    @Mapping(target = "status", source = "status")
     Manga toManga(MangaRequest request);
 
     @Mapping(target = "genres", source = "genres", qualifiedByName = "genresToStringList")
     @Mapping(target = "chapters", source = "chapters", qualifiedByName = "chaptersToStringList")
+    @Mapping(target = "yearOfRelease", source = "yearOfRelease")
+    @Mapping(target = "status", source = "status")
     MangaResponse toMangaResponse(Manga manga);
 
     /**
@@ -37,6 +41,8 @@ public interface MangaMapper {
      * @return MangaSummaryResponse
      */
     @Mapping(target = "lastChapterNumber", expression = "java(getLastChapterNumber(manga))")
+    @Mapping(target = "yearOfRelease", source = "yearOfRelease")
+    @Mapping(target = "status", source = "status")
     MangaSummaryResponse toMangaSummaryResponse(Manga manga);
 
     @Mapping(target = "id", ignore = true)

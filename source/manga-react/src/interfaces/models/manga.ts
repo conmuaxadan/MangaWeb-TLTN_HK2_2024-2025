@@ -10,8 +10,20 @@ export interface MangaResponse {
     description: string;
     genres: string[];
     chapters: string[];
+    yearOfRelease?: number;
+    status?: string;
     updatedAt: string;
     lastChapterAddedAt?: string;
+}
+
+// Advanced Search Request
+export interface AdvancedSearchRequest {
+    title?: string;
+    author?: string;
+    genres?: string[];
+    yearOfRelease?: number;
+    status?: string;
+    orderBy?: string;
 }
 
 // Manga Summary Response
@@ -21,6 +33,8 @@ export interface MangaSummaryResponse {
     coverUrl?: string;
     lastChapterAddedAt?: string;
     lastChapterNumber?: number;
+    yearOfRelease?: number;
+    status?: string;
 }
 
 // Manga Request
@@ -30,6 +44,8 @@ export interface MangaRequest {
     description: string;
     genres: string[];
     chapters?: string[];
+    yearOfRelease?: number;
+    status?: string;
 }
 
 // Chapter Response

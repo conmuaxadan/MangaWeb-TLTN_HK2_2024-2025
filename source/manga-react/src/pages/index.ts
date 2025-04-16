@@ -4,3 +4,6 @@ export { default as RegisterPage } from './RegisterPage';
 export { default as MangaDetailPage } from './MangaDetailPage';
 export { default as MangaChapterPage } from './MangaChapterPage';
 export { default as AuthenticatePage } from './AuthenticatePage';
+export { default as ProfilePage } from './ProfilePage';
+export { default as ProfileSettingsPage } from './ProfileSettingsPage';
+export { default as AdvancedSearchPage } from './AdvancedSearchPage';

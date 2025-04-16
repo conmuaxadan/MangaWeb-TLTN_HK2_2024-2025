@@ -6,7 +6,10 @@ import {
     RegisterPage,
     AuthenticatePage,
     MangaDetailPage,
-    MangaChapterPage
+    MangaChapterPage,
+    ProfilePage,
+    ProfileSettingsPage,
+    AdvancedSearchPage
 } from "../pages";
 
 // Định nghĩa các route cho ứng dụng
@@ -49,17 +52,31 @@ export const routes: IRoute[] = [
 
     // Route hiển thị chapter
     {
-        path: '/mangas/:id/chapters/:chapterNumber',
+        path: '/mangas/:id/chapters/:chapterId',
         Component: MangaChapterPage,
         Layout: Master,
         requireAuth: false
     },
 
-    // Có thể thêm các route yêu cầu đăng nhập ở đây
-    // {
-    //     path: '/profile',
-    //     Component: Profile,
-    //     Layout: Master,
-    //     requireAuth: true
-    // },
+    // Route tìm kiếm nâng cao
+    {
+        path: '/search',
+        Component: AdvancedSearchPage,
+        Layout: Master,
+        requireAuth: false
+    },
+
+    // Các route yêu cầu đăng nhập
+    {
+        path: '/profile',
+        Component: ProfilePage,
+        Layout: Master,
+        requireAuth: true
+    },
+    {
+        path: '/profile/settings',
+        Component: ProfileSettingsPage,
+        Layout: Master,
+        requireAuth: true
+    },
 ]
