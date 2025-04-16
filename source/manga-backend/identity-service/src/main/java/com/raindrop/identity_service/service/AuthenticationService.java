@@ -6,16 +6,21 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.raindrop.identity_service.dto.request.AuthenticationRequest;
+import com.raindrop.identity_service.dto.request.GoogleAuthenticationRequest;
 import com.raindrop.identity_service.dto.request.IntrospectRequest;
 import com.raindrop.identity_service.dto.request.LogoutRequest;
+import com.raindrop.identity_service.dto.request.RefreshTokenRequest;
 import com.raindrop.identity_service.dto.response.AuthenticationResponse;
 import com.raindrop.identity_service.dto.response.IntrospectResponse;
 import com.raindrop.identity_service.entity.InvalidatedToken;
+import com.raindrop.identity_service.entity.RefreshToken;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.exception.AppException;
 import com.raindrop.identity_service.enums.ErrorCode;
 import com.raindrop.identity_service.repository.InvalidatedTokenRepository;
+import com.raindrop.identity_service.repository.RefreshTokenRepository;
 import com.raindrop.identity_service.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
@@ -29,6 +34,7 @@ import org.springframework.web.client.RestClient;
 
 import java.text.ParseException;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
@@ -41,11 +47,17 @@ import java.util.UUID;
 public class AuthenticationService {
     UserRepository userRepository;
     InvalidatedTokenRepository invalidatedTokenRepository;
-    private final RestClient.Builder builder;
+    RefreshTokenRepository refreshTokenRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
+
+    // Thời gian sống của access token (1 giờ)
+    private static final long ACCESS_TOKEN_EXPIRATION = 60 * 60; // 1 giờ tính bằng giây
+
+    // Thời gian sống của refresh token (7 ngày)
+    private static final long REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60; // 7 ngày tính bằng giây
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
@@ -64,6 +76,7 @@ public class AuthenticationService {
                 .build();
     }
 
+    @Transactional
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         log.info("Authenticating user: {}", request.getUsername());
         var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> {
@@ -80,15 +93,23 @@ public class AuthenticationService {
         }
 
         log.info("User authenticated successfully: {}", request.getUsername());
-        var token = generateToken(user);
+
+        // Tạo access token
+        var accessToken = generateToken(user);
+
+        // Tạo refresh token
+        var refreshToken = createRefreshToken(user);
 
         return AuthenticationResponse.builder()
-                .token(token)
+                .token(accessToken)
+                .refreshToken(refreshToken.getToken())
                 .authenticated(true)
+                .expiresIn(ACCESS_TOKEN_EXPIRATION)
                 .build();
     }
 
-    public AuthenticationResponse authenticateGG(AuthenticationRequest request) {
+    @Transactional
+    public AuthenticationResponse authenticateGG(GoogleAuthenticationRequest request) {
         log.info("Authenticating Google user: {}", request.getUsername());
         var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> {
             log.warn("Google authentication failed: User not found - {}", request.getUsername());
@@ -96,16 +117,24 @@ public class AuthenticationService {
         });
 
         log.info("Google user authenticated successfully: {}", request.getUsername());
-        var token = generateToken(user);
+
+        // Tạo access token
+        var accessToken = generateToken(user);
+
+        // Tạo refresh token
+        var refreshToken = createRefreshToken(user);
 
         return AuthenticationResponse.builder()
-                .token(token)
+                .token(accessToken)
+                .refreshToken(refreshToken.getToken())
                 .authenticated(true)
+                .expiresIn(ACCESS_TOKEN_EXPIRATION)
                 .build();
     }
 
 
 
+    @Transactional
     public void logout(LogoutRequest request) throws JOSEException, ParseException {
         log.info("Processing logout request");
         var signToken = verifyToken(request.getToken());
@@ -116,11 +145,19 @@ public class AuthenticationService {
 
         log.info("Invalidating token for user: {}", subject);
 
+        // Thêm token vào danh sách token đã bị vô hiệu hóa
         InvalidatedToken invalidatedToken = InvalidatedToken.builder()
                 .id(jit)
                 .expiryTime(expirationTime)
                 .build();
         invalidatedTokenRepository.save(invalidatedToken);
+
+        // Thu hồi tất cả refresh token của người dùng
+        User user = userRepository.findById(subject).orElse(null);
+        if (user != null) {
+            refreshTokenRepository.revokeAllUserTokens(user);
+            log.info("All refresh tokens revoked for user: {}", subject);
+        }
 
         log.info("User logged out successfully: {}", subject);
     }
@@ -203,5 +240,72 @@ public class AuthenticationService {
 
         return joiner.toString();
     }
+
+    /**
+     * Tạo mới refresh token cho người dùng
+     * @param user Người dùng cần tạo refresh token
+     * @return RefreshToken đã được lưu vào database
+     */
+    @Transactional
+    public RefreshToken createRefreshToken(User user) {
+        log.info("Creating refresh token for user: {}", user.getUsername());
+
+        // Tạo refresh token mới
+        RefreshToken refreshToken = RefreshToken.builder()
+                .user(user)
+                .token(UUID.randomUUID().toString())
+                .expiryDate(LocalDateTime.now().plusSeconds(REFRESH_TOKEN_EXPIRATION))
+                .revoked(false)
+                .build();
+
+        // Lưu vào database
+        refreshToken = refreshTokenRepository.save(refreshToken);
+        log.info("Refresh token created successfully for user: {}, expires at: {}",
+                user.getUsername(), refreshToken.getExpiryDate());
+
+        return refreshToken;
+    }
+
+    /**
+     * Làm mới token dựa trên refresh token
+     * @param refreshTokenRequest Yêu cầu làm mới token
+     * @return Thông tin xác thực mới
+     */
+    @Transactional
+    public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+        log.info("Processing refresh token request");
+
+        // Tìm refresh token trong database
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenRequest.getRefreshToken())
+                .orElseThrow(() -> {
+                    log.warn("Refresh token not found: {}", refreshTokenRequest.getRefreshToken());
+                    return new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+                });
+
+        // Kiểm tra refresh token có hợp lệ không
+        if (refreshToken.isRevoked()) {
+            log.warn("Refresh token has been revoked: {}", refreshToken.getToken());
+            throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        if (refreshToken.isExpired()) {
+            log.warn("Refresh token has expired: {}", refreshToken.getToken());
+            throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        // Tạo access token mới
+        User user = refreshToken.getUser();
+        String accessToken = generateToken(user);
+
+        log.info("Token refreshed successfully for user: {}", user.getUsername());
+
+        return AuthenticationResponse.builder()
+                .token(accessToken)
+                .refreshToken(refreshToken.getToken()) // Giữ nguyên refresh token
+                .authenticated(true)
+                .expiresIn(ACCESS_TOKEN_EXPIRATION)
+                .build();
+    }
+
 
 }

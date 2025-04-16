@@ -42,15 +42,10 @@ const RecentComments = () => {
 
                     setComments(formattedComments);
                     setError(null);
-                } else {
-                    // Nếu không có dữ liệu từ API, sử dụng dữ liệu mẫu
-                    setComments(getSampleComments());
                 }
             } catch (err) {
                 console.error('Lỗi khi tải bình luận mới nhất:', err);
                 setError('Không thể tải bình luận mới nhất');
-                // Sử dụng dữ liệu mẫu khi có lỗi
-                setComments(getSampleComments());
             } finally {
                 setLoading(false);
             }
@@ -58,65 +53,6 @@ const RecentComments = () => {
 
         fetchLatestComments();
     }, []);
-
-    // Hàm tạo dữ liệu mẫu khi API không có dữ liệu hoặc có lỗi
-    const getSampleComments = (): Comment[] => [
-        {
-            id: '1',
-            content: 'Truyện hay quá! Đọc mãi không chán.',
-            username: 'Manga Lover',
-            userAvatarUrl: 'default-avatar.jpg',
-            createdAt: new Date().toISOString(),
-            mangaId: '201',
-            mangaTitle: 'Solo Leveling',
-            chapterId: '301',
-            chapterNumber: '150'
-        },
-        {
-            id: '2',
-            content: 'Nhân vật chính quá mạnh, mong chờ chapter tiếp theo!',
-            username: 'Anime Fan',
-            userAvatarUrl: 'default-avatar.jpg',
-            createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 phút trước
-            mangaId: '202',
-            mangaTitle: 'One Piece',
-            chapterId: '302',
-            chapterNumber: '1050'
-        },
-        {
-            id: '3',
-            content: 'Cốt truyện hơi khó hiểu nhưng vẫn rất cuốn.',
-            username: 'Manga Reader',
-            userAvatarUrl: 'default-avatar.jpg',
-            createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1 giờ trước
-            mangaId: '203',
-            mangaTitle: 'Chainsaw Man',
-            chapterId: '303',
-            chapterNumber: '97'
-        },
-        {
-            id: '4',
-            content: 'Tranh vẽ đẹp quá, tác giả tài năng thật!',
-            username: 'Art Lover',
-            userAvatarUrl: 'default-avatar.jpg',
-            createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 giờ trước
-            mangaId: '204',
-            mangaTitle: 'Jujutsu Kaisen',
-            chapterId: '304',
-            chapterNumber: '180'
-        },
-        {
-            id: '5',
-            content: 'Mong chờ phần tiếp theo, không thể đợi thêm được nữa!',
-            username: 'Impatient Reader',
-            userAvatarUrl: 'default-avatar.jpg',
-            createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 giờ trước
-            mangaId: '205',
-            mangaTitle: 'Demon Slayer',
-            chapterId: '305',
-            chapterNumber: '205'
-        }
-    ];
 
     return (
         <div>

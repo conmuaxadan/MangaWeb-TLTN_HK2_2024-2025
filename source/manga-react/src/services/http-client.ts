@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { API_CONFIG, DEFAULT_HEADERS, TIMEOUT, getAuthHeader } from '../configurations/api-config';
+import { API_CONFIG, DEFAULT_HEADERS, TIMEOUT, TOKEN_STORAGE, getAuthHeader, isTokenExpired } from '../configurations/api-config';
 import { toast } from 'react-toastify';
+import authService from './auth-service';
 
 class HttpClient {
     private instance: AxiosInstance;
@@ -14,14 +15,42 @@ class HttpClient {
 
         // Request interceptor
         this.instance.interceptors.request.use(
-            (config: InternalAxiosRequestConfig) => {
-                // Add auth header if token exists
-                const authHeaders = getAuthHeader();
-                if (authHeaders['Authorization']) {
-                    if (config.headers) {
-                        config.headers['Authorization'] = authHeaders['Authorization'];
+            async (config: InternalAxiosRequestConfig) => {
+                // Kiểm tra xem token có hết hạn không
+                const token = localStorage.getItem(TOKEN_STORAGE.ACCESS_TOKEN);
+                const refreshToken = localStorage.getItem(TOKEN_STORAGE.REFRESH_TOKEN);
+
+                // Nếu có token và token đã hết hạn và có refresh token
+                if (token && isTokenExpired() && refreshToken) {
+                    // Thử làm mới token
+                    const refreshResult = await authService.refreshToken();
+
+                    if (refreshResult) {
+                        // Nếu làm mới thành công, sử dụng token mới
+                        if (config.headers) {
+                            config.headers['Authorization'] = `Bearer ${refreshResult.token}`;
+                        }
+                    } else {
+                        // Nếu làm mới thất bại, xóa token và chuyển hướng đến trang đăng nhập
+                        localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
+                        localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
+                        localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
+
+                        // Chỉ chuyển hướng nếu đường dẫn hiện tại không phải là trang đăng nhập
+                        if (!window.location.pathname.includes('/login')) {
+                            window.location.href = '/login';
+                        }
+                    }
+                } else {
+                    // Thêm auth header nếu token tồn tại và chưa hết hạn
+                    const authHeaders = getAuthHeader();
+                    if (authHeaders['Authorization']) {
+                        if (config.headers) {
+                            config.headers['Authorization'] = authHeaders['Authorization'];
+                        }
                     }
                 }
+
                 return config;
             },
             (error) => {
@@ -42,10 +71,29 @@ class HttpClient {
 
                     switch (status) {
                         case 401:
-                            // Unauthorized - clear token and redirect to login
-                            localStorage.removeItem('token');
-                            window.location.href = '/login';
-                            toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                            // Unauthorized - thử refresh token trước khi đăng xuất
+                            const refreshToken = localStorage.getItem(TOKEN_STORAGE.REFRESH_TOKEN);
+                            if (refreshToken) {
+                                // Thử làm mới token
+                                authService.refreshToken().then(result => {
+                                    if (result) {
+                                        // Nếu làm mới thành công, reload trang để thử lại request
+                                        window.location.reload();
+                                    } else {
+                                        // Nếu làm mới thất bại, đăng xuất
+                                        localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
+                                        localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
+                                        localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
+                                        window.location.href = '/login';
+                                        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                                    }
+                                });
+                            } else {
+                                // Không có refresh token, đăng xuất luôn
+                                localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
+                                window.location.href = '/login';
+                                toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                            }
                             break;
                         case 403:
                             // Forbidden

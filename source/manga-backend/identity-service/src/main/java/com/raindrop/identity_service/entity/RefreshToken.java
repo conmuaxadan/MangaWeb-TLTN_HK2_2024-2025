@@ -1,4 +1,4 @@
-package com.raindrop.manga_service.entity;
+package com.raindrop.identity_service.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,33 +8,42 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
+@Table(name = "refresh_tokens")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
-public class Chapter {
+public class RefreshToken {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    int chapterNumber;
-    String title;
-    int views;
 
-    @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<Page> pages;
+    @Column(nullable = false, unique = true)
+    String token;
 
     @ManyToOne
-    @JoinColumn(name = "manga_id", nullable = false)
-    Manga manga;
+    @JoinColumn(name = "user_id", nullable = false)
+    User user;
 
-    @Column(updatable = false)
+    @Column(nullable = false)
+    LocalDateTime expiryDate;
+
+    @Column(name = "created_at", updatable = false)
     @CreatedDate
     LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
     @LastModifiedDate
     LocalDateTime updatedAt;
+
+    @Column(nullable = false)
+    boolean revoked;
+
+    public boolean isExpired() {
+        return LocalDateTime.now().isAfter(expiryDate);
+    }
 }

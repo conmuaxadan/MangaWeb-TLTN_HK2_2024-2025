@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AugmentWebviewStateStore">
+    <option name="stateMap">
+      <map>
+        <entry key="CHAT_STATE" value="eyJjdXJyZW50Q29udmVyc2F0aW9uSWQiOiJkNTc4ZTBjNy1jYjlhLTRlNGEtODUyMS04NTY4MGE1MWQ4MjQiLCJjb252ZXJzYXRpb25zIjp7ImQ1NzhlMGM3LWNiOWEtNGU0YS04NTIxLTg1NjgwYTUxZDgyNCI6eyJpZCI6ImQ1NzhlMGM3LWNiOWEtNGU0YS04NTIxLTg1NjgwYTUxZDgyNCIsImNyZWF0ZWRBdElzbyI6IjIwMjUtMDQtMTZUMTQ6Mzk6NTAuMDAyWiIsImxhc3RJbnRlcmFjdGVkQXRJc28iOiIyMDI1LTA0LTE2VDE0OjM5OjUwLjAwMloiLCJjaGF0SGlzdG9yeSI6W10sImZlZWRiYWNrU3RhdGVzIjp7fSwidG9vbFVzZVN0YXRlcyI6e30sImRyYWZ0RXhjaGFuZ2UiOnsicmVxdWVzdF9tZXNzYWdlIjoiIiwicmljaF90ZXh0X2pzb25fcmVwciI6eyJ0eXBlIjoiZG9jIiwiY29udGVudCI6W3sidHlwZSI6InBhcmFncmFwaCJ9XX0sInN0YXR1cyI6ImRyYWZ0In0sInJlcXVlc3RJZHMiOltdLCJpc1Bpbm5lZCI6ZmFsc2UsImlzU2hhcmVhYmxlIjpmYWxzZSwiZXh0cmFEYXRhIjp7ImlzQWdlbnRDb252ZXJzYXRpb24iOnRydWUsImhhc0RpcnR5RWRpdHMiOmZhbHNlfSwicGVyc29uYVR5cGUiOjB9fSwiYWdlbnRFeGVjdXRpb25Nb2RlIjoibWFudWFsIiwiaXNBZ2VudEVkaXRzQ29sbGFwc2VkIjp0cnVlfQ==" />
+      </map>
+    </option>
+  </component>
+</project>

@@ -3,11 +3,12 @@ import authService from "../services/auth-service";
 import profileService from "../services/profile-service";
 import { UserResponse } from "../interfaces/models/auth";
 import { UserProfileResponse } from "../interfaces/models/profile";
+import { TOKEN_STORAGE } from "../configurations/api-config";
 
 interface AuthContextType {
     isLogin: boolean;
     user: UserProfileResponse | null;
-    login: (token: string) => void;
+    login: (authResponse: { token: string, refreshToken: string, expiresIn?: number }) => void;
     logout: () => void;
 }
 
@@ -15,7 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isLogin, setIsLogin] = useState<boolean>(() => {
-        return !!localStorage.getItem("token");
+        return !!localStorage.getItem(TOKEN_STORAGE.ACCESS_TOKEN);
     });
     const [user, setUser] = useState<UserProfileResponse | null>(null);
 
@@ -59,13 +60,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         fetchUserInfo();
     }, [isLogin]);
 
-    const login = (token: string) => {
-        localStorage.setItem("token", token);
+    const login = (authResponse: { token: string, refreshToken: string, expiresIn?: number }) => {
+        // Lưu access token và refresh token
+        localStorage.setItem(TOKEN_STORAGE.ACCESS_TOKEN, authResponse.token);
+        localStorage.setItem(TOKEN_STORAGE.REFRESH_TOKEN, authResponse.refreshToken);
+
+        // Lưu thời gian hết hạn nếu có
+        if (authResponse.expiresIn) {
+            const expiryTime = Date.now() + (authResponse.expiresIn * 1000);
+            localStorage.setItem(TOKEN_STORAGE.TOKEN_EXPIRY, expiryTime.toString());
+        }
+
         setIsLogin(true);
     };
 
     const logout = () => {
-        localStorage.removeItem("token");
+        // Xóa tất cả các token khỏi localStorage
+        localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
+        localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
+        localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
+
         setIsLogin(false);
         setUser(null);
     };

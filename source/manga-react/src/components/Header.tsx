@@ -1,169 +1,268 @@
-import {useState, useRef} from 'react';
-import '@fortawesome/fontawesome-free/css/all.min.css';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
-const Header = () => {
-    const [showSearch, setShowSearch] = useState(false);
-    const [showMenu, setShowMenu] = useState(false);
-    const [searchKeyword, setSearchKeyword] = useState('');
-    const { isLogin, logout } = useAuth();
-    const navigate = useNavigate();
-    const searchInputRef = useRef<HTMLInputElement>(null);
+const NewHeader = () => {
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [isScrolled, setIsScrolled] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const { isLogin, logout, user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    const handleSearchClick = () => {
-        setShowSearch(true);
-        // Focus vào input khi hiển thị form tìm kiếm
-        setTimeout(() => {
-            if (searchInputRef.current) {
-                searchInputRef.current.focus();
-            }
-        }, 100);
+  // Theo dõi scroll để thay đổi màu nền header
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
     };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-    const handleBodyClick = () => {
-        setShowSearch(false);
-        setSearchKeyword('');
+  // Xử lý click bên ngoài menu để đóng menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
     };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-    const handleInputClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        e.stopPropagation();
-    };
-
-    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchKeyword(e.target.value);
-    };
-
-    const handleSearchSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (searchKeyword.trim()) {
-            navigate(`/search?keyword=${encodeURIComponent(searchKeyword.trim())}`);
-            setShowSearch(false);
-            setSearchKeyword('');
-        }
-    };
-
-    const handleMenuClick = () => {
-        setShowMenu(!showMenu);
+  // Focus vào input khi mở search
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
     }
+  }, [isSearchOpen]);
 
-    const handleLogout = (e) => {
-        e.preventDefault();
-        logout();
-        navigate('/');
+  const handleSearchClick = () => {
+    setIsSearchOpen(true);
+  };
+
+  const handleMenuClick = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchKeyword.trim()) {
+      navigate(`/search?keyword=${encodeURIComponent(searchKeyword.trim())}`);
+      setIsSearchOpen(false);
+      setSearchKeyword('');
     }
+  };
 
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchKeyword(e.target.value);
+  };
 
-    return (
-        <div>
-            {showSearch ? (
-                <div>
-                <div className="fixed inset-0 bg-black opacity-70 z-50 " onClick={handleBodyClick} >
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    logout();
+    setIsMenuOpen(false);
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
+  return (
+    <>
+      {/* Header */}
+      <header className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-gray-900/95 backdrop-blur-md shadow-md' : 'bg-gray-900'}`}>
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <div className="flex-shrink-0">
+              <Link to="/" className="flex items-center">
+                <span className="text-white font-bold text-xl tracking-tight">R-Manga</span>
+              </Link>
+            </div>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex space-x-1">
+              <Link
+                to="/"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/') ? 'text-white bg-gray-800' : 'text-gray-300 hover:text-white hover:bg-gray-700'}`}
+              >
+                <i className="fas fa-home mr-2"></i>
+                Trang chủ
+              </Link>
+              <Link
+                to="/search"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/search') ? 'text-white bg-gray-800' : 'text-gray-300 hover:text-white hover:bg-gray-700'}`}
+              >
+                <i className="fas fa-search mr-2"></i>
+                Tìm kiếm
+              </Link>
+              <Link
+                to="/profile/reading-history"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/profile/reading-history') ? 'text-white bg-gray-800' : 'text-gray-300 hover:text-white hover:bg-gray-700'}`}
+              >
+                <i className="fas fa-history mr-2"></i>
+                Lịch sử
+              </Link>
+              <Link
+                to="/genres"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/genres') ? 'text-white bg-gray-800' : 'text-gray-300 hover:text-white hover:bg-gray-700'}`}
+              >
+                <i className="fas fa-tags mr-2"></i>
+                Thể loại
+              </Link>
+              <Link
+                to="/rankings"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/rankings') ? 'text-white bg-gray-800' : 'text-gray-300 hover:text-white hover:bg-gray-700'}`}
+              >
+                <i className="fas fa-trophy mr-2"></i>
+                Xếp hạng
+              </Link>
+            </nav>
+
+            {/* Right side buttons */}
+            <div className="flex items-center space-x-4">
+              {/* Search button (mobile only) */}
+              <button
+                onClick={handleSearchClick}
+                className="md:hidden w-10 h-10 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors flex items-center justify-center"
+                aria-label="Search"
+              >
+                <i className="fas fa-search"></i>
+              </button>
+
+              {/* Username display when logged in */}
+              {isLogin && user && (
+                <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
+                  <i className="fas fa-user"></i>
+                  <span className="text-sm font-medium truncate max-w-[120px]">{user.displayName}</span>
                 </div>
-                <div onClick={handleInputClick}
-                     className="fixed top-0 left-0 w-full bg-zinc-900 p-4 z-50 transform transition-all flex flex-col items-center shadow">
-                    <form onSubmit={handleSearchSubmit} className="max-w-screen-md w-full">
-                        <div className="relative">
-                            <input
-                                ref={searchInputRef}
-                                type="text"
-                                value={searchKeyword}
-                                onChange={handleSearchInputChange}
-                                placeholder="Tìm kiếm truyện"
-                                className="px-4 py-2 text-black bg-gray-300 focus:bg-gray-300 transition duration-300 ease-in-out rounded-lg w-full outline-none focus:ring focus:ring-gray-300"
-                            />
-                            <button
-                                type="submit"
-                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800"
-                            >
-                                <i className="fas fa-search"></i>
-                            </button>
+              )}
+
+              {/* User menu */}
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={handleMenuClick}
+                  className="w-10 h-10 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors flex items-center justify-center"
+                  aria-label="User menu"
+                >
+                  <i className="fas fa-bars"></i>
+                </button>
+
+                {/* Dropdown menu */}
+                {isMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 py-1 z-50 transition-all duration-200">
+                    {!isLogin ? (
+                      <>
+                        <Link to="/login" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                          <i className="fas fa-sign-in-alt mr-2"></i>
+                          Đăng nhập
+                        </Link>
+                        <Link to="/register" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                          <i className="fas fa-user-plus mr-2"></i>
+                          Đăng ký
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        {/* Mobile username display */}
+                        <div className="md:hidden px-4 py-3 text-sm text-white bg-gray-700 border-b border-gray-600 flex items-center gap-2">
+                          <i className="fas fa-user text-lg"></i>
+                          <span className="font-medium truncate">{user?.displayName}</span>
                         </div>
-                    </form>
-                </div>
-                </div>
-            ) : (
-                <nav className="bg-zinc-900 px-2 z-40 top-0 left-0 w-full fixed">
-                    <div className="max-w-screen-md lg:max-w-screen-lg xl:max-w-screen-xl mx-auto">
-                        <div className="flex justify-between items-stretch py-2 gap-4">
-                            <div className="flex-1 items-center gap-3 hidden lg:flex">
-                                <Link to="/"
-                                   className="mr-2 font-display font-bold uppercase select-none rounded-full flex items-center h-11 text-gray-300 text-opacity-60">
-                                    Trang chủ
-                                </Link>
-                                <Link to="/search"
-                                   className="mr-2 font-display font-bold uppercase select-none rounded-full flex items-center h-11 text-gray-300 text-opacity-60">
-                                    Tìm kiếm
-                                </Link>
-                                <Link to="/"
-                                   className="mr-2 font-display font-bold uppercase select-none rounded-full flex items-center h-11 text-gray-300 text-opacity-60">
-                                    Lịch sử
-                                </Link>
-                                <Link to="/"
-                                   className="font-display font-bold uppercase select-none rounded-full flex items-center h-11 text-gray-300 text-opacity-60">
-                                    Hot
-                                </Link>
-                            </div>
-                            <div className="flex-1 flex lg:justify-center items-center max-w-full">
-                                <Link
-                                    to="/"
-                                    aria-current="page"
-                                    className="font-display font-extrabold uppercase select-none rounded-full flex items-center h-11 text-gray-300 text-opacity-60"
-                                >
-                                    R-Manga
-                                </Link>
-                            </div>
-                            <div className="flex-1 flex justify-end max-w-full">
-                                <button onClick={handleSearchClick}
-                                        className="p-2 text-white bg-gray-700 rounded-3xl w-12 h-12">
-                                    <i className="fas fa-search"></i>
-                                </button>
-                                <div className="relative ml-2">
-                                    <button onClick={handleMenuClick}
-                                            className="p-2 text-white bg-gray-700 rounded-3xl w-12 h-12">
-                                        <i className="fas fa-bars"></i>
-                                    </button>
-                                    {showMenu && (
-                                        <div
-                                            className="min-w-30 bg-gray-700 absolute shadow-lg rounded-lg mt-2 right-0 overflow-hidden flex flex-col whitespace-nowrap text-white z-10">
-                                            {!isLogin ? (
-                                                <>
-                                                    <Link to="/login"
-                                                       className="p-2 text-white hover:bg-gray-100 hover:text-black">Đăng
-                                                        nhập</Link>
-                                                    <Link to="/register"
-                                                       className="p-2 text-white hover:bg-gray-100 hover:text-black">Đăng ký</Link>
-                                                </>
-                                            ):(
-                                                <>
-                                                    <Link to="/profile"
-                                                       className="p-2 text-white hover:bg-gray-100 hover:text-black">Trang cá nhân</Link>
-                                                    <a href="#"
-                                                       onClick={handleLogout}
-                                                       className="p-2 text-white hover:bg-gray-100 hover:text-black">Đăng
-                                                        xuất</a>
-                                                </>
-                                            )}
-                                            <div className="lg:hidden flex flex-col">
-                                                <div className="border-b border-amber-50"></div>
-                                                <Link to="/search"
-                                                   className="p-2 text-white hover:bg-gray-100 hover:text-black">Tìm kiếm</Link>
-                                                <Link to="/"
-                                                   className="p-2 text-white hover:bg-gray-100 hover:text-black">Lịch sử</Link>
-                                                <Link to="/"
-                                                   className="p-2 text-white hover:bg-gray-100 hover:text-black">Bảng xếp
-                                                    hạng</Link>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                        <Link to="/profile" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                          <i className="fas fa-user mr-2"></i>
+                          Trang cá nhân
+                        </Link>
+                        <Link to="/profile/favorites" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                          <i className="fas fa-heart mr-2"></i>
+                          Truyện yêu thích
+                        </Link>
+                        <Link to="/profile/reading-history" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                          <i className="fas fa-history mr-2"></i>
+                          Lịch sử đọc
+                        </Link>
+                        <Link to="/profile/settings" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                          <i className="fas fa-cog mr-2"></i>
+                          Cài đặt
+                        </Link>
+                        <div className="border-t border-gray-700 my-1"></div>
+                        <a href="#" onClick={handleLogout} className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                          <i className="fas fa-sign-out-alt mr-2"></i>
+                          Đăng xuất
+                        </a>
+                      </>
+                    )}
+                    <div className="md:hidden border-t border-gray-700 my-1"></div>
+                    <div className="md:hidden">
+                      <Link to="/" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                        <i className="fas fa-home mr-2"></i>
+                        Trang chủ
+                      </Link>
+                      <Link to="/search" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                        <i className="fas fa-search mr-2"></i>
+                        Tìm kiếm
+                      </Link>
+                      <Link to="/profile/reading-history" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                        <i className="fas fa-history mr-2"></i>
+                        Lịch sử
+                      </Link>
+                      <Link to="/genres" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                        <i className="fas fa-tags mr-2"></i>
+                        Thể loại
+                      </Link>
+                      <Link to="/rankings" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                        <i className="fas fa-trophy mr-2"></i>
+                        Xếp hạng
+                      </Link>
                     </div>
-                </nav>)}
-            <div className="h-15"></div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-    );
+      </header>
+
+      {/* Search overlay */}
+      {isSearchOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 transition-opacity duration-200"
+            onClick={() => setIsSearchOpen(false)}
+          ></div>
+          <div
+            className="fixed top-0 left-0 w-full bg-gray-900 p-4 shadow-lg z-50 transition-all duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <form onSubmit={handleSearchSubmit} className="max-w-3xl mx-auto relative">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchKeyword}
+                onChange={handleSearchInputChange}
+                placeholder="Tìm kiếm truyện..."
+                className="w-full bg-gray-800 text-white rounded-full py-3 pl-5 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+              />
+              <button
+                type="submit"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white p-1"
+              >
+                <i className="fas fa-search"></i>
+              </button>
+            </form>
+          </div>
+        </>
+      )}
+
+      {/* Spacer to prevent content from being hidden under the fixed header */}
+      <div className="h-16"></div>
+    </>
+  );
 };
 
-export default Header;
+export default NewHeader;

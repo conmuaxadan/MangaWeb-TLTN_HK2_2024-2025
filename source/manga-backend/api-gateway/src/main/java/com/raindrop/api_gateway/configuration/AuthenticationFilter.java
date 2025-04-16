@@ -39,6 +39,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/identity/auth/login",
             "/identity/auth/introspect",
             "/identity/auth/google-login",
+            "/identity/auth/refresh-token",
             "/manga/mangas",
             "/manga/mangas/paginated",
             "/manga/mangas/summaries",

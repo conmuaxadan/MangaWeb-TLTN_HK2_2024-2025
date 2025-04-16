@@ -10,7 +10,6 @@ import com.raindrop.manga_service.entity.Manga;
 import com.raindrop.manga_service.enums.ErrorCode;
 import com.raindrop.manga_service.exception.AppException;
 import com.raindrop.manga_service.mapper.MangaMapper;
-import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.repository.GenreRepository;
 import com.raindrop.manga_service.repository.MangaRepository;
 import com.raindrop.manga_service.repository.httpclient.UploadClient;
@@ -41,7 +40,6 @@ public class MangaService {
     MangaRepository mangaRepository;
     MangaMapper mangaMapper;
     GenreRepository genreRepository;
-    ChapterRepository chapterRepository;
     UploadClient uploadClient;
 
     public MangaResponse createManga(MangaRequest request) {

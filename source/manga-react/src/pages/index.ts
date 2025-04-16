@@ -1,9 +1,9 @@
-export { default as HomePage } from './HomePage';
-export { default as LoginPage } from './LoginPage';
-export { default as RegisterPage } from './RegisterPage';
-export { default as MangaDetailPage } from './MangaDetailPage';
-export { default as MangaChapterPage } from './MangaChapterPage';
-export { default as AuthenticatePage } from './AuthenticatePage';
-export { default as ProfilePage } from './ProfilePage';
-export { default as ProfileSettingsPage } from './ProfileSettingsPage';
-export { default as AdvancedSearchPage } from './AdvancedSearchPage';
+export { default as Home } from './Home';
+export { default as Login } from './Login';
+export { default as Register} from './Register';
+export { default as MangaDetail } from './MangaDetail';
+export { default as Chapter } from './Chapter';
+export { default as Authenticate } from './Authenticate';
+export { default as Profile } from './Profile.tsx';
+export { default as ProfileSettings } from './ProfileSettings.tsx';
+export { default as AdvancedSearch } from './AdvancedSearch';

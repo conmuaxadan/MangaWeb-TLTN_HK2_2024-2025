@@ -1,15 +1,15 @@
 import Master from "../components/layouts/Master.tsx";
 import {IRoute} from "../interfaces/IRoute.ts";
 import {
-    HomePage,
-    LoginPage,
-    RegisterPage,
-    AuthenticatePage,
-    MangaDetailPage,
-    MangaChapterPage,
-    ProfilePage,
-    ProfileSettingsPage,
-    AdvancedSearchPage
+    Home,
+    Login,
+    Register,
+    Authenticate,
+    MangaDetail,
+    Chapter,
+    Profile,
+    ProfileSettings,
+    AdvancedSearch
 } from "../pages";
 
 // Định nghĩa các route cho ứng dụng
@@ -17,7 +17,7 @@ export const routes: IRoute[] = [
     // Route công khai - không yêu cầu đăng nhập
     {
         path: '/',
-        Component: HomePage,
+        Component: Home,
         Layout: Master,
         requireAuth: false
     },
@@ -25,19 +25,19 @@ export const routes: IRoute[] = [
     // Route xác thực - không cho phép người dùng đã đăng nhập truy cập
     {
         path: '/login',
-        Component: LoginPage,
+        Component: Login,
         Layout: Master,
         requireAuth: false
     },
     {
         path: '/register',
-        Component: RegisterPage,
+        Component: Register,
         Layout: Master,
         requireAuth: false
     },
     {
         path: '/authenticate',
-        Component: AuthenticatePage,
+        Component: Authenticate,
         Layout: Master,
         requireAuth: false
     },
@@ -45,7 +45,7 @@ export const routes: IRoute[] = [
     // Route chi tiết manga
     {
         path: '/mangas/:id',
-        Component: MangaDetailPage,
+        Component: MangaDetail,
         Layout: Master,
         requireAuth: false
     },
@@ -53,7 +53,7 @@ export const routes: IRoute[] = [
     // Route hiển thị chapter
     {
         path: '/mangas/:id/chapters/:chapterId',
-        Component: MangaChapterPage,
+        Component: Chapter,
         Layout: Master,
         requireAuth: false
     },
@@ -61,7 +61,7 @@ export const routes: IRoute[] = [
     // Route tìm kiếm nâng cao
     {
         path: '/search',
-        Component: AdvancedSearchPage,
+        Component: AdvancedSearch,
         Layout: Master,
         requireAuth: false
     },
@@ -69,13 +69,13 @@ export const routes: IRoute[] = [
     // Các route yêu cầu đăng nhập
     {
         path: '/profile',
-        Component: ProfilePage,
+        Component: Profile,
         Layout: Master,
         requireAuth: true
     },
     {
         path: '/profile/settings',
-        Component: ProfileSettingsPage,
+        Component: ProfileSettings,
         Layout: Master,
         requireAuth: true
     },

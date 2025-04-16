@@ -24,7 +24,8 @@ public class SecurityConfig {
             "/auth/login",
             "/auth/introspect",
             "/auth/logout",
-            "/auth/google-login"};
+            "/auth/google-login",
+            "/auth/refresh-token"};
 
     @Autowired
     private CustomJwtDecoder customJwtDecoder;

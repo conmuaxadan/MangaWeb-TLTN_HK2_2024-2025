@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import mangaService from '../services/manga-service';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 

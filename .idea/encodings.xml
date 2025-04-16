@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/source/manga-backend/api-gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/source/manga-backend/common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/source/manga-backend/notification-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/source/manga-backend/profile-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/source/manga-backend/upload-service/src/main/java" charset="UTF-8" />
+  </component>
+</project>

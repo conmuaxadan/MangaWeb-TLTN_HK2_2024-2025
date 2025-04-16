@@ -54,6 +54,12 @@ public enum ErrorCode {
     GOOGLE_INVALID_ID_TOKEN(1204, "Invalid Google ID token", HttpStatus.BAD_REQUEST),
     GOOGLE_USER_DISABLED(1205, "Google user is disabled", HttpStatus.FORBIDDEN),
 
+    // Refresh token related errors (1250-1299)
+    INVALID_REFRESH_TOKEN(1250, "Invalid or expired refresh token", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_REVOKED(1251, "Refresh token has been revoked", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_EXPIRED(1252, "Refresh token has expired", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_NOT_FOUND(1253, "Refresh token not found", HttpStatus.UNAUTHORIZED),
+
     // Profile related errors (1300-1399)
     PROFILE_NOT_FOUND(1300, "Profile not found", HttpStatus.NOT_FOUND),
     PROFILE_UPDATE_FAILED(1301, "Failed to update profile", HttpStatus.INTERNAL_SERVER_ERROR),

@@ -7,7 +7,9 @@ export interface AuthRequest {
 // Authentication Response
 export interface AuthResponse {
     token: string;
+    refreshToken: string;
     authenticated: boolean;
+    expiresIn?: number; // Thời gian hết hạn của access token (tính bằng giây)
 }
 
 // Google Login Request
@@ -42,4 +44,9 @@ export interface RoleResponse {
 export interface PermissionResponse {
     name: string;
     description?: string;
+}
+
+// Refresh Token Request
+export interface RefreshTokenRequest {
+    refreshToken: string;
 }

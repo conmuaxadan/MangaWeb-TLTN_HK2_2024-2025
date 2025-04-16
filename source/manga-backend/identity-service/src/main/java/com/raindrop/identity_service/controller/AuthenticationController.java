@@ -5,6 +5,7 @@ import com.raindrop.identity_service.dto.request.AuthenticationRequest;
 import com.raindrop.identity_service.dto.request.GoogleLoginRequest;
 import com.raindrop.identity_service.dto.request.IntrospectRequest;
 import com.raindrop.identity_service.dto.request.LogoutRequest;
+import com.raindrop.identity_service.dto.request.RefreshTokenRequest;
 import com.raindrop.identity_service.dto.response.ApiResponse;
 import com.raindrop.identity_service.dto.response.AuthenticationResponse;
 import com.raindrop.identity_service.dto.response.IntrospectResponse;
@@ -65,6 +66,15 @@ public class AuthenticationController {
         log.info("Logout request received");
         authenticationService.logout(request);
         return ApiResponse.<Void>builder()
+                .build();
+    }
+
+    @PostMapping("/refresh-token")
+    ApiResponse<AuthenticationResponse> refreshToken(@RequestBody @Valid RefreshTokenRequest request) {
+        log.info("Refresh token request received");
+        var result = authenticationService.refreshToken(request);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
                 .build();
     }
 }

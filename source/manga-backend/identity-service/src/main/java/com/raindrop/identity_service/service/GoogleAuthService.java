@@ -3,7 +3,7 @@ package com.raindrop.identity_service.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.raindrop.common.event.UserProfileEvent;
-import com.raindrop.identity_service.dto.request.AuthenticationRequest;
+import com.raindrop.identity_service.dto.request.GoogleAuthenticationRequest;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.AuthenticationResponse;
 import com.raindrop.identity_service.entity.Role;
@@ -154,11 +154,11 @@ public class GoogleAuthService {
                 log.info("New user created successfully: {}", email);
             }
 
-            AuthenticationRequest authenticationRequest = AuthenticationRequest.builder()
+            GoogleAuthenticationRequest googleAuthRequest = GoogleAuthenticationRequest.builder()
                     .username(email)
                     .build();
 
-            return authenticationService.authenticateGG(authenticationRequest);
+            return authenticationService.authenticateGG(googleAuthRequest);
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {

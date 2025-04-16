@@ -7,11 +7,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Data
@@ -30,6 +27,7 @@ public class Manga {
     String author;
     int views;
     int loves;
+    int comments;
     String coverUrl;
     @Column(columnDefinition = "TEXT")
     String description;
@@ -44,7 +42,7 @@ public class Manga {
     List<Chapter> chapters;
 
     // Năm phát hành
-    Integer yearOfRelease;
+    int yearOfRelease;
 
     // Tình trạng (đang tiến hành, đã hoàn thành, tạm ngưng)
     String status;
