@@ -1,7 +1,6 @@
 package com.raindrop.manga_service.dto.response;
 
-import com.raindrop.manga_service.entity.Chapter;
-import com.raindrop.manga_service.entity.Genre;
+import com.raindrop.manga_service.enums.MangaStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -25,7 +24,7 @@ public class MangaResponse {
     String description;
     List<String> genres;
     int yearOfRelease;
-    String status;
+    MangaStatus status;
     String lastChapterId;
     LocalDateTime lastChapterAddedAt;
 }

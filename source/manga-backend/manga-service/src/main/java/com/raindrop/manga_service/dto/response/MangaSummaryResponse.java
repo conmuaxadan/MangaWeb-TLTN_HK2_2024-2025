@@ -1,5 +1,6 @@
 package com.raindrop.manga_service.dto.response;
 
+import com.raindrop.manga_service.enums.MangaStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -16,7 +17,7 @@ public class MangaSummaryResponse {
     String coverUrl;
     String lastChapterId;
     LocalDateTime lastChapterAddedAt;
-    String status;
+    MangaStatus status;
     int views;
     int loves;
     int comments;

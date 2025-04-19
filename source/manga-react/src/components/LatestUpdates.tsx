@@ -15,6 +15,7 @@ interface MangaCardData {
     views: number;
     loves: number;
     comments: number;
+    lastChapterId?: string;
 }
 
 const LatestUpdates: React.FC = () => {
@@ -39,12 +40,13 @@ const LatestUpdates: React.FC = () => {
                             ? formatDistanceToNow(new Date(manga.lastChapterAddedAt), { addSuffix: true, locale: vi })
                             : 'Chưa cập nhật',
                         link: `/mangas/${manga.id}`,
-                        chapterLink: manga.lastChapterNumber
-                            ? `/mangas/${manga.id}/chapters/${manga.lastChapterNumber}`
+                        chapterLink: manga.lastChapterId
+                            ? `/mangas/${manga.id}/chapters/${manga.lastChapterId}`
                             : `/mangas/${manga.id}`,
                         views: manga.views || 0,
                         loves: manga.loves || 0,
-                        comments: manga.comments || 0
+                        comments: manga.comments || 0,
+                        lastChapterId: manga.lastChapterId
                     }));
 
                     setMangaList(processedData);

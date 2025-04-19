@@ -13,6 +13,7 @@ interface MangaCardData {
     timeAgo: string;
     link: string;
     chapterLink: string;
+    lastChapterId?: string;
 }
 
 const MangaList: React.FC = () => {
@@ -37,9 +38,10 @@ const MangaList: React.FC = () => {
                             ? formatDistanceToNow(new Date(manga.lastChapterAddedAt), { addSuffix: true, locale: vi })
                             : 'Chưa cập nhật',
                         link: `/mangas/${manga.id}`,
-                        chapterLink: manga.lastChapterNumber
-                            ? `/mangas/${manga.id}/chapters/${manga.lastChapterNumber}`
-                            : `/mangas/${manga.id}`
+                        chapterLink: manga.lastChapterId
+                            ? `/mangas/${manga.id}/chapters/${manga.lastChapterId}`
+                            : `/mangas/${manga.id}`,
+                        lastChapterId: manga.lastChapterId
                     }));
 
                     setMangaList(processedData);

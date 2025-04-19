@@ -1,5 +1,6 @@
 package com.raindrop.manga_service.dto.request;
 
+import com.raindrop.manga_service.enums.MangaStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,6 +16,6 @@ public class AdvancedSearchRequest {
     String author;
     List<String> genres;
     Integer yearOfRelease;
-    String status;
+    MangaStatus status;
     String orderBy;
 }

@@ -1,3 +1,17 @@
+// Manga Status Enum
+export enum MangaStatus {
+    ONGOING = "ONGOING",
+    COMPLETED = "COMPLETED",
+    PAUSED = "PAUSED"
+}
+
+// Manga Status Display Names
+export const MangaStatusDisplayNames = {
+    [MangaStatus.ONGOING]: "Đang tiến hành",
+    [MangaStatus.COMPLETED]: "Hoàn thành",
+    [MangaStatus.PAUSED]: "Tạm ngưng"
+};
+
 // Manga Response
 export interface MangaResponse {
     id: string;
@@ -11,7 +25,7 @@ export interface MangaResponse {
     genres: string[];
     chapters: string[];
     yearOfRelease?: number;
-    status?: string;
+    status?: MangaStatus;
     updatedAt: string;
     lastChapterAddedAt?: string;
 }
@@ -22,7 +36,7 @@ export interface AdvancedSearchRequest {
     author?: string;
     genres?: string[];
     yearOfRelease?: number;
-    status?: string;
+    status?: MangaStatus;
     orderBy?: string;
 }
 
@@ -31,10 +45,14 @@ export interface MangaSummaryResponse {
     id: string;
     title: string;
     coverUrl?: string;
+    lastChapterId?: string;
     lastChapterAddedAt?: string;
     lastChapterNumber?: number;
     yearOfRelease?: number;
-    status?: string;
+    status?: MangaStatus;
+    views?: number;
+    loves?: number;
+    comments?: number;
 }
 
 // Manga Request
@@ -45,7 +63,7 @@ export interface MangaRequest {
     genres: string[];
     chapters?: string[];
     yearOfRelease?: number;
-    status?: string;
+    status?: MangaStatus;
 }
 
 // Chapter Response

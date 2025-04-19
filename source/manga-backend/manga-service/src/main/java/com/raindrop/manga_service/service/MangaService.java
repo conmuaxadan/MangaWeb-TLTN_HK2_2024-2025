@@ -256,7 +256,7 @@ public class MangaService {
             }
 
             // Tìm kiếm theo tình trạng
-            if (searchRequest.getStatus() != null && !searchRequest.getStatus().isEmpty()) {
+            if (searchRequest.getStatus() != null) {
                 predicates.add(criteriaBuilder.equal(root.get("status"), searchRequest.getStatus()));
             }
 

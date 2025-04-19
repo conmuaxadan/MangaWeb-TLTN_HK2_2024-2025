@@ -1,5 +1,6 @@
 package com.raindrop.manga_service.entity;
 
+import com.raindrop.manga_service.enums.MangaStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -36,7 +37,8 @@ public class Manga {
     // Năm phát hành
     int yearOfRelease;
     // Tình trạng (đang tiến hành, đã hoàn thành, tạm ngưng)
-    String status;
+    @Enumerated(EnumType.STRING)
+    MangaStatus status;
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;

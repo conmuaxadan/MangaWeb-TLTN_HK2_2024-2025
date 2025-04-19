@@ -5,6 +5,7 @@ import com.raindrop.manga_service.dto.request.MangaRequest;
 import com.raindrop.manga_service.dto.response.ApiResponse;
 import com.raindrop.manga_service.dto.response.MangaResponse;
 import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
+import com.raindrop.manga_service.enums.MangaStatus;
 import com.raindrop.manga_service.service.MangaService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -40,11 +41,21 @@ public class MangaController {
             @RequestParam("genres") String genresString,
             @RequestParam("cover") MultipartFile cover,
             @RequestParam("yearOfRelease") int yearOfRelease,
-            @RequestParam("status") String status
+            @RequestParam("status") String statusStr
     ) {
         Set<String> genres = Arrays.stream(genresString.split(","))
                 .map(String::trim)
                 .collect(Collectors.toSet());
+
+        // Chuyển đổi String status thành enum MangaStatus
+        MangaStatus status;
+        try {
+            status = MangaStatus.valueOf(statusStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            // Nếu không chuyển đổi được, sử dụng giá trị mặc định ONGOING
+            log.warn("Invalid status value: {}, using default ONGOING", statusStr);
+            status = MangaStatus.ONGOING;
+        }
 
         MangaRequest request = MangaRequest.builder()
                 .title(title)
@@ -113,14 +124,28 @@ public class MangaController {
             @RequestParam("author") String author,
             @RequestParam("description") String description,
             @RequestParam("genres") Set<String> genres,
-            @RequestParam(value = "cover", required = false) MultipartFile cover
+            @RequestParam(value = "cover", required = false) MultipartFile cover,
+            @RequestParam(value = "yearOfRelease", required = false, defaultValue = "0") int yearOfRelease,
+            @RequestParam(value = "status", required = false) String statusStr
     ) {
+        // Chuyển đổi String status thành enum MangaStatus nếu có
+        MangaStatus status = null;
+        if (statusStr != null && !statusStr.isEmpty()) {
+            try {
+                status = MangaStatus.valueOf(statusStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid status value: {}, using null", statusStr);
+            }
+        }
+
         MangaRequest request = MangaRequest.builder()
                 .title(title)
                 .author(author)
                 .description(description)
                 .genres(genres)
                 .cover(cover)
+                .yearOfRelease(yearOfRelease)
+                .status(status)
                 .build();
 
         return ApiResponse.<MangaResponse>builder()

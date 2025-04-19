@@ -9,7 +9,7 @@ import {
     faChevronUp
 } from '@fortawesome/free-solid-svg-icons';
 import mangaService from '../services/manga-service.ts';
-import { AdvancedSearchRequest, GenreResponse, MangaResponse } from '../interfaces/models/manga.ts';
+import { AdvancedSearchRequest, GenreResponse, MangaResponse, MangaStatus, MangaStatusDisplayNames } from '../interfaces/models/manga.ts';
 const AdvancedSearch: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -23,7 +23,7 @@ const AdvancedSearch: React.FC = () => {
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
     const [author, setAuthor] = useState<string>('');
     const [yearOfRelease, setYearOfRelease] = useState<number | undefined>(undefined);
-    const [status, setStatus] = useState<string>('');
+    const [status, setStatus] = useState<MangaStatus | ''>('');
     const [orderBy, setOrderBy] = useState<string>('lastChapterAddedAt,desc');
 
     // State cho dropdown thể loại
@@ -44,7 +44,12 @@ const AdvancedSearch: React.FC = () => {
     const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
 
     // Các tùy chọn cho dropdown
-    const statusOptions = ['Tất cả', 'Đang tiến hành', 'Đã hoàn thành', 'Tạm ngưng'];
+    const statusOptions = [
+        { value: '', label: 'Tất cả' },
+        { value: MangaStatus.ONGOING, label: MangaStatusDisplayNames[MangaStatus.ONGOING] },
+        { value: MangaStatus.COMPLETED, label: MangaStatusDisplayNames[MangaStatus.COMPLETED] },
+        { value: MangaStatus.PAUSED, label: MangaStatusDisplayNames[MangaStatus.PAUSED] }
+    ];
     const orderByOptions = [
         { value: 'lastChapterAddedAt,desc', label: 'Mới cập nhật' },
         { value: 'createdAt,desc', label: 'Truyện mới' },
@@ -390,12 +395,12 @@ const AdvancedSearch: React.FC = () => {
                                 <label className="block mb-2 text-sm font-medium">Tình trạng</label>
                                 <select
                                     value={status}
-                                    onChange={(e) => setStatus(e.target.value)}
+                                    onChange={(e) => setStatus(e.target.value as MangaStatus | '')}
                                     className="w-full p-2.5 text-sm rounded-lg bg-gray-800 border border-gray-700 focus:ring-purple-500 focus:border-purple-500"
                                 >
                                     {statusOptions.map((option) => (
-                                        <option key={option} value={option}>
-                                            {option}
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
                                         </option>
                                     ))}
                                 </select>
