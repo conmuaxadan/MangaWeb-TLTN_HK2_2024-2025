@@ -43,6 +43,10 @@ public interface MangaMapper {
     @Mapping(target = "coverUrl", source = "coverUrl")
     @Mapping(target = "lastChapterId", source = "lastChapterId")
     @Mapping(target = "lastChapterAddedAt", source = "lastChapterAddedAt")
+    @Mapping(target = "views", source = "views")
+    @Mapping(target = "loves", source = "loves")
+    @Mapping(target = "comments", source = "comments")
+    @Mapping(target = "lastChapterNumber", ignore = true)
     MangaSummaryResponse toMangaSummaryResponse(Manga manga);
 
     @Mapping(target = "id", ignore = true)
@@ -63,4 +67,6 @@ public interface MangaMapper {
                 .map(Genre::getName)
                 .collect(Collectors.toList());
     }
+
+
 }

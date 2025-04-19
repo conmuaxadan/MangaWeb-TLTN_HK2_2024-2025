@@ -12,6 +12,9 @@ interface MangaCardData {
     timeAgo: string;
     link: string;
     chapterLink: string;
+    views: number;
+    loves: number;
+    comments: number;
 }
 
 const LatestUpdates: React.FC = () => {
@@ -38,11 +41,15 @@ const LatestUpdates: React.FC = () => {
                         link: `/mangas/${manga.id}`,
                         chapterLink: manga.lastChapterNumber
                             ? `/mangas/${manga.id}/chapters/${manga.lastChapterNumber}`
-                            : `/mangas/${manga.id}`
+                            : `/mangas/${manga.id}`,
+                        views: manga.views || 0,
+                        loves: manga.loves || 0,
+                        comments: manga.comments || 0
                     }));
 
                     setMangaList(processedData);
                     setError(null);
+                    setLoading(false);
                 } else {
                     setError("Không thể tải danh sách manga");
                 }
@@ -108,13 +115,13 @@ const LatestUpdates: React.FC = () => {
                                             </h3>
                                             <span className="flex items-center justify-between gap-1 text-xs text-gray-300">
                                                 <span className="flex items-center gap-1">
-                                                    <i className="fa fa-star text-yellow-500"></i>9
+                                                    <i className="fa fa-eye text-yellow-500"></i>{manga.views}
                                                 </span>
                                                 <span className="flex items-center gap-1">
-                                                    <i className="fa fa-comment text-blue-400"></i>0
+                                                    <i className="fa fa-comment text-blue-400"></i>{manga.comments}
                                                 </span>
                                                 <span className="flex items-center gap-1">
-                                                    <i className="fa fa-heart text-red-500"></i>0
+                                                    <i className="fa fa-heart text-red-500"></i>{manga.loves}
                                                 </span>
                                             </span>
                                         </div>

@@ -17,4 +17,8 @@ public class MangaSummaryResponse {
     String lastChapterId;
     LocalDateTime lastChapterAddedAt;
     String status;
+    int views;
+    int loves;
+    int comments;
+    Integer lastChapterNumber;
 }

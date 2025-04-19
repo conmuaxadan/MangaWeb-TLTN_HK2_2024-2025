@@ -9,6 +9,7 @@ import com.raindrop.manga_service.entity.Manga;
 import com.raindrop.manga_service.enums.ErrorCode;
 import com.raindrop.manga_service.exception.AppException;
 import com.raindrop.manga_service.mapper.MangaMapper;
+import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.repository.GenreRepository;
 import com.raindrop.manga_service.repository.MangaRepository;
 import com.raindrop.manga_service.repository.httpclient.UploadClient;
@@ -40,6 +41,7 @@ public class MangaService {
     MangaRepository mangaRepository;
     MangaMapper mangaMapper;
     GenreRepository genreRepository;
+    ChapterRepository chapterRepository;
     UploadClient uploadClient;
 
     @Transactional
@@ -138,7 +140,21 @@ public class MangaService {
     public Page<MangaSummaryResponse> getMangaSummariesPaginated(Pageable pageable) {
         log.info("Getting paginated manga summaries with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
         Page<Manga> mangasPage = mangaRepository.findAll(pageable);
-        Page<MangaSummaryResponse> mangaSummaryResponsePage = mangasPage.map(mangaMapper::toMangaSummaryResponse);
+
+        // Chuyển đổi Manga sang MangaSummaryResponse và thêm lastChapterNumber
+        Page<MangaSummaryResponse> mangaSummaryResponsePage = mangasPage.map(manga -> {
+            MangaSummaryResponse response = mangaMapper.toMangaSummaryResponse(manga);
+
+            // Nếu có lastChapterId, tìm chapter tương ứng để lấy chapterNumber
+            if (manga.getLastChapterId() != null) {
+                chapterRepository.findById(manga.getLastChapterId()).ifPresent(chapter -> {
+                    response.setLastChapterNumber(chapter.getChapterNumber());
+                });
+            }
+
+            return response;
+        });
+
         log.info("Retrieved {} manga summaries out of {} total", mangaSummaryResponsePage.getNumberOfElements(), mangaSummaryResponsePage.getTotalElements());
         return mangaSummaryResponsePage;
     }
