@@ -9,7 +9,8 @@ import {
     Chapter,
     Profile,
     ProfileSettings,
-    AdvancedSearch
+    AdvancedSearch,
+    FavoriteList
 } from "../pages";
 
 // Định nghĩa các route cho ứng dụng
@@ -76,6 +77,12 @@ export const routes: IRoute[] = [
     {
         path: '/profile/settings',
         Component: ProfileSettings,
+        Layout: Master,
+        requireAuth: true
+    },
+    {
+        path: '/profile/favorites',
+        Component: FavoriteList,
         Layout: Master,
         requireAuth: true
     },

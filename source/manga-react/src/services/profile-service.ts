@@ -250,6 +250,43 @@ class ProfileService {
     }
 
     /**
+     * Lấy danh sách manga yêu thích của người dùng hiện tại
+     * @returns Danh sách manga yêu thích hoặc null nếu thất bại
+     */
+    async getMyFavorites(): Promise<FavoriteMangaResponse[] | null> {
+        try {
+            const apiResponse = await profileHttpClient.get<ApiResponse<any>>(`/favorites?page=0&size=100&sort=createdAt,desc`);
+
+            if (apiResponse.code !== 2000) {
+                toast.error(apiResponse.message || "Không thể lấy danh sách manga yêu thích", { position: "top-right" });
+                return null;
+            }
+
+            // API trả về dạng Page, cần lấy phần content
+            return apiResponse.result.content || [];
+        } catch (error) {
+            console.error(`Lỗi lấy danh sách manga yêu thích:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Xóa manga khỏi danh sách yêu thích
+     * @param mangaId ID của manga
+     * @returns true nếu xóa thành công, false nếu thất bại
+     */
+    async removeFavorite(mangaId: string): Promise<boolean> {
+        try {
+            const apiResponse = await profileHttpClient.delete<ApiResponse<void>>(`/favorites/${mangaId}`);
+
+            return apiResponse.code === 2000;
+        } catch (error) {
+            console.error(`Lỗi xóa manga ID ${mangaId} khỏi danh sách yêu thích:`, error);
+            return false;
+        }
+    }
+
+    /**
      * Kiểm tra xem một manga có nằm trong danh sách yêu thích không
      * @param userId ID của người dùng
      * @param mangaId ID của manga

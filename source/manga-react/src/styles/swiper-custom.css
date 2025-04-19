@@ -1,0 +1,51 @@
+/* Custom styles for Swiper */
+.swiper-container {
+  width: 100%;
+  padding-bottom: 40px; /* Space for pagination bullets */
+}
+
+.manga-swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.swiper-slide {
+  height: auto;
+  display: flex;
+}
+
+/* Navigation arrows */
+.swiper-button-next,
+.swiper-button-prev {
+  color: #9333ea !important; /* Purple color for arrows */
+  background: rgba(0, 0, 0, 0.5);
+  width: 35px !important;
+  height: 35px !important;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+  font-size: 18px !important;
+}
+
+/* Pagination bullets */
+.swiper-pagination-bullet {
+  background: #9333ea !important; /* Purple color for bullets */
+  opacity: 0.5;
+}
+
+.swiper-pagination-bullet-active {
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .swiper-button-next,
+  .swiper-button-prev {
+    display: none !important;
+  }
+}

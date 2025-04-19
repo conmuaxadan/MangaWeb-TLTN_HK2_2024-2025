@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faCog, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faCog, faSignOutAlt, faHeart } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../contexts/AuthContext.tsx';
 
 interface ProfileLayoutProps {
@@ -25,34 +25,22 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ children }) => {
 
   return (
     <section className="relative pb-16 lg:pb-24 bg-gray-900 text-white min-h-screen">
-      <div className="container-fluid relative">
-        <div className="profile-banner relative text-transparent">
-          <div className="relative shrink-0">
-            <img 
-              src="/images/avt_default.jpg"
-              className="h-80 w-full object-cover" 
-              id="profile-banner" 
-              alt="Profile Banner" 
-            />
-            <div className="absolute inset-0 bg-black/70"></div>
-          </div>
-        </div>
-      </div>
-      
+      {/* Banner đã được xóa */}
+
       <div className="container relative mx-auto px-4">
         <div className="md:flex">
           {/* Sidebar */}
           <div className="md:w-1/3 md:px-3 lg:w-1/4">
-            <div className="relative -mt-32 md:-mt-32">
+            <div className="relative mt-6">
               <div className="rounded-md bg-gray-800 p-6 shadow">
                 <div className="profile-pic mb-5 text-center">
                   <div>
                     <div className="relative mx-auto size-28">
-                      <img 
-                        src={user?.avatarUrl || "/images/avt_default.jpg"} 
-                        className="h-full w-full rounded-full shadow ring-4 ring-gray-700" 
-                        id="profile-image" 
-                        alt="Profile" 
+                      <img
+                        src={user?.avatarUrl || "/images/avt_default.jpg"}
+                        className="h-full w-full rounded-full shadow ring-4 ring-gray-700"
+                        id="profile-image"
+                        alt="Profile"
                       />
                     </div>
                     <div className="mt-4">
@@ -61,7 +49,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ children }) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="border-t border-gray-700">
                   <ul className="sidebar-nav mb-0 mt-3 list-none">
                     <li className={`navbar-item account-menu ${isActive('/profile') ? 'active' : ''}`}>
@@ -70,6 +58,14 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ children }) => {
                           <FontAwesomeIcon icon={faUser} />
                         </span>
                         <h6 className="mb-0 font-semibold">Thông tin chung</h6>
+                      </Link>
+                    </li>
+                    <li className={`navbar-item account-menu ${isActive('/profile/favorites') ? 'active' : ''}`}>
+                      <Link to="/profile/favorites" className="navbar-link flex items-center rounded py-2 text-gray-400 hover:text-white">
+                        <span className="mb-0 mr-2 text-[18px]">
+                          <FontAwesomeIcon icon={faHeart} />
+                        </span>
+                        <h6 className="mb-0 font-semibold">Yêu thích</h6>
                       </Link>
                     </li>
                     <li className={`navbar-item account-menu ${isActive('/profile/settings') ? 'active' : ''}`}>
@@ -81,7 +77,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ children }) => {
                       </Link>
                     </li>
                     <li className="navbar-item account-menu">
-                      <button 
+                      <button
                         onClick={handleLogout}
                         className="navbar-link flex items-center rounded py-2 text-gray-400 hover:text-white w-full text-left"
                       >
@@ -96,9 +92,9 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ children }) => {
               </div>
             </div>
           </div>
-          
+
           {/* Main Content */}
-          <div className="mt-[30px] md:mt-0 md:w-2/3 md:px-3 lg:w-3/4">
+          <div className="mt-6 md:mt-6 md:w-2/3 md:px-3 lg:w-3/4">
             {children}
           </div>
         </div>

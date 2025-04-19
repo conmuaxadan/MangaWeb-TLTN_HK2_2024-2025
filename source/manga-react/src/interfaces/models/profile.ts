@@ -54,6 +54,12 @@ export interface FavoriteMangaResponse {
     mangaCoverUrl?: string;
     author?: string;
     description?: string;
+    views: number;
+    loves: number;
+    comments: number;
+    lastChapterId?: string;
+    lastChapterNumber?: string;
+    lastChapterAddedAt?: string;
 }
 
 // Comment Request
