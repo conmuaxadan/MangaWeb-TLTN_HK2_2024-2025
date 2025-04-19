@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FavoriteMangaRepository extends JpaRepository<FavoriteManga, String> {
-    List<FavoriteManga> findByProfileId(String profileId);
-    Page<FavoriteManga> findByProfileId(String profileId, Pageable pageable);
-    Optional<FavoriteManga> findByProfileIdAndMangaId(String profileId, String mangaId);
-    boolean existsByProfileIdAndMangaId(String profileId, String mangaId);
-    void deleteByProfileIdAndMangaId(String profileId, String mangaId);
+    List<FavoriteManga> findByUserProfileId(String profileId);
+    Page<FavoriteManga> findByUserProfileId(String profileId, Pageable pageable);
+    Optional<FavoriteManga> findByUserProfileIdAndMangaId(String profileId, String mangaId);
+    boolean existsByUserProfileIdAndMangaId(String profileId, String mangaId);
+    void deleteByUserProfileIdAndMangaId(String profileId, String mangaId);
     long countByMangaId(String mangaId);
 }

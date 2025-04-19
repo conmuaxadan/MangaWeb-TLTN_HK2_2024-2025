@@ -9,7 +9,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface CommentMapper {
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "profileId", ignore = true)
+    @Mapping(target = "userProfile", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Comment toComment(CommentRequest request);

@@ -50,9 +50,9 @@ public class FavoriteMangaService {
         String profileId = userProfile.getId();
 
         // Kiểm tra xem đã thêm vào yêu thích chưa
-        if (favoriteMangaRepository.existsByProfileIdAndMangaId(profileId, request.getMangaId())) {
+        if (favoriteMangaRepository.existsByUserProfileIdAndMangaId(profileId, request.getMangaId())) {
             log.info("Manga {} already in favorites for user {}", request.getMangaId(), userId);
-            FavoriteManga existingFavorite = favoriteMangaRepository.findByProfileIdAndMangaId(profileId, request.getMangaId())
+            FavoriteManga existingFavorite = favoriteMangaRepository.findByUserProfileIdAndMangaId(profileId, request.getMangaId())
                     .orElseThrow(() -> new RuntimeException("Favorite manga not found"));
 
             return enrichFavoriteResponse(favoriteMangaMapper.toFavoriteResponse(existingFavorite), userProfile);
@@ -60,7 +60,7 @@ public class FavoriteMangaService {
 
         // Tạo mới favorite
         FavoriteManga favoriteManga = favoriteMangaMapper.toFavoriteManga(request);
-        favoriteManga.setProfileId(profileId);
+        favoriteManga.setUserProfile(userProfile);
 
         favoriteManga = favoriteMangaRepository.save(favoriteManga);
         log.info("Manga {} added to favorites with ID: {}", request.getMangaId(), favoriteManga.getId());
@@ -89,13 +89,13 @@ public class FavoriteMangaService {
         String profileId = userProfile.getId();
 
         // Kiểm tra xem có trong danh sách yêu thích không
-        if (!favoriteMangaRepository.existsByProfileIdAndMangaId(profileId, mangaId)) {
+        if (!favoriteMangaRepository.existsByUserProfileIdAndMangaId(profileId, mangaId)) {
             log.info("Manga {} not in favorites for user {}", mangaId, userId);
             return;
         }
 
         // Xóa khỏi danh sách yêu thích
-        favoriteMangaRepository.deleteByProfileIdAndMangaId(profileId, mangaId);
+        favoriteMangaRepository.deleteByUserProfileIdAndMangaId(profileId, mangaId);
         log.info("Manga {} removed from favorites for user {}", mangaId, userId);
 
         // Gửi event đến Kafka
@@ -121,7 +121,7 @@ public class FavoriteMangaService {
         String profileId = userProfileOpt.get().getId();
 
         // Kiểm tra xem có trong danh sách yêu thích không
-        boolean isFavorite = favoriteMangaRepository.existsByProfileIdAndMangaId(profileId, mangaId);
+        boolean isFavorite = favoriteMangaRepository.existsByUserProfileIdAndMangaId(profileId, mangaId);
         log.info("Manga {} is {} favorites for user {}", mangaId, isFavorite ? "in" : "not in", userId);
 
         return isFavorite;
@@ -143,7 +143,7 @@ public class FavoriteMangaService {
         String profileId = userProfile.getId();
 
         // Lấy danh sách yêu thích
-        Page<FavoriteManga> favorites = favoriteMangaRepository.findByProfileId(profileId, pageable);
+        Page<FavoriteManga> favorites = favoriteMangaRepository.findByUserProfileId(profileId, pageable);
         log.info("Found {} favorites for user {}", favorites.getTotalElements(), userId);
 
         // Tạo response

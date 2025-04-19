@@ -55,7 +55,6 @@ public class GenreService {
             throw new AppException(ErrorCode.GENRE_NOT_FOUND);
         }
         genre.setName(request.getName());
-        genre.setDescription(request.getDescription());
         genreRepository.save(genre);
 
         return genreMapper.toGenreResponse(genre);

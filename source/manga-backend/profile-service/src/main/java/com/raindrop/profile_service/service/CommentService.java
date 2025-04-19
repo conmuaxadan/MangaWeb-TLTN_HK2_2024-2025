@@ -52,16 +52,15 @@ public class CommentService {
         Optional<UserProfile> userProfileOpt = userProfileRepository.findByUserId(userId);
 
         // Xử lý thông tin profile
-        String profileId = null;
         String username;
         String avatarUrl = null;
+        UserProfile userProfile = null;
 
         if (userProfileOpt.isPresent()) {
-            UserProfile userProfile = userProfileOpt.get();
-            profileId = userProfile.getId();
+            userProfile = userProfileOpt.get();
             username = userProfile.getDisplayName();
             avatarUrl = userProfile.getAvatarUrl();
-            log.info("Found user profile: id={}, displayName={}", profileId, username);
+            log.info("Found user profile: id={}, displayName={}", userProfile.getId(), username);
         } else {
             // Nếu không tìm thấy profile, sử dụng userId làm username
             username = "User_" + userId.substring(0, Math.min(8, userId.length()));
@@ -70,7 +69,7 @@ public class CommentService {
 
         // Tạo comment
         Comment comment = commentMapper.toComment(request);
-        comment.setProfileId(profileId);
+        comment.setUserProfile(userProfile);
 
         comment = commentRepository.save(comment);
         log.info("Comment created with ID: {}", comment.getId());
@@ -109,14 +108,12 @@ public class CommentService {
         return comments.map(comment -> {
             CommentResponse response = commentMapper.toCommentResponse(comment);
 
-            // Lấy thông tin người dùng từ profileId
-            if (comment.getProfileId() != null) {
-                userProfileRepository.findById(comment.getProfileId())
-                    .ifPresent(profile -> {
-                        response.setUserId(profile.getUserId());
-                        response.setUsername(profile.getDisplayName());
-                        response.setUserAvatarUrl(profile.getAvatarUrl());
-                    });
+            // Lấy thông tin người dùng từ userProfile
+            if (comment.getUserProfile() != null) {
+                UserProfile profile = comment.getUserProfile();
+                response.setUserId(profile.getUserId());
+                response.setUsername(profile.getDisplayName());
+                response.setUserAvatarUrl(profile.getAvatarUrl());
             }
 
             return response;
@@ -143,8 +140,8 @@ public class CommentService {
         String username = userProfile.getDisplayName();
         String avatarUrl = userProfile.getAvatarUrl();
 
-        // Tìm comment theo profileId thay vì userId
-        Page<Comment> comments = commentRepository.findByProfileId(profileId, pageable);
+        // Tìm comment theo userProfile thay vì userId
+        Page<Comment> comments = commentRepository.findByUserProfileId(profileId, pageable);
 
         return comments.map(comment -> {
             CommentResponse response = commentMapper.toCommentResponse(comment);
@@ -177,7 +174,7 @@ public class CommentService {
         }
 
         // Kiểm tra quyền xóa (chỉ người tạo mới được xóa)
-        if (!userProfileOpt.get().getId().equals(comment.getProfileId())) {
+        if (comment.getUserProfile() == null || !userProfileOpt.get().getId().equals(comment.getUserProfile().getId())) {
             throw new AccessDeniedException("You don't have permission to delete this comment");
         }
 
@@ -215,7 +212,7 @@ public class CommentService {
         UserProfile userProfile = userProfileOpt.get();
 
         // Kiểm tra quyền cập nhật (chỉ người tạo mới được cập nhật)
-        if (!userProfile.getId().equals(comment.getProfileId())) {
+        if (comment.getUserProfile() == null || !userProfile.getId().equals(comment.getUserProfile().getId())) {
             throw new AccessDeniedException("You don't have permission to update this comment");
         }
 
@@ -246,8 +243,8 @@ public class CommentService {
             CommentResponse response = commentMapper.toCommentResponse(comment);
 
             // Lấy thông tin người dùng từ profileId
-            if (comment.getProfileId() != null) {
-                userProfileRepository.findById(comment.getProfileId())
+            if (comment.getUserProfile() != null) {
+                userProfileRepository.findById(comment.getUserProfile().getUserId())
                     .ifPresent(profile -> {
                         response.setUserId(profile.getUserId());
                         response.setUsername(profile.getDisplayName());

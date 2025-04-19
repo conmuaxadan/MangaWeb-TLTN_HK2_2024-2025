@@ -22,8 +22,9 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    @Column(name = "profile_id")
-    String profileId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profile_id")
+    UserProfile userProfile;
 
     @Column(name = "chapter_id", nullable = false)
     String chapterId;

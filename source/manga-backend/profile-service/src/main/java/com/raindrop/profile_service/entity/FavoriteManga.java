@@ -24,8 +24,9 @@ public class FavoriteManga {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    @Column(name = "profile_id", nullable = false)
-    String profileId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profile_id", nullable = false)
+    UserProfile userProfile;
 
     @Column(name = "manga_id", nullable = false)
     String mangaId;

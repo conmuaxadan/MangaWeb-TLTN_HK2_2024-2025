@@ -9,11 +9,11 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface FavoriteMangaMapper {
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "profileId", ignore = true)
+    @Mapping(target = "userProfile", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     FavoriteManga toFavoriteManga(FavoriteRequest request);
-    
+
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "username", ignore = true)
     @Mapping(target = "mangaTitle", ignore = true)

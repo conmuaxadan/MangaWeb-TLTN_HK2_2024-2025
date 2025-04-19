@@ -22,7 +22,6 @@ public class Genre {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
     String name;
-    String description;
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;
