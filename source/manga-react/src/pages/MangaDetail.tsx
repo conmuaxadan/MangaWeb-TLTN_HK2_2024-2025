@@ -189,17 +189,10 @@ const MangaDetail: React.FC = () => {
                     <h1 className="my-0 mb-4 text-3xl font-semibold leading-tight text-center md:text-left">{manga.title}</h1>
                     <div className="flex flex-wrap justify-center md:justify-between items-center gap-4 text-gray-500">
                         <div className="flex gap-6">
-                            <button
-                                onClick={handleToggleFavorite}
-                                disabled={favoriteLoading}
-                                className="flex items-center hover:opacity-80 transition-opacity"
-                            >
-                                <FontAwesomeIcon
-                                    icon={isFavorite ? faHeartSolid : faHeartRegular}
-                                    className={`mr-2 ${isFavorite ? 'text-red-500' : 'text-gray-400'} ${favoriteLoading ? 'animate-pulse' : ''}`}
-                                />
+                            <span className="flex items-center">
+                                <FontAwesomeIcon icon={faHeartSolid} className="mr-2 text-red-500"/>
                                 <span className="text-white">{manga.loves || 0}</span>
-                            </button>
+                            </span>
                             <span className="flex items-center">
                   <FontAwesomeIcon icon={faEye} className="mr-2 text-blue-500"/>
                   <span className="text-white">{manga.views || 0}</span>
@@ -239,8 +232,8 @@ const MangaDetail: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Đọc ngay button for mobile */}
-                                <div className="mt-4 md:hidden">
+                                {/* Đọc ngay và Yêu thích buttons for mobile */}
+                                <div className="mt-4 md:hidden space-y-2">
                                     <Link
                                         to={chapters.length > 0 ? `/mangas/${manga.id}/chapters/${chapters[chapters.length - 1].id}` : '#'}
                                         className={`w-full justify-center whitespace-nowrap rounded-md font-medium transition-colors
@@ -254,6 +247,23 @@ const MangaDetail: React.FC = () => {
                       </span>
                                         Đọc ngay
                                     </Link>
+
+                                    <button
+                                        onClick={handleToggleFavorite}
+                                        disabled={favoriteLoading}
+                                        className={`w-full justify-center whitespace-nowrap rounded-md font-medium transition-colors
+                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                      disabled:pointer-events-none disabled:opacity-50 flex h-auto items-center gap-4
+                      px-4 py-3 text-[14px] ${isFavorite
+                                            ? 'bg-red-500 hover:bg-red-600 text-white'
+                                            : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'}
+                      ${favoriteLoading ? 'opacity-70 cursor-wait' : ''}`}
+                                    >
+                      <span className="shrink-0">
+                        <FontAwesomeIcon icon={isFavorite ? faHeartSolid : faHeartRegular}/>
+                      </span>
+                                        {isFavorite ? 'Đã thích' : 'Thêm vào yêu thích'}
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -311,21 +321,40 @@ const MangaDetail: React.FC = () => {
                                     </p>
                                 </li>
 
-                                {/* Đọc ngay button for desktop */}
+                                {/* Đọc ngay và Yêu thích buttons for desktop */}
                                 <li className="hidden md:block pt-4">
-                                    <Link
-                                        to={chapters.length > 0 ? `/mangas/${manga.id}/chapters/${chapters[chapters.length - 1].id}` : '#'}
-                                        className={`justify-center whitespace-nowrap rounded-md font-medium transition-colors
-                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-                      disabled:pointer-events-none disabled:opacity-50 flex h-auto items-center gap-4
-                      bg-blue-500 px-6 py-3 text-white hover:bg-blue-600 w-auto
-                      ${chapters.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                      <span className="shrink-0">
-                        <FontAwesomeIcon icon={faEye}/>
-                      </span>
-                                        Đọc ngay
-                                    </Link>
+                                    <div className="flex gap-3">
+                                        <Link
+                                            to={chapters.length > 0 ? `/mangas/${manga.id}/chapters/${chapters[chapters.length - 1].id}` : '#'}
+                                            className={`justify-center whitespace-nowrap rounded-md font-medium transition-colors
+                          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                          disabled:pointer-events-none disabled:opacity-50 flex h-auto items-center gap-4
+                          bg-blue-500 px-6 py-3 text-white hover:bg-blue-600 w-auto
+                          ${chapters.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                          <span className="shrink-0">
+                            <FontAwesomeIcon icon={faEye}/>
+                          </span>
+                                            Đọc ngay
+                                        </Link>
+
+                                        <button
+                                            onClick={handleToggleFavorite}
+                                            disabled={favoriteLoading}
+                                            className={`justify-center whitespace-nowrap rounded-md font-medium transition-colors
+                          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                          disabled:pointer-events-none disabled:opacity-50 flex h-auto items-center gap-4
+                          px-6 py-3 w-auto ${isFavorite
+                                                ? 'bg-red-500 hover:bg-red-600 text-white'
+                                                : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'}
+                          ${favoriteLoading ? 'opacity-70 cursor-wait' : ''}`}
+                                        >
+                          <span className="shrink-0">
+                            <FontAwesomeIcon icon={isFavorite ? faHeartSolid : faHeartRegular}/>
+                          </span>
+                                            {isFavorite ? 'Đã thích' : 'Thích'}
+                                        </button>
+                                    </div>
                                 </li>
                             </ul>
                         </div>
