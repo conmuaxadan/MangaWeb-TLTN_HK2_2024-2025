@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import mangaService from '../services/manga-service';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { useSearchParams } from 'react-router-dom';
 
 // Định nghĩa interface cho dữ liệu manga đã được xử lý
 interface MangaCardData {
@@ -19,15 +20,27 @@ interface MangaCardData {
 }
 
 const LatestUpdates: React.FC = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [mangaList, setMangaList] = useState<MangaCardData[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [totalPages, setTotalPages] = useState<number>(1);
+    const [totalElements, setTotalElements] = useState<number>(0);
+
+    // Lấy trang hiện tại từ URL, mặc định là 0 (trang đầu tiên)
+    const currentPage = parseInt(searchParams.get('page') || '0');
+    const pageSize = 20; // Số truyện mỗi trang
+
+    // Hàm chuyển đổi trang sang URL
+    const handlePageChange = (page: number) => {
+        setSearchParams({ page: page.toString() });
+    };
 
     useEffect(() => {
         const fetchMangaSummaries = async () => {
             try {
                 setLoading(true);
-                const result = await mangaService.getMangaSummaries(0, 24, "lastChapterAddedAt,desc");
+                const result = await mangaService.getMangaSummaries(currentPage, pageSize, "lastChapterAddedAt,desc");
 
                 if (result) {
                     // Chuyển đổi dữ liệu từ API sang định dạng phù hợp với MangaCard
@@ -50,8 +63,9 @@ const LatestUpdates: React.FC = () => {
                     }));
 
                     setMangaList(processedData);
+                    setTotalPages(result.totalPages);
+                    setTotalElements(result.totalElements);
                     setError(null);
-                    setLoading(false);
                 } else {
                     setError("Không thể tải danh sách manga");
                 }
@@ -64,7 +78,7 @@ const LatestUpdates: React.FC = () => {
         };
 
         fetchMangaSummaries();
-    }, []);
+    }, [currentPage, pageSize]);
 
     return (
         <div>
@@ -75,11 +89,6 @@ const LatestUpdates: React.FC = () => {
                     </svg>
                     <span>Truyện mới cập nhật</span>
                 </h1>
-                <button className="rounded-full border-2 border-purple-500 p-3 text-purple-400 hover:bg-purple-500 hover:text-white transition-all duration-300" title="Lọc theo cài đặt">
-                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M487.976 0H24.028C2.71 0-8.047 25.866 7.058 40.971L192 225.941V432c0 7.831 3.821 15.17 10.237 19.662l80 55.98C298.02 518.69 320 507.493 320 487.98V225.941l184.947-184.97C520.021 25.896 509.338 0 487.976 0z"></path>
-                    </svg>
-                </button>
             </div>
 
             {loading ? (
@@ -151,40 +160,126 @@ const LatestUpdates: React.FC = () => {
                 </div>
             )}
 
-            <div className="mt-8">
-                <ul className="flex justify-center items-center space-x-2" role="navigation" aria-label="Pagination">
-                    <li>
-                        <a className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-gray-400 cursor-not-allowed" tabIndex={-1} role="button" aria-disabled="true" aria-label="Previous page" rel="prev">
-                            &lt;
-                        </a>
-                    </li>
-                    <li>
-                        <a className="flex items-center justify-center w-10 h-10 rounded-md bg-purple-600 text-white font-medium" rel="canonical" role="button" tabIndex={-1} aria-label="Page 1 is your current page" aria-current="page">
-                            1
-                        </a>
-                    </li>
-                    <li>
-                        <a className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200" rel="next" role="button" tabIndex={0} aria-label="Page 2">
-                            2
-                        </a>
-                    </li>
-                    <li>
-                        <a className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200" role="button" tabIndex={0} aria-label="Jump forward">
-                            ...
-                        </a>
-                    </li>
-                    <li>
-                        <a className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200" role="button" tabIndex={0} aria-label="Page 100">
-                            100
-                        </a>
-                    </li>
-                    <li>
-                        <a className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200" tabIndex={0} role="button" aria-disabled="false" aria-label="Next page" rel="next">
-                            &gt;
-                        </a>
-                    </li>
-                </ul>
-            </div>
+            {totalPages > 1 && (
+                <div className="mt-8">
+                    <ul className="flex justify-center items-center space-x-2" role="navigation" aria-label="Pagination">
+                        {/* Nút Previous */}
+                        <li>
+                            {currentPage > 0 ? (
+                                <button
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200"
+                                    aria-label="Previous page"
+                                >
+                                    &lt;
+                                </button>
+                            ) : (
+                                <span className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-gray-400 cursor-not-allowed">
+                                    &lt;
+                                </span>
+                            )}
+                        </li>
+
+                        {/* Trang đầu */}
+                        {currentPage > 2 && (
+                            <li>
+                                <button
+                                    onClick={() => handlePageChange(0)}
+                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200"
+                                    aria-label="Page 1"
+                                >
+                                    1
+                                </button>
+                            </li>
+                        )}
+
+                        {/* Dấu ... đầu */}
+                        {currentPage > 3 && (
+                            <li>
+                                <span className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white">
+                                    ...
+                                </span>
+                            </li>
+                        )}
+
+                        {/* Trang trước */}
+                        {currentPage > 0 && (
+                            <li>
+                                <button
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200"
+                                    aria-label={`Page ${currentPage}`}
+                                >
+                                    {currentPage}
+                                </button>
+                            </li>
+                        )}
+
+                        {/* Trang hiện tại */}
+                        <li>
+                            <span className="flex items-center justify-center w-10 h-10 rounded-md bg-purple-600 text-white font-medium" aria-current="page">
+                                {currentPage + 1}
+                            </span>
+                        </li>
+
+                        {/* Trang sau */}
+                        {currentPage < totalPages - 1 && (
+                            <li>
+                                <button
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200"
+                                    aria-label={`Page ${currentPage + 2}`}
+                                >
+                                    {currentPage + 2}
+                                </button>
+                            </li>
+                        )}
+
+                        {/* Dấu ... cuối */}
+                        {currentPage < totalPages - 4 && (
+                            <li>
+                                <span className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white">
+                                    ...
+                                </span>
+                            </li>
+                        )}
+
+                        {/* Trang cuối */}
+                        {currentPage < totalPages - 3 && (
+                            <li>
+                                <button
+                                    onClick={() => handlePageChange(totalPages - 1)}
+                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200"
+                                    aria-label={`Page ${totalPages}`}
+                                >
+                                    {totalPages}
+                                </button>
+                            </li>
+                        )}
+
+                        {/* Nút Next */}
+                        <li>
+                            {currentPage < totalPages - 1 ? (
+                                <button
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200"
+                                    aria-label="Next page"
+                                >
+                                    &gt;
+                                </button>
+                            ) : (
+                                <span className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-gray-400 cursor-not-allowed">
+                                    &gt;
+                                </span>
+                            )}
+                        </li>
+                    </ul>
+
+                    <div className="text-center text-sm text-gray-400 mt-4">
+                        Hiển thị {currentPage * pageSize + 1} - {Math.min((currentPage + 1) * pageSize, totalElements)} trong tổng số {totalElements} truyện
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
