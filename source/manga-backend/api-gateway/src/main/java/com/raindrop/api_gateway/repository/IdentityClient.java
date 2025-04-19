@@ -1,6 +1,5 @@
 package com.raindrop.api_gateway.repository;
 
-
 import com.raindrop.api_gateway.dto.request.IntrospectRequest;
 import com.raindrop.api_gateway.dto.response.ApiResponse;
 import com.raindrop.api_gateway.dto.response.IntrospectResponse;

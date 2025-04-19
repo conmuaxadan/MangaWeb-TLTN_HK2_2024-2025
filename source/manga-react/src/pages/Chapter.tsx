@@ -12,7 +12,6 @@ import {
   faAngleUp,
   faEye
 } from '@fortawesome/free-solid-svg-icons';
-import '../components/MangaChapter.css';
 import CommentSection from '../components/CommentSection.tsx';
 
 const Chapter: React.FC = () => {

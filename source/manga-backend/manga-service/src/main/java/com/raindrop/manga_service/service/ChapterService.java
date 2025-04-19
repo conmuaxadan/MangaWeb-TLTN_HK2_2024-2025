@@ -15,6 +15,7 @@ import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.repository.MangaRepository;
 import com.raindrop.manga_service.repository.PageRepository;
 import com.raindrop.manga_service.repository.httpclient.UploadClient;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -37,68 +38,76 @@ public class ChapterService {
     UploadClient uploadClient;
     MangaRepository mangaRepository;
     PageRepository pageRepository;
+    MangaStatsService mangaStatsService;
 
-public ChapterResponse createChapter(ChapterRequest request) {
-    if (request.getPages() == null || request.getPages().isEmpty()) {
-        throw new AppException(ErrorCode.CHAPTER_NO_PAGES);
-    }
-
-    Manga manga = mangaRepository.findById(request.getMangaId())
-            .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
-
-    // **Tạo Chapter trước để có ID**
-    Chapter chapter = Chapter.builder()
-            .chapterNumber(request.getChapterNumber())
-            .title(request.getTitle())
-            .manga(manga)
-            .build();
-    chapter = chapterRepository.save(chapter);
-
-    ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-    var header = attributes.getRequest().getHeader("Authorization");
-
-    // **Tạo và lưu các Page, gán Chapter cho từng Page**
-    List<Page> pages = new ArrayList<>();
-    for (int i = 0; i < request.getPages().size(); i++) {
-        MultipartFile file = request.getPages().get(i);
-        try {
-            ApiResponse<FileDataResponse> apiResponse = uploadClient.uploadMedia(header, file);
-            Page page = Page.builder()
-                    .index(i)
-                    .pageUrl(apiResponse.getResult().getName())
-                    .chapter(chapter) // Gán Chapter cho Page
-                    .build();
-            page = pageRepository.save(page); // Lưu Page
-            pages.add(page); // Thêm vào danh sách pages
-        } catch (Exception e) {
-            log.error("Error uploading file [{}]: {}", i, e.getMessage());
-            throw new AppException(ErrorCode.PAGE_UPLOAD_FAILED);
+    @Transactional
+    public ChapterResponse createChapter(ChapterRequest request) {
+        if (request.getPages() == null || request.getPages().isEmpty()) {
+            throw new AppException(ErrorCode.CHAPTER_NO_PAGES);
         }
+
+        Manga manga = mangaRepository.findById(request.getMangaId())
+                .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
+
+        // **Tạo Chapter trước để có ID**
+        Chapter chapter = Chapter.builder()
+                .chapterNumber(request.getChapterNumber())
+                .title(request.getTitle())
+                .manga(manga)
+                .build();
+        chapter = chapterRepository.save(chapter);
+
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var header = attributes.getRequest().getHeader("Authorization");
+
+        // **Tạo và lưu các Page, gán Chapter cho từng Page**
+        List<Page> pages = new ArrayList<>();
+        for (int i = 0; i < request.getPages().size(); i++) {
+            MultipartFile file = request.getPages().get(i);
+            try {
+                ApiResponse<FileDataResponse> apiResponse = uploadClient.uploadMedia(header, file);
+                Page page = Page.builder()
+                        .index(i)
+                        .pageUrl(apiResponse.getResult().getName())
+                        .chapter(chapter) // Gán Chapter cho Page
+                        .build();
+                page = pageRepository.save(page); // Lưu Page
+                pages.add(page); // Thêm vào danh sách pages
+            } catch (Exception e) {
+                log.error("Error uploading file [{}]: {}", i, e.getMessage());
+                throw new AppException(ErrorCode.PAGE_UPLOAD_FAILED);
+            }
+        }
+
+        // **Cập nhật danh sách pages trong Chapter (đồng bộ hóa)**
+        chapter.setPages(pages);
+        chapterRepository.save(chapter); // Cập nhật Chapter với danh sách pages
+
+        // Cập nhật ID chapter mới nhất của manga
+        manga.setLastChapterId(chapter.getId());
+        // Cập nhật thời gian thêm chapter mới nhất của manga
+        manga.setLastChapterAddedAt(LocalDateTime.now());
+        mangaRepository.save(manga);
+
+        // Cập nhật tổng số lượt xem và comment của manga
+        mangaStatsService.updateMangaTotalViews(manga.getId());
+        mangaStatsService.updateMangaTotalComments(manga.getId());
+
+        // **Tạo response**
+        return ChapterResponse.builder()
+                .title(chapter.getTitle())
+                .chapterNumber(chapter.getChapterNumber())
+                .mangaId(chapter.getManga().getId())
+                .pages(chapter.getPages().stream()
+                        .sorted(Comparator.comparingInt(Page::getIndex))
+                        .map(page -> PageResponse.builder()
+                                .index(page.getIndex())
+                                .pageUrl(page.getPageUrl())
+                                .build())
+                        .toList())
+                .updatedAt(chapter.getUpdatedAt())
+                .build();
     }
-
-    // **Cập nhật danh sách pages trong Chapter (đồng bộ hóa)**
-    chapter.setPages(pages);
-    chapterRepository.save(chapter); // Cập nhật Chapter với danh sách pages
-
-    // Cập nhật thời gian thêm chapter mới nhất của manga
-    manga.setLastChapterAddedAt(LocalDateTime.now());
-    mangaRepository.save(manga);
-
-    // **Tạo response**
-    return ChapterResponse.builder()
-            .title(chapter.getTitle())
-            .chapterNumber(chapter.getChapterNumber())
-            .mangaId(chapter.getManga().getId())
-            .pages(chapter.getPages().stream()
-                    .sorted(Comparator.comparingInt(Page::getIndex))
-                    .map(page -> PageResponse.builder()
-                            .index(page.getIndex())
-                            .pageUrl(page.getPageUrl())
-                            .build())
-                    .toList())
-            .updatedAt(chapter.getUpdatedAt())
-            .build();
-}
 
     public ChapterResponse getChapterById(String id) {
         Chapter chapter = chapterRepository.findById(id)
@@ -108,6 +117,7 @@ public ChapterResponse createChapter(ChapterRequest request) {
 
     /**
      * Tăng lượt xem của chapter và cập nhật tổng lượt xem của manga
+     *
      * @param id ID của chapter
      * @return Thông tin chapter sau khi cập nhật lượt xem
      */
@@ -124,6 +134,9 @@ public ChapterResponse createChapter(ChapterRequest request) {
         // Cập nhật tổng lượt xem của manga mà không cập nhật thời gian updatedAt
         mangaRepository.incrementViews(chapter.getManga().getId());
 
+        // Cập nhật tổng số lượt xem của manga bằng tổng số lượt xem của tất cả các chapter
+        mangaStatsService.updateMangaTotalViews(chapter.getManga().getId());
+
         // Lấy lại chapter đã cập nhật lượt xem
         chapter = chapterRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
 
@@ -135,6 +148,7 @@ public ChapterResponse createChapter(ChapterRequest request) {
 
     /**
      * Lấy tất cả chapter
+     *
      * @return Danh sách tất cả chapter
      */
     public List<ChapterResponse> getAllChapters() {
@@ -146,6 +160,7 @@ public ChapterResponse createChapter(ChapterRequest request) {
 
     /**
      * Lấy danh sách chapter của một manga
+     *
      * @param mangaId ID của manga
      * @return Danh sách chapter của manga
      */

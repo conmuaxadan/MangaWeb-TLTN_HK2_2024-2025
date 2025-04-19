@@ -24,14 +24,12 @@ public class Chapter {
     int chapterNumber;
     String title;
     int views;
-
+    int comments;
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Page> pages;
-
     @ManyToOne
     @JoinColumn(name = "manga_id", nullable = false)
     Manga manga;
-
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;

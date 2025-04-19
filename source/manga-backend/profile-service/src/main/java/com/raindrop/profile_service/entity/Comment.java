@@ -22,9 +22,6 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    @Column(name = "user_id", nullable = false)
-    String userId;
-
     @Column(name = "profile_id")
     String profileId;
 
@@ -33,9 +30,6 @@ public class Comment {
 
     @Column(name = "manga_id", nullable = false)
     String mangaId;
-
-    @Column(name = "username")
-    String username;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     String content;
@@ -47,7 +41,4 @@ public class Comment {
     @Column(name = "updated_at")
     @LastModifiedDate
     LocalDateTime updatedAt;
-
-    @Version
-    Integer version;
 }

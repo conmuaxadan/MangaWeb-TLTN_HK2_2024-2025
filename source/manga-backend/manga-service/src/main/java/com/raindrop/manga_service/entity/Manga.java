@@ -31,28 +31,20 @@ public class Manga {
     String coverUrl;
     @Column(columnDefinition = "TEXT")
     String description;
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-        name = "manga_genres",
-        joinColumns = @JoinColumn(name = "manga_id"),
-        inverseJoinColumns = @JoinColumn(name = "genre_id")
-    )
+    @ManyToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     List<Genre> genres;
-    @OneToMany(mappedBy = "manga", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    List<Chapter> chapters;
-
     // Năm phát hành
     int yearOfRelease;
-
     // Tình trạng (đang tiến hành, đã hoàn thành, tạm ngưng)
     String status;
-
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;
     @LastModifiedDate
     LocalDateTime updatedAt;
 
+    //ID chapter mới nhất
+    String lastChapterId;
     // Thời gian thêm chapter mới nhất
     LocalDateTime lastChapterAddedAt;
 }

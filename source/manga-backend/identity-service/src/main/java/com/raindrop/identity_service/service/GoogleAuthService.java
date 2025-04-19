@@ -23,7 +23,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
+import com.raindrop.identity_service.kafka.UserProfileEventProducer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,7 +40,7 @@ public class GoogleAuthService {
     final UserRepository userRepository;
     final PasswordEncoder passwordEncoder;
     final ProfileMapper profileMapper;
-    final KafkaTemplate<String, Object> kafkaTemplate;
+    final UserProfileEventProducer userProfileEventProducer;
 
     @Value("${google.client-id}")
     String clientId;
@@ -149,8 +149,7 @@ public class GoogleAuthService {
                 log.info("Creating user profile for user: {}", profileEvent.getEmail());
 
                 //Publish message to Kafka
-                log.info("Sending user profile event to Kafka for user: {}", user.getUsername());
-                kafkaTemplate.send("onboard-successful",profileEvent);
+                userProfileEventProducer.sendUserProfileEvent(profileEvent);
                 log.info("New user created successfully: {}", email);
             }
 

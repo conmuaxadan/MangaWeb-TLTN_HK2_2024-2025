@@ -23,10 +23,6 @@ public class Genre {
     String id;
     String name;
     String description;
-
-    @ManyToMany(mappedBy = "genres")
-    List<Manga> mangas;
-
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;

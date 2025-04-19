@@ -12,12 +12,14 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FavoriteResponse {
     String id;
-    String userId;
+    String profileId;
+    String userId; // Thông tin từ UserProfile
+    String username; // Thông tin từ UserProfile
     String mangaId;
     String mangaTitle;
     String mangaCoverUrl;
     LocalDateTime addedAt;
-    
+
     // Thông tin bổ sung từ Manga Service
     String author;
     String description;

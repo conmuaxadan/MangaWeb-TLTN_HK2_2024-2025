@@ -7,6 +7,7 @@ import com.raindrop.profile_service.dto.response.CommentResponse;
 import com.raindrop.profile_service.dto.response.MangaInfoResponse;
 import com.raindrop.profile_service.entity.Comment;
 import com.raindrop.profile_service.entity.UserProfile;
+import com.raindrop.profile_service.kafka.CommentEventProducer;
 import com.raindrop.profile_service.mapper.CommentMapper;
 import com.raindrop.profile_service.repository.CommentRepository;
 import com.raindrop.profile_service.repository.UserProfileRepository;
@@ -35,6 +36,7 @@ public class CommentService {
     CommentMapper commentMapper;
     UserProfileRepository userProfileRepository;
     MangaClient mangaClient;
+    CommentEventProducer commentEventProducer;
 
     /**
      * Tạo bình luận mới
@@ -49,9 +51,9 @@ public class CommentService {
         // Lấy thông tin profile người dùng
         Optional<UserProfile> userProfileOpt = userProfileRepository.findByUserId(userId);
 
-        // Xử lý thông tin người dùng
-        String username;
+        // Xử lý thông tin profile
         String profileId = null;
+        String username;
         String avatarUrl = null;
 
         if (userProfileOpt.isPresent()) {
@@ -68,14 +70,17 @@ public class CommentService {
 
         // Tạo comment
         Comment comment = commentMapper.toComment(request);
-        comment.setUserId(userId);
         comment.setProfileId(profileId);
-        comment.setUsername(username);
 
         comment = commentRepository.save(comment);
         log.info("Comment created with ID: {}", comment.getId());
 
+        // Gửi event đến Kafka để cập nhật số lượng comment
+        commentEventProducer.sendCommentCreatedEvent(comment.getMangaId(), comment.getChapterId());
+
         CommentResponse response = commentMapper.toCommentResponse(comment);
+        response.setUserId(userId);
+        response.setUsername(username);
         response.setUserAvatarUrl(avatarUrl);
 
         return response;
@@ -104,20 +109,13 @@ public class CommentService {
         return comments.map(comment -> {
             CommentResponse response = commentMapper.toCommentResponse(comment);
 
-            // Lấy avatar của người dùng từ profileId nếu có
+            // Lấy thông tin người dùng từ profileId
             if (comment.getProfileId() != null) {
                 userProfileRepository.findById(comment.getProfileId())
-                    .ifPresent(profile -> response.setUserAvatarUrl(profile.getAvatarUrl()));
-            } else {
-                // Nếu không có profileId, thử tìm bằng userId
-                userProfileRepository.findByUserId(comment.getUserId())
                     .ifPresent(profile -> {
+                        response.setUserId(profile.getUserId());
+                        response.setUsername(profile.getDisplayName());
                         response.setUserAvatarUrl(profile.getAvatarUrl());
-                        response.setProfileId(profile.getId());
-
-                        // Cập nhật profileId trong comment
-                        comment.setProfileId(profile.getId());
-                        commentRepository.save(comment);
                     });
             }
 
@@ -133,25 +131,28 @@ public class CommentService {
      */
     public Page<CommentResponse> getCommentsByUserId(String userId, Pageable pageable) {
         log.info("Getting comments for user: {}", userId);
-        Page<Comment> comments = commentRepository.findByUserId(userId, pageable);
 
         // Lấy profile của người dùng
         Optional<UserProfile> userProfileOpt = userProfileRepository.findByUserId(userId);
-        String profileId = userProfileOpt.map(UserProfile::getId).orElse(null);
-        String avatarUrl = userProfileOpt.map(UserProfile::getAvatarUrl).orElse(null);
+        if (!userProfileOpt.isPresent()) {
+            return Page.empty(pageable);
+        }
+
+        UserProfile userProfile = userProfileOpt.get();
+        String profileId = userProfile.getId();
+        String username = userProfile.getDisplayName();
+        String avatarUrl = userProfile.getAvatarUrl();
+
+        // Tìm comment theo profileId thay vì userId
+        Page<Comment> comments = commentRepository.findByProfileId(profileId, pageable);
 
         return comments.map(comment -> {
             CommentResponse response = commentMapper.toCommentResponse(comment);
 
-            // Gán thông tin profile
+            // Gán thông tin người dùng
+            response.setUserId(userId);
+            response.setUsername(username);
             response.setUserAvatarUrl(avatarUrl);
-
-            // Cập nhật profileId trong comment nếu cần
-            if (profileId != null && comment.getProfileId() == null) {
-                comment.setProfileId(profileId);
-                commentRepository.save(comment);
-                response.setProfileId(profileId);
-            }
 
             return response;
         });
@@ -169,13 +170,26 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
 
+        // Lấy profile của người dùng
+        Optional<UserProfile> userProfileOpt = userProfileRepository.findByUserId(userId);
+        if (!userProfileOpt.isPresent()) {
+            throw new AccessDeniedException("User profile not found");
+        }
+
         // Kiểm tra quyền xóa (chỉ người tạo mới được xóa)
-        if (!comment.getUserId().equals(userId)) {
+        if (!userProfileOpt.get().getId().equals(comment.getProfileId())) {
             throw new AccessDeniedException("You don't have permission to delete this comment");
         }
 
+        // Lưu thông tin manga và chapter trước khi xóa comment
+        String mangaId = comment.getMangaId();
+        String chapterId = comment.getChapterId();
+
         commentRepository.deleteById(commentId);
         log.info("Comment deleted: {}", commentId);
+
+        // Gửi event đến Kafka để cập nhật số lượng comment
+        commentEventProducer.sendCommentDeletedEvent(mangaId, chapterId);
     }
 
     /**
@@ -192,28 +206,17 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
 
-        // Kiểm tra quyền cập nhật (chỉ người tạo mới được cập nhật)
-        if (!comment.getUserId().equals(userId)) {
-            throw new AccessDeniedException("You don't have permission to update this comment");
+        // Lấy profile của người dùng
+        Optional<UserProfile> userProfileOpt = userProfileRepository.findByUserId(userId);
+        if (!userProfileOpt.isPresent()) {
+            throw new AccessDeniedException("User profile not found");
         }
 
-        // Tìm profile của người dùng nếu chưa acó profileId
-        String profileId = comment.getProfileId();
-        String avatarUrl = null;
+        UserProfile userProfile = userProfileOpt.get();
 
-        if (profileId == null) {
-            Optional<UserProfile> userProfileOpt = userProfileRepository.findByUserId(userId);
-            if (userProfileOpt.isPresent()) {
-                UserProfile profile = userProfileOpt.get();
-                profileId = profile.getId();
-                avatarUrl = profile.getAvatarUrl();
-                comment.setProfileId(profileId);
-            }
-        } else {
-            Optional<UserProfile> userProfileOpt = userProfileRepository.findById(profileId);
-            if (userProfileOpt.isPresent()) {
-                avatarUrl = userProfileOpt.get().getAvatarUrl();
-            }
+        // Kiểm tra quyền cập nhật (chỉ người tạo mới được cập nhật)
+        if (!userProfile.getId().equals(comment.getProfileId())) {
+            throw new AccessDeniedException("You don't have permission to update this comment");
         }
 
         // Cập nhật nội dung comment
@@ -222,8 +225,9 @@ public class CommentService {
 
         // Tạo response
         CommentResponse response = commentMapper.toCommentResponse(comment);
-        response.setProfileId(profileId);
-        response.setUserAvatarUrl(avatarUrl);
+        response.setUserId(userId);
+        response.setUsername(userProfile.getDisplayName());
+        response.setUserAvatarUrl(userProfile.getAvatarUrl());
 
         return response;
     }
@@ -241,20 +245,13 @@ public class CommentService {
         return comments.map(comment -> {
             CommentResponse response = commentMapper.toCommentResponse(comment);
 
-            // Lấy avatar của người dùng từ profileId nếu có
+            // Lấy thông tin người dùng từ profileId
             if (comment.getProfileId() != null) {
                 userProfileRepository.findById(comment.getProfileId())
-                    .ifPresent(profile -> response.setUserAvatarUrl(profile.getAvatarUrl()));
-            } else {
-                // Nếu không có profileId, thử tìm bằng userId
-                userProfileRepository.findByUserId(comment.getUserId())
                     .ifPresent(profile -> {
+                        response.setUserId(profile.getUserId());
+                        response.setUsername(profile.getDisplayName());
                         response.setUserAvatarUrl(profile.getAvatarUrl());
-                        response.setProfileId(profile.getId());
-
-                        // Cập nhật profileId trong comment
-                        comment.setProfileId(profile.getId());
-                        commentRepository.save(comment);
                     });
             }
 

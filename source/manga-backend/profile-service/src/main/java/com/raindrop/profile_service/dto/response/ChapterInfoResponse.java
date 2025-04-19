@@ -13,4 +13,5 @@ public class ChapterInfoResponse {
     int chapterNumber;
     String title;
     String mangaId;
+    int comments;
 }

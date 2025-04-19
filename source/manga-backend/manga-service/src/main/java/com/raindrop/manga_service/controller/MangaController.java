@@ -38,7 +38,9 @@ public class MangaController {
             @RequestParam("author") String author,
             @RequestParam("description") String description,
             @RequestParam("genres") String genresString,
-            @RequestParam(value = "cover", required = false) MultipartFile cover
+            @RequestParam("cover") MultipartFile cover,
+            @RequestParam("yearOfRelease") int yearOfRelease,
+            @RequestParam("status") String status
     ) {
         Set<String> genres = Arrays.stream(genresString.split(","))
                 .map(String::trim)
@@ -50,6 +52,8 @@ public class MangaController {
                 .description(description)
                 .genres(genres)
                 .cover(cover)
+                .yearOfRelease(yearOfRelease)
+                .status(status)
                 .build();
 
         return ApiResponse.<MangaResponse>builder()

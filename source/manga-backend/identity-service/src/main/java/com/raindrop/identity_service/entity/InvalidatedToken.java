@@ -24,7 +24,6 @@ public class InvalidatedToken {
     @Id
     String id;
     Date expiryTime;
-
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;

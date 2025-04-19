@@ -19,8 +19,6 @@ import java.time.LocalDateTime;
 public class Permission {
     @Id
     String name;
-    String description;
-
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;

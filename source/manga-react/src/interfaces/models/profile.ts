@@ -37,14 +37,23 @@ export interface ReadingHistoryResponse {
     lastChapterNumber: number;
 }
 
+// Favorite Request
+export interface FavoriteRequest {
+    mangaId: string;
+}
+
 // Favorite Manga Response
 export interface FavoriteMangaResponse {
     id: string;
+    profileId: string;
     userId: string;
+    username: string;
     mangaId: string;
     addedAt: string;
     mangaTitle: string;
     mangaCoverUrl?: string;
+    author?: string;
+    description?: string;
 }
 
 // Comment Request

@@ -17,6 +17,7 @@ public class ChapterResponse {
     int chapterNumber;
     String title;
     int views;
+    int comments;
     List<PageResponse> pages;
     String mangaId;
     LocalDateTime updatedAt;

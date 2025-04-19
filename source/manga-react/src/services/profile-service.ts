@@ -8,7 +8,8 @@ import {
     ReadingHistoryResponse,
     FavoriteMangaResponse,
     CommentRequest,
-    CommentResponse
+    CommentResponse,
+    FavoriteRequest
 } from "../interfaces/models/profile";
 
 class ProfileService {
@@ -475,6 +476,98 @@ class ProfileService {
         } catch (error) {
             console.error(`Lỗi cập nhật bình luận ID ${commentId}:`, error);
             toast.error("Không thể cập nhật bình luận", { position: "top-right" });
+            return null;
+        }
+    }
+
+    /**
+     * Thêm manga vào danh sách yêu thích
+     * @param mangaId ID của manga
+     * @returns Thông tin manga đã thêm vào yêu thích hoặc null nếu thất bại
+     */
+    async addFavorite(mangaId: string): Promise<FavoriteMangaResponse | null> {
+        try {
+            const request: FavoriteRequest = { mangaId };
+            const apiResponse = await profileHttpClient.post<ApiResponse<FavoriteMangaResponse>>('/favorites', request);
+
+            if (apiResponse.code !== 2000) {
+                console.error(apiResponse.message || "Không thể thêm vào danh sách yêu thích");
+                return null;
+            }
+
+            toast.success("Đã thêm vào danh sách yêu thích", { position: "top-right" });
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi thêm manga ${mangaId} vào danh sách yêu thích:`, error);
+            toast.error("Không thể thêm vào danh sách yêu thích", { position: "top-right" });
+            return null;
+        }
+    }
+
+    /**
+     * Xóa manga khỏi danh sách yêu thích
+     * @param mangaId ID của manga
+     * @returns true nếu xóa thành công, false nếu thất bại
+     */
+    async removeFavorite(mangaId: string): Promise<boolean> {
+        try {
+            const apiResponse = await profileHttpClient.delete<ApiResponse<void>>(`/favorites/${mangaId}`);
+
+            if (apiResponse.code !== 2000) {
+                console.error(apiResponse.message || "Không thể xóa khỏi danh sách yêu thích");
+                return false;
+            }
+
+            toast.success("Đã xóa khỏi danh sách yêu thích", { position: "top-right" });
+            return true;
+        } catch (error) {
+            console.error(`Lỗi xóa manga ${mangaId} khỏi danh sách yêu thích:`, error);
+            toast.error("Không thể xóa khỏi danh sách yêu thích", { position: "top-right" });
+            return false;
+        }
+    }
+
+    /**
+     * Kiểm tra xem manga có trong danh sách yêu thích không
+     * @param mangaId ID của manga
+     * @returns true nếu manga có trong danh sách yêu thích, false nếu không
+     */
+    async isFavorite(mangaId: string): Promise<boolean> {
+        try {
+            const apiResponse = await profileHttpClient.get<ApiResponse<boolean>>(`/favorites/${mangaId}/check`);
+
+            if (apiResponse.code !== 2000) {
+                console.error(apiResponse.message || "Không thể kiểm tra trạng thái yêu thích");
+                return false;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi kiểm tra trạng thái yêu thích của manga ${mangaId}:`, error);
+            return false;
+        }
+    }
+
+    /**
+     * Lấy danh sách manga yêu thích của người dùng
+     * @param page Số trang
+     * @param size Số lượng manga trên mỗi trang
+     * @returns Danh sách manga yêu thích có phân trang hoặc null nếu thất bại
+     */
+    async getFavorites(page: number = 0, size: number = 20): Promise<ApiResponse<any> | null> {
+        try {
+            const apiResponse = await profileHttpClient.get<ApiResponse<any>>(
+                `/favorites?page=${page}&size=${size}&sort=createdAt,desc`
+            );
+
+            if (apiResponse.code !== 2000) {
+                console.error(apiResponse.message || "Không thể lấy danh sách yêu thích");
+                return null;
+            }
+
+            return apiResponse;
+        } catch (error) {
+            console.error(`Lỗi lấy danh sách manga yêu thích:`, error);
             return null;
         }
     }

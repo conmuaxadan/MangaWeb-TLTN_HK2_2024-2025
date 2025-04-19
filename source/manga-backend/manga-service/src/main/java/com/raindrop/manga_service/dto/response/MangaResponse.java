@@ -20,12 +20,12 @@ public class MangaResponse {
     String author;
     int loves;
     int views;
+    int comments;
     String coverUrl;
     String description;
     List<String> genres;
-    List<String> chapters;
-    Integer yearOfRelease;
+    int yearOfRelease;
     String status;
-    LocalDateTime updatedAt;
+    String lastChapterId;
     LocalDateTime lastChapterAddedAt;
 }

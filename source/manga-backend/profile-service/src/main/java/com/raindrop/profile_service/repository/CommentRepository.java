@@ -12,9 +12,8 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
     Page<Comment> findByChapterId(String chapterId, Pageable pageable);
     List<Comment> findByMangaId(String mangaId);
     Page<Comment> findByMangaId(String mangaId, Pageable pageable);
-    List<Comment> findByUserId(String userId);
-    Page<Comment> findByUserId(String userId, Pageable pageable);
-    void deleteByUserIdAndId(String userId, String commentId);
+    List<Comment> findByProfileId(String profileId);
+    Page<Comment> findByProfileId(String profileId, Pageable pageable);
 
     // Đếm số bình luận theo mangaId
     long countByMangaId(String mangaId);

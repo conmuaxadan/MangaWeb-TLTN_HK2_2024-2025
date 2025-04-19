@@ -16,15 +16,13 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
+import com.raindrop.identity_service.kafka.UserProfileEventProducer;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,7 +42,7 @@ public class UserService {
     PasswordEncoder passwordEncoder;
     ProfileClient profileClient;
     ProfileMapper profileMapper;
-    KafkaTemplate<String, Object> kafkaTemplate;
+    UserProfileEventProducer userProfileEventProducer;
 
 
     public UserResponse createUser(UserRequest request) {
@@ -85,8 +83,7 @@ public class UserService {
 //        profileClient.createProfile(header,profileRequest);
 
         //Publish message to Kafka
-        log.info("Sending user profile event to Kafka for user: {}", user.getUsername());
-        kafkaTemplate.send("onboard-successful",profileEvent);
+        userProfileEventProducer.sendUserProfileEvent(profileEvent);
 
         return userMapper.toUserResponse(user);
     }

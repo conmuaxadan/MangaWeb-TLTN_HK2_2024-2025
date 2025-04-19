@@ -6,16 +6,21 @@ import { MangaResponse, ChapterResponse } from '../interfaces/models/manga.ts';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faHeart, faEye, faClock, faUser, faRss, faTags, faPen, faList, faComment } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faHeart as faHeartSolid, faEye, faClock, faUser, faRss, faTags, faPen, faList, faComment } from '@fortawesome/free-solid-svg-icons';
+import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
+import { useAuth } from '../contexts/AuthContext';
 
 const MangaDetail: React.FC = () => {
   const {id} = useParams<{ id: string }>();
+  const { isLogin } = useAuth();
   const [manga, setManga] = useState<MangaResponse | null>(null);
   const [chapters, setChapters] = useState<ChapterResponse[]>([]);
   const [totalComments, setTotalComments] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isFavorite, setIsFavorite] = useState<boolean>(false);
+  const [favoriteLoading, setFavoriteLoading] = useState<boolean>(false);
   const chaptersPerPage = 20;
 
   useEffect(() => {
@@ -61,6 +66,22 @@ const MangaDetail: React.FC = () => {
     fetchMangaDetails();
   }, [id]);
 
+  // Kiểm tra trạng thái yêu thích
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      if (!id || !isLogin) return;
+
+      try {
+        const status = await profileService.isFavorite(id);
+        setIsFavorite(status);
+      } catch (error) {
+        console.error('Lỗi khi kiểm tra trạng thái yêu thích:', error);
+      }
+    };
+
+    checkFavoriteStatus();
+  }, [id, isLogin]);
+
   // Tính toán các chapter hiển thị trên trang hiện tại
   const indexOfLastChapter = currentPage * chaptersPerPage;
   const indexOfFirstChapter = indexOfLastChapter - chaptersPerPage;
@@ -69,6 +90,52 @@ const MangaDetail: React.FC = () => {
 
   // Xử lý chuyển trang
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  // Xử lý thêm/xóa yêu thích
+  const handleToggleFavorite = async () => {
+    if (!isLogin) {
+      alert('Vui lòng đăng nhập để thêm vào danh sách yêu thích');
+      return;
+    }
+
+    if (!id) return;
+
+    try {
+      setFavoriteLoading(true);
+
+      if (isFavorite) {
+        // Xóa khỏi danh sách yêu thích
+        const success = await profileService.removeFavorite(id);
+        if (success) {
+          setIsFavorite(false);
+          // Cập nhật số lượng yêu thích trên UI
+          if (manga) {
+            setManga({
+              ...manga,
+              loves: Math.max(0, (manga.loves || 0) - 1)
+            });
+          }
+        }
+      } else {
+        // Thêm vào danh sách yêu thích
+        const result = await profileService.addFavorite(id);
+        if (result) {
+          setIsFavorite(true);
+          // Cập nhật số lượng yêu thích trên UI
+          if (manga) {
+            setManga({
+              ...manga,
+              loves: (manga.loves || 0) + 1
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Lỗi khi thao tác với danh sách yêu thích:', error);
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -111,10 +178,17 @@ const MangaDetail: React.FC = () => {
             <h1 className="my-0 mb-4 text-3xl font-semibold leading-tight text-center md:text-left">{manga.title}</h1>
             <div className="flex flex-wrap justify-center md:justify-between items-center gap-4 text-gray-500">
               <div className="flex gap-6">
-                <span className="flex items-center">
-                  <FontAwesomeIcon icon={faHeart} className="mr-2 text-red-500"/>
+                <button
+                  onClick={handleToggleFavorite}
+                  disabled={favoriteLoading}
+                  className="flex items-center hover:opacity-80 transition-opacity"
+                >
+                  <FontAwesomeIcon
+                    icon={isFavorite ? faHeartSolid : faHeartRegular}
+                    className={`mr-2 ${isFavorite ? 'text-red-500' : 'text-gray-400'} ${favoriteLoading ? 'animate-pulse' : ''}`}
+                  />
                   <span className="text-white">{manga.loves || 0}</span>
-                </span>
+                </button>
                 <span className="flex items-center">
                   <FontAwesomeIcon icon={faEye} className="mr-2 text-blue-500"/>
                   <span className="text-white">{manga.views || 0}</span>

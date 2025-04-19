@@ -19,9 +19,9 @@ public interface MangaMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "views", ignore = true)
     @Mapping(target = "loves", ignore = true)
+    @Mapping(target = "comments", ignore = true)
     @Mapping(target = "coverUrl", ignore = true) // Xử lý riêng trong service
     @Mapping(target = "genres", ignore = true) // Xử lý riêng trong service
-    @Mapping(target = "chapters", ignore = true) // Xử lý riêng trong service
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "lastChapterAddedAt", ignore = true)
@@ -30,9 +30,7 @@ public interface MangaMapper {
     Manga toManga(MangaRequest request);
 
     @Mapping(target = "genres", source = "genres", qualifiedByName = "genresToStringList")
-    @Mapping(target = "chapters", source = "chapters", qualifiedByName = "chaptersToStringList")
-    @Mapping(target = "yearOfRelease", source = "yearOfRelease")
-    @Mapping(target = "status", source = "status")
+    @Mapping(target = "lastChapterId", source = "lastChapterId")
     MangaResponse toMangaResponse(Manga manga);
 
     /**
@@ -40,9 +38,11 @@ public interface MangaMapper {
      * @param manga Entity Manga
      * @return MangaSummaryResponse
      */
-    @Mapping(target = "lastChapterNumber", expression = "java(getLastChapterNumber(manga))")
-    @Mapping(target = "yearOfRelease", source = "yearOfRelease")
-    @Mapping(target = "status", source = "status")
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "title", source = "title")
+    @Mapping(target = "coverUrl", source = "coverUrl")
+    @Mapping(target = "lastChapterId", source = "lastChapterId")
+    @Mapping(target = "lastChapterAddedAt", source = "lastChapterAddedAt")
     MangaSummaryResponse toMangaSummaryResponse(Manga manga);
 
     @Mapping(target = "id", ignore = true)
@@ -50,7 +50,6 @@ public interface MangaMapper {
     @Mapping(target = "loves", ignore = true)
     @Mapping(target = "coverUrl", ignore = true) // Xử lý riêng trong service
     @Mapping(target = "genres", ignore = true) // Xử lý riêng trong service
-    @Mapping(target = "chapters", ignore = true) // Xử lý riêng trong service
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "lastChapterAddedAt", ignore = true)
@@ -63,28 +62,5 @@ public interface MangaMapper {
                 .stream()
                 .map(Genre::getName)
                 .collect(Collectors.toList());
-    }
-
-    @Named("chaptersToStringList")
-    default List<String> chaptersToStringList(List<Chapter> chapters) {
-        return Optional.ofNullable(chapters)
-                .orElse(Collections.emptyList())
-                .stream()
-                .map(Chapter::getId)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Lấy số chapter mới nhất của manga
-     * @param manga Entity Manga
-     * @return Số chapter mới nhất hoặc null nếu không có chapter nào
-     */
-    default Integer getLastChapterNumber(Manga manga) {
-        return Optional.ofNullable(manga.getChapters())
-                .orElse(Collections.emptyList())
-                .stream()
-                .map(Chapter::getChapterNumber)
-                .max(Integer::compareTo)
-                .orElse(null);
     }
 }

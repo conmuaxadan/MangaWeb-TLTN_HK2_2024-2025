@@ -4,7 +4,6 @@ import com.raindrop.manga_service.dto.request.AdvancedSearchRequest;
 import com.raindrop.manga_service.dto.request.MangaRequest;
 import com.raindrop.manga_service.dto.response.MangaResponse;
 import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
-import com.raindrop.manga_service.entity.Chapter;
 import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.entity.Manga;
 import com.raindrop.manga_service.enums.ErrorCode;
@@ -16,6 +15,7 @@ import com.raindrop.manga_service.repository.httpclient.UploadClient;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -42,6 +42,7 @@ public class MangaService {
     GenreRepository genreRepository;
     UploadClient uploadClient;
 
+    @Transactional
     public MangaResponse createManga(MangaRequest request) {
         // Kiểm tra xem manga đã tồn tại chưa
         Manga existingManga = mangaRepository.findByTitle(request.getTitle());
@@ -90,8 +91,6 @@ public class MangaService {
         }
 
         manga = mangaRepository.save(manga);
-
-
         return mangaMapper.toMangaResponse(manga);
     }
 
@@ -106,21 +105,8 @@ public class MangaService {
     public MangaResponse getMangaById(String id) {
         Manga manga = mangaRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
-        return MangaResponse.builder()
-                .id(manga.getId())
-                .title(manga.getTitle())
-                .author(manga.getAuthor())
-                .description(manga.getDescription())
-                .loves(manga.getLoves())
-                .views(manga.getViews())
-                .coverUrl(manga.getCoverUrl())
-                .genres(manga.getGenres().stream().map(Genre::getName).collect(Collectors.toList()))
-                .chapters(manga.getChapters().stream().map(Chapter::getId).collect(Collectors.toList()))
-                .yearOfRelease(manga.getYearOfRelease())
-                .status(manga.getStatus())
-                .updatedAt(manga.getUpdatedAt())
-                .lastChapterAddedAt(manga.getLastChapterAddedAt())
-                .build();
+        MangaResponse response = mangaMapper.toMangaResponse(manga);
+        return response;
     }
 
 
@@ -181,6 +167,7 @@ public class MangaService {
         // Upload ảnh bìa mới nếu có
         if (request.getCover() != null && !request.getCover().isEmpty()) {
             try {
+                uploadClient.deleteMedia(header,manga.getCoverUrl());
                 log.info("Uploading new cover image for manga: {}", manga.getTitle());
                 var response = uploadClient.uploadMedia(header,request.getCover());
                 manga.setCoverUrl(response.getResult().getName());
@@ -199,7 +186,6 @@ public class MangaService {
 
         // Xử lý genres - xóa tất cả genres hiện tại và thêm lại các genres mới
         manga.getGenres().clear(); // Xóa tất cả genres hiện tại
-
         if (request.getGenres() != null && !request.getGenres().isEmpty()) {
             List<Genre> newGenres = new ArrayList<>();
             for (var genreName : request.getGenres()) {

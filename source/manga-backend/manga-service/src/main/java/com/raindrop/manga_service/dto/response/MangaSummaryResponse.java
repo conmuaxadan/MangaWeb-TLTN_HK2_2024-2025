@@ -14,8 +14,7 @@ public class MangaSummaryResponse {
     String id;
     String title;
     String coverUrl;
+    String lastChapterId;
     LocalDateTime lastChapterAddedAt;
-    Integer lastChapterNumber;
-    Integer yearOfRelease;
     String status;
 }

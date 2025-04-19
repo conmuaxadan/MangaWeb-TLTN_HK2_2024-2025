@@ -16,5 +16,5 @@ public interface UploadClient {
     ApiResponse<FileDataResponse> uploadMedia(@RequestHeader("Authorization") String token, @RequestPart("image") MultipartFile file);
 
     @DeleteMapping(value = "/files/{fileName}")
-    ApiResponse<Void> deleteMedia(@RequestPart("fileName") String fileName);
+    ApiResponse<Void> deleteMedia(@RequestHeader("Authorization") String token,@RequestPart("fileName") String fileName);
 }
