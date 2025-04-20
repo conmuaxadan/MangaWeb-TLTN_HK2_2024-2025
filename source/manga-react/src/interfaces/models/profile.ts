@@ -21,7 +21,7 @@ export interface UserProfileRequest {
 export interface ReadingHistoryRequest {
     mangaId: string;
     chapterId: string;
-    lastPageRead: number;
+    // Không còn lưu lastPage nữa
 }
 
 // Reading History Response
@@ -29,12 +29,14 @@ export interface ReadingHistoryResponse {
     id: string;
     userId: string;
     mangaId: string;
-    lastChapterId: string;
-    lastPageRead: number;
-    lastReadAt: string;
+    chapterId: string;
+    // Không còn lưu lastPage nữa
+    createdAt: string;
+    updatedAt: string;
     mangaTitle: string;
     mangaCoverUrl?: string;
-    lastChapterNumber: number;
+    chapterTitle?: string;
+    chapterNumber: number;
 }
 
 // Favorite Request

@@ -142,13 +142,43 @@ class MangaService {
     }
 
     /**
+     * Lấy session ID mới
+     * @returns Session ID mới hoặc null nếu thất bại
+     */
+    async getSessionId(): Promise<string | null> {
+        try {
+            const apiResponse = await mangaHttpClient.get<ApiResponse<string>>(`/chapters/session`);
+
+            if (apiResponse.code !== 2000) {
+                console.error(`Lỗi khi lấy session ID:`, apiResponse.message);
+                return null;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi khi lấy session ID:`, error);
+            return null;
+        }
+    }
+
+    /**
      * Tăng lượt xem của chapter
      * @param id ID của chapter
+     * @param userId ID của user (null nếu chưa đăng nhập)
+     * @param sessionId ID của session
+     * @param scrollPercentage Phần trăm cuộn trang (0-100)
      * @returns Thông tin chapter sau khi cập nhật lượt xem hoặc null nếu thất bại
      */
-    async incrementChapterViews(id: string): Promise<ChapterResponse | null> {
+    async incrementChapterViews(id: string, userId: string | null = null, sessionId: string, scrollPercentage: number = 0): Promise<ChapterResponse | null> {
         try {
-            const apiResponse = await mangaHttpClient.post<ApiResponse<ChapterResponse>>(`/chapters/${id}/view`);
+            const request = {
+                chapterId: id,
+                userId,
+                sessionId,
+                scrollPercentage
+            };
+
+            const apiResponse = await mangaHttpClient.post<ApiResponse<ChapterResponse>>(`/chapters/${id}/view`, request);
 
             if (apiResponse.code !== 2000) {
                 // Không hiển thị thông báo lỗi vì đây là tính năng ngầm

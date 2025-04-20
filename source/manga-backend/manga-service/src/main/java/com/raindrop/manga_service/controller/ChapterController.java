@@ -2,10 +2,12 @@ package com.raindrop.manga_service.controller;
 
 import com.raindrop.manga_service.dto.request.ChapterRequest;
 import com.raindrop.manga_service.dto.request.MangaRequest;
+import com.raindrop.manga_service.dto.request.ViewLogRequest;
 import com.raindrop.manga_service.dto.response.ApiResponse;
 import com.raindrop.manga_service.dto.response.ChapterResponse;
 import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.service.ChapterService;
+import com.raindrop.manga_service.service.ViewLogService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import java.util.List;
 @Slf4j
 public class ChapterController {
     ChapterService chapterService;
+    ViewLogService viewLogService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -64,13 +67,49 @@ public class ChapterController {
     /**
      * Tăng lượt xem của chapter
      * @param id ID của chapter
+     * @param request Thông tin lượt xem
      * @return Thông tin chapter sau khi cập nhật lượt xem
      */
     @PostMapping("/{id}/view")
-    ApiResponse<ChapterResponse> incrementChapterViews(@PathVariable String id) {
+    ApiResponse<ChapterResponse> logChapterView(
+            @PathVariable String id,
+            @RequestBody @Valid ViewLogRequest request) {
+
+        // Kiểm tra xem chapterId trong request có khớp với id trong path không
+        if (!id.equals(request.getChapterId())) {
+            request = ViewLogRequest.builder()
+                    .chapterId(id)
+                    .userId(request.getUserId())
+                    .sessionId(request.getSessionId())
+                    .scrollPercentage(request.getScrollPercentage())
+                    .build();
+        }
+
+        // Ghi nhận lượt xem
+        boolean viewLogged = viewLogService.logChapterView(
+                request.getChapterId(),
+                request.getUserId(),
+                request.getSessionId(),
+                request.getScrollPercentage());
+
+        // Lấy thông tin chapter sau khi cập nhật lượt xem
+        ChapterResponse chapterResponse = chapterService.getChapterById(id);
+
         return ApiResponse.<ChapterResponse>builder()
-                .message("Chapter views incremented successfully")
-                .result(chapterService.incrementChapterViews(id))
+                .message(viewLogged ? "Chapter view logged successfully" : "Chapter view not logged (already viewed recently or scroll percentage too low)")
+                .result(chapterResponse)
+                .build();
+    }
+
+    /**
+     * Tạo session ID mới
+     * @return Session ID mới
+     */
+    @GetMapping("/session")
+    ApiResponse<String> generateSessionId() {
+        return ApiResponse.<String>builder()
+                .message("Session ID generated successfully")
+                .result(viewLogService.generateSessionId())
                 .build();
     }
 

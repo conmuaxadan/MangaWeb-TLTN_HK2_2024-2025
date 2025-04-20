@@ -270,21 +270,7 @@ class ProfileService {
         }
     }
 
-    /**
-     * Xóa manga khỏi danh sách yêu thích
-     * @param mangaId ID của manga
-     * @returns true nếu xóa thành công, false nếu thất bại
-     */
-    async removeFavorite(mangaId: string): Promise<boolean> {
-        try {
-            const apiResponse = await profileHttpClient.delete<ApiResponse<void>>(`/favorites/${mangaId}`);
-
-            return apiResponse.code === 2000;
-        } catch (error) {
-            console.error(`Lỗi xóa manga ID ${mangaId} khỏi danh sách yêu thích:`, error);
-            return false;
-        }
-    }
+    // Method removeFavorite has been moved to line 549
 
     /**
      * Kiểm tra xem một manga có nằm trong danh sách yêu thích không
@@ -605,6 +591,79 @@ class ProfileService {
             return apiResponse;
         } catch (error) {
             console.error(`Lỗi lấy danh sách manga yêu thích:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Lấy lịch sử đọc của người dùng hiện tại
+     * @returns Danh sách lịch sử đọc hoặc null nếu thất bại
+     */
+    async getMyReadingHistory(): Promise<ReadingHistoryResponse[] | null> {
+        try {
+            const apiResponse = await profileHttpClient.get<ApiResponse<any>>(`/reading-history?page=0&size=100&sort=updatedAt,desc`);
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể lấy lịch sử đọc", { position: "top-right" });
+                return null;
+            }
+
+            // API trả về dạng Page, cần lấy phần content
+            return apiResponse.result.content || [];
+        } catch (error) {
+            console.error(`Lỗi lấy lịch sử đọc:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Xóa lịch sử đọc
+     * @param historyId ID của lịch sử đọc
+     * @returns true nếu xóa thành công, false nếu thất bại
+     */
+    async removeReadingHistory(historyId: string): Promise<boolean> {
+        try {
+            const apiResponse = await profileHttpClient.delete<ApiResponse<void>>(`/reading-history/${historyId}`);
+
+            if (apiResponse.code !== 1000) {
+                console.error(apiResponse.message || "Không thể xóa lịch sử đọc");
+                return false;
+            }
+
+            toast.success("Đã xóa khỏi lịch sử đọc", { position: "top-right" });
+            return true;
+        } catch (error) {
+            console.error(`Lỗi xóa lịch sử đọc ${historyId}:`, error);
+            toast.error("Không thể xóa lịch sử đọc", { position: "top-right" });
+            return false;
+        }
+    }
+
+    /**
+     * Đánh dấu đã đọc chapter
+     * @param mangaId ID của manga
+     * @param chapterId ID của chapter
+     * @returns Thông tin lịch sử đọc hoặc null nếu thất bại
+     */
+    async markAsRead(mangaId: string, chapterId: string): Promise<ReadingHistoryResponse | null> {
+        try {
+            const request: ReadingHistoryRequest = {
+                mangaId,
+                chapterId
+            };
+
+            console.log('Sending reading history request:', request);
+
+            const apiResponse = await profileHttpClient.post<ApiResponse<ReadingHistoryResponse>>('/reading-history', request);
+
+            if (apiResponse.code !== 1000) {
+                console.error(apiResponse.message || "Không thể đánh dấu đã đọc chapter");
+                return null;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi đánh dấu đã đọc chapter ${chapterId} của manga ${mangaId}:`, error);
             return null;
         }
     }

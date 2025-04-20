@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faCog, faSignOutAlt, faHeart } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faCog, faSignOutAlt, faHeart, faHistory } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../contexts/AuthContext.tsx';
 
 interface ProfileLayoutProps {
@@ -66,6 +66,14 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ children }) => {
                           <FontAwesomeIcon icon={faHeart} />
                         </span>
                         <h6 className="mb-0 font-semibold">Yêu thích</h6>
+                      </Link>
+                    </li>
+                    <li className={`navbar-item account-menu ${isActive('/profile/reading-history') ? 'active' : ''}`}>
+                      <Link to="/profile/reading-history" className="navbar-link flex items-center rounded py-2 text-gray-400 hover:text-white">
+                        <span className="mb-0 mr-2 text-[18px]">
+                          <FontAwesomeIcon icon={faHistory} />
+                        </span>
+                        <h6 className="mb-0 font-semibold">Lịch sử đọc</h6>
                       </Link>
                     </li>
                     <li className={`navbar-item account-menu ${isActive('/profile/settings') ? 'active' : ''}`}>

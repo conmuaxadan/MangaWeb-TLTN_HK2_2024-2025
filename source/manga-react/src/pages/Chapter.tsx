@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import mangaService from '../services/manga-service.ts';
+import profileService from '../services/profile-service.ts';
 import {MangaResponse, ChapterResponse, ChapterPageResponse} from '../interfaces/models/manga.ts';
+import { useAuth } from '../contexts/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faArrowLeft,
@@ -16,24 +18,61 @@ import CommentSection from '../components/CommentSection.tsx';
 
 const Chapter: React.FC = () => {
   const { id, chapterId } = useParams<{ id: string; chapterId: string }>();
+  const { user, isLogin } = useAuth();
   const [manga, setManga] = useState<MangaResponse | null>(null);
   const [chapter, setChapter] = useState<ChapterResponse | null>(null);
   const [nextChapter, setNextChapter] = useState<ChapterResponse | null>(null);
   const [prevChapter, setPrevChapter] = useState<ChapterResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [sessionId, setSessionId] = useState<string>("");
+  const [scrollPercentage, setScrollPercentage] = useState<number>(0);
+
+  // Danh sách trang của chapter
+  const [pages, setPages] = useState<ChapterPageResponse[]>([]);
 
   // State cho thanh điều hướng
   const [navbarVisible, setNavbarVisible] = useState<boolean>(true);
   const [lastScrollY, setLastScrollY] = useState<number>(0);
   const navbarRef = useRef<HTMLDivElement>(null);
 
-  // Xử lý ẩn/hiện thanh điều hướng khi cuộn
+  // Lấy session ID khi component mount
+  useEffect(() => {
+    const getSessionId = async () => {
+      // Kiểm tra xem đã có session ID trong localStorage chưa
+      let storedSessionId = localStorage.getItem('manga_session_id');
+
+      if (!storedSessionId) {
+        // Nếu chưa có, lấy session ID mới từ server
+        const newSessionId = await mangaService.getSessionId();
+        if (newSessionId) {
+          storedSessionId = newSessionId;
+          localStorage.setItem('manga_session_id', newSessionId);
+        } else {
+          // Nếu không lấy được từ server, tạo một ID ngẫu nhiên
+          storedSessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+          localStorage.setItem('manga_session_id', storedSessionId);
+        }
+      }
+
+      setSessionId(storedSessionId);
+    };
+
+    getSessionId();
+  }, []);
+
+  // Xử lý ẩn/hiện thanh điều hướng khi cuộn và theo dõi tiến trình đọc
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const scrollingDown = currentScrollY > lastScrollY;
       const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
+
+      // Tính toán phần trăm cuộn
+      const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrollPercent = Math.round((window.scrollY / docHeight) * 100);
+      setScrollPercentage(scrollPercent);
 
       if (scrollingDown && !nearBottom && currentScrollY > 100) {
         // Cuộn xuống và không gần cuối trang -> ẩn navbar
@@ -41,6 +80,32 @@ const Chapter: React.FC = () => {
       } else {
         // Cuộn lên, gần cuối trang, hoặc ở đầu trang -> hiện navbar
         setNavbarVisible(true);
+      }
+
+      // Xác định trang hiện tại đang đọc dựa trên vị trí cuộn
+      if (pages.length > 0) {
+        const pageElements = document.querySelectorAll('[data-id]');
+        let visiblePage = 0;
+
+        pageElements.forEach((element) => {
+          const rect = element.getBoundingClientRect();
+          // Nếu phần tử hiển thị trong viewport
+          if (rect.top < window.innerHeight && rect.bottom > 0) {
+            const pageIndex = parseInt(element.getAttribute('data-index') || '0', 10);
+            if (pageIndex > visiblePage) {
+              visiblePage = pageIndex;
+            }
+          }
+        });
+
+        if (visiblePage !== currentPage) {
+          setCurrentPage(visiblePage);
+
+          // Lưu lịch sử đọc nếu đã đăng nhập
+          if (isLogin && id && chapterId) {
+            profileService.markAsRead(id, chapterId);
+          }
+        }
       }
 
       setLastScrollY(currentScrollY);
@@ -55,13 +120,35 @@ const Chapter: React.FC = () => {
       window.removeEventListener('scroll', handleScroll);
       document.body.classList.remove('reading-mode');
     };
-  }, [lastScrollY]);
-
-  // Danh sách trang của chapter
-  const [pages, setPages] = useState<ChapterPageResponse[]>([]);
+  }, [lastScrollY, pages, currentPage, isLogin, id, chapterId]);
 
   // Lưu trữ tất cả các chapter để sử dụng cho nút "Chương đầu tiên"
   const [chapters, setChapters] = useState<ChapterResponse[]>([]);
+
+  // Gọi API tăng lượt xem khi người dùng cuộn trang
+  useEffect(() => {
+    // Chỉ gọi API khi đã cuộn ít nhất 30% trang và có sessionId
+    if (scrollPercentage >= 30 && sessionId && chapterId) {
+      const logView = async () => {
+        try {
+          await mangaService.incrementChapterViews(
+            chapterId,
+            isLogin ? user?.id : null,
+            sessionId,
+            scrollPercentage
+          );
+          console.log(`Đã gọi API tăng lượt xem với scrollPercentage = ${scrollPercentage}%`);
+        } catch (error) {
+          console.error('Lỗi khi gọi API tăng lượt xem:', error);
+        }
+      };
+
+      // Chỉ gọi API khi cuộn đến 30%, 60% và 90% trang
+      if (scrollPercentage === 30 || scrollPercentage === 60 || scrollPercentage === 90) {
+        logView();
+      }
+    }
+  }, [scrollPercentage, sessionId, chapterId, isLogin, user]);
 
   useEffect(() => {
     const fetchChapterData = async () => {
@@ -127,8 +214,27 @@ const Chapter: React.FC = () => {
 
           // Tăng lượt xem của chapter
           try {
-            await mangaService.incrementChapterViews(currentChapter.id);
-            console.log('Tăng lượt xem thành công cho chapter ID:', currentChapter.id);
+            // Đảm bảo đã có sessionId trước khi gọi API
+            if (sessionId) {
+              // Gọi API với thông tin user và phần trăm cuộn
+              await mangaService.incrementChapterViews(
+                currentChapter.id,
+                isLogin ? user?.id : null,
+                sessionId,
+                30 // Mặc định là 30% khi mới mở chapter
+              );
+              console.log('Tăng lượt xem thành công cho chapter ID:', currentChapter.id);
+            }
+
+            // Đánh dấu đã đọc chapter nếu đã đăng nhập
+            if (isLogin && id) {
+              try {
+                await profileService.markAsRead(id, currentChapter.id);
+                console.log('Lưu lịch sử đọc thành công cho chapter ID:', currentChapter.id);
+              } catch (readErr) {
+                console.error('Lỗi khi lưu lịch sử đọc:', readErr);
+              }
+            }
           } catch (err) {
             console.error('Lỗi khi tăng lượt xem:', err);
             // Không hiển thị lỗi cho người dùng vì đây là tính năng ngầm

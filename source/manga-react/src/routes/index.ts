@@ -10,7 +10,8 @@ import {
     Profile,
     ProfileSettings,
     AdvancedSearch,
-    FavoriteList
+    FavoriteList,
+    ReadingHistoryList
 } from "../pages";
 
 // Định nghĩa các route cho ứng dụng
@@ -83,6 +84,12 @@ export const routes: IRoute[] = [
     {
         path: '/profile/favorites',
         Component: FavoriteList,
+        Layout: Master,
+        requireAuth: true
+    },
+    {
+        path: '/profile/reading-history',
+        Component: ReadingHistoryList,
         Layout: Master,
         requireAuth: true
     },

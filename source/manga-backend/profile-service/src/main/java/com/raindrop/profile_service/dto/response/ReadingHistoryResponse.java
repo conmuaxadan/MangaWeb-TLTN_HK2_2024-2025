@@ -17,10 +17,11 @@ public class ReadingHistoryResponse {
     String chapterId;
     String mangaTitle;
     Integer chapterNumber;
-    Integer lastPage;
-    LocalDateTime readAt;
+    // Không còn lưu lastPage nữa
+    // Integer lastPage;
+    LocalDateTime createdAt;
     LocalDateTime updatedAt;
-    
+
     // Thông tin bổ sung từ Manga Service
     String mangaCoverUrl;
     String chapterTitle;
