@@ -460,24 +460,25 @@ const AdvancedSearch: React.FC = () => {
                                     <span>{selectedGenres.length > 0 ? ', ' : 'Đang lọc theo '}tình trạng {MangaStatusDisplayNames[status as MangaStatus]}</span>
                                 )}
                             </div>
-                            <div className="flex gap-2">
-                                <button
-                                    type="button"
-                                    onClick={handleReset}
-                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                                >
-                                    <FontAwesomeIcon icon={faRedo} />
-                                    <span>Reset</span>
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                                >
-                                    <FontAwesomeIcon icon={faSearch} />
-                                    <span>Tìm kiếm</span>
-                                </button>
-                            </div>
+
                         </div>
+                    </div>
+                    <div className="flex gap-2 justify-end w-full">
+                        <button
+                            type="button"
+                            onClick={handleReset}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                        >
+                            <FontAwesomeIcon icon={faRedo} />
+                            <span>Reset</span>
+                        </button>
+                        <button
+                            type="submit"
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                        >
+                            <FontAwesomeIcon icon={faSearch} />
+                            <span>Tìm kiếm</span>
+                        </button>
                     </div>
                 </form>
 
