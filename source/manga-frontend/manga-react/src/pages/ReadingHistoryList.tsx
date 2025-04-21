@@ -64,53 +64,63 @@ const ReadingHistoryList: React.FC = () => {
             </a>
           </div>
         ) : (
-          <div className="mt-6 space-y-4">
+          <div className="grid grid-cols-2 gap-[15px] md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 mt-6">
             {readingHistory.map((history) => (
-              <div key={history.id} className="group bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex">
-                  {/* Ảnh bìa */}
-                  <div className="w-[100px] h-[150px] shrink-0">
-                    <a href={`/mangas/${history.mangaId}`} className="block h-full">
-                      <img
-                        src={history.mangaCoverUrl ? `http://localhost:8888/api/v1/upload/files/${history.mangaCoverUrl}` : '/images/default-manga-cover.jpg'}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
-                        alt={history.mangaTitle}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/images/default-manga-cover.jpg';
-                        }}
-                      />
-                    </a>
-                  </div>
-
-                  {/* Thông tin truyện */}
-                  <div className="flex-1 p-4 flex flex-col justify-between">
-                    <div>
-                      <a href={`/mangas/${history.mangaId}`} className="block">
-                        <h3 className="text-base font-semibold text-white mb-2 hover:text-purple-400 transition-colors">
-                          {history.mangaTitle}
-                        </h3>
+              <div key={history.id}>
+                <div className="group">
+                  <figure className="clearfix">
+                    <div className="relative mb-2">
+                      <a title={history.mangaTitle} href={`/mangas/${history.mangaId}`} className="block">
+                        <div style={{ position: 'relative', width: '100%', paddingBottom: '150%' }}>
+                          <div className="overflow-hidden rounded-lg group-hover:shadow-lg" style={{ position: 'absolute', inset: 0 }}>
+                            <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-neutral-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
+                            <img
+                              src={history.mangaCoverUrl ? `http://localhost:8888/api/v1/upload/files/${history.mangaCoverUrl}` : '/images/default-manga-cover.jpg'}
+                              className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
+                              alt={history.mangaTitle}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/images/default-manga-cover.jpg';
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="absolute bottom-0 left-0 z-[2] w-full px-2 py-1.5">
+                          <h3 className="mb-2 line-clamp-2 text-[12px] font-semibold leading-tight text-white transition group-hover:line-clamp-3">
+                            {history.mangaTitle}
+                          </h3>
+                          <span className="flex items-center justify-between gap-[4px] text-[10px] text-gray-300">
+                            <span className="flex items-center gap-[4px]">
+                              <i className="fa fa-eye text-yellow-500"></i>0
+                            </span>
+                            <span className="flex items-center gap-[4px]">
+                              <i className="fa fa-book text-green-500"></i>Ch.{history.chapterNumber}
+                            </span>
+                            <span className="flex items-center gap-[4px]">
+                              <i className="fa fa-clock text-purple-400"></i>
+                              {formatDistanceToNow(new Date(history.updatedAt), { addSuffix: true, locale: vi }).replace('khoảng ', '')}
+                            </span>
+                          </span>
+                        </div>
                       </a>
-
-                      <div className="flex items-center gap-4 text-xs text-gray-400 mb-2">
-                        <a
-                          href={`/mangas/${history.mangaId}/chapters/${history.chapterId}`}
-                          className="flex items-center gap-1 text-blue-400 hover:text-blue-300"
-                        >
-                          <FontAwesomeIcon icon={faBookOpen} className="text-green-500" />
-                          Chapter {history.chapterNumber}
-                        </a>
-                        {/* Không còn hiển thị trang đã đọc nữa */}
-                      </div>
-
-                      <div className="text-sm text-gray-400 mb-2">
-                        <span className="flex items-center gap-1">
-                          <FontAwesomeIcon icon={faClock} className="text-purple-400" />
-                          Đọc gần nhất: {history.updatedAt ? formatDistanceToNow(new Date(history.updatedAt), { locale: vi, addSuffix: false }) : ''} trước
-                        </span>
-                      </div>
                     </div>
-                  </div>
+                    <figcaption>
+                      <ul className="flex flex-col gap-[4px]">
+                        <li className="flex items-center justify-between gap-x-2 text-[10px]">
+                          <a
+                            title={`Chapter ${history.chapterNumber}`}
+                            className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition visited:text-gray-400 hover:text-purple-400 text-gray-200"
+                            href={`/mangas/${history.mangaId}/chapters/${history.chapterId}`}
+                          >
+                            Chapter {history.chapterNumber}
+                          </a>
+                          <span className="whitespace-nowrap leading-[13px] text-gray-400">
+                            {formatDistanceToNow(new Date(history.updatedAt), { addSuffix: true, locale: vi }).replace('khoảng ', '')}
+                          </span>
+                        </li>
+                      </ul>
+                    </figcaption>
+                  </figure>
                 </div>
               </div>
             ))}

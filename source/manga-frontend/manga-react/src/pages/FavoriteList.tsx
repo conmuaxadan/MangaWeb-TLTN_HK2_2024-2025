@@ -76,79 +76,78 @@ const FavoriteList: React.FC = () => {
             </a>
           </div>
         ) : (
-          <div className="mt-6 space-y-4">
+          <div className="grid grid-cols-2 gap-[15px] md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 mt-6">
             {favorites.map((favorite) => (
-              <div key={favorite.id} className="group bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex">
-                  {/* Ảnh bìa */}
-                  <div className="w-[100px] h-[150px] shrink-0">
-                    <a href={`/mangas/${favorite.mangaId}`} className="block h-full">
-                      <img
-                        src={favorite.mangaCoverUrl ? `http://localhost:8888/api/v1/upload/files/${favorite.mangaCoverUrl}` : '/images/default-manga-cover.jpg'}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
-                        alt={favorite.mangaTitle}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/images/default-manga-cover.jpg';
-                        }}
-                      />
-                    </a>
-                  </div>
-
-                  {/* Thông tin truyện */}
-                  <div className="flex-1 p-4 flex flex-col justify-between">
-                    <div>
-                      <a href={`/mangas/${favorite.mangaId}`} className="block">
-                        <h3 className="text-base font-semibold text-white mb-2 hover:text-purple-400 transition-colors">
-                          {favorite.mangaTitle}
-                        </h3>
-                      </a>
-
-                      <div className="flex items-center gap-4 text-xs text-gray-400 mb-2">
-                        <span className="flex items-center gap-1">
-                          <FontAwesomeIcon icon={faEye} className="text-yellow-500" />
-                          {favorite.views}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <FontAwesomeIcon icon={faComment} className="text-blue-400" />
-                          {favorite.comments}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <FontAwesomeIcon icon={faHeart} className="text-red-500" />
-                          {favorite.loves}
-                        </span>
-                        {favorite.lastChapterNumber && (
-                          <span className="flex items-center gap-1">
-                            <FontAwesomeIcon icon={faBookOpen} className="text-green-500" />
-                            C.{favorite.lastChapterNumber}
+              <div key={favorite.id}>
+                <div className="group">
+                  <figure className="clearfix">
+                    <div className="relative mb-2">
+                      <a title={favorite.mangaTitle} href={`/mangas/${favorite.mangaId}`} className="block">
+                        <div style={{ position: 'relative', width: '100%', paddingBottom: '150%' }}>
+                          <div className="overflow-hidden rounded-lg group-hover:shadow-lg" style={{ position: 'absolute', inset: 0 }}>
+                            <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-neutral-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
+                            <img
+                              src={favorite.mangaCoverUrl ? `http://localhost:8888/api/v1/upload/files/${favorite.mangaCoverUrl}` : '/images/default-manga-cover.jpg'}
+                              className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
+                              alt={favorite.mangaTitle}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/images/default-manga-cover.jpg';
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="absolute bottom-0 left-0 z-[2] w-full px-2 py-1.5">
+                          <h3 className="mb-2 line-clamp-2 text-[12px] font-semibold leading-tight text-white transition group-hover:line-clamp-3">
+                            {favorite.mangaTitle}
+                          </h3>
+                          <span className="flex items-center justify-between gap-[4px] text-[10px] text-gray-300">
+                            <span className="flex items-center gap-[4px]">
+                              <i className="fa fa-eye text-yellow-500"></i>{favorite.views || 0}
+                            </span>
+                            <span className="flex items-center gap-[4px]">
+                              <i className="fa fa-comment text-blue-400"></i>{favorite.comments || 0}
+                            </span>
+                            <span className="flex items-center gap-[4px]">
+                              <i className="fa fa-heart text-red-500"></i>{favorite.loves || 0}
+                            </span>
                           </span>
-                        )}
-                      </div>
-
-                      {favorite.author && (
-                        <p className="text-sm text-gray-400 mb-2">
-                          <span className="text-purple-400">Tác giả:</span> {favorite.author}
-                        </p>
-                      )}
+                        </div>
+                      </a>
                     </div>
-
-                    <div className="flex justify-between items-center">
-                      <div className="text-xs text-gray-400">
-                        <div>Đã thêm: {favorite.addedAt ? formatDistanceToNow(new Date(favorite.addedAt), { locale: vi, addSuffix: false }) : ''} trước</div>
-                        {favorite.lastChapterAddedAt && (
-                          <div>Cập nhật: {formatDistanceToNow(new Date(favorite.lastChapterAddedAt), { locale: vi, addSuffix: false })} trước</div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleRemoveFavorite(favorite.mangaId)}
-                        className="text-red-500 hover:text-red-700 transition-colors px-3 py-1 rounded-md border border-red-500 hover:bg-red-500/10"
-                        title="Xóa khỏi danh sách yêu thích"
-                      >
-                        <FontAwesomeIcon icon={faTrash} className="mr-1" /> Xóa
-                      </button>
-                    </div>
-                  </div>
+                    <figcaption>
+                      <ul className="flex flex-col gap-[4px]">
+                        <li className="flex items-center justify-between gap-x-2 text-[10px]">
+                          {favorite.lastChapterId ? (
+                            <a
+                              title={`Chapter ${favorite.lastChapterNumber}`}
+                              className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition visited:text-gray-400 hover:text-purple-400 text-gray-200"
+                              href={`/mangas/${favorite.mangaId}/chapters/${favorite.lastChapterId}`}
+                            >
+                              Chapter {favorite.lastChapterNumber}
+                            </a>
+                          ) : (
+                            <span className="text-gray-400">Chưa có chapter</span>
+                          )}
+                          {favorite.lastChapterAddedAt && (
+                            <span className="whitespace-nowrap leading-[13px] text-gray-400">
+                              {formatDistanceToNow(new Date(favorite.lastChapterAddedAt), { addSuffix: true, locale: vi })}
+                            </span>
+                          )}
+                        </li>
+                      </ul>
+                    </figcaption>
+                  </figure>
                 </div>
+                <button
+                  onClick={() => handleRemoveFavorite(favorite.mangaId)}
+                  className="justify-center whitespace-nowrap rounded-md font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex h-auto items-center gap-2 bg-purple-600 px-3 py-2 text-[12px] text-white hover:bg-purple-700 mt-2 w-full"
+                >
+                  <span className="shrink-0">
+                    <FontAwesomeIcon icon={faTrash} />
+                  </span>
+                  Bỏ theo dõi
+                </button>
               </div>
             ))}
           </div>
