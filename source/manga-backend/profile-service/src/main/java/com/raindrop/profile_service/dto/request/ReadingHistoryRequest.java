@@ -13,11 +13,10 @@ import lombok.experimental.FieldDefaults;
 public class ReadingHistoryRequest {
     @NotBlank(message = "Manga ID is required")
     String mangaId;
-
+    
     @NotBlank(message = "Chapter ID is required")
     String chapterId;
-
-    // Không còn lưu lastPage nữa
-    // @Min(value = 0, message = "Last page must be a positive number")
-    // Integer lastPage;
+    
+    @Min(value = 0, message = "Last page must be a positive number")
+    Integer lastPage;
 }

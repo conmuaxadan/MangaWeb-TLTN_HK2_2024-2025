@@ -26,7 +26,7 @@ import jakarta.validation.Valid;
 @Slf4j
 public class ReadingHistoryController {
     ReadingHistoryService readingHistoryService;
-    
+
     /**
      * Đánh dấu đã đọc chapter
      * @param jwt JWT token của người dùng
@@ -41,16 +41,16 @@ public class ReadingHistoryController {
     ) {
         String userId = jwt.getSubject();
         log.info("Marking chapter {} of manga {} as read for user {}", request.getChapterId(), request.getMangaId(), userId);
-        
+
         ReadingHistoryResponse response = readingHistoryService.markChapterAsRead(userId, request);
-        
+
         return ResponseEntity.ok(ApiResponse.<ReadingHistoryResponse>builder()
                 .code(1000)
                 .message("Chapter marked as read successfully")
                 .result(response)
                 .build());
     }
-    
+
     /**
      * Lấy lịch sử đọc của người dùng
      * @param jwt JWT token của người dùng
@@ -65,16 +65,16 @@ public class ReadingHistoryController {
     ) {
         String userId = jwt.getSubject();
         log.info("Getting reading history for user {}", userId);
-        
+
         Page<ReadingHistoryResponse> readingHistory = readingHistoryService.getReadingHistory(userId, pageable);
-        
+
         return ResponseEntity.ok(ApiResponse.<Page<ReadingHistoryResponse>>builder()
                 .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
                 .build());
     }
-    
+
     /**
      * Lấy lịch sử đọc của một manga cụ thể
      * @param jwt JWT token của người dùng
@@ -89,16 +89,16 @@ public class ReadingHistoryController {
     ) {
         String userId = jwt.getSubject();
         log.info("Getting reading history for manga {} and user {}", mangaId, userId);
-        
+
         ReadingHistoryResponse readingHistory = readingHistoryService.getMangaReadingHistory(userId, mangaId);
-        
+
         return ResponseEntity.ok(ApiResponse.<ReadingHistoryResponse>builder()
                 .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
                 .build());
     }
-    
+
     /**
      * Xóa lịch sử đọc
      * @param jwt JWT token của người dùng
@@ -113,9 +113,9 @@ public class ReadingHistoryController {
     ) {
         String userId = jwt.getSubject();
         log.info("Deleting reading history {} for user {}", historyId, userId);
-        
+
         readingHistoryService.deleteReadingHistory(userId, historyId);
-        
+
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .code(1000)
                 .message("Reading history deleted successfully")

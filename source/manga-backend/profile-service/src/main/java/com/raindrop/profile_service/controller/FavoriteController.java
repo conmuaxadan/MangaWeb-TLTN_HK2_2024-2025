@@ -43,7 +43,7 @@ public class FavoriteController {
         FavoriteResponse response = favoriteMangaService.addFavorite(userId, request);
         
         return ResponseEntity.ok(ApiResponse.<FavoriteResponse>builder()
-                .code(2000)
+                .code(1000)
                 .message("Manga added to favorites successfully")
                 .result(response)
                 .build());
@@ -67,7 +67,7 @@ public class FavoriteController {
         favoriteMangaService.removeFavorite(userId, mangaId);
         
         return ResponseEntity.ok(ApiResponse.<Void>builder()
-                .code(2000)
+                .code(1000)
                 .message("Manga removed from favorites successfully")
                 .build());
     }
@@ -90,7 +90,7 @@ public class FavoriteController {
         boolean isFavorite = favoriteMangaService.isFavorite(userId, mangaId);
         
         return ResponseEntity.ok(ApiResponse.<Boolean>builder()
-                .code(2000)
+                .code(1000)
                 .message("Favorite status checked successfully")
                 .result(isFavorite)
                 .build());
@@ -114,7 +114,7 @@ public class FavoriteController {
         Page<FavoriteResponse> favorites = favoriteMangaService.getFavorites(userId, pageable);
         
         return ResponseEntity.ok(ApiResponse.<Page<FavoriteResponse>>builder()
-                .code(2000)
+                .code(1000)
                 .message("Favorites retrieved successfully")
                 .result(favorites)
                 .build());
@@ -132,7 +132,7 @@ public class FavoriteController {
         long count = favoriteMangaService.countFavoritesByMangaId(mangaId);
         
         return ResponseEntity.ok(ApiResponse.<Long>builder()
-                .code(2000)
+                .code(1000)
                 .message("Favorites counted successfully")
                 .result(count)
                 .build());

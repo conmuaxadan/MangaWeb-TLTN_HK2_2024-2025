@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.ArrayList;
 
 @Data
 @NoArgsConstructor
@@ -27,4 +28,5 @@ public class MangaResponse {
     MangaStatus status;
     String lastChapterId;
     LocalDateTime lastChapterAddedAt;
+    List<String> chapters = new ArrayList<>();
 }

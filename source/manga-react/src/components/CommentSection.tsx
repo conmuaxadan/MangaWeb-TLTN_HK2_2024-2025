@@ -164,7 +164,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
           <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
             {isLogin ? (
               <img
-                src={user?.avatarUrl || "/images/avt_default.jpg"}
+                src={"http://localhost:8888/api/v1/upload/files/"+user?.avatarUrl || "/images/avt_default.jpg"}
                 alt={user?.displayName || 'User'}
                 className="w-full h-full object-cover"
               />
@@ -220,7 +220,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
                 <div className="flex items-start">
                   <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
                     <img
-                      src={comment.userAvatarUrl || "/images/avt_default.jpg"}
+                      src={"http://localhost:8888/api/v1/upload/files/" + comment.userAvatarUrl || "/images/avt_default.jpg"}
                       alt={comment.username}
                       className="w-full h-full object-cover"
                     />

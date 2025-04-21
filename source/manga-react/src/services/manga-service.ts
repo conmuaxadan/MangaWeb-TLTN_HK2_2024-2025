@@ -19,7 +19,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<MangaResponse[]>>('/mangas');
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách manga", { position: "top-right" });
                 return null;
             }
@@ -54,7 +54,7 @@ class MangaService {
 
             const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaResponse>>>(url);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách manga", { position: "top-right" });
                 return null;
             }
@@ -82,7 +82,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<MangaResponse>>(`/mangas/${id}`);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy thông tin manga", { position: "top-right" });
                 return null;
             }
@@ -108,7 +108,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<ChapterResponse[]>>(`/chapters/manga/${mangaId}`);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách chapter", { position: "top-right" });
                 return null;
             }
@@ -129,7 +129,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<ChapterResponse>>(`/chapters/${id}`);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy thông tin chapter", { position: "top-right" });
                 return null;
             }
@@ -149,7 +149,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<string>>(`/chapters/session`);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 console.error(`Lỗi khi lấy session ID:`, apiResponse.message);
                 return null;
             }
@@ -180,7 +180,7 @@ class MangaService {
 
             const apiResponse = await mangaHttpClient.post<ApiResponse<ChapterResponse>>(`/chapters/${id}/view`, request);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 // Không hiển thị thông báo lỗi vì đây là tính năng ngầm
                 console.error(`Lỗi khi tăng lượt xem chapter ID ${id}:`, apiResponse.message);
                 return null;
@@ -201,7 +201,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<GenreResponse[]>>('/genres');
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách thể loại", { position: "top-right" });
                 return null;
             }
@@ -222,7 +222,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<GenreResponse>>(`/genres/${name}`);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy thông tin thể loại", { position: "top-right" });
                 return null;
             }
@@ -246,7 +246,7 @@ class MangaService {
             const url = `/mangas/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${size}`;
             const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaResponse>>>(url);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể tìm kiếm manga", { position: "top-right" });
                 return null;
             }
@@ -278,12 +278,13 @@ class MangaService {
         size: number = 10
     ): Promise<PageResponse<MangaResponse> | null> {
         try {
+            console.log('Advanced search request:', JSON.stringify(searchRequest, null, 2));
             const apiResponse = await mangaHttpClient.post<ApiResponse<PageResponse<MangaResponse>>>(
                 `/mangas/advanced-search?page=${page}&size=${size}`,
                 searchRequest
             );
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể tìm kiếm manga", { position: "top-right" });
                 return null;
             }
@@ -298,6 +299,18 @@ class MangaService {
             return apiResponse.result;
         } catch (error) {
             console.error("Lỗi tìm kiếm nâng cao manga:", error);
+            if (error.response) {
+                // Server trả về lỗi với status code khác 2xx
+                console.error('Error data:', error.response.data);
+                console.error('Error status:', error.response.status);
+                console.error('Error headers:', error.response.headers);
+            } else if (error.request) {
+                // Request đã được gửi nhưng không nhận được response
+                console.error('Error request:', error.request);
+            } else {
+                // Có lỗi khi thiết lập request
+                console.error('Error message:', error.message);
+            }
             return null;
         }
     }
@@ -318,7 +331,7 @@ class MangaService {
 
             const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaSummaryResponse>>>(url);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách tóm tắt manga", { position: "top-right" });
                 return null;
             }

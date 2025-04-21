@@ -51,7 +51,6 @@ public class FileController {
     }
 
     @DeleteMapping("/{fileName}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ApiResponse<Void> deleteImageFromFileSystem(@PathVariable String fileName) throws IOException {
         fileService.deleteFile(fileName);
         return ApiResponse.<Void>builder()

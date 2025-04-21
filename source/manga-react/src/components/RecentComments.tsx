@@ -94,7 +94,7 @@ const RecentComments = () => {
                             <div className="flex items-center gap-2">
                                 <img
                                     className="h-8 w-8 rounded-full border border-gray-600"
-                                    src={comment.userAvatarUrl ? `http://localhost:8888/api/v1/upload/files/${comment.userAvatarUrl}` : '/images/avt_default.jpg'}
+                                    src={"http://localhost:8888/api/v1/upload/files/" + comment.userAvatarUrl || "/images/avt_default.jpg"}
                                     onError={(e) => {
                                         const target = e.target as HTMLImageElement;
                                         target.src = '/images/avt_default.jpg';

@@ -33,6 +33,7 @@ public enum ErrorCode {
     USERNAME_REQUIRED(1013, "Username is required", HttpStatus.BAD_REQUEST),
     PASSWORD_REQUIRED(1014, "Password is required", HttpStatus.BAD_REQUEST),
     EMAIL_REQUIRED(1015, "Email is required", HttpStatus.BAD_REQUEST),
+    INCORRECT_PASSWORD(1016, "Incorrect password", HttpStatus.BAD_REQUEST),
 
     // User related errors (1100-1199)
     USER_EXISTED(1100, "User already exists", HttpStatus.BAD_REQUEST),

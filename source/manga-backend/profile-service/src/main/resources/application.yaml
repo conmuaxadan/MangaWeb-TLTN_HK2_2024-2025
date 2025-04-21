@@ -2,6 +2,9 @@ server:
   port: 8081
   servlet:
     context-path: /profile
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 spring:
   datasource:
@@ -28,6 +31,7 @@ spring:
 app:
   services:
     manga: http://localhost:8082/manga
+    upload: http://localhost:8084/upload
 jwt:
   signerKey: "o6lSCt2tIkiqLnuj/m+P/My5Nq4w6C47rvMCAQIXJp8+I4lxliuh/EMEFM/YS9Aa"
 
@@ -46,5 +50,10 @@ feign:
       manga-service:
         connectTimeout: 60000
         readTimeout: 60000
+        loggerLevel: full
+        decode404: true
+      upload-service:
+        connectTimeout: 120000
+        readTimeout: 120000
         loggerLevel: full
         decode404: true

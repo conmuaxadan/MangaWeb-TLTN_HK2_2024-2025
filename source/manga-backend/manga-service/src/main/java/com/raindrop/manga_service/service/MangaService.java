@@ -4,6 +4,7 @@ import com.raindrop.manga_service.dto.request.AdvancedSearchRequest;
 import com.raindrop.manga_service.dto.request.MangaRequest;
 import com.raindrop.manga_service.dto.response.MangaResponse;
 import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
+import com.raindrop.manga_service.entity.Chapter;
 import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.entity.Manga;
 import com.raindrop.manga_service.enums.ErrorCode;
@@ -13,9 +14,7 @@ import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.repository.GenreRepository;
 import com.raindrop.manga_service.repository.MangaRepository;
 import com.raindrop.manga_service.repository.httpclient.UploadClient;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.*;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +31,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -108,6 +108,15 @@ public class MangaService {
         Manga manga = mangaRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
         MangaResponse response = mangaMapper.toMangaResponse(manga);
+
+        // Lấy danh sách ID của các chapter và sắp xếp theo số chapter
+        List<String> chapterIds = chapterRepository.findByMangaId(id)
+                .stream()
+                .sorted(Comparator.comparing(Chapter::getChapterNumber))
+                .map(Chapter::getId)
+                .collect(Collectors.toList());
+        response.setChapters(chapterIds);
+
         return response;
     }
 
@@ -246,8 +255,19 @@ public class MangaService {
 
             // Tìm kiếm theo thể loại
             if (searchRequest.getGenres() != null && !searchRequest.getGenres().isEmpty()) {
-                Join<Object, Object> genresJoin = root.join("genres", JoinType.INNER);
-                predicates.add(genresJoin.get("name").in(searchRequest.getGenres()));
+                // Sử dụng subquery để đảm bảo manga chứa TẤT CẢ các thể loại được chọn
+                List<String> requestedGenres = searchRequest.getGenres();
+
+                // Tạo subquery để đếm số lượng thể loại khớp
+                Subquery<Long> subquery = query.subquery(Long.class);
+                Root<Manga> subRoot = subquery.correlate(root);
+                Join<Manga, Genre> genreJoin = subRoot.join("genres", JoinType.INNER);
+
+                subquery.select(criteriaBuilder.count(genreJoin.get("name")))
+                        .where(genreJoin.get("name").in(requestedGenres));
+
+                // Manga phải chứa đúng số lượng thể loại được yêu cầu
+                predicates.add(criteriaBuilder.equal(subquery, (long) requestedGenres.size()));
             }
 
             // Tìm kiếm theo năm phát hành
@@ -267,8 +287,20 @@ public class MangaService {
         Page<Manga> mangaPage = mangaRepository.findAll(spec, pageable);
         log.info("Found {} mangas matching the search criteria", mangaPage.getTotalElements());
 
-        // Chuyển đổi kết quả sang DTO
-        return mangaPage.map(mangaMapper::toMangaResponse);
+        // Chuyển đổi kết quả sang DTO và thêm thông tin chapter
+        return mangaPage.map(manga -> {
+            MangaResponse response = mangaMapper.toMangaResponse(manga);
+
+            // Lấy danh sách ID của các chapter và sắp xếp theo số chapter
+            List<String> chapterIds = chapterRepository.findByMangaId(manga.getId())
+                    .stream()
+                    .sorted(Comparator.comparing(Chapter::getChapterNumber))
+                    .map(Chapter::getId)
+                    .collect(Collectors.toList());
+            response.setChapters(chapterIds);
+
+            return response;
+        });
     }
 
 }

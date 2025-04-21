@@ -30,13 +30,12 @@ public class ReadingHistory {
 
     @Column(name = "manga_id", nullable = false)
     String mangaId;
-
+    
     @Column(name = "chapter_id", nullable = false)
     String chapterId;
-
-    // Không còn lưu lastPage nữa
-    // @Column(name = "last_page", nullable = false)
-    // Integer lastPage;
+    
+    @Column(name = "last_page", nullable = false)
+    Integer lastPage;
 
     @Column(name = "created_at", updatable = false)
     @CreatedDate

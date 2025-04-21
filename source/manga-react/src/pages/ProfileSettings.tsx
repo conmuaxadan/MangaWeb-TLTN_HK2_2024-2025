@@ -57,17 +57,30 @@ const ProfileSettings: React.FC = () => {
       return;
     }
 
+    // Kiểm tra độ mạnh của mật khẩu
+    const passwordRegex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$/;
+    if (newPassword.length < 8) {
+      toast.error('Mật khẩu mới phải có ít nhất 8 ký tự', { position: 'top-right' });
+      return;
+    }
+    if (!passwordRegex.test(newPassword)) {
+      toast.error('Mật khẩu mới phải chứa ít nhất một chữ số, một chữ thường, một chữ hoa và một ký tự đặc biệt (@#$%^&+=)', { position: 'top-right' });
+      return;
+    }
+
     setLoading(true);
     try {
       // Gọi API đổi mật khẩu
-      await profileService.changePassword(oldPassword, newPassword);
+      const success = await profileService.changePassword(oldPassword, newPassword);
 
-      toast.success('Đổi mật khẩu thành công', { position: 'top-right' });
+      if (success) {
+        toast.success('Đổi mật khẩu thành công', { position: 'top-right' });
 
-      // Xóa các trường mật khẩu
-      setOldPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+        // Xóa các trường mật khẩu
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
     } catch (error) {
       console.error('Lỗi khi đổi mật khẩu:', error);
       toast.error('Không thể đổi mật khẩu', { position: 'top-right' });
@@ -88,7 +101,7 @@ const ProfileSettings: React.FC = () => {
         displayName: displayName
       };
 
-      await profileService.updateProfile(updateData);
+      const result = await profileService.updateProfile(updateData);
 
       toast.success('Cập nhật tên hiển thị thành công', { position: 'top-right' });
 
@@ -116,12 +129,12 @@ const ProfileSettings: React.FC = () => {
     setLoading(true);
     try {
       // Upload avatar
-      await profileService.uploadAvatar(avatarFile);
+      const success = await profileService.uploadAvatar(avatarFile);
 
-      toast.success('Cập nhật ảnh đại diện thành công', { position: 'top-right' });
-
-      // Reload trang để cập nhật thông tin
-      window.location.reload();
+      if (success) {
+        // Reload trang để hiển thị ảnh mới
+        window.location.reload();
+      }
     } catch (error) {
       console.error('Lỗi khi cập nhật ảnh đại diện:', error);
       toast.error('Không thể cập nhật ảnh đại diện', { position: 'top-right' });

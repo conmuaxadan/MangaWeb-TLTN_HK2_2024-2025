@@ -122,15 +122,43 @@ const AdvancedSearch: React.FC = () => {
             setLoading(true);
             setError(null);
 
-            const searchRequest: AdvancedSearchRequest = {
-                title: searchTitle || undefined,
-                author: author || undefined,
-                genres: selectedGenres.length > 0 ? selectedGenres : undefined,
-                yearOfRelease: yearOfRelease,
-                status: status !== 'Tất cả' ? status : undefined,
-                orderBy: orderBy
-            };
+            // Tạo request object, chỉ thêm các trường có giá trị
+            const searchRequest: AdvancedSearchRequest = {};
 
+            // Thêm title nếu có
+            if (searchTitle) {
+                searchRequest.title = searchTitle;
+            }
+
+            // Thêm author nếu có
+            if (author) {
+                searchRequest.author = author;
+            }
+
+            // Thêm genres nếu có chọn thể loại
+            if (selectedGenres.length > 0) {
+                searchRequest.genres = selectedGenres;
+            }
+
+            // Thêm yearOfRelease nếu có
+            if (yearOfRelease) {
+                searchRequest.yearOfRelease = yearOfRelease;
+            }
+
+            // Thêm status nếu không phải "Tất cả"
+            if (status !== '') {
+                // Đảm bảo status là một giá trị hợp lệ của enum MangaStatus
+                if (Object.values(MangaStatus).includes(status as MangaStatus)) {
+                    searchRequest.status = status as MangaStatus;
+                }
+            }
+
+            // Luôn thêm orderBy
+            searchRequest.orderBy = orderBy;
+
+            console.log('Advanced search request:', JSON.stringify(searchRequest, null, 2));
+
+            // Mỗi trang hiển thị 10 truyện (5 truyện mỗi hàng, 2 hàng)
             const results = await mangaService.advancedSearch(searchRequest, page, 10);
             if (results) {
                 if (results.content.length === 0) {
@@ -428,8 +456,8 @@ const AdvancedSearch: React.FC = () => {
                                 {selectedGenres.length > 0 && (
                                     <span>Đang lọc theo {selectedGenres.length} thể loại</span>
                                 )}
-                                {status !== 'Tất cả' && (
-                                    <span>{selectedGenres.length > 0 ? ', ' : 'Đang lọc theo '}tình trạng {status}</span>
+                                {status !== '' && (
+                                    <span>{selectedGenres.length > 0 ? ', ' : 'Đang lọc theo '}tình trạng {MangaStatusDisplayNames[status as MangaStatus]}</span>
                                 )}
                             </div>
                             <div className="flex gap-2">
@@ -466,24 +494,64 @@ const AdvancedSearch: React.FC = () => {
                             <div className="mb-4 text-gray-400">
                                 Tìm thấy {totalElements} kết quả
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
                                 {searchResults.map((manga) => (
-                                    <div key={manga.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                                        <a href={`/mangas/${manga.id}`} className="block">
-                                            <div className="relative pb-[150%]">
-                                                <img
-                                                    src={"http://localhost:8888/api/v1/upload/files/"+manga.coverUrl || '/images/default-manga-cover.jpg'}
-                                                    alt={manga.title}
-                                                    className="absolute inset-0 w-full h-full object-cover"
-                                                />
+                                    <div key={manga.id} className="group bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                                        <figure className="clearfix">
+                                            <div className="relative mb-2">
+                                                <a title={manga.title} href={`/mangas/${manga.id}`} className="block">
+                                                    <div className="relative pb-[150%]">
+                                                        <div className="absolute inset-0 w-full h-full overflow-hidden">
+                                                            <div className="relative h-full w-full">
+                                                                <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
+                                                                <img
+                                                                    src={`http://localhost:8888/api/v1/upload/files/${manga.coverUrl}`}
+                                                                    className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
+                                                                    alt={manga.title}
+                                                                    onError={(e) => {
+                                                                        const target = e.target as HTMLImageElement;
+                                                                        target.src = '/images/default-manga-cover.jpg';
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="absolute bottom-0 left-0 z-[2] w-full px-3 py-2">
+                                                        <h3 className="mb-2 line-clamp-2 text-sm font-semibold leading-tight text-white transition group-hover:line-clamp-4">
+                                                            {manga.title}
+                                                        </h3>
+                                                        <span className="flex items-center justify-between gap-1 text-xs text-gray-300">
+                                                            <span className="flex items-center gap-1">
+                                                                <i className="fa fa-eye text-yellow-500"></i>{manga.views || 0}
+                                                            </span>
+                                                            <span className="flex items-center gap-1">
+                                                                <i className="fa fa-comment text-blue-400"></i>{manga.comments || 0}
+                                                            </span>
+                                                            <span className="flex items-center gap-1">
+                                                                <i className="fa fa-heart text-red-500"></i>{manga.loves || 0}
+                                                            </span>
+                                                        </span>
+                                                    </div>
+                                                </a>
                                             </div>
-                                            <div className="p-3">
-                                                <h3 className="text-sm font-medium line-clamp-2">{manga.title}</h3>
-                                                <div className="mt-1 text-xs text-gray-400">
-                                                    {manga.chapters.length > 0 ? `${manga.chapters.length} chapter` : 'Chưa có chapter'}
-                                                </div>
-                                            </div>
-                                        </a>
+                                            <figcaption className="px-3 pb-3">
+                                                <ul className="flex flex-col gap-1">
+                                                    <li className="flex items-center justify-between gap-x-2 text-xs">
+                                                        {manga.chapters && manga.chapters.length > 0 ? (
+                                                            <a
+                                                                title={`Chapter ${manga.chapters.length}`}
+                                                                className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition visited:text-gray-400 hover:text-purple-400 text-gray-200"
+                                                                href={`/mangas/${manga.id}/chapters/${manga.chapters[manga.chapters.length - 1]}`}
+                                                            >
+                                                                Chapter {manga.chapters.length}
+                                                            </a>
+                                                        ) : (
+                                                            <span className="text-gray-400">Chưa có chapter</span>
+                                                        )}
+                                                    </li>
+                                                </ul>
+                                            </figcaption>
+                                        </figure>
                                     </div>
                                 ))}
                             </div>

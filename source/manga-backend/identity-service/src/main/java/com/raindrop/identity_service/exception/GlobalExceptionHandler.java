@@ -13,10 +13,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @Slf4j
 public class GlobalExceptionHandler {
     @ExceptionHandler(value = Exception.class)
-    ResponseEntity<ApiResponse> handleRuntimeException() {
+    ResponseEntity<ApiResponse> handleRuntimeException(Exception e) {
+        log.error("Uncategorized exception:", e);
         ApiResponse response = new ApiResponse();
         response.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
-        response.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
+        response.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage() + ": " + e.getMessage());
         return ResponseEntity.badRequest().body(response);
     }
 
@@ -58,6 +59,7 @@ public class GlobalExceptionHandler {
         // Tạo response với mã lỗi và thông báo phù hợp
         ApiResponse response = new ApiResponse();
         response.setCode(errorCode.getCode());
+        response.setMessage(errorCode.getMessage() + " (field: " + fieldName + ")");
 
         return ResponseEntity.status(errorCode.getHttpStatusCode()).body(response);
     }

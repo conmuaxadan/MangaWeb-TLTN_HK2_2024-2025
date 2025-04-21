@@ -41,6 +41,8 @@ spring:
 app:
   services:
     upload: http://localhost:8084/upload
+  profile-service:
+    url: http://localhost:8081/profile
 
 feign:
   httpclient:

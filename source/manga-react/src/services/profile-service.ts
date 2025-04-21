@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import { profileHttpClient } from "./http-client";
+import { profileHttpClient, identityHttpClient } from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
 import {
     UserProfileResponse,
@@ -83,30 +83,48 @@ class ProfileService {
     /**
      * Upload avatar
      * @param file File ảnh avatar
-     * @returns URL của avatar hoặc null nếu thất bại
+     * @returns true nếu upload thành công, false nếu thất bại
      */
-    async uploadAvatar(file: File): Promise<string | null> {
+    async uploadAvatar(file: File): Promise<boolean> {
         try {
+            console.log('Uploading avatar...');
+
             const formData = new FormData();
             formData.append('file', file);
 
-            const apiResponse = await profileHttpClient.post<ApiResponse<{ url: string }>>('/users/avatar', formData, {
+            // Gọi API cập nhật avatar
+            const apiResponse = await profileHttpClient.post<ApiResponse<UserProfileResponse>>('/users/me/avatar', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
 
+            console.log('Upload avatar response:', apiResponse);
+
             if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể upload avatar", { position: "top-right" });
-                return null;
+                toast.error(apiResponse.message || "Không thể cập nhật ảnh đại diện", { position: "top-right" });
+                return false;
             }
 
-            toast.success("Upload avatar thành công", { position: "top-right" });
-            return apiResponse.result.url;
+            toast.success("Cập nhật ảnh đại diện thành công", { position: "top-right" });
+            return true;
         } catch (error) {
-            console.error("Lỗi upload avatar:", error);
-            toast.error("Không thể upload avatar", { position: "top-right" });
-            return null;
+            console.error("Lỗi cập nhật ảnh đại diện:", error);
+
+            if (error.response) {
+                // Server trả về lỗi với status code khác 2xx
+                console.error('Error data:', error.response.data);
+                console.error('Error status:', error.response.status);
+                console.error('Error headers:', error.response.headers);
+
+                // Hiển thị thông báo lỗi cụ thể nếu có
+                const errorMessage = error.response.data?.message || "Không thể cập nhật ảnh đại diện";
+                toast.error(errorMessage, { position: "top-right" });
+            } else {
+                toast.error("Không thể cập nhật ảnh đại diện", { position: "top-right" });
+            }
+
+            return false;
         }
     }
 
@@ -118,10 +136,16 @@ class ProfileService {
      */
     async changePassword(oldPassword: string, newPassword: string): Promise<boolean> {
         try {
-            const apiResponse = await profileHttpClient.post<ApiResponse<void>>('/users/change-password', {
+            console.log('Sending change password request to identity service:', '/users/change-password');
+            console.log('Request data:', { oldPassword: '***', newPassword: '***' });
+
+            // Sử dụng identityHttpClient thay vì profileHttpClient vì đổi mật khẩu là chức năng của identity service
+            const apiResponse = await identityHttpClient.post<ApiResponse<void>>('/users/change-password', {
                 oldPassword,
                 newPassword
             });
+
+            console.log('Change password response:', apiResponse);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể đổi mật khẩu", { position: "top-right" });
@@ -132,7 +156,20 @@ class ProfileService {
             return true;
         } catch (error) {
             console.error("Lỗi đổi mật khẩu:", error);
-            toast.error("Không thể đổi mật khẩu", { position: "top-right" });
+
+            if (error.response) {
+                // Server trả về lỗi với status code khác 2xx
+                console.error('Error data:', error.response.data);
+                console.error('Error status:', error.response.status);
+                console.error('Error headers:', error.response.headers);
+
+                // Hiển thị thông báo lỗi cụ thể nếu có
+                const errorMessage = error.response.data?.message || "Không thể đổi mật khẩu";
+                toast.error(errorMessage, { position: "top-right" });
+            } else {
+                toast.error("Không thể đổi mật khẩu", { position: "top-right" });
+            }
+
             return false;
         }
     }
@@ -180,6 +217,46 @@ class ProfileService {
         } catch (error) {
             console.error(`Lỗi cập nhật thông tin profile của người dùng ID ${request.userId}:`, error);
             return null;
+        }
+    }
+
+    /**
+     * Cập nhật thông tin profile của người dùng hiện tại
+     * @param request Thông tin cần cập nhật (displayName)
+     * @returns true nếu cập nhật thành công, false nếu thất bại
+     */
+    async updateProfileInfo(request: { displayName: string }): Promise<boolean> {
+        try {
+            console.log('Sending update profile request:', request);
+
+            const apiResponse = await profileHttpClient.put<ApiResponse<UserProfileResponse>>('/users/me', request);
+
+            console.log('Update profile response:', apiResponse);
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể cập nhật thông tin profile", { position: "top-right" });
+                return false;
+            }
+
+            toast.success("Cập nhật thông tin profile thành công", { position: "top-right" });
+            return true;
+        } catch (error) {
+            console.error(`Lỗi cập nhật thông tin profile:`, error);
+
+            if (error.response) {
+                // Server trả về lỗi với status code khác 2xx
+                console.error('Error data:', error.response.data);
+                console.error('Error status:', error.response.status);
+                console.error('Error headers:', error.response.headers);
+
+                // Hiển thị thông báo lỗi cụ thể nếu có
+                const errorMessage = error.response.data?.message || "Không thể cập nhật thông tin profile";
+                toast.error(errorMessage, { position: "top-right" });
+            } else {
+                toast.error("Không thể cập nhật thông tin profile", { position: "top-right" });
+            }
+
+            return false;
         }
     }
 
@@ -257,7 +334,7 @@ class ProfileService {
         try {
             const apiResponse = await profileHttpClient.get<ApiResponse<any>>(`/favorites?page=0&size=100&sort=createdAt,desc`);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách manga yêu thích", { position: "top-right" });
                 return null;
             }
@@ -513,7 +590,7 @@ class ProfileService {
             const request: FavoriteRequest = { mangaId };
             const apiResponse = await profileHttpClient.post<ApiResponse<FavoriteMangaResponse>>('/favorites', request);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 console.error(apiResponse.message || "Không thể thêm vào danh sách yêu thích");
                 return null;
             }
@@ -536,7 +613,7 @@ class ProfileService {
         try {
             const apiResponse = await profileHttpClient.delete<ApiResponse<void>>(`/favorites/${mangaId}`);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 console.error(apiResponse.message || "Không thể xóa khỏi danh sách yêu thích");
                 return false;
             }
@@ -559,7 +636,7 @@ class ProfileService {
         try {
             const apiResponse = await profileHttpClient.get<ApiResponse<boolean>>(`/favorites/${mangaId}/check`);
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 console.error(apiResponse.message || "Không thể kiểm tra trạng thái yêu thích");
                 return false;
             }
@@ -583,7 +660,7 @@ class ProfileService {
                 `/favorites?page=${page}&size=${size}&sort=createdAt,desc`
             );
 
-            if (apiResponse.code !== 2000) {
+            if (apiResponse.code !== 1000) {
                 console.error(apiResponse.message || "Không thể lấy danh sách yêu thích");
                 return null;
             }

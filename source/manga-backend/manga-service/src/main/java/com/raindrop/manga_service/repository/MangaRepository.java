@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 import java.util.Optional;
 
 public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecificationExecutor<Manga> {
@@ -66,4 +69,23 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
     @Query("UPDATE Manga m SET m.comments = :totalComments WHERE m.id = :mangaId")
     int updateTotalComments(@Param("mangaId") String mangaId, @Param("totalComments") int totalComments);
 
+    /**
+     * Tìm các manga có lượt xem cao nhất
+     * @param pageable Thông tin phân trang và số lượng cần lấy
+     * @return Danh sách manga có lượt xem cao nhất
+     */
+    List<Manga> findByOrderByViewsDesc(Pageable pageable);
+
+    /**
+     * Tìm các manga dựa trên thể loại, loại trừ các manga đã đọc gần đây
+     * @param genres Danh sách thể loại ưu tiên
+     * @param excludeMangaIds Danh sách ID manga cần loại trừ
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga phù hợp
+     */
+    @Query("SELECT DISTINCT m FROM Manga m JOIN m.genres g WHERE g.name IN :genres AND m.id NOT IN :excludeMangaIds ORDER BY m.views DESC")
+    List<Manga> findMangasByGenres(
+            @Param("genres") List<String> genres,
+            @Param("excludeMangaIds") List<String> excludeMangaIds,
+            Pageable pageable);
 }

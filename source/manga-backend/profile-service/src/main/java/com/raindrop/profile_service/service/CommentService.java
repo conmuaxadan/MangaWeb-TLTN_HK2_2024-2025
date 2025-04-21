@@ -244,7 +244,7 @@ public class CommentService {
 
             // Lấy thông tin người dùng từ profileId
             if (comment.getUserProfile() != null) {
-                userProfileRepository.findById(comment.getUserProfile().getUserId())
+                userProfileRepository.findById(comment.getUserProfile().getId())
                     .ifPresent(profile -> {
                         response.setUserId(profile.getUserId());
                         response.setUsername(profile.getDisplayName());
@@ -255,7 +255,7 @@ public class CommentService {
             // Lấy thông tin manga
             try {
                 ApiResponse<MangaInfoResponse> mangaResponse = mangaClient.getMangaById(comment.getMangaId());
-                if (mangaResponse != null && mangaResponse.getCode() == 2000 && mangaResponse.getResult() != null) {
+                if (mangaResponse != null && mangaResponse.getCode() == 1000 && mangaResponse.getResult() != null) {
                     response.setMangaTitle(mangaResponse.getResult().getTitle());
                 }
             } catch (Exception e) {
@@ -265,8 +265,8 @@ public class CommentService {
             // Lấy thông tin chapter
             try {
                 ApiResponse<ChapterInfoResponse> chapterResponse = mangaClient.getChapterById(comment.getChapterId());
-                if (chapterResponse != null && chapterResponse.getCode() == 2000 && chapterResponse.getResult() != null) {
-                    response.setChapterNumber(String.valueOf(chapterResponse.getResult().getChapterNumber()));
+                if (chapterResponse != null && chapterResponse.getCode() == 1000 && chapterResponse.getResult() != null) {
+                    response.setChapterTitle(String.valueOf(chapterResponse.getResult().getTitle()));
                 }
             } catch (Exception e) {
                 log.error("Error getting chapter info for ID {}: {}", comment.getChapterId(), e.getMessage());

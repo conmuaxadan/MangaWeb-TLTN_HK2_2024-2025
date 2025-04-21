@@ -37,7 +37,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ children }) => {
                   <div>
                     <div className="relative mx-auto size-28">
                       <img
-                        src={user?.avatarUrl || "/images/avt_default.jpg"}
+                        src={"http://localhost:8888/api/v1/upload/files/"+user?.avatarUrl || "/images/avt_default.jpg"}
                         className="h-full w-full rounded-full shadow ring-4 ring-gray-700"
                         id="profile-image"
                         alt="Profile"

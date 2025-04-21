@@ -1,5 +1,6 @@
 package com.raindrop.identity_service.controller;
 
+import com.raindrop.identity_service.dto.request.ChangePasswordRequest;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.ApiResponse;
 import com.raindrop.identity_service.dto.response.UserResponse;
@@ -85,6 +86,21 @@ public class UserController {
         return ApiResponse.<UserResponse>builder()
                 .message("User retrieved successfully")
                 .result(userService.getMyInfo())
+                .build();
+    }
+
+    /**
+     * Đổi mật khẩu của người dùng hiện tại
+     * @param request Yêu cầu đổi mật khẩu
+     * @return Thông báo kết quả
+     */
+    @PostMapping("/change-password")
+    ApiResponse<Void> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
+        log.info("Change password request received");
+        userService.changePassword(request);
+        return ApiResponse.<Void>builder()
+                .code(1000)
+                .message("Password changed successfully")
                 .build();
     }
 }

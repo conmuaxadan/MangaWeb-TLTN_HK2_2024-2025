@@ -1,6 +1,7 @@
 package com.raindrop.identity_service.service;
 
 import com.raindrop.common.event.UserProfileEvent;
+import com.raindrop.identity_service.dto.request.ChangePasswordRequest;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.UserResponse;
 import com.raindrop.identity_service.entity.Role;
@@ -20,6 +21,8 @@ import com.raindrop.identity_service.kafka.UserProfileEventProducer;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -162,5 +165,48 @@ public class UserService {
         });
 
         return userMapper.toUserResponse(user);
+    }
+
+    /**
+     * Đổi mật khẩu của người dùng hiện tại
+     * @param request Yêu cầu đổi mật khẩu
+     */
+    public void changePassword(ChangePasswordRequest request) {
+        // Lấy thông tin người dùng hiện tại
+        var context = SecurityContextHolder.getContext();
+        if (context.getAuthentication() == null) {
+            log.warn("Change password request failed: No authentication found");
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        // Lấy ID của user từ token JWT
+        String userId = null;
+        if (context.getAuthentication() instanceof JwtAuthenticationToken jwtAuthenticationToken) {
+            Jwt jwt = jwtAuthenticationToken.getToken();
+            userId = jwt.getSubject(); // Subject trong JWT là ID của user
+        }
+
+        if (userId == null) {
+            log.warn("Change password request failed: Could not extract user ID from token");
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        log.info("User requesting password change, ID: {}", userId);
+
+        User user = userRepository.findById(userId).orElseThrow(() -> {
+            return new AppException(ErrorCode.USER_NOT_EXISTED);
+        });
+
+        // Kiểm tra mật khẩu cũ
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            log.warn("Change password request failed: Incorrect old password for user ID: {}", userId);
+            throw new AppException(ErrorCode.INCORRECT_PASSWORD);
+        }
+
+        // Cập nhật mật khẩu mới
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        log.info("Password changed successfully for user ID: {}", userId);
     }
 }
