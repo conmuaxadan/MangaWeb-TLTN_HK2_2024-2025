@@ -321,6 +321,37 @@ class MangaService {
     }
 
     /**
+     * Tìm kiếm manga theo thể loại
+     * @param genreName Tên thể loại
+     * @param page Số trang
+     * @param size Số lượng item trên mỗi trang
+     * @returns Danh sách manga thuộc thể loại hoặc null nếu thất bại
+     */
+    async findByGenre(genreName: string, page: number = 0, size: number = 10): Promise<PageResponse<MangaResponse> | null> {
+        try {
+            const url = `/mangas/genre/${encodeURIComponent(genreName)}?page=${page}&size=${size}`;
+            const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaResponse>>>(url);
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể tìm kiếm manga theo thể loại", { position: "top-right" });
+                return null;
+            }
+
+            // Thêm ảnh mặc định cho các manga không có coverUrl
+            apiResponse.result.content.forEach(manga => {
+                if (!manga.coverUrl) {
+                    manga.coverUrl = '/images/default-manga-cover.jpg';
+                }
+            });
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi tìm kiếm manga theo thể loại '${genreName}':`, error);
+            return null;
+        }
+    }
+
+    /**
      * Lấy danh sách tóm tắt manga có phân trang
      * @param page Số trang
      * @param size Số lượng item trên mỗi trang

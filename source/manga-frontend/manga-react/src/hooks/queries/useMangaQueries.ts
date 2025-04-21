@@ -65,3 +65,13 @@ export function useSearchMangas(keyword: string, page: number = 0, size: number 
     keepPreviousData: true,
   });
 }
+
+// Hook tìm kiếm manga theo thể loại
+export function useMangasByGenre(genreName: string, page: number = 0, size: number = 10) {
+  return useQuery({
+    queryKey: [...mangaKeys.lists(), 'genre', genreName, page, size],
+    queryFn: () => mangaService.findByGenre(genreName, page, size),
+    enabled: !!genreName, // Chỉ tìm kiếm khi có tên thể loại
+    keepPreviousData: true,
+  });
+}

@@ -303,4 +303,68 @@ public class MangaService {
         });
     }
 
+    /**
+     * Tìm kiếm manga theo từ khóa
+     * @param keyword Từ khóa tìm kiếm
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga phù hợp với từ khóa
+     */
+    public Page<MangaResponse> searchByKeyword(String keyword, Pageable pageable) {
+        log.info("Searching manga with keyword: {}", keyword);
+
+        // Thực hiện tìm kiếm với từ khóa
+        Page<Manga> mangaPage = mangaRepository.searchByKeyword(keyword, pageable);
+        log.info("Found {} mangas matching the keyword", mangaPage.getTotalElements());
+
+        // Chuyển đổi kết quả sang DTO và thêm thông tin chapter
+        return mangaPage.map(manga -> {
+            MangaResponse response = mangaMapper.toMangaResponse(manga);
+
+            // Lấy danh sách ID của các chapter và sắp xếp theo số chapter
+            List<String> chapterIds = chapterRepository.findByMangaId(manga.getId())
+                    .stream()
+                    .sorted(Comparator.comparing(Chapter::getChapterNumber))
+                    .map(Chapter::getId)
+                    .collect(Collectors.toList());
+            response.setChapters(chapterIds);
+
+            return response;
+        });
+    }
+
+    /**
+     * Tìm kiếm manga theo thể loại
+     * @param genreName Tên thể loại
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga thuộc thể loại
+     */
+    public Page<MangaResponse> findByGenre(String genreName, Pageable pageable) {
+        log.info("Finding manga by genre: {}", genreName);
+
+        // Kiểm tra xem thể loại có tồn tại không
+        Genre genre = genreRepository.findByName(genreName);
+        if (genre == null) {
+            log.warn("Genre not found: {}", genreName);
+            throw new AppException(ErrorCode.GENRE_NOT_FOUND);
+        }
+
+        // Thực hiện tìm kiếm theo thể loại
+        Page<Manga> mangaPage = mangaRepository.findByGenre(genreName, pageable);
+        log.info("Found {} mangas in genre {}", mangaPage.getTotalElements(), genreName);
+
+        // Chuyển đổi kết quả sang DTO và thêm thông tin chapter
+        return mangaPage.map(manga -> {
+            MangaResponse response = mangaMapper.toMangaResponse(manga);
+
+            // Lấy danh sách ID của các chapter và sắp xếp theo số chapter
+            List<String> chapterIds = chapterRepository.findByMangaId(manga.getId())
+                    .stream()
+                    .sorted(Comparator.comparing(Chapter::getChapterNumber))
+                    .map(Chapter::getId)
+                    .collect(Collectors.toList());
+            response.setChapters(chapterIds);
+
+            return response;
+        });
+    }
 }

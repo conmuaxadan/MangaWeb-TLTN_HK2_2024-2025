@@ -9,3 +9,4 @@ export { default as ProfileSettings } from './ProfileSettings.tsx';
 export { default as AdvancedSearch } from './AdvancedSearch';
 export { default as FavoriteList } from './FavoriteList.tsx';
 export { default as ReadingHistoryList } from './ReadingHistoryList.tsx';
+export { default as GenreDetail } from './GenreDetail';

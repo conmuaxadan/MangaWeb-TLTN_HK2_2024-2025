@@ -1,6 +1,7 @@
 package com.raindrop.manga_service.repository;
 
 import com.raindrop.manga_service.entity.Manga;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -88,4 +89,22 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
             @Param("genres") List<String> genres,
             @Param("excludeMangaIds") List<String> excludeMangaIds,
             Pageable pageable);
+
+    /**
+     * Tìm kiếm manga theo từ khóa
+     * @param keyword Từ khóa tìm kiếm (tìm trong tiêu đề hoặc tác giả)
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga phù hợp với từ khóa
+     */
+    @Query("SELECT m FROM Manga m WHERE LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.author) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY m.views DESC")
+    Page<Manga> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    /**
+     * Tìm kiếm manga theo thể loại
+     * @param genreName Tên thể loại
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga thuộc thể loại
+     */
+    @Query("SELECT DISTINCT m FROM Manga m JOIN m.genres g WHERE g.name = :genreName ORDER BY m.lastChapterAddedAt DESC")
+    Page<Manga> findByGenre(@Param("genreName") String genreName, Pageable pageable);
 }

@@ -179,4 +179,38 @@ public class MangaController {
                 .result(mangaService.advancedSearch(searchRequest, pageable))
                 .build();
     }
+
+    /**
+     * Tìm kiếm manga theo từ khóa
+     * @param keyword Từ khóa tìm kiếm
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga phù hợp với từ khóa
+     */
+    @GetMapping("/search")
+    ApiResponse<Page<MangaResponse>> searchByKeyword(
+            @RequestParam String keyword,
+            @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return ApiResponse.<Page<MangaResponse>>builder()
+                .message("Search results retrieved successfully")
+                .result(mangaService.searchByKeyword(keyword, pageable))
+                .build();
+    }
+
+    /**
+     * Tìm kiếm manga theo thể loại
+     * @param genreName Tên thể loại
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga thuộc thể loại
+     */
+    @GetMapping("/genre/{genreName}")
+    ApiResponse<Page<MangaResponse>> findByGenre(
+            @PathVariable String genreName,
+            @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return ApiResponse.<Page<MangaResponse>>builder()
+                .message("Mangas by genre retrieved successfully")
+                .result(mangaService.findByGenre(genreName, pageable))
+                .build();
+    }
 }

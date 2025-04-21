@@ -1,14 +1,20 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import mangaService from '../services/manga-service';
+import { MangaResponse } from '../interfaces/models/manga';
 
 const NewHeader = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchResults, setSearchResults] = useState<MangaResponse[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchResultsRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { isLogin, logout, user } = useAuth();
   const navigate = useNavigate();
@@ -29,6 +35,12 @@ const NewHeader = () => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
       }
+
+      // Đóng dropdown kết quả tìm kiếm khi click bên ngoài
+      if (searchResultsRef.current && !searchResultsRef.current.contains(event.target as Node) &&
+          searchInputRef.current && !searchInputRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -40,10 +52,6 @@ const NewHeader = () => {
       searchInputRef.current.focus();
     }
   }, [isSearchOpen]);
-
-  const handleSearchClick = () => {
-    setIsSearchOpen(true);
-  };
 
   const handleMenuClick = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -58,18 +66,54 @@ const NewHeader = () => {
     }
   };
 
+  // Debounce function để tránh gọi API quá nhiều khi người dùng gõ
+  const debounce = (func: Function, delay: number) => {
+    let timeoutId: NodeJS.Timeout;
+    return function(...args: any[]) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func(...args), delay);
+    };
+  };
+
+  // Hàm tìm kiếm manga
+  const searchManga = useCallback(async (keyword: string) => {
+    if (keyword.trim().length < 2) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await mangaService.searchManga(keyword, 0, 5);
+      if (results && results.content.length > 0) {
+        setSearchResults(results.content);
+        setShowResults(true);
+      } else {
+        setSearchResults([]);
+        setShowResults(false);
+      }
+    } catch (error) {
+      console.error('Error searching manga:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Debounced search function
+  const debouncedSearch = useCallback(debounce(searchManga, 300), [searchManga]);
+
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchKeyword(e.target.value);
+    const value = e.target.value;
+    setSearchKeyword(value);
+    debouncedSearch(value);
   };
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
     logout();
     setIsMenuOpen(false);
-  };
-
-  const isActive = (path: string) => {
-    return location.pathname === path;
   };
 
   return (
@@ -85,56 +129,80 @@ const NewHeader = () => {
               </Link>
             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-1">
-              <Link
-                to="/"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/') ? 'text-white bg-gray-800' : 'text-gray-300 hover:text-white hover:bg-gray-700'}`}
-              >
-                <i className="fas fa-home mr-2"></i>
-                Trang chủ
-              </Link>
-              <Link
-                to="/search"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/search') ? 'text-white bg-gray-800' : 'text-gray-300 hover:text-white hover:bg-gray-700'}`}
-              >
-                <i className="fas fa-search mr-2"></i>
-                Tìm kiếm
-              </Link>
-              <Link
-                to="/profile/reading-history"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/profile/reading-history') ? 'text-white bg-gray-800' : 'text-gray-300 hover:text-white hover:bg-gray-700'}`}
-              >
-                <i className="fas fa-history mr-2"></i>
-                Lịch sử
-              </Link>
-              <Link
-                to="/genres"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/genres') ? 'text-white bg-gray-800' : 'text-gray-300 hover:text-white hover:bg-gray-700'}`}
-              >
-                <i className="fas fa-tags mr-2"></i>
-                Thể loại
-              </Link>
-              <Link
-                to="/rankings"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/rankings') ? 'text-white bg-gray-800' : 'text-gray-300 hover:text-white hover:bg-gray-700'}`}
-              >
-                <i className="fas fa-trophy mr-2"></i>
-                Xếp hạng
-              </Link>
-            </nav>
+            {/* Search Bar in Header */}
+            <div className="hidden md:flex flex-1 max-w-xl mx-auto relative">
+              <div className="w-full relative">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchKeyword}
+                  onChange={handleSearchInputChange}
+                  onFocus={() => searchKeyword.trim().length >= 2 && setShowResults(true)}
+                  placeholder="Tìm kiếm truyện..."
+                  className="w-full bg-gray-800 text-white rounded-full py-2 pl-5 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-sm"
+                />
+                <button
+                  onClick={handleSearchSubmit}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white p-1"
+                >
+                  <i className="fas fa-search"></i>
+                </button>
+
+                {/* Search Results Dropdown */}
+                {showResults && searchKeyword.trim().length >= 2 && (
+                  <div
+                    ref={searchResultsRef}
+                    className="absolute top-full left-0 right-0 mt-1 bg-gray-800 rounded-lg shadow-lg overflow-hidden z-50"
+                  >
+                    {isSearching ? (
+                      <div className="p-4 text-center text-gray-400">
+                        <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-purple-500 mr-2"></div>
+                        Đang tìm kiếm...
+                      </div>
+                    ) : searchResults.length > 0 ? (
+                      <div>
+                        {searchResults.map((manga) => (
+                          <Link
+                            key={manga.id}
+                            to={`/manga/${manga.id}`}
+                            className="flex items-center p-3 hover:bg-gray-700 border-b border-gray-700 last:border-b-0"
+                            onClick={() => setShowResults(false)}
+                          >
+                            <div className="flex-shrink-0 h-12 w-9 bg-gray-700 rounded overflow-hidden mr-3">
+                              <img
+                                src={'http://localhost:8888/api/v1/upload/files/' + manga.coverUrl|| '/images/default-manga-cover.jpg'}
+                                alt={manga.title}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-white truncate">{manga.title}</p>
+                              <p className="text-xs text-gray-400 truncate">{manga.author}</p>
+                            </div>
+                          </Link>
+                        ))}
+                        <div className="p-2 text-center border-t border-gray-700">
+                          <Link
+                            to={`/search?keyword=${encodeURIComponent(searchKeyword.trim())}`}
+                            className="text-xs text-purple-400 hover:text-purple-300"
+                            onClick={() => setShowResults(false)}
+                          >
+                            Xem tất cả kết quả
+                          </Link>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-gray-400">
+                        Không tìm thấy kết quả
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Right side buttons */}
             <div className="flex items-center space-x-4">
-              {/* Search button (mobile only) */}
-              <button
-                onClick={handleSearchClick}
-                className="md:hidden w-10 h-10 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors flex items-center justify-center"
-                aria-label="Search"
-              >
-                <i className="fas fa-search"></i>
-              </button>
-
               {/* Username display when logged in */}
               {isLogin && user && (
                 <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
@@ -197,29 +265,7 @@ const NewHeader = () => {
                         </a>
                       </>
                     )}
-                    <div className="md:hidden border-t border-gray-700 my-1"></div>
-                    <div className="md:hidden">
-                      <Link to="/" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
-                        <i className="fas fa-home mr-2"></i>
-                        Trang chủ
-                      </Link>
-                      <Link to="/search" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
-                        <i className="fas fa-search mr-2"></i>
-                        Tìm kiếm
-                      </Link>
-                      <Link to="/profile/reading-history" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
-                        <i className="fas fa-history mr-2"></i>
-                        Lịch sử
-                      </Link>
-                      <Link to="/genres" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
-                        <i className="fas fa-tags mr-2"></i>
-                        Thể loại
-                      </Link>
-                      <Link to="/rankings" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
-                        <i className="fas fa-trophy mr-2"></i>
-                        Xếp hạng
-                      </Link>
-                    </div>
+
                   </div>
                 )}
               </div>
@@ -228,7 +274,7 @@ const NewHeader = () => {
         </div>
       </header>
 
-      {/* Search overlay */}
+      {/* Search overlay for mobile */}
       {isSearchOpen && (
         <>
           <div

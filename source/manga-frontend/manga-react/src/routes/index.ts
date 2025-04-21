@@ -11,7 +11,8 @@ import {
     ProfileSettings,
     AdvancedSearch,
     FavoriteList,
-    ReadingHistoryList
+    ReadingHistoryList,
+    GenreDetail
 } from "../pages";
 
 // Định nghĩa các route cho ứng dụng
@@ -64,6 +65,14 @@ export const routes: IRoute[] = [
     {
         path: '/search',
         Component: AdvancedSearch,
+        Layout: Master,
+        requireAuth: false
+    },
+
+    // Route hiển thị truyện theo thể loại
+    {
+        path: '/genre/:genreName',
+        Component: GenreDetail,
         Layout: Master,
         requireAuth: false
     },

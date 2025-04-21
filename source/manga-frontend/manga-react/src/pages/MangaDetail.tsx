@@ -311,7 +311,7 @@ const MangaDetail: React.FC = () => {
                                             <React.Fragment key={genre}>
                                                 <Link
                                                     className="text-blue-400 transition hover:text-blue-300 bg-gray-800 px-2 py-1 rounded-md text-sm"
-                                                    to={`/genres/${genre}`}
+                                                    to={`/genre/${genre}`}
                                                 >
                                                     {genre}
                                                 </Link>
