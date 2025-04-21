@@ -76,7 +76,7 @@ public class UserService {
                 .userId(profileRequest.getUserId())
                 .email(profileRequest.getEmail())
                 .displayName(profileRequest.getDisplayName())
-                .avatarUrl(profileRequest.getAvatarUrl())
+                .avatarUrl("default.jpg")
                 .build();
 
         log.info("Creating user profile for user: {}", profileEvent.getEmail());

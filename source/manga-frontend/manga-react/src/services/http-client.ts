@@ -72,7 +72,7 @@ class HttpClient {
                     switch (status) {
                         case 401:
                             // Unauthorized - thử refresh token trước khi đăng xuất
-                            const refreshToken = localStorage.getItem(TOKEN_STORAGE.REFRESH_TOKEN);
+                            { const refreshToken = localStorage.getItem(TOKEN_STORAGE.REFRESH_TOKEN);
                             if (refreshToken) {
                                 // Thử làm mới token
                                 authService.refreshToken().then(result => {
@@ -94,7 +94,7 @@ class HttpClient {
                                 window.location.href = '/login';
                                 toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
                             }
-                            break;
+                            break; }
                         case 403:
                             // Forbidden
                             toast.error('Bạn không có quyền thực hiện hành động này.');

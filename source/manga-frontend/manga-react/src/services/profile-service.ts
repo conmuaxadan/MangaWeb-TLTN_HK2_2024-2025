@@ -1,6 +1,7 @@
 import { toast } from "react-toastify";
 import { profileHttpClient, identityHttpClient } from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
+import { AxiosError } from "axios";
 import {
     UserProfileResponse,
     UserProfileRequest,
@@ -9,7 +10,8 @@ import {
     FavoriteMangaResponse,
     CommentRequest,
     CommentResponse,
-    FavoriteRequest
+    FavoriteRequest,
+    CommentPageResponse, FavoritePageResponse, ReadingHistoryPageResponse
 } from "../interfaces/models/profile";
 
 class ProfileService {
@@ -111,15 +113,19 @@ class ProfileService {
         } catch (error) {
             console.error("Lỗi cập nhật ảnh đại diện:", error);
 
-            if (error.response) {
-                // Server trả về lỗi với status code khác 2xx
-                console.error('Error data:', error.response.data);
-                console.error('Error status:', error.response.status);
-                console.error('Error headers:', error.response.headers);
+            if (error instanceof AxiosError) {
+                if (error.response) {
+                    // Server trả về lỗi với status code khác 2xx
+                    console.error('Error data:', error.response.data);
+                    console.error('Error status:', error.response.status);
+                    console.error('Error headers:', error.response.headers);
 
-                // Hiển thị thông báo lỗi cụ thể nếu có
-                const errorMessage = error.response.data?.message || "Không thể cập nhật ảnh đại diện";
-                toast.error(errorMessage, { position: "top-right" });
+                    // Hiển thị thông báo lỗi cụ thể nếu có
+                    const errorMessage = error.response.data?.message || "Không thể cập nhật ảnh đại diện";
+                    toast.error(errorMessage, { position: "top-right" });
+                } else {
+                    toast.error("Không thể cập nhật ảnh đại diện", { position: "top-right" });
+                }
             } else {
                 toast.error("Không thể cập nhật ảnh đại diện", { position: "top-right" });
             }
@@ -157,15 +163,19 @@ class ProfileService {
         } catch (error) {
             console.error("Lỗi đổi mật khẩu:", error);
 
-            if (error.response) {
-                // Server trả về lỗi với status code khác 2xx
-                console.error('Error data:', error.response.data);
-                console.error('Error status:', error.response.status);
-                console.error('Error headers:', error.response.headers);
+            if (error instanceof AxiosError) {
+                if (error.response) {
+                    // Server trả về lỗi với status code khác 2xx
+                    console.error('Error data:', error.response.data);
+                    console.error('Error status:', error.response.status);
+                    console.error('Error headers:', error.response.headers);
 
-                // Hiển thị thông báo lỗi cụ thể nếu có
-                const errorMessage = error.response.data?.message || "Không thể đổi mật khẩu";
-                toast.error(errorMessage, { position: "top-right" });
+                    // Hiển thị thông báo lỗi cụ thể nếu có
+                    const errorMessage = error.response.data?.message || "Không thể đổi mật khẩu";
+                    toast.error(errorMessage, { position: "top-right" });
+                } else {
+                    toast.error("Không thể đổi mật khẩu", { position: "top-right" });
+                }
             } else {
                 toast.error("Không thể đổi mật khẩu", { position: "top-right" });
             }
@@ -180,9 +190,9 @@ class ProfileService {
      * @param size Số lượng bình luận trên mỗi trang
      * @returns Danh sách bình luận có phân trang hoặc null nếu thất bại
      */
-    async getMyComments(page: number = 0, size: number = 20): Promise<ApiResponse<any> | null> {
+    async getMyComments(page: number = 0, size: number = 20): Promise<ApiResponse<CommentPageResponse> | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<any>>(
+            const apiResponse = await profileHttpClient.get<ApiResponse<CommentPageResponse>>(
                 `/comments/me?page=${page}&size=${size}&sort=createdAt,desc`
             );
 
@@ -243,15 +253,19 @@ class ProfileService {
         } catch (error) {
             console.error(`Lỗi cập nhật thông tin profile:`, error);
 
-            if (error.response) {
-                // Server trả về lỗi với status code khác 2xx
-                console.error('Error data:', error.response.data);
-                console.error('Error status:', error.response.status);
-                console.error('Error headers:', error.response.headers);
+            if (error instanceof AxiosError) {
+                if (error.response) {
+                    // Server trả về lỗi với status code khác 2xx
+                    console.error('Error data:', error.response.data);
+                    console.error('Error status:', error.response.status);
+                    console.error('Error headers:', error.response.headers);
 
-                // Hiển thị thông báo lỗi cụ thể nếu có
-                const errorMessage = error.response.data?.message || "Không thể cập nhật thông tin profile";
-                toast.error(errorMessage, { position: "top-right" });
+                    // Hiển thị thông báo lỗi cụ thể nếu có
+                    const errorMessage = error.response.data?.message || "Không thể cập nhật thông tin profile";
+                    toast.error(errorMessage, { position: "top-right" });
+                } else {
+                    toast.error("Không thể cập nhật thông tin profile", { position: "top-right" });
+                }
             } else {
                 toast.error("Không thể cập nhật thông tin profile", { position: "top-right" });
             }
@@ -332,7 +346,7 @@ class ProfileService {
      */
     async getMyFavorites(): Promise<FavoriteMangaResponse[] | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<any>>(`/favorites?page=0&size=100&sort=createdAt,desc`);
+            const apiResponse = await profileHttpClient.get<ApiResponse<FavoritePageResponse>>(`/favorites?page=0&size=100&sort=createdAt,desc`);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách manga yêu thích", { position: "top-right" });
@@ -378,12 +392,11 @@ class ProfileService {
      * @param lastPageRead Trang cuối cùng đã đọc
      * @returns Thông tin lịch sử đọc hoặc null nếu thất bại
      */
-    async markChapterAsRead(userId: string, mangaId: string, chapterId: string, lastPageRead: number): Promise<ReadingHistoryResponse | null> {
+    async markChapterAsRead(userId: string, mangaId: string, chapterId: string): Promise<ReadingHistoryResponse | null> {
         try {
             const request: ReadingHistoryRequest = {
                 mangaId,
                 chapterId,
-                lastPageRead
             };
 
             const apiResponse = await profileHttpClient.post<ApiResponse<ReadingHistoryResponse>>(
@@ -441,9 +454,9 @@ class ProfileService {
      * @param limit Số lượng bình luận cần lấy
      * @returns Danh sách bình luận mới nhất hoặc null nếu thất bại
      */
-    async getLatestComments(limit: number = 10): Promise<ApiResponse<any> | null> {
+    async getLatestComments(limit: number = 10): Promise<ApiResponse<CommentPageResponse> | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<any>>(
+            const apiResponse = await profileHttpClient.get<ApiResponse<CommentPageResponse>>(
                 `/comments/latest?size=${limit}&sort=createdAt,desc`
             );
 
@@ -487,9 +500,9 @@ class ProfileService {
      * @param size Số lượng bình luận trên mỗi trang
      * @returns Danh sách bình luận có phân trang hoặc null nếu thất bại
      */
-    async getCommentsByChapterId(chapterId: string, page: number = 0, size: number = 10): Promise<ApiResponse<any> | null> {
+    async getCommentsByChapterId(chapterId: string, page: number = 0, size: number = 10): Promise<ApiResponse<CommentPageResponse> | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<any>>(
+            const apiResponse = await profileHttpClient.get<ApiResponse<CommentPageResponse>>(
                 `/comments/chapter/${chapterId}?page=${page}&size=${size}&sort=createdAt,desc`
             );
 
@@ -654,9 +667,9 @@ class ProfileService {
      * @param size Số lượng manga trên mỗi trang
      * @returns Danh sách manga yêu thích có phân trang hoặc null nếu thất bại
      */
-    async getFavorites(page: number = 0, size: number = 20): Promise<ApiResponse<any> | null> {
+    async getFavorites(page: number = 0, size: number = 20): Promise<ApiResponse<FavoritePageResponse> | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<any>>(
+            const apiResponse = await profileHttpClient.get<ApiResponse<FavoritePageResponse>>(
                 `/favorites?page=${page}&size=${size}&sort=createdAt,desc`
             );
 
@@ -678,7 +691,7 @@ class ProfileService {
      */
     async getMyReadingHistory(): Promise<ReadingHistoryResponse[] | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<any>>(`/reading-history?page=0&size=100&sort=updatedAt,desc`);
+            const apiResponse = await profileHttpClient.get<ApiResponse<ReadingHistoryPageResponse>>(`/reading-history?page=0&size=100&sort=updatedAt,desc`);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy lịch sử đọc", { position: "top-right" });

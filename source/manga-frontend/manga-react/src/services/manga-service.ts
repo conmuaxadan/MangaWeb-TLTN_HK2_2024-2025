@@ -1,6 +1,7 @@
 import { toast } from "react-toastify";
 import { mangaHttpClient } from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
+import { AxiosError } from "axios";
 import {
     MangaResponse,
     ChapterResponse,
@@ -299,17 +300,21 @@ class MangaService {
             return apiResponse.result;
         } catch (error) {
             console.error("Lỗi tìm kiếm nâng cao manga:", error);
-            if (error.response) {
-                // Server trả về lỗi với status code khác 2xx
-                console.error('Error data:', error.response.data);
-                console.error('Error status:', error.response.status);
-                console.error('Error headers:', error.response.headers);
-            } else if (error.request) {
-                // Request đã được gửi nhưng không nhận được response
-                console.error('Error request:', error.request);
+            if (error instanceof AxiosError) {
+                if (error.response) {
+                    // Server trả về lỗi với status code khác 2xx
+                    console.error('Error data:', error.response.data);
+                    console.error('Error status:', error.response.status);
+                    console.error('Error headers:', error.response.headers);
+                } else if (error.request) {
+                    // Request đã được gửi nhưng không nhận được response
+                    console.error('Error request:', error.request);
+                } else {
+                    // Có lỗi khi thiết lập request
+                    console.error('Error message:', error.message);
+                }
             } else {
-                // Có lỗi khi thiết lập request
-                console.error('Error message:', error.message);
+                console.error('Unexpected error:', error);
             }
             return null;
         }
