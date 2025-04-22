@@ -10,6 +10,7 @@ import {
     MangaSummaryResponse,
     AdvancedSearchRequest
 } from "../interfaces/models/manga";
+import authService from "./auth-service";
 
 class MangaService {
     /**
@@ -385,6 +386,8 @@ class MangaService {
             return null;
         }
     }
+
+
 }
 
 export default new MangaService();

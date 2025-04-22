@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import mangaService from '../services/manga-service';
@@ -18,7 +18,6 @@ const NewHeader = () => {
   const menuRef = useRef<HTMLDivElement>(null);
   const { isLogin, logout, user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Theo dõi scroll để thay đổi màu nền header
   useEffect(() => {

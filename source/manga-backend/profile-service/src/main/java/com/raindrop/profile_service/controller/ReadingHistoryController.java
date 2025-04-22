@@ -3,6 +3,8 @@ package com.raindrop.profile_service.controller;
 import com.raindrop.profile_service.dto.request.ReadingHistoryRequest;
 import com.raindrop.profile_service.dto.response.ApiResponse;
 import com.raindrop.profile_service.dto.response.ReadingHistoryResponse;
+import com.raindrop.profile_service.entity.UserProfile;
+import com.raindrop.profile_service.repository.UserProfileRepository;
 import com.raindrop.profile_service.service.ReadingHistoryService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/reading-history")
@@ -26,6 +29,7 @@ import jakarta.validation.Valid;
 @Slf4j
 public class ReadingHistoryController {
     ReadingHistoryService readingHistoryService;
+    UserProfileRepository userProfileRepository;
 
     /**
      * Đánh dấu đã đọc chapter
@@ -98,6 +102,8 @@ public class ReadingHistoryController {
                 .result(readingHistory)
                 .build());
     }
+
+
 
     /**
      * Xóa lịch sử đọc

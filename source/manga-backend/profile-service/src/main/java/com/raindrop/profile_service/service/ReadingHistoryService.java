@@ -20,7 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -200,4 +201,6 @@ public class ReadingHistoryService {
         // Xóa lịch sử đọc
         readingHistoryRepository.delete(readingHistory);
     }
+
+
 }

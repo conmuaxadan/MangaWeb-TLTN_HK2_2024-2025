@@ -75,3 +75,5 @@ export function useMangasByGenre(genreName: string, page: number = 0, size: numb
     keepPreviousData: true,
   });
 }
+
+

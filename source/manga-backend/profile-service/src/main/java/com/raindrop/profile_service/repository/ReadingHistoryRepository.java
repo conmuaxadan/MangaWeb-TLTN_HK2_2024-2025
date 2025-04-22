@@ -21,4 +21,6 @@ public interface ReadingHistoryRepository extends JpaRepository<ReadingHistory, 
     Optional<ReadingHistory> findFirstByUserProfileIdAndMangaIdOrderByUpdatedAtDesc(String profileId, String mangaId);
 
     List<ReadingHistory> findByMangaId(String mangaId);
+
+    List<ReadingHistory> findByUserProfileIdOrderByUpdatedAtDesc(String profileId);
 }

@@ -11,14 +11,5 @@ import java.util.List;
 
 @FeignClient(name = "profile-service", url = "${app.profile-service.url}")
 public interface ProfileClient {
-    /**
-     * Lấy lịch sử đọc gần đây của người dùng
-     * @param userId ID của người dùng
-     * @param limit Số lượng bản ghi cần lấy
-     * @return Danh sách lịch sử đọc gần đây
-     */
-    @GetMapping("/users/{userId}/reading-history/recent")
-    ApiResponse<List<ReadingHistoryResponse>> getRecentReadingHistory(
-            @PathVariable("userId") String userId,
-            @RequestParam("limit") int limit);
+
 }

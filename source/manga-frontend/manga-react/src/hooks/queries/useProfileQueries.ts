@@ -65,6 +65,33 @@ export function useReadingHistory() {
   return useQuery({
     queryKey: profileKeys.history(),
     queryFn: () => profileService.getMyReadingHistory(),
+    staleTime: 5 * 60 * 1000, // 5 phút
+  });
+}
+
+// Hook lấy lịch sử đọc gần đây (3 truyện gần nhất)
+export function useRecentReadingHistory(limit: number = 3) {
+  return useQuery({
+    queryKey: [...profileKeys.history(), 'recent', limit],
+    queryFn: async () => {
+      const history = await profileService.getMyReadingHistory();
+      if (!history) return [];
+
+      // Lọc theo mangaId để chỉ lấy mỗi manga một lần (chapter mới nhất)
+      const uniqueMangaMap = new Map();
+      history.forEach(item => {
+        if (!uniqueMangaMap.has(item.mangaId) ||
+            new Date(uniqueMangaMap.get(item.mangaId).updatedAt) < new Date(item.updatedAt)) {
+          uniqueMangaMap.set(item.mangaId, item);
+        }
+      });
+
+      // Chuyển map thành mảng và sắp xếp theo thời gian gần nhất
+      return Array.from(uniqueMangaMap.values())
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        .slice(0, limit);
+    },
+    staleTime: 5 * 60 * 1000, // 5 phút
   });
 }
 

@@ -77,18 +77,7 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
      */
     List<Manga> findByOrderByViewsDesc(Pageable pageable);
 
-    /**
-     * Tìm các manga dựa trên thể loại, loại trừ các manga đã đọc gần đây
-     * @param genres Danh sách thể loại ưu tiên
-     * @param excludeMangaIds Danh sách ID manga cần loại trừ
-     * @param pageable Thông tin phân trang
-     * @return Danh sách manga phù hợp
-     */
-    @Query("SELECT DISTINCT m FROM Manga m JOIN m.genres g WHERE g.name IN :genres AND m.id NOT IN :excludeMangaIds ORDER BY m.views DESC")
-    List<Manga> findMangasByGenres(
-            @Param("genres") List<String> genres,
-            @Param("excludeMangaIds") List<String> excludeMangaIds,
-            Pageable pageable);
+
 
     /**
      * Tìm kiếm manga theo từ khóa
