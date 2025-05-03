@@ -30,7 +30,8 @@ public class SecurityConfig {
             "/chapters/manga",
             "/genres",
             "/genres/{id}",
-            "/genres/{name}"
+            "/genres/{name}",
+            "/recommendations/by-genre"
     };
 
     @Autowired

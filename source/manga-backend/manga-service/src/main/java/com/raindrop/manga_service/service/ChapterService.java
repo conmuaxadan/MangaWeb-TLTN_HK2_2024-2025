@@ -18,6 +18,7 @@ import com.raindrop.manga_service.repository.PageRepository;
 import com.raindrop.manga_service.repository.ViewLogRepository;
 import com.raindrop.manga_service.repository.httpclient.UploadClient;
 import jakarta.transaction.Transactional;
+import com.raindrop.manga_service.kafka.NewChapterEventProducer;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -41,6 +42,7 @@ public class ChapterService {
     MangaRepository mangaRepository;
     PageRepository pageRepository;
     MangaStatsService mangaStatsService;
+    NewChapterEventProducer newChapterEventProducer;
 
     @Transactional
     public ChapterResponse createChapter(ChapterRequest request) {
@@ -94,6 +96,15 @@ public class ChapterService {
         // Cập nhật tổng số lượt xem và comment của manga
         mangaStatsService.updateMangaTotalViews(manga.getId());
         mangaStatsService.updateMangaTotalComments(manga.getId());
+
+        // Gửi sự kiện chapter mới để thông báo cho người dùng đã yêu thích truyện
+        newChapterEventProducer.sendNewChapterEvent(
+                manga.getId(),
+                manga.getTitle(),
+                chapter.getId(),
+                chapter.getChapterNumber(),
+                chapter.getTitle()
+        );
 
         // **Tạo response**
         return ChapterResponse.builder()

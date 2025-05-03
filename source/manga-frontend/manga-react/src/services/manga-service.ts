@@ -387,7 +387,40 @@ class MangaService {
         }
     }
 
+    /**
+     * Lấy gợi ý manga dựa trên thể loại từ lịch sử đọc của người dùng
+     * @param limit Số lượng manga gợi ý (mặc định là 6)
+     * @returns Danh sách manga được gợi ý hoặc null nếu thất bại
+     */
+    async getPersonalRecommendations(limit: number = 6): Promise<MangaResponse[] | null> {
+        try {
+            // Lấy thông tin người dùng hiện tại từ token
+            const currentUser = authService.getCurrentUser();
+            if (!currentUser) {
+                console.log("Không có người dùng đăng nhập, không thể lấy gợi ý cá nhân");
+                return null;
+            }
 
+            const url = `/recommendations/by-genre?userId=${currentUser.userId}&limit=${limit}`;
+            const apiResponse = await mangaHttpClient.get<ApiResponse<MangaResponse[]>>(url);
+
+            if (apiResponse.code !== 1000) {
+                console.log(apiResponse.message || "Không thể lấy gợi ý manga");
+                return null;
+            }
+
+            // Nếu kết quả rỗng, trả về null để không hiển thị phần gợi ý
+            if (!apiResponse.result || apiResponse.result.length === 0) {
+                console.log("Không có gợi ý nào cho người dùng");
+                return null;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error("Lỗi lấy gợi ý manga:", error);
+            return null;
+        }
+    }
 }
 
 export default new MangaService();

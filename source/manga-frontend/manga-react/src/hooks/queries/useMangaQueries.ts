@@ -76,4 +76,12 @@ export function useMangasByGenre(genreName: string, page: number = 0, size: numb
   });
 }
 
-
+// Hook lấy gợi ý manga cá nhân dựa trên lịch sử đọc
+export function usePersonalRecommendations(limit: number = 6) {
+  return useQuery({
+    queryKey: [...mangaKeys.lists(), 'personal-recommendations', limit],
+    queryFn: () => mangaService.getPersonalRecommendations(limit),
+    staleTime: 10 * 60 * 1000, // 10 phút
+    // Không cần enabled vì service đã kiểm tra người dùng đăng nhập
+  });
+}

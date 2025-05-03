@@ -3,6 +3,7 @@ import LatestUpdates from "../components/LatestUpdates.tsx";
 import TopManga from "../components/TopManga.tsx";
 import RecentComments from "../components/RecentComments.tsx";
 import NavigationToolbar from "../components/NavigationToolbar.tsx";
+import PersonalRecommendations from "../components/PersonalRecommendations.tsx";
 
 const Home = () => {
     return (
@@ -14,6 +15,9 @@ const Home = () => {
 
                     {/* Truyện đề cử */}
                     <RecommendedManga />
+
+                    {/* Có thể bạn muốn đọc - Chỉ hiển thị khi đã đăng nhập */}
+                    <PersonalRecommendations />
 
                     {/* Grid layout cho phần chính và sidebar */}
                     <div className="grid grid-cols-1 gap-[40px] lg:grid-cols-3">

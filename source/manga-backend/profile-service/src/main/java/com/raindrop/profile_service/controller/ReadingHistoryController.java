@@ -127,4 +127,46 @@ public class ReadingHistoryController {
                 .message("Reading history deleted successfully")
                 .build());
     }
+
+    /**
+     * Lấy lịch sử đọc gần đây của người dùng cụ thể (mỗi manga chỉ lấy 1 lần)
+     * @param userId ID của người dùng
+     * @param limit Số lượng manga cần lấy
+     * @return Danh sách lịch sử đọc gần đây
+     */
+    @GetMapping("/users/{userId}/recent")
+    public ResponseEntity<ApiResponse<List<ReadingHistoryResponse>>> getUserRecentReadingHistory(
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "3") int limit
+    ) {
+        log.info("Getting recent reading history for user {}, limit: {}", userId, limit);
+
+        List<ReadingHistoryResponse> recentHistory = readingHistoryService.getRecentReadingHistory(userId, limit);
+
+        return ResponseEntity.ok(ApiResponse.<List<ReadingHistoryResponse>>builder()
+                .code(1000)
+                .message("Recent reading history retrieved successfully")
+                .result(recentHistory)
+                .build());
+    }
+
+    /**
+     * Lấy tất cả mangaId đã đọc của người dùng
+     * @param userId ID của người dùng
+     * @return Danh sách tất cả mangaId đã đọc
+     */
+    @GetMapping("/users/{userId}/all-read-manga-ids")
+    public ResponseEntity<ApiResponse<List<String>>> getAllReadMangaIds(
+            @PathVariable String userId
+    ) {
+        log.info("Getting all read manga IDs for user {}", userId);
+
+        List<String> allReadMangaIds = readingHistoryService.getAllReadMangaIds(userId);
+
+        return ResponseEntity.ok(ApiResponse.<List<String>>builder()
+                .code(1000)
+                .message("All read manga IDs retrieved successfully")
+                .result(allReadMangaIds)
+                .build());
+    }
 }

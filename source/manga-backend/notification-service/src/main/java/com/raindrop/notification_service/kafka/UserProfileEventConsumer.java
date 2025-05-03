@@ -33,4 +33,6 @@ public class UserProfileEventConsumer {
         emailService.sendEmail(request);
         log.info("Welcome email sent to: {}", message.getEmail());
     }
+
+
 }

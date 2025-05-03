@@ -202,5 +202,85 @@ public class ReadingHistoryService {
         readingHistoryRepository.delete(readingHistory);
     }
 
+    /**
+     * Lấy lịch sử đọc gần đây của người dùng (mỗi manga chỉ lấy 1 lần)
+     * @param userId ID của người dùng
+     * @param limit Số lượng manga cần lấy
+     * @return Danh sách lịch sử đọc gần đây
+     */
+    public List<ReadingHistoryResponse> getRecentReadingHistory(String userId, int limit) {
+        log.info("Getting recent reading history for user {}, limit: {}", userId, limit);
 
+        // Lấy thông tin profile người dùng
+        UserProfile userProfile = userProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User profile not found"));
+
+        // Lấy tất cả lịch sử đọc của người dùng, sắp xếp theo thời gian gần nhất
+        List<ReadingHistory> allHistory = readingHistoryRepository.findByUserProfileIdOrderByUpdatedAtDesc(userProfile.getId());
+
+        // Lọc để mỗi manga chỉ lấy 1 lần (chapter mới nhất)
+        Map<String, ReadingHistory> uniqueMangaMap = new LinkedHashMap<>(); // Sử dụng LinkedHashMap để giữ thứ tự
+
+        for (ReadingHistory history : allHistory) {
+            String mangaId = history.getMangaId();
+            if (!uniqueMangaMap.containsKey(mangaId)) {
+                uniqueMangaMap.put(mangaId, history);
+
+                // Nếu đã đủ số lượng manga cần lấy, dừng vòng lặp
+                if (uniqueMangaMap.size() >= limit) {
+                    break;
+                }
+            }
+        }
+
+        // Chuyển đổi kết quả sang DTO và bổ sung thông tin
+        List<ReadingHistoryResponse> result = new ArrayList<>();
+
+        for (ReadingHistory history : uniqueMangaMap.values()) {
+            ReadingHistoryResponse response = readingHistoryMapper.toReadingHistoryResponse(history);
+
+            // Bổ sung thông tin từ Manga Service
+            try {
+                ApiResponse<MangaInfoResponse> mangaInfo = mangaClient.getMangaById(history.getMangaId());
+                if (mangaInfo != null && mangaInfo.getResult() != null) {
+                    response.setMangaTitle(mangaInfo.getResult().getTitle());
+                    response.setMangaCoverUrl(mangaInfo.getResult().getCoverUrl());
+                }
+
+                // Lấy thông tin chapter
+                ApiResponse<ChapterInfoResponse> chapterInfo = mangaClient.getChapterById(history.getChapterId());
+                if (chapterInfo != null && chapterInfo.getResult() != null) {
+                    ChapterInfoResponse chapterData = chapterInfo.getResult();
+                    response.setChapterTitle(chapterData.getTitle());
+                    response.setChapterNumber(chapterData.getChapterNumber());
+                }
+            } catch (Exception e) {
+                log.error("Error getting manga/chapter info for manga {}: {}", history.getMangaId(), e.getMessage());
+            }
+
+            result.add(response);
+        }
+
+        log.info("Retrieved {} recent manga reading history for user {}", result.size(), userId);
+        return result;
+    }
+
+    /**
+     * Lấy tất cả mangaId đã đọc của người dùng
+     * @param userId ID của người dùng
+     * @return Danh sách tất cả mangaId đã đọc
+     */
+    public List<String> getAllReadMangaIds(String userId) {
+        log.info("Getting all read manga IDs for user {}", userId);
+
+        // Lấy thông tin profile người dùng
+        UserProfile userProfile = userProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User profile not found"));
+
+        // Lấy tất cả mangaId đã đọc
+        List<String> allReadMangaIds = readingHistoryRepository.findAllMangaIdsByUserProfileId(userProfile.getId());
+        log.info("Retrieved {} manga IDs from reading history for user {}", allReadMangaIds.size(), userId);
+
+        return allReadMangaIds;
+    }
 }

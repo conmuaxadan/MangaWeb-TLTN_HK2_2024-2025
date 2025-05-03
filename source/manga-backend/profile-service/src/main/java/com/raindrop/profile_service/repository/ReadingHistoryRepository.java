@@ -23,4 +23,23 @@ public interface ReadingHistoryRepository extends JpaRepository<ReadingHistory, 
     List<ReadingHistory> findByMangaId(String mangaId);
 
     List<ReadingHistory> findByUserProfileIdOrderByUpdatedAtDesc(String profileId);
+
+    /**
+     * Lấy tất cả mangaId đã đọc của người dùng
+     * @param profileId ID của profile người dùng
+     * @return Danh sách tất cả mangaId đã đọc
+     */
+    @Query(value = "SELECT DISTINCT manga_id FROM reading_histories WHERE profile_id = :profileId", nativeQuery = true)
+    List<String> findAllMangaIdsByUserProfileId(@Param("profileId") String profileId);
+
+    /**
+     * Lấy danh sách mangaId gần đây của người dùng, mỗi manga chỉ lấy 1 lần
+     * @param profileId ID của profile người dùng
+     * @param limit Số lượng mangaId cần lấy
+     * @return Danh sách mangaId gần đây
+     */
+    @Query(value = "SELECT DISTINCT rh.manga_id FROM reading_histories rh " +
+            "WHERE rh.profile_id = :profileId " +
+            "ORDER BY MAX(rh.updated_at) DESC LIMIT :limit", nativeQuery = true)
+    List<String> findRecentMangaIdsByUserProfileId(@Param("profileId") String profileId, @Param("limit") int limit);
 }

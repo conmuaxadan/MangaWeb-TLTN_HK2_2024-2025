@@ -22,7 +22,9 @@ public class SecurityConfig {
             "/users",
             "/comments/chapter/{chapterId}",
             "/comments/count/manga/{mangaId}",
-            "/comments/latest"
+            "/comments/latest",
+            "/reading-history/users/{userId}/recent",
+            "/reading-history/users/{userId}/all-read-manga-ids"
     };
 
     @Autowired
@@ -31,7 +33,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
-                request.requestMatchers(HttpMethod.GET, "/comments/latest", "/comments/chapter/{chapterId}", "/comments/count/manga/{mangaId}").permitAll()
+                request.requestMatchers(HttpMethod.GET, "/comments/latest", "/comments/chapter/{chapterId}", "/comments/count/manga/{mangaId}", "/reading-history/users/{userId}/recent", "/reading-history/users/{userId}/all-read-manga-ids").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .anyRequest()
                         .authenticated());
