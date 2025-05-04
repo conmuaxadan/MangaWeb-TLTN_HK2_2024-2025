@@ -65,7 +65,7 @@ public class ChapterController {
     }
 
     /**
-     * Tăng lượt xem của chapter
+     * Tăng lượt xem của chapter (phương thức cũ, giữ lại để tương thích ngược)
      * @param id ID của chapter
      * @param request Thông tin lượt xem
      * @return Thông tin chapter sau khi cập nhật lượt xem
@@ -97,6 +97,24 @@ public class ChapterController {
 
         return ApiResponse.<ChapterResponse>builder()
                 .message(viewLogged ? "Chapter view logged successfully" : "Chapter view not logged (already viewed recently or scroll percentage too low)")
+                .result(chapterResponse)
+                .build();
+    }
+
+    /**
+     * Tăng lượt xem của chapter (phương thức đơn giản hóa)
+     * @param id ID của chapter
+     * @return Thông tin chapter sau khi cập nhật lượt xem
+     */
+    @PostMapping("/{id}/increment-view")
+    ApiResponse<ChapterResponse> incrementChapterView(@PathVariable String id) {
+        log.info("Simple view increment for chapter: {}", id);
+
+        // Tăng lượt xem và lấy thông tin chapter sau khi cập nhật
+        ChapterResponse chapterResponse = chapterService.incrementChapterViews(id);
+
+        return ApiResponse.<ChapterResponse>builder()
+                .message("Chapter view incremented successfully")
                 .result(chapterResponse)
                 .build();
     }

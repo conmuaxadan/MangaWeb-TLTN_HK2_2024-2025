@@ -7,6 +7,7 @@ import com.raindrop.profile_service.dto.response.ReadingHistoryResponse;
 import com.raindrop.profile_service.dto.response.manga.ApiResponse;
 import com.raindrop.profile_service.entity.ReadingHistory;
 import com.raindrop.profile_service.entity.UserProfile;
+import com.raindrop.profile_service.kafka.ChapterViewEventProducer;
 import com.raindrop.profile_service.mapper.ReadingHistoryMapper;
 import com.raindrop.profile_service.repository.ReadingHistoryRepository;
 import com.raindrop.profile_service.repository.UserProfileRepository;
@@ -32,6 +33,7 @@ public class ReadingHistoryService {
     UserProfileRepository userProfileRepository;
     ReadingHistoryMapper readingHistoryMapper;
     MangaClient mangaClient;
+    ChapterViewEventProducer chapterViewEventProducer;
 
     /**
      * Đánh dấu đã đọc chapter
@@ -63,6 +65,14 @@ public class ReadingHistoryService {
 
         // Lưu lịch sử đọc
         readingHistory = readingHistoryRepository.save(readingHistory);
+
+        // Gửi sự kiện tăng lượt xem qua Kafka
+        chapterViewEventProducer.sendChapterViewEvent(
+                request.getChapterId(),
+                request.getMangaId(),
+                userId
+        );
+        log.info("Sent chapter view event for chapter {} of manga {}", request.getChapterId(), request.getMangaId());
 
         // Tạo response
         ReadingHistoryResponse response = readingHistoryMapper.toReadingHistoryResponse(readingHistory);

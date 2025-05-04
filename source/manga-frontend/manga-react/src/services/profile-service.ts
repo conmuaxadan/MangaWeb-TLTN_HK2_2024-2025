@@ -11,7 +11,11 @@ import {
     CommentRequest,
     CommentResponse,
     FavoriteRequest,
-    CommentPageResponse, FavoritePageResponse, ReadingHistoryPageResponse
+    CommentPageResponse,
+    FavoritePageResponse,
+    ReadingHistoryPageResponse,
+    AnonymousReadingHistoryRequest,
+    AnonymousReadingHistoryResponse
 } from "../interfaces/models/profile";
 
 class ProfileService {
@@ -730,7 +734,7 @@ class ProfileService {
     }
 
     /**
-     * Đánh dấu đã đọc chapter
+     * Đánh dấu đã đọc chapter cho người dùng đã đăng nhập
      * @param mangaId ID của manga
      * @param chapterId ID của chapter
      * @returns Thông tin lịch sử đọc hoặc null nếu thất bại
@@ -754,6 +758,44 @@ class ProfileService {
             return apiResponse.result;
         } catch (error) {
             console.error(`Lỗi đánh dấu đã đọc chapter ${chapterId} của manga ${mangaId}:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Đánh dấu đã đọc chapter cho người dùng không đăng nhập
+     * @param mangaId ID của manga
+     * @param chapterId ID của chapter
+     * @param sessionId ID phiên của người dùng
+     * @returns Thông tin lịch sử đọc hoặc null nếu thất bại
+     */
+    async markAnonymousRead(mangaId: string, chapterId: string, sessionId: string): Promise<AnonymousReadingHistoryResponse | null> {
+        try {
+            if (!mangaId || !chapterId || !sessionId) {
+                console.error('Thiếu thông tin để đánh dấu đã đọc chapter cho người dùng không đăng nhập');
+                console.log('mangaId:', mangaId, 'chapterId:', chapterId, 'sessionId:', sessionId);
+                return null;
+            }
+
+            const request: AnonymousReadingHistoryRequest = {
+                mangaId,
+                chapterId,
+                sessionId
+            };
+
+            console.log('Sending anonymous reading history request:', request);
+
+            const apiResponse = await profileHttpClient.post<ApiResponse<AnonymousReadingHistoryResponse>>('/anonymous-reading-history', request);
+
+            if (apiResponse.code !== 1000) {
+                console.error(apiResponse.message || "Không thể đánh dấu đã đọc chapter cho người dùng không đăng nhập");
+                return null;
+            }
+
+            console.log('Lưu lịch sử đọc ẩn danh thành công:', apiResponse.result);
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi đánh dấu đã đọc chapter ${chapterId} của manga ${mangaId} cho người dùng không đăng nhập:`, error);
             return null;
         }
     }

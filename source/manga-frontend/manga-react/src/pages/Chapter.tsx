@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import mangaService from '../services/manga-service.ts';
 import profileService from '../services/profile-service.ts';
+import sessionService from '../services/session-service';
 import {MangaResponse, ChapterResponse, ChapterPageResponse} from '../interfaces/models/manga.ts';
 import { useAuth } from '../contexts/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -39,27 +40,18 @@ const Chapter: React.FC = () => {
 
   // Lấy session ID khi component mount
   useEffect(() => {
-    const getSessionId = async () => {
-      // Kiểm tra xem đã có session ID trong localStorage chưa
-      let storedSessionId = localStorage.getItem('manga_session_id');
+    // Đảm bảo sessionId được tạo và lưu trước khi sử dụng
+    const storedSessionId = sessionService.getSessionId();
+    console.log('SessionId from service:', storedSessionId);
+    console.log('SessionId from localStorage:', localStorage.getItem('manga_session_id'));
 
-      if (!storedSessionId) {
-        // Nếu chưa có, lấy session ID mới từ server
-        const newSessionId = await mangaService.getSessionId();
-        if (newSessionId) {
-          storedSessionId = newSessionId;
-          localStorage.setItem('manga_session_id', newSessionId);
-        } else {
-          // Nếu không lấy được từ server, tạo một ID ngẫu nhiên
-          storedSessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-          localStorage.setItem('manga_session_id', storedSessionId);
-        }
-      }
-
+    // Đảm bảo sessionId được lưu vào localStorage và state
+    if (storedSessionId) {
+      localStorage.setItem('manga_session_id', storedSessionId);
       setSessionId(storedSessionId);
-    };
+    }
 
-    getSessionId();
+    console.log('Using session ID:', storedSessionId);
   }, []);
 
   // Xử lý ẩn/hiện thanh điều hướng khi cuộn và theo dõi tiến trình đọc
@@ -100,11 +92,8 @@ const Chapter: React.FC = () => {
 
         if (visiblePage !== currentPage) {
           setCurrentPage(visiblePage);
-
-          // Lưu lịch sử đọc nếu đã đăng nhập
-          if (isLogin && id && chapterId) {
-            profileService.markAsRead(id, chapterId);
-          }
+          // Đã loại bỏ việc gọi markAsRead khi cuộn trang
+          // Vì chúng ta sẽ chỉ gọi markAsRead một lần khi mở chapter
         }
       }
 
@@ -125,30 +114,8 @@ const Chapter: React.FC = () => {
   // Lưu trữ tất cả các chapter để sử dụng cho nút "Chương đầu tiên"
   const [chapters, setChapters] = useState<ChapterResponse[]>([]);
 
-  // Gọi API tăng lượt xem khi người dùng cuộn trang
-  useEffect(() => {
-    // Chỉ gọi API khi đã cuộn ít nhất 30% trang và có sessionId
-    if (scrollPercentage >= 30 && sessionId && chapterId) {
-      const logView = async () => {
-        try {
-          await mangaService.incrementChapterViews(
-            chapterId,
-            isLogin ? user?.id : null,
-            sessionId,
-            scrollPercentage
-          );
-          console.log(`Đã gọi API tăng lượt xem với scrollPercentage = ${scrollPercentage}%`);
-        } catch (error) {
-          console.error('Lỗi khi gọi API tăng lượt xem:', error);
-        }
-      };
-
-      // Chỉ gọi API khi cuộn đến 30%, 60% và 90% trang
-      if (scrollPercentage === 30 || scrollPercentage === 60 || scrollPercentage === 90) {
-        logView();
-      }
-    }
-  }, [scrollPercentage, sessionId, chapterId, isLogin, user]);
+  // Đã loại bỏ việc gọi API tăng lượt xem khi người dùng cuộn trang
+  // Vì chúng ta sẽ chỉ gọi API tăng lượt xem một lần khi mở chapter
 
   useEffect(() => {
     const fetchChapterData = async () => {
@@ -212,32 +179,55 @@ const Chapter: React.FC = () => {
           }
           setPages(chapterData.pages || []);
 
-          // Tăng lượt xem của chapter
-          try {
-            // Đảm bảo đã có sessionId trước khi gọi API
-            if (sessionId) {
-              // Gọi API với thông tin user và phần trăm cuộn
-              await mangaService.incrementChapterViews(
-                currentChapter.id,
-                isLogin ? user?.id : null,
-                sessionId,
-                30 // Mặc định là 30% khi mới mở chapter
-              );
-              console.log('Tăng lượt xem thành công cho chapter ID:', currentChapter.id);
-            }
+          // Đánh dấu đã đọc chapter (sẽ tự động tăng lượt xem qua Kafka)
+          // Đảm bảo có sessionId bằng cách lấy từ nhiều nguồn
+          let currentSessionId = sessionId;
 
-            // Đánh dấu đã đọc chapter nếu đã đăng nhập
-            if (isLogin && id) {
-              try {
-                await profileService.markAsRead(id, currentChapter.id);
-                console.log('Lưu lịch sử đọc thành công cho chapter ID:', currentChapter.id);
-              } catch (readErr) {
-                console.error('Lỗi khi lưu lịch sử đọc:', readErr);
-              }
+          // Nếu không có trong state, thử lấy từ localStorage
+          if (!currentSessionId) {
+            currentSessionId = localStorage.getItem('manga_session_id');
+          }
+
+          // Nếu vẫn không có, tạo mới và lưu vào cả state và localStorage
+          if (!currentSessionId) {
+            currentSessionId = sessionService.getSessionId();
+            localStorage.setItem('manga_session_id', currentSessionId);
+            setSessionId(currentSessionId);
+          }
+
+          console.log('Kiểm tra điều kiện lưu lịch sử đọc:', {
+            isLogin,
+            id,
+            'sessionId từ state': sessionId,
+            'sessionId được sử dụng': currentSessionId,
+            'sessionId từ localStorage': localStorage.getItem('manga_session_id'),
+            'Kiểm tra sessionId': !!currentSessionId
+          });
+
+          // Xử lý lưu lịch sử đọc
+          if (isLogin && id) {
+            // Người dùng đã đăng nhập
+            try {
+              await profileService.markAsRead(id, currentChapter.id);
+              console.log('Lưu lịch sử đọc và tăng lượt xem thành công cho chapter ID:', currentChapter.id);
+            } catch (readErr) {
+              console.error('Lỗi khi lưu lịch sử đọc:', readErr);
             }
-          } catch (err) {
-            console.error('Lỗi khi tăng lượt xem:', err);
-            // Không hiển thị lỗi cho người dùng vì đây là tính năng ngầm
+          } else if (id && currentSessionId) {
+            // Người dùng không đăng nhập, sử dụng sessionId
+            try {
+              console.log('Gọi API markAnonymousRead với sessionId:', currentSessionId);
+              const result = await profileService.markAnonymousRead(id, currentChapter.id, currentSessionId);
+              if (result) {
+                console.log('Lưu lịch sử đọc ẩn danh thành công:', result);
+              } else {
+                console.error('Lưu lịch sử đọc ẩn danh thất bại: API trả về null');
+              }
+            } catch (readErr) {
+              console.error('Lỗi khi lưu lịch sử đọc ẩn danh:', readErr);
+            }
+          } else {
+            console.log('Không có sessionId hoặc mangaId, không thể lưu lịch sử đọc');
           }
         }
 
@@ -251,7 +241,7 @@ const Chapter: React.FC = () => {
     };
 
     fetchChapterData();
-  }, [id, chapterId]);
+  }, [id, chapterId, isLogin]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });

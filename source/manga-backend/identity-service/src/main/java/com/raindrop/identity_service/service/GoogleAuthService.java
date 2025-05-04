@@ -6,6 +6,7 @@ import com.raindrop.common.event.UserProfileEvent;
 import com.raindrop.identity_service.dto.request.GoogleAuthenticationRequest;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.AuthenticationResponse;
+import com.raindrop.identity_service.dto.response.GoogleUserInfoResponse;
 import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.enums.ErrorCode;
@@ -39,7 +40,6 @@ public class GoogleAuthService {
     final AuthenticationService authenticationService;
     final UserRepository userRepository;
     final PasswordEncoder passwordEncoder;
-    final ProfileMapper profileMapper;
     final UserProfileEventProducer userProfileEventProducer;
 
     @Value("${google.client-id}")
@@ -56,105 +56,25 @@ public class GoogleAuthService {
 
     final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Xử lý đăng nhập Google
+     * @param code Mã xác thực từ Google
+     * @param redirectUri URI chuyển hướng
+     * @return Thông tin xác thực
+     */
     public AuthenticationResponse googleLogin(String code, String redirectUri) {
         try {
             log.info("Processing Google login with code: {}", code.substring(0, Math.min(code.length(), 10)) + "...");
 
-            // Đổi code lấy token từ Google
-            String tokenResponse;
-            try {
-                tokenResponse = exchangeCodeForToken(code, redirectUri);
-            } catch (Exception e) {
-                log.error("Error exchanging code for token: {}", e.getMessage());
-                throw new AppException(ErrorCode.GOOGLE_TOKEN_ERROR);
-            }
+            // Lấy thông tin người dùng từ Google
+            GoogleUserInfoResponse googleUserInfo = getGoogleUserInfo(code, redirectUri);
 
-            JsonNode tokenJson;
-            try {
-                tokenJson = objectMapper.readTree(tokenResponse);
+            // Tìm hoặc tạo người dùng
+            User user = findOrCreateUser(googleUserInfo);
 
-                // Kiểm tra lỗi từ Google
-                if (tokenJson.has("error")) {
-                    String error = tokenJson.get("error").asText();
-                    String errorDescription = tokenJson.has("error_description") ?
-                            tokenJson.get("error_description").asText() : "Unknown error";
-                    log.error("Google OAuth error: {} - {}", error, errorDescription);
-                    throw new AppException(ErrorCode.GOOGLE_TOKEN_ERROR);
-                }
-
-            } catch (Exception e) {
-                log.error("Error parsing token response: {}", e.getMessage());
-                throw new AppException(ErrorCode.GOOGLE_TOKEN_ERROR);
-            }
-
-            String accessToken = tokenJson.get("access_token").asText();
-            String idToken = tokenJson.get("id_token").asText();
-
-            // Lấy thông tin user từ Google
-            String userInfo;
-            try {
-                userInfo = getUserInfo(accessToken);
-            } catch (Exception e) {
-                log.error("Error getting user info: {}", e.getMessage());
-                throw new AppException(ErrorCode.GOOGLE_USER_INFO_ERROR);
-            }
-
-            JsonNode userJson;
-            try {
-                userJson = objectMapper.readTree(userInfo);
-
-                // Kiểm tra lỗi từ Google
-                if (userJson.has("error")) {
-                    String error = userJson.get("error").asText();
-                    String errorDescription = userJson.has("error_description") ?
-                            userJson.get("error_description").asText() : "Unknown error";
-                    log.error("Google User Info error: {} - {}", error, errorDescription);
-                    throw new AppException(ErrorCode.GOOGLE_USER_INFO_ERROR);
-                }
-
-            } catch (Exception e) {
-                log.error("Error parsing user info: {}", e.getMessage());
-                throw new AppException(ErrorCode.GOOGLE_USER_INFO_ERROR);
-            }
-
-            String email = userJson.get("email").asText();
-            String name = userJson.get("name") != null ? userJson.get("name").asText() : email;
-            String googleId = userJson.get("sub").asText();
-
-            log.info("User authenticated via Google - Email: {}, Google ID: {}", email, googleId);
-
-            // Tìm hoặc tạo user
-            User user = userRepository.findByUsername(email).orElse(null);
-
-            if (user == null) {
-                log.info("Creating new user from Google authentication: {}", email);
-                var roles = new HashSet<Role>();
-                roles.add(Role.builder().name("USER").build());
-                user = User.builder()
-                        .username(email)
-                        .email(email)
-                        .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-                        .roles(roles)
-                        .build();
-                userRepository.save(user);
-
-
-                UserProfileEvent profileEvent = UserProfileEvent.builder()
-                        .userId(user.getId())
-                        .email(user.getEmail())
-                        .displayName(name)
-                        .avatarUrl(null)
-                        .build();
-
-                log.info("Creating user profile for user: {}", profileEvent.getEmail());
-
-                //Publish message to Kafka
-                userProfileEventProducer.sendUserProfileEvent(profileEvent);
-                log.info("New user created successfully: {}", email);
-            }
-
+            // Xác thực người dùng
             GoogleAuthenticationRequest googleAuthRequest = GoogleAuthenticationRequest.builder()
-                    .username(email)
+                    .username(googleUserInfo.getEmail())
                     .build();
 
             return authenticationService.authenticateGG(googleAuthRequest);
@@ -164,6 +84,116 @@ public class GoogleAuthService {
             log.error("Unexpected error during Google authentication", e);
             throw new AppException(ErrorCode.GOOGLE_AUTH_ERROR);
         }
+    }
+
+    /**
+     * Lấy thông tin người dùng từ Google
+     * @param code Mã xác thực từ Google
+     * @param redirectUri URI chuyển hướng
+     * @return Thông tin người dùng Google
+     */
+    private GoogleUserInfoResponse getGoogleUserInfo(String code, String redirectUri) {
+        try {
+            // Đổi code lấy token từ Google
+            String tokenResponse = exchangeCodeForToken(code, redirectUri);
+            JsonNode tokenJson = parseAndValidateJsonResponse(tokenResponse, ErrorCode.GOOGLE_TOKEN_ERROR, "Google OAuth error");
+
+            String accessToken = tokenJson.get("access_token").asText();
+
+            // Lấy thông tin user từ Google
+            String userInfoResponse = getUserInfo(accessToken);
+            JsonNode userJson = parseAndValidateJsonResponse(userInfoResponse, ErrorCode.GOOGLE_USER_INFO_ERROR, "Google User Info error");
+
+            String email = userJson.get("email").asText();
+            String name = userJson.get("name") != null ? userJson.get("name").asText() : email;
+            String googleId = userJson.get("sub").asText();
+
+            log.info("User authenticated via Google - Email: {}, Google ID: {}", email, googleId);
+
+            return GoogleUserInfoResponse.builder()
+                    .email(email)
+                    .name(name)
+                    .googleId(googleId)
+                    .build();
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error getting Google user info: {}", e.getMessage());
+            throw new AppException(ErrorCode.GOOGLE_USER_INFO_ERROR);
+        }
+    }
+
+    /**
+     * Phân tích và xác thực phản hồi JSON
+     * @param jsonResponse Phản hồi JSON
+     * @param errorCode Mã lỗi nếu có lỗi
+     * @param errorPrefix Tiền tố lỗi cho log
+     * @return JsonNode đã phân tích
+     */
+    private JsonNode parseAndValidateJsonResponse(String jsonResponse, ErrorCode errorCode, String errorPrefix) {
+        try {
+            JsonNode jsonNode = objectMapper.readTree(jsonResponse);
+
+            // Kiểm tra lỗi từ Google
+            if (jsonNode.has("error")) {
+                String error = jsonNode.get("error").asText();
+                String errorDescription = jsonNode.has("error_description") ?
+                        jsonNode.get("error_description").asText() : "Unknown error";
+                log.error("{}: {} - {}", errorPrefix, error, errorDescription);
+                throw new AppException(errorCode);
+            }
+
+            return jsonNode;
+        } catch (Exception e) {
+            log.error("Error parsing JSON response: {}", e.getMessage());
+            throw new AppException(errorCode);
+        }
+    }
+
+    /**
+     * Tìm hoặc tạo người dùng từ thông tin Google
+     * @param googleUserInfo Thông tin người dùng Google
+     * @return Đối tượng User
+     */
+    private User findOrCreateUser(GoogleUserInfoResponse googleUserInfo) {
+        User user = userRepository.findByUsername(googleUserInfo.getEmail()).orElse(null);
+
+        if (user == null) {
+            log.info("Creating new user from Google authentication: {}", googleUserInfo.getEmail());
+            var roles = new HashSet<Role>();
+            roles.add(Role.builder().name("USER").build());
+            user = User.builder()
+                    .username(googleUserInfo.getEmail())
+                    .email(googleUserInfo.getEmail())
+                    .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .roles(roles)
+                    .build();
+            userRepository.save(user);
+
+            createUserProfile(user, googleUserInfo.getName());
+        }
+
+        return user;
+    }
+
+    /**
+     * Tạo hồ sơ người dùng
+     * @param user Đối tượng User
+     * @param displayName Tên hiển thị
+     */
+    private void createUserProfile(User user, String displayName) {
+        UserProfileEvent profileEvent = UserProfileEvent.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .displayName(displayName)
+                .avatarUrl(null)
+                .build();
+
+        log.info("Creating user profile for user: {}", profileEvent.getEmail());
+
+        //Publish message to Kafka
+        userProfileEventProducer.sendUserProfileEvent(profileEvent);
+        log.info("New user created successfully: {}", user.getEmail());
     }
 
 
@@ -220,9 +250,6 @@ public class GoogleAuthService {
         }
     }
 
-    private String generateAppToken(String googleId, String email) {
-        // Tạm thời trả về chuỗi đơn giản, thay bằng JWT nếu cần
-        return "jwt-token-for-" + googleId;
-    }
+
 
 }

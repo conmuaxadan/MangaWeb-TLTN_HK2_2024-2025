@@ -10,8 +10,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reading_histories", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"profile_id", "manga_id", "chapter_id"})
+@Table(name = "anonymous_reading_histories", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"session_id", "manga_id", "chapter_id"})
 })
 @Data
 @NoArgsConstructor
@@ -19,28 +19,30 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
-public class ReadingHistory {
+public class AnonymousReadingHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "profile_id", nullable = false)
-    UserProfile userProfile;
-
+    @Column(name = "session_id", nullable = false)
+    String sessionId;
+    
     @Column(name = "manga_id", nullable = false)
     String mangaId;
-
+    
     @Column(name = "chapter_id", nullable = false)
     String chapterId;
-
-    @Column(name = "last_page", nullable = true)
-    Integer lastPage;
-
+    
+    @Column(name = "ip_address")
+    String ipAddress;
+    
+    @Column(name = "user_agent")
+    String userAgent;
+    
     @Column(name = "created_at", updatable = false)
     @CreatedDate
     LocalDateTime createdAt;
-
+    
     @Column(name = "updated_at")
     @LastModifiedDate
     LocalDateTime updatedAt;

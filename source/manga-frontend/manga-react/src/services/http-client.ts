@@ -31,14 +31,22 @@ class HttpClient {
                             config.headers['Authorization'] = `Bearer ${refreshResult.token}`;
                         }
                     } else {
-                        // Nếu làm mới thất bại, xóa token và chuyển hướng đến trang đăng nhập
-                        localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
-                        localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
-                        localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
+                        // Kiểm tra xem endpoint có yêu cầu xác thực không
+                        const url = config.url || '';
+                        const isAnonymousEndpoint = url.includes('anonymous-reading-history');
 
-                        // Chỉ chuyển hướng nếu đường dẫn hiện tại không phải là trang đăng nhập
-                        if (!window.location.pathname.includes('/login')) {
-                            window.location.href = '/login';
+                        if (!isAnonymousEndpoint) {
+                            // Nếu làm mới thất bại và không phải endpoint ẩn danh, xóa token và chuyển hướng đến trang đăng nhập
+                            localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
+                            localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
+                            localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
+
+                            // Chỉ chuyển hướng nếu đường dẫn hiện tại không phải là trang đăng nhập
+                            if (!window.location.pathname.includes('/login')) {
+                                window.location.href = '/login';
+                            }
+                        } else {
+                            console.log('Không chuyển hướng đến trang đăng nhập cho endpoint anonymous-reading-history');
                         }
                     }
                 } else {
@@ -72,7 +80,18 @@ class HttpClient {
                     switch (status) {
                         case 401:
                             // Unauthorized - thử refresh token trước khi đăng xuất
-                            { const refreshToken = localStorage.getItem(TOKEN_STORAGE.REFRESH_TOKEN);
+                            {
+                            // Kiểm tra xem endpoint có yêu cầu xác thực không
+                            // Nếu là endpoint anonymous-reading-history, không chuyển hướng đến trang đăng nhập
+                            const url = error.config?.url || '';
+                            const isAnonymousEndpoint = url.includes('anonymous-reading-history');
+
+                            if (isAnonymousEndpoint) {
+                                console.log('Không chuyển hướng đến trang đăng nhập cho endpoint anonymous-reading-history');
+                                break;
+                            }
+
+                            const refreshToken = localStorage.getItem(TOKEN_STORAGE.REFRESH_TOKEN);
                             if (refreshToken) {
                                 // Thử làm mới token
                                 authService.refreshToken().then(result => {

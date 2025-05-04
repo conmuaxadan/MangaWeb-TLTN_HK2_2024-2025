@@ -54,6 +54,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/profile/comments/chapter/{chapterId}",
             "/profile/comments/count/manga/{mangaId}",
             "/profile/comments/latest",
+            "/profile/anonymous-reading-history",
+            "/profile/anonymous-reading-history/session/{sessionId}",
             "/upload/files",
             "/upload/files/{fileName}"
     };

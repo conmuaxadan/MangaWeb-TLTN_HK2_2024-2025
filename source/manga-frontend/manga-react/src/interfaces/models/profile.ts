@@ -24,6 +24,27 @@ export interface ReadingHistoryRequest {
     // Không còn lưu lastPage nữa
 }
 
+// Anonymous Reading History Request
+export interface AnonymousReadingHistoryRequest {
+    mangaId: string;
+    chapterId: string;
+    sessionId: string;
+}
+
+// Anonymous Reading History Response
+export interface AnonymousReadingHistoryResponse {
+    id: string;
+    sessionId: string;
+    mangaId: string;
+    chapterId: string;
+    createdAt: string;
+    updatedAt: string;
+    mangaTitle: string;
+    mangaCoverUrl?: string;
+    chapterTitle?: string;
+    chapterNumber: number;
+}
+
 // Reading History Response
 export interface ReadingHistoryResponse {
     id: string;
