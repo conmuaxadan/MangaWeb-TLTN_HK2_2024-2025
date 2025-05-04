@@ -4,8 +4,7 @@ import { ReadingHistoryResponse } from '../interfaces/models/profile';
 import profileService from '../services/profile-service';
 import { useNavigate } from 'react-router-dom';
 import ProfileLayout from '../components/layouts/ProfileLayout.tsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faBookOpen, faClock } from '@fortawesome/free-solid-svg-icons';
+import { getMangaImageUrl } from '../utils/file-utils';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
@@ -75,7 +74,7 @@ const ReadingHistoryList: React.FC = () => {
                           <div className="overflow-hidden rounded-lg group-hover:shadow-lg" style={{ position: 'absolute', inset: 0 }}>
                             <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-neutral-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
                             <img
-                              src={history.mangaCoverUrl ? `http://localhost:8888/api/v1/upload/files/${history.mangaCoverUrl}` : '/images/default-manga-cover.jpg'}
+                              src={history.mangaCoverUrl ? getMangaImageUrl(history.mangaCoverUrl) : '/images/default-manga-cover.jpg'}
                               className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
                               alt={history.mangaTitle}
                               onError={(e) => {
@@ -91,9 +90,6 @@ const ReadingHistoryList: React.FC = () => {
                           </h3>
                           <span className="flex items-center justify-between gap-[4px] text-[10px] text-gray-300">
                             <span className="flex items-center gap-[4px]">
-                              <i className="fa fa-eye text-yellow-500"></i>0
-                            </span>
-                            <span className="flex items-center gap-[4px]">
                               <i className="fa fa-book text-green-500"></i>Ch.{history.chapterNumber}
                             </span>
                             <span className="flex items-center gap-[4px]">
@@ -104,22 +100,6 @@ const ReadingHistoryList: React.FC = () => {
                         </div>
                       </a>
                     </div>
-                    <figcaption>
-                      <ul className="flex flex-col gap-[4px]">
-                        <li className="flex items-center justify-between gap-x-2 text-[10px]">
-                          <a
-                            title={`Chapter ${history.chapterNumber}`}
-                            className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition visited:text-gray-400 hover:text-purple-400 text-gray-200"
-                            href={`/mangas/${history.mangaId}/chapters/${history.chapterId}`}
-                          >
-                            Chapter {history.chapterNumber}
-                          </a>
-                          <span className="whitespace-nowrap leading-[13px] text-gray-400">
-                            {formatDistanceToNow(new Date(history.updatedAt), { addSuffix: true, locale: vi }).replace('khoảng ', '')}
-                          </span>
-                        </li>
-                      </ul>
-                    </figcaption>
                   </figure>
                 </div>
               </div>

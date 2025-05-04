@@ -6,6 +6,7 @@ import {MangaResponse, ChapterResponse, MangaStatusDisplayNames} from '../interf
 import {formatDistanceToNow} from 'date-fns';
 import {vi} from 'date-fns/locale';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import { getMangaImageUrl } from '../utils/file-utils';
 import {
     faStar,
     faHeart as faHeartSolid,
@@ -226,7 +227,7 @@ const MangaDetail: React.FC = () => {
                                          style={{position: 'absolute', inset: 0}}>
                                         <img
                                             className="h-full w-full object-cover"
-                                            src={"http://localhost:8888/api/v1/upload/files/" + manga.coverUrl || '/images/default-manga-cover.jpg'}
+                                            src={getMangaImageUrl(manga.coverUrl) || '/images/default-manga-cover.jpg'}
                                             alt={manga.title}
                                         />
                                     </div>

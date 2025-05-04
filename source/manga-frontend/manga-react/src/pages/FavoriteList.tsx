@@ -5,9 +5,8 @@ import profileService from '../services/profile-service';
 import { useNavigate } from 'react-router-dom';
 import ProfileLayout from '../components/layouts/ProfileLayout.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faEye, faHeart, faComment, faBookOpen } from '@fortawesome/free-solid-svg-icons';
-import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { faTrash} from '@fortawesome/free-solid-svg-icons';
+import { getMangaImageUrl } from '../utils/file-utils';
 import { toast } from 'react-toastify';
 
 const FavoriteList: React.FC = () => {
@@ -87,7 +86,7 @@ const FavoriteList: React.FC = () => {
                           <div className="overflow-hidden rounded-lg group-hover:shadow-lg" style={{ position: 'absolute', inset: 0 }}>
                             <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-neutral-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
                             <img
-                              src={favorite.mangaCoverUrl ? `http://localhost:8888/api/v1/upload/files/${favorite.mangaCoverUrl}` : '/images/default-manga-cover.jpg'}
+                              src={favorite.mangaCoverUrl ? getMangaImageUrl(favorite.mangaCoverUrl) : '/images/default-manga-cover.jpg'}
                               className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
                               alt={favorite.mangaTitle}
                               onError={(e) => {
@@ -115,28 +114,6 @@ const FavoriteList: React.FC = () => {
                         </div>
                       </a>
                     </div>
-                    <figcaption>
-                      <ul className="flex flex-col gap-[4px]">
-                        <li className="flex items-center justify-between gap-x-2 text-[10px]">
-                          {favorite.lastChapterId ? (
-                            <a
-                              title={`Chapter ${favorite.lastChapterNumber}`}
-                              className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition visited:text-gray-400 hover:text-purple-400 text-gray-200"
-                              href={`/mangas/${favorite.mangaId}/chapters/${favorite.lastChapterId}`}
-                            >
-                              Chapter {favorite.lastChapterNumber}
-                            </a>
-                          ) : (
-                            <span className="text-gray-400">Chưa có chapter</span>
-                          )}
-                          {favorite.lastChapterAddedAt && (
-                            <span className="whitespace-nowrap leading-[13px] text-gray-400">
-                              {formatDistanceToNow(new Date(favorite.lastChapterAddedAt), { addSuffix: true, locale: vi })}
-                            </span>
-                          )}
-                        </li>
-                      </ul>
-                    </figcaption>
                   </figure>
                 </div>
                 <button

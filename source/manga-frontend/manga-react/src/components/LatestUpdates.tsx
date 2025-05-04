@@ -3,6 +3,7 @@ import mangaService from '../services/manga-service';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { useSearchParams } from 'react-router-dom';
+import { getMangaImageUrl } from '../utils/file-utils';
 
 // Định nghĩa interface cho dữ liệu manga đã được xử lý
 interface MangaCardData {
@@ -109,7 +110,7 @@ const LatestUpdates: React.FC = () => {
                                                 <div className="relative h-full w-full">
                                                     <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
                                                     <img
-                                                        src={`http://localhost:8888/api/v1/upload/files/${manga.image}`}
+                                                        src={getMangaImageUrl(manga.image)}
                                                         className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
                                                         alt={manga.title}
                                                         onError={(e) => {

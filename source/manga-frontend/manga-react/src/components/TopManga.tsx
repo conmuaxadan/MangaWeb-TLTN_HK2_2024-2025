@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import mangaService from '../services/manga-service';
+import { getMangaImageUrl } from '../utils/file-utils';
 
 interface MangaData {
     id: string;
@@ -73,7 +74,7 @@ const TopManga = () => {
                             >
                                 <img
                                     className="h-full w-full object-cover"
-                                    src={`http://localhost:8888/api/v1/upload/files/${manga.coverUrl}`}
+                                    src={getMangaImageUrl(manga.coverUrl)}
                                     alt={manga.title}
                                     onError={(e) => {
                                         const target = e.target as HTMLImageElement;

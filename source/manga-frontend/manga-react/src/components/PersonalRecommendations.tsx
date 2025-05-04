@@ -3,6 +3,7 @@ import { usePersonalRecommendations } from '../hooks/queries/useMangaQueries';
 import { useAuth } from '../contexts/AuthContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
+import { getMangaImageUrl } from '../utils/file-utils';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -70,7 +71,7 @@ const PersonalRecommendations = () => {
                                                     <div className="relative h-full w-full">
                                                         <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
                                                         <img
-                                                            src={`http://localhost:8888/api/v1/upload/files/${manga.coverUrl}`}
+                                                            src={getMangaImageUrl(manga.coverUrl)}
                                                             alt={manga.title}
                                                             className="absolute inset-0 h-full w-full object-cover transition-all duration-500 group-hover:scale-110"
                                                         />

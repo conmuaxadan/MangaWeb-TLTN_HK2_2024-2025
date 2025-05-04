@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import profileService from '../services/profile-service';
+import { getAvatarUrl } from '../utils/file-utils';
 
 interface Comment {
     id: string;
@@ -94,7 +95,7 @@ const RecentComments = () => {
                             <div className="flex items-center gap-2">
                                 <img
                                     className="h-8 w-8 rounded-full border border-gray-600"
-                                    src={"http://localhost:8888/api/v1/upload/files/" + comment.userAvatarUrl || "/images/avt_default.jpg"}
+                                    src={getAvatarUrl(comment.userAvatarUrl)}
                                     onError={(e) => {
                                         const target = e.target as HTMLImageElement;
                                         target.src = '/images/avt_default.jpg';

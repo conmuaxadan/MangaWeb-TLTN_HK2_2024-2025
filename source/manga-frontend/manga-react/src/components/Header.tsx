@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import mangaService from '../services/manga-service';
 import { MangaResponse } from '../interfaces/models/manga';
+import { getMangaImageUrl } from '../utils/file-utils';
 
 const NewHeader = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -169,7 +170,7 @@ const NewHeader = () => {
                           >
                             <div className="flex-shrink-0 h-12 w-9 bg-gray-700 rounded overflow-hidden mr-3">
                               <img
-                                src={'http://localhost:8888/api/v1/upload/files/' + manga.coverUrl|| '/images/default-manga-cover.jpg'}
+                                src={getMangaImageUrl(manga.coverUrl) || '/images/default-manga-cover.jpg'}
                                 alt={manga.title}
                                 className="h-full w-full object-cover"
                               />

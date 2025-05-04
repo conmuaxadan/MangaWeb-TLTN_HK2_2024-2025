@@ -16,6 +16,7 @@ import {
   faEye
 } from '@fortawesome/free-solid-svg-icons';
 import CommentSection from '../components/CommentSection.tsx';
+import { getMangaPageUrl } from '../utils/file-utils';
 
 const Chapter: React.FC = () => {
   const { id, chapterId } = useParams<{ id: string; chapterId: string }>();
@@ -396,7 +397,7 @@ const Chapter: React.FC = () => {
                 className="w-full mb-1"
               >
                 <img
-                  src={`http://localhost:8888/api/v1/upload/files/${page.pageUrl}`}
+                  src={getMangaPageUrl(page.pageUrl)}
                   alt={`Page ${page.index + 1}`}
                   className="w-full h-auto mx-auto"
                   loading="lazy"

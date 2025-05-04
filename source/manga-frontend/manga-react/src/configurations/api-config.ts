@@ -4,6 +4,8 @@ export const API_CONFIG = {
     IDENTITY_SERVICE: '/identity',
     MANGA_SERVICE: '/manga',
     PROFILE_SERVICE: '/profile',
+    UPLOAD_SERVICE: '/upload',
+    FILES_PATH: '/upload/files',
 };
 
 // Timeout configuration (in milliseconds)

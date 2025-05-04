@@ -4,6 +4,7 @@ import { useMangasByGenre } from '../hooks/queries/useMangaQueries';
 import { MangaResponse } from '../interfaces/models/manga';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { getMangaImageUrl } from '../utils/file-utils';
 
 
 
@@ -154,7 +155,7 @@ const GenreDetail: React.FC = () => {
                           <div className="relative h-full w-full">
                             <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
                             <img
-                              src={`http://localhost:8888/api/v1/upload/files/${manga.coverUrl}`}
+                              src={getMangaImageUrl(manga.coverUrl)}
                               className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
                               alt={manga.title}
                               onError={(e) => {
