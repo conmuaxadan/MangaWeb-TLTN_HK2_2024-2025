@@ -33,6 +33,7 @@ public class UserProfileService {
 
     public UserProfileResponse createProfile(UserProfileRequest userProfileRequest) {
         UserProfile userProfile = userProfileMapper.toUserProfile(userProfileRequest);
+        userProfile.setAvatarUrl("default.jpg");
         userProfileRepository.save(userProfile);
         return userProfileMapper.toUserProfileResponse(userProfile);
     }

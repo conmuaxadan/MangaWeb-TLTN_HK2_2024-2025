@@ -4,6 +4,7 @@ import { ApiResponse } from "../interfaces/models/ApiResponse";
 import { AuthRequest, AuthResponse, GoogleLoginRequest, RefreshTokenRequest, UserRegistrationRequest, UserResponse } from "../interfaces/models/auth";
 import { OAuthConfig } from "../configurations/configuration.ts";
 import { TOKEN_STORAGE, setTokenExpiry } from "../configurations/api-config";
+import { logApiCall } from "../utils/api-logger";
 
 class AuthService {
 
@@ -14,9 +15,10 @@ class AuthService {
      * @returns Thông tin xác thực hoặc false nếu thất bại
      */
     async login(username: string, password: string): Promise<AuthResponse | false> {
+        logApiCall('login');
         try {
             const request: AuthRequest = { username, password };
-            const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/login', request);
+            const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/tokens', request);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Đăng nhập thất bại", {position: "top-right"});
@@ -50,12 +52,13 @@ class AuthService {
      * @returns Thông tin xác thực hoặc false nếu thất bại
      */
     async googleLogin(code: string): Promise<AuthResponse | false> {
+        logApiCall('googleLogin');
         try {
             const request: GoogleLoginRequest = {
                 code,
                 redirectUri: OAuthConfig.redirectUri,
             };
-            const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/google-login', request);
+            const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/google/tokens', request);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Đăng nhập Google thất bại", { position: "top-right" });
@@ -91,9 +94,10 @@ class AuthService {
      * @returns Thông tin người dùng hoặc false nếu thất bại
      */
     async register(username: string, password: string, email: string): Promise<UserResponse | false> {
+        logApiCall('register');
         try {
             const request: UserRegistrationRequest = { username, password, email };
-            const apiResponse = await identityHttpClient.post<ApiResponse<UserResponse>>('/users/register', request);
+            const apiResponse = await identityHttpClient.post<ApiResponse<UserResponse>>('/users', request);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Đăng ký thất bại", { position: "top-right" });
@@ -113,6 +117,7 @@ class AuthService {
      * @returns Thông tin người dùng hoặc false nếu thất bại
      */
     getCurrentUser(): { userId: string, email: string } | false {
+        logApiCall('getCurrentUser');
         try {
             const token = localStorage.getItem(TOKEN_STORAGE.ACCESS_TOKEN);
             if (!token) {
@@ -142,6 +147,7 @@ class AuthService {
      * Đăng xuất
      */
     async logout(): Promise<boolean> {
+        logApiCall('logout');
         try {
             // Xóa tất cả các token khỏi localStorage
             localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
@@ -159,6 +165,7 @@ class AuthService {
      * @returns Thông tin xác thực mới hoặc false nếu thất bại
      */
     async refreshToken(): Promise<AuthResponse | false> {
+        logApiCall('refreshToken');
         try {
             const refreshToken = localStorage.getItem(TOKEN_STORAGE.REFRESH_TOKEN);
             if (!refreshToken) {
@@ -167,7 +174,7 @@ class AuthService {
             }
 
             const request: RefreshTokenRequest = { refreshToken };
-            const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/refresh-token', request);
+            const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/tokens/refresh', request);
 
             if (apiResponse.code !== 1000) {
                 console.error("Làm mới token thất bại:", apiResponse.message);

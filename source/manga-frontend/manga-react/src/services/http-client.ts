@@ -33,7 +33,7 @@ class HttpClient {
                     } else {
                         // Kiểm tra xem endpoint có yêu cầu xác thực không
                         const url = config.url || '';
-                        const isAnonymousEndpoint = url.includes('anonymous-reading-history');
+                        const isAnonymousEndpoint = url.includes('anonymousReadingHistories');
 
                         if (!isAnonymousEndpoint) {
                             // Nếu làm mới thất bại và không phải endpoint ẩn danh, xóa token và chuyển hướng đến trang đăng nhập
@@ -84,7 +84,7 @@ class HttpClient {
                             // Kiểm tra xem endpoint có yêu cầu xác thực không
                             // Nếu là endpoint anonymous-reading-history, không chuyển hướng đến trang đăng nhập
                             const url = error.config?.url || '';
-                            const isAnonymousEndpoint = url.includes('anonymous-reading-history');
+                            const isAnonymousEndpoint = url.includes('anonymousReadingHistories');
 
                             if (isAnonymousEndpoint) {
                                 console.log('Không chuyển hướng đến trang đăng nhập cho endpoint anonymous-reading-history');

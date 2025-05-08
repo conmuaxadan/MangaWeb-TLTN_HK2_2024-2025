@@ -1,17 +1,26 @@
 import authService from "../services/auth-service.ts";
-import {FormEvent, useState} from "react";
+import {FormEvent, useState, useEffect} from "react";
 import {toast} from "react-toastify";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, Link} from "react-router-dom";
 import {OAuthConfig} from "../configurations/configuration.ts";
 import { useAuth } from "../contexts/AuthContext.tsx";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUser, faLock, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 
 const Login = () => {
     const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [showPassword, setShowPassword] = useState<boolean>(false);
+    const [rememberMe, setRememberMe] = useState<boolean>(false);
     const navigate = useNavigate();
     const { login } = useAuth();
+
+    // Animation effect when component mounts
+    useEffect(() => {
+        document.querySelector('.login-container')?.classList.add('fade-in');
+    }, []);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -50,105 +59,164 @@ const Login = () => {
     };
 
     return (
-        <div className="flex-grow min-h-screen bg-zinc-800">
+        <div className="flex-grow min-h-screen bg-gradient-to-br from-zinc-900 to-zinc-800 p-4">
+            <style>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .fade-in {
+                    animation: fadeIn 0.6s ease-out forwards;
+                }
+                .login-container {
+                    opacity: 0;
+                }
+                .input-icon-container:focus-within {
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+                }
+                .social-login-btn {
+                    transition: transform 0.2s;
+                }
+                .social-login-btn:hover {
+                    transform: translateY(-2px);
+                }
+            `}</style>
+
             <div className="min-h-screen w-full flex justify-center items-center">
-                <div className="max-w-screen-md md:w-5/12 m-4 p-8">
-                    <div className="w-full flex justify-center">
-                        <h1 className="text-xl font-bold text-white mb-12 font-head">
-                            Đăng nhập
-                        </h1>
-                    </div>
-                    <form onSubmit={handleSubmit}>
-                        {/* Tên đăng nhập */}
-                        <div className="mb-8">
-                            <label htmlFor="username" className="block text-white">
-                                Tên đăng nhập
-                            </label>
-                            <input
-                                id="username"
-                                type="text"
-                                placeholder="Tên đăng nhập"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full mt-4 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black"
-                            />
+                <div className="login-container w-full max-w-md bg-zinc-800/50 rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm">
+                    {/* Login form */}
+                    <div className="p-6 sm:p-10 flex flex-col justify-center">
+                        <div className="mb-8 text-center">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                                Đăng nhập
+                            </h1>
+                            <p className="text-gray-400">Nhập thông tin đăng nhập của bạn để tiếp tục</p>
                         </div>
 
-                        {/* Mật khẩu */}
-                        <div className="mb-8">
-                            <label htmlFor="password" className="block text-white">
-                                Mật khẩu
-                            </label>
-                            <input
-                                id="password"
-                                type="password"
-                                placeholder="Mật khẩu"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full mt-4 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black"
-                            />
-                        </div>
-
-                        {/* Ghi nhớ mật khẩu */}
-                        <div className="mb-8 flex items-center">
-                            <input
-                                type="checkbox"
-                                id="rememberMe"
-                                className="mr-2"
-                            />
-                            <label htmlFor="rememberMe" className="text-white">
-                                Ghi nhớ mật khẩu
-                            </label>
-                        </div>
-
-                        {/* Nút Đăng nhập */}
-                        <div className="w-full flex justify-center mb-8">
-                            <button
-                                type="submit"
-                                className="px-8 py-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? "Đang xử lý..." : "Đăng nhập"}
-                            </button>
-                        </div>
-
-
-
-                        {/* Liên kết */}
-                        <div className="flex flex-col md:flex-row justify-center gap-4 mb-8">
-                            <a
-                                href="/request-reset-password"
-                                className="text-sm font-bold text-blue-500 hover:text-blue-700 transition"
-                            >
-                                Quên mật khẩu?
-                            </a>
-                            <a
-                                href="/register"
-                                className="text-sm font-bold text-blue-500 hover:text-blue-700 transition"
-                            >
-                                Đăng ký tài khoản
-                            </a>
-                        </div>
-
-                        <div className="w-full flex justify-center mb-2">
-                            <div className="text-sm font-bold text-blue-500 hover:text-blue-700 transition">
-                                Hoặc đăng nhập với
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* Tên đăng nhập */}
+                            <div>
+                                <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                                    Tên đăng nhập
+                                </label>
+                                <div className="relative input-icon-container flex items-center overflow-hidden border border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-indigo-500 bg-zinc-700/50 transition-all duration-200">
+                                    <span className="pl-4 text-gray-400">
+                                        <FontAwesomeIcon icon={faUser} />
+                                    </span>
+                                    <input
+                                        id="username"
+                                        type="text"
+                                        placeholder="Nhập tên đăng nhập"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        className="w-full p-3 bg-transparent text-white focus:outline-none"
+                                    />
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="w-full flex justify-center mb-8">
-                            <button
-                                type="button"
-                                onClick={handleGoogleLogin}
-                                className="px-8 py-3 bg-red-500 text-white rounded hover:bg-red-600 transition flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                disabled={isLoading}
-                            >
-                                <i className="fab fa-google"></i>
-                                Đăng nhập bằng Google
-                            </button>
-                        </div>
+                            {/* Mật khẩu */}
+                            <div>
+                                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                                    Mật khẩu
+                                </label>
+                                <div className="relative input-icon-container flex items-center overflow-hidden border border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-indigo-500 bg-zinc-700/50 transition-all duration-200">
+                                    <span className="pl-4 text-gray-400">
+                                        <FontAwesomeIcon icon={faLock} />
+                                    </span>
+                                    <input
+                                        id="password"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="Nhập mật khẩu"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full p-3 bg-transparent text-white focus:outline-none"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="pr-4 text-gray-400 hover:text-gray-300 focus:outline-none"
+                                    >
+                                        <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                                    </button>
+                                </div>
+                            </div>
 
-                    </form>
+                            {/* Ghi nhớ mật khẩu và Quên mật khẩu */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        id="rememberMe"
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                        className="w-4 h-4 text-indigo-600 rounded border-gray-500 focus:ring-indigo-500 bg-zinc-700"
+                                    />
+                                    <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-300">
+                                        Ghi nhớ đăng nhập
+                                    </label>
+                                </div>
+                                <a
+                                    href="/request-reset-password"
+                                    className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                                >
+                                    Quên mật khẩu?
+                                </a>
+                            </div>
+
+                            {/* Nút Đăng nhập */}
+                            <div>
+                                <button
+                                    type="submit"
+                                    className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:from-indigo-500 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-zinc-800 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? (
+                                        <span className="flex items-center justify-center">
+                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Đang xử lý...
+                                        </span>
+                                    ) : "Đăng nhập"}
+                                </button>
+                            </div>
+
+                            {/* Divider */}
+                            <div className="relative my-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-600"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-zinc-800 text-gray-400">Hoặc đăng nhập với</span>
+                                </div>
+                            </div>
+
+                            {/* Social Login */}
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={handleGoogleLogin}
+                                    className="social-login-btn w-full py-3 px-4 bg-white text-gray-800 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-zinc-800 transition-all duration-200 shadow-md"
+                                    disabled={isLoading}
+                                >
+                                    <i className="fab fa-google text-red-500"></i>
+                                    Đăng nhập bằng Google
+                                </button>
+                            </div>
+
+                            {/* Register link */}
+                            <div className="text-center mt-6">
+                                <p className="text-gray-400">
+                                    Chưa có tài khoản?{" "}
+                                    <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+                                        Đăng ký ngay
+                                    </Link>
+                                </p>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

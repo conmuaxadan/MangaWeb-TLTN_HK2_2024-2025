@@ -19,13 +19,13 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
-            "/users/register",
-            "/users/myInfo",
-            "/auth/login",
-            "/auth/introspect",
-            "/auth/logout",
-            "/auth/google-login",
-            "/auth/refresh-token"};
+            "/users",
+            "/users/me",
+            "/auth/tokens",
+            "/auth/tokens/validate",
+            "/auth/tokens/revoke",
+            "/auth/google/tokens",
+            "/auth/tokens/refresh"};
 
     @Autowired
     private CustomJwtDecoder customJwtDecoder;

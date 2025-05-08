@@ -86,12 +86,8 @@ public class GoogleAuthService {
         }
     }
 
-    /**
-     * Lấy thông tin người dùng từ Google
-     * @param code Mã xác thực từ Google
-     * @param redirectUri URI chuyển hướng
-     * @return Thông tin người dùng Google
-     */
+
+
     private GoogleUserInfoResponse getGoogleUserInfo(String code, String redirectUri) {
         try {
             // Đổi code lấy token từ Google

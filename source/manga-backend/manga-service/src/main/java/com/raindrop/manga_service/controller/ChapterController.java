@@ -70,7 +70,7 @@ public class ChapterController {
      * @param request Thông tin lượt xem
      * @return Thông tin chapter sau khi cập nhật lượt xem
      */
-    @PostMapping("/{id}/view")
+    @PostMapping("/{id}/views")
     ApiResponse<ChapterResponse> logChapterView(
             @PathVariable String id,
             @RequestBody @Valid ViewLogRequest request) {
@@ -106,7 +106,7 @@ public class ChapterController {
      * @param id ID của chapter
      * @return Thông tin chapter sau khi cập nhật lượt xem
      */
-    @PostMapping("/{id}/increment-view")
+    @PostMapping("/{id}/views/increment")
     ApiResponse<ChapterResponse> incrementChapterView(@PathVariable String id) {
         log.info("Simple view increment for chapter: {}", id);
 
@@ -123,7 +123,7 @@ public class ChapterController {
      * Tạo session ID mới
      * @return Session ID mới
      */
-    @GetMapping("/session")
+    @PostMapping("/sessions")
     ApiResponse<String> generateSessionId() {
         return ApiResponse.<String>builder()
                 .message("Session ID generated successfully")
@@ -150,6 +150,20 @@ public class ChapterController {
      */
     @GetMapping("/manga/{mangaId}")
     ApiResponse<List<ChapterResponse>> getChaptersByMangaId(
+            @PathVariable String mangaId) {
+        return ApiResponse.<List<ChapterResponse>>builder()
+                .message("Chapters for manga retrieved successfully")
+                .result(chapterService.getChaptersByMangaId(mangaId))
+                .build();
+    }
+
+    /**
+     * Phương thức mới để lấy danh sách chapter của một manga theo chuẩn REST
+     * @param mangaId ID của manga
+     * @return Danh sách chapter của manga
+     */
+    @GetMapping("/byManga/{mangaId}")
+    ApiResponse<List<ChapterResponse>> getChaptersByMangaIdRest(
             @PathVariable String mangaId) {
         return ApiResponse.<List<ChapterResponse>>builder()
                 .message("Chapters for manga retrieved successfully")

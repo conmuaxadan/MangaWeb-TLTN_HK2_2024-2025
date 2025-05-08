@@ -21,11 +21,14 @@ public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/users",
             "/comments/chapter/{chapterId}",
+            "/comments/byChapter/{chapterId}",
             "/comments/count/manga/{mangaId}",
+            "/comments/byManga/{mangaId}/count",
             "/comments/latest",
             "/reading-history/users/{userId}/recent",
             "/reading-history/users/{userId}/all-read-manga-ids",
-            "/anonymous-reading-history/**"
+            "/anonymousReadingHistories/**",
+            "/sessions/{sessionId}/readingHistories/**"
     };
 
     @Autowired

@@ -6,7 +6,7 @@ export { default as Chapter } from './Chapter';
 export { default as Authenticate } from './Authenticate';
 export { default as Profile } from './Profile.tsx';
 export { default as ProfileSettings } from './ProfileSettings.tsx';
-export { default as AdvancedSearch } from './AdvancedSearch';
+export { default as AdvancedSearch } from './AdvancedSearch.tsx';
 export { default as FavoriteList } from './FavoriteList.tsx';
 export { default as ReadingHistoryList } from './ReadingHistoryList.tsx';
 export { default as GenreDetail } from './GenreDetail';

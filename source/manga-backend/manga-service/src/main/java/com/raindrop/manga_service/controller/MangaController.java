@@ -169,7 +169,7 @@ public class MangaController {
      * @param pageable Thông tin phân trang
      * @return Danh sách manga phù hợp với điều kiện tìm kiếm
      */
-    @PostMapping("/advanced-search")
+    @PostMapping("/search/advanced")
     ApiResponse<Page<MangaResponse>> advancedSearch(
             @RequestBody AdvancedSearchRequest searchRequest,
             @PageableDefault(size = 10) Pageable pageable

@@ -27,7 +27,7 @@ public class UserController {
      UserService userService;
      UserMapper userMapper;
 
-    @PostMapping("/register")
+    @PostMapping
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .message("User created successfully")
@@ -73,15 +73,15 @@ public class UserController {
                 .build();
     }
 
-    @DeleteMapping()
-    ApiResponse<Void> deleteUser(@RequestBody UserRequest request) {
-        userService.deleteUser(request);
+    @DeleteMapping("/{username}")
+    ApiResponse<Void> deleteUser(@PathVariable String username) {
+        userService.deleteUserByUsername(username);
         return ApiResponse.<Void>builder()
                 .message("User deleted successfully")
                 .build();
     }
 
-    @GetMapping("/myInfo")
+    @GetMapping("/me")
     ApiResponse<UserResponse> getMyInfo() {
         return ApiResponse.<UserResponse>builder()
                 .message("User retrieved successfully")
@@ -94,7 +94,7 @@ public class UserController {
      * @param request Yêu cầu đổi mật khẩu
      * @return Thông báo kết quả
      */
-    @PostMapping("/change-password")
+    @PutMapping("/password")
     ApiResponse<Void> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
         log.info("Change password request received");
         userService.changePassword(request);

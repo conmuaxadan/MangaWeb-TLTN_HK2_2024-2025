@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import authService from "../services/auth-service";
 import profileService from "../services/profile-service";
-import { UserResponse } from "../interfaces/models/auth";
 import { UserProfileResponse } from "../interfaces/models/profile";
 import { TOKEN_STORAGE } from "../configurations/api-config";
 

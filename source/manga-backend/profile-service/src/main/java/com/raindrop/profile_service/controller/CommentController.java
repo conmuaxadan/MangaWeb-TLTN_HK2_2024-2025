@@ -63,12 +63,42 @@ public class CommentController {
     }
 
     /**
+     * Lấy danh sách bình luận của một chapter (API chuẩn REST)
+     * @param chapterId ID của chapter
+     * @param pageable Thông tin phân trang
+     * @return Danh sách bình luận có phân trang
+     */
+    @GetMapping("/byChapter/{chapterId}")
+    public ApiResponse<Page<CommentResponse>> getCommentsByChapterIdRest(
+            @PathVariable String chapterId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ApiResponse.<Page<CommentResponse>>builder()
+                .message("Comments retrieved successfully")
+                .result(commentService.getCommentsByChapterId(chapterId, pageable))
+                .build();
+    }
+
+    /**
      * Đếm số bình luận của một manga
      * @param mangaId ID của manga
      * @return Tổng số bình luận
      */
     @GetMapping("/count/manga/{mangaId}")
     public ApiResponse<Long> countCommentsByMangaId(@PathVariable String mangaId) {
+        return ApiResponse.<Long>builder()
+                .message("Comment count retrieved successfully")
+                .result(commentService.countCommentsByMangaId(mangaId))
+                .build();
+    }
+
+    /**
+     * Đếm số bình luận của một manga (API chuẩn REST)
+     * @param mangaId ID của manga
+     * @return Tổng số bình luận
+     */
+    @GetMapping("/byManga/{mangaId}/count")
+    public ApiResponse<Long> countCommentsByMangaIdRest(@PathVariable String mangaId) {
         return ApiResponse.<Long>builder()
                 .message("Comment count retrieved successfully")
                 .result(commentService.countCommentsByMangaId(mangaId))

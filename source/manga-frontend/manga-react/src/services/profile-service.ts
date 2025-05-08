@@ -17,6 +17,7 @@ import {
     AnonymousReadingHistoryRequest,
     AnonymousReadingHistoryResponse
 } from "../interfaces/models/profile";
+import { logApiCall } from "../utils/api-logger";
 
 class ProfileService {
     /**
@@ -25,6 +26,7 @@ class ProfileService {
      * @returns Thông tin profile hoặc null nếu thất bại
      */
     async getUserProfile(profileId: string): Promise<UserProfileResponse | null> {
+        logApiCall('getUserProfile');
         try {
             const apiResponse = await profileHttpClient.get<ApiResponse<UserProfileResponse>>(`/users/${profileId}`);
 
@@ -46,6 +48,7 @@ class ProfileService {
      * @returns Thông tin profile hoặc null nếu thất bại
      */
     async getUserProfileByUserId(userId: string): Promise<UserProfileResponse | null> {
+        logApiCall('getUserProfileByUserId');
         try {
             const apiResponse = await profileHttpClient.get<ApiResponse<UserProfileResponse>>(`/users/by-user-id/${userId}`);
 
@@ -69,6 +72,7 @@ class ProfileService {
      * @returns Thông tin profile đã cập nhật hoặc null nếu thất bại
      */
     async updateProfile(data: { displayName: string }): Promise<UserProfileResponse | null> {
+        logApiCall('updateProfile');
         try {
             const apiResponse = await profileHttpClient.put<ApiResponse<UserProfileResponse>>('/users/me', data);
 
@@ -150,7 +154,7 @@ class ProfileService {
             console.log('Request data:', { oldPassword: '***', newPassword: '***' });
 
             // Sử dụng identityHttpClient thay vì profileHttpClient vì đổi mật khẩu là chức năng của identity service
-            const apiResponse = await identityHttpClient.post<ApiResponse<void>>('/users/change-password', {
+            const apiResponse = await identityHttpClient.put<ApiResponse<void>>('/users/password', {
                 oldPassword,
                 newPassword
             });
@@ -483,7 +487,7 @@ class ProfileService {
      */
     async countCommentsByMangaId(mangaId: string): Promise<number> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<number>>(`/comments/count/manga/${mangaId}`);
+            const apiResponse = await profileHttpClient.get<ApiResponse<number>>(`/comments/byManga/${mangaId}/count`);
 
             if (apiResponse.code !== 1000) {
                 console.error(`Lỗi đếm bình luận của manga ID ${mangaId}:`, apiResponse.message);
@@ -507,7 +511,7 @@ class ProfileService {
     async getCommentsByChapterId(chapterId: string, page: number = 0, size: number = 10): Promise<ApiResponse<CommentPageResponse> | null> {
         try {
             const apiResponse = await profileHttpClient.get<ApiResponse<CommentPageResponse>>(
-                `/comments/chapter/${chapterId}?page=${page}&size=${size}&sort=createdAt,desc`
+                `/comments/byChapter/${chapterId}?page=${page}&size=${size}&sort=createdAt,desc`
             );
 
             if (apiResponse.code !== 1000) {
@@ -785,7 +789,7 @@ class ProfileService {
 
             console.log('Sending anonymous reading history request:', request);
 
-            const apiResponse = await profileHttpClient.post<ApiResponse<AnonymousReadingHistoryResponse>>('/anonymous-reading-history', request);
+            const apiResponse = await profileHttpClient.post<ApiResponse<AnonymousReadingHistoryResponse>>('/anonymousReadingHistories', request);
 
             if (apiResponse.code !== 1000) {
                 console.error(apiResponse.message || "Không thể đánh dấu đã đọc chapter cho người dùng không đăng nhập");

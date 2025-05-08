@@ -17,13 +17,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/anonymous-reading-history")
+@RequestMapping("/anonymousReadingHistories")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class AnonymousReadingHistoryController {
     AnonymousReadingHistoryService anonymousReadingHistoryService;
-    
+
     /**
      * Đánh dấu đã đọc chapter cho người dùng không đăng nhập
      * @param request Thông tin chapter đã đọc
@@ -37,56 +37,100 @@ public class AnonymousReadingHistoryController {
     ) {
         String ipAddress = httpRequest.getRemoteAddr();
         String userAgent = httpRequest.getHeader("User-Agent");
-        
-        log.info("Marking chapter {} of manga {} as read for anonymous user with session {}", 
+
+        log.info("Marking chapter {} of manga {} as read for anonymous user with session {}",
                 request.getChapterId(), request.getMangaId(), request.getSessionId());
-        
+
         AnonymousReadingHistoryResponse response = anonymousReadingHistoryService.markChapterAsRead(request, ipAddress, userAgent);
-        
+
         return ResponseEntity.ok(ApiResponse.<AnonymousReadingHistoryResponse>builder()
                 .code(1000)
                 .message("Chapter marked as read successfully for anonymous user")
                 .result(response)
                 .build());
     }
-    
+
     /**
      * Lấy lịch sử đọc của người dùng không đăng nhập
      * @param sessionId ID phiên của người dùng
      * @param pageable Thông tin phân trang
      * @return Danh sách lịch sử đọc có phân trang
      */
-    @GetMapping("/session/{sessionId}")
+    @GetMapping("/bySession/{sessionId}")
     public ResponseEntity<ApiResponse<Page<AnonymousReadingHistoryResponse>>> getReadingHistory(
             @PathVariable String sessionId,
             @PageableDefault(size = 10, sort = "updatedAt") Pageable pageable
     ) {
         log.info("Getting reading history for anonymous user with session {}", sessionId);
-        
+
         Page<AnonymousReadingHistoryResponse> readingHistory = anonymousReadingHistoryService.getReadingHistory(sessionId, pageable);
-        
+
         return ResponseEntity.ok(ApiResponse.<Page<AnonymousReadingHistoryResponse>>builder()
                 .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
                 .build());
     }
-    
+
+    /**
+     * Lấy lịch sử đọc của người dùng không đăng nhập (API chuẩn REST)
+     * @param sessionId ID phiên của người dùng
+     * @param pageable Thông tin phân trang
+     * @return Danh sách lịch sử đọc có phân trang
+     */
+    @GetMapping("/sessions/{sessionId}/histories")
+    public ResponseEntity<ApiResponse<Page<AnonymousReadingHistoryResponse>>> getReadingHistoryRest(
+            @PathVariable String sessionId,
+            @PageableDefault(size = 10, sort = "updatedAt") Pageable pageable
+    ) {
+        log.info("Getting reading history for anonymous user with session {}", sessionId);
+
+        Page<AnonymousReadingHistoryResponse> readingHistory = anonymousReadingHistoryService.getReadingHistory(sessionId, pageable);
+
+        return ResponseEntity.ok(ApiResponse.<Page<AnonymousReadingHistoryResponse>>builder()
+                .code(1000)
+                .message("Reading history retrieved successfully")
+                .result(readingHistory)
+                .build());
+    }
+
     /**
      * Lấy lịch sử đọc của một manga cụ thể cho người dùng không đăng nhập
      * @param sessionId ID phiên của người dùng
      * @param mangaId ID của manga
      * @return Thông tin lịch sử đọc
      */
-    @GetMapping("/session/{sessionId}/manga/{mangaId}")
+    @GetMapping("/bySession/{sessionId}/manga/{mangaId}")
     public ResponseEntity<ApiResponse<AnonymousReadingHistoryResponse>> getMangaReadingHistory(
             @PathVariable String sessionId,
             @PathVariable String mangaId
     ) {
         log.info("Getting reading history for manga {} and anonymous user with session {}", mangaId, sessionId);
-        
+
         AnonymousReadingHistoryResponse readingHistory = anonymousReadingHistoryService.getMangaReadingHistory(sessionId, mangaId);
-        
+
+        return ResponseEntity.ok(ApiResponse.<AnonymousReadingHistoryResponse>builder()
+                .code(1000)
+                .message("Reading history retrieved successfully")
+                .result(readingHistory)
+                .build());
+    }
+
+    /**
+     * Lấy lịch sử đọc của một manga cụ thể cho người dùng không đăng nhập (API chuẩn REST)
+     * @param sessionId ID phiên của người dùng
+     * @param mangaId ID của manga
+     * @return Thông tin lịch sử đọc
+     */
+    @GetMapping("/sessions/{sessionId}/mangas/{mangaId}/history")
+    public ResponseEntity<ApiResponse<AnonymousReadingHistoryResponse>> getMangaReadingHistoryRest(
+            @PathVariable String sessionId,
+            @PathVariable String mangaId
+    ) {
+        log.info("Getting reading history for manga {} and anonymous user with session {}", mangaId, sessionId);
+
+        AnonymousReadingHistoryResponse readingHistory = anonymousReadingHistoryService.getMangaReadingHistory(sessionId, mangaId);
+
         return ResponseEntity.ok(ApiResponse.<AnonymousReadingHistoryResponse>builder()
                 .code(1000)
                 .message("Reading history retrieved successfully")

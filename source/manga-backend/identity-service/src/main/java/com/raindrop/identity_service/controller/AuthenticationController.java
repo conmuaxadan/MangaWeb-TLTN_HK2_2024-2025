@@ -33,7 +33,7 @@ public class AuthenticationController {
     AuthenticationService authenticationService;
     GoogleAuthService googleAuthService;
 
-    @PostMapping("/login")
+    @PostMapping("/tokens")
     ApiResponse<AuthenticationResponse> login(@RequestBody @Valid AuthenticationRequest request) {
         log.info("Login attempt for user: {}", request.getUsername());
         var result = authenticationService.authenticate(request);
@@ -42,7 +42,7 @@ public class AuthenticationController {
                 .build();
     }
 
-    @PostMapping("/google-login")
+    @PostMapping("/google/tokens")
     public ApiResponse<AuthenticationResponse> googleLogin(@RequestBody @Valid GoogleLoginRequest request) throws Exception {
         log.info("Google login attempt with redirect URI: {}", request.getRedirectUri());
         var result = googleAuthService.googleLogin(request.getCode(), request.getRedirectUri());
@@ -52,7 +52,7 @@ public class AuthenticationController {
     }
 
 
-    @PostMapping("/introspect")
+    @PostMapping("/tokens/validate")
     ApiResponse<IntrospectResponse> introspect(@RequestBody @Valid IntrospectRequest request) throws ParseException, JOSEException {
         log.debug("Token introspection request");
         var result = authenticationService.introspect(request);
@@ -61,7 +61,7 @@ public class AuthenticationController {
                 .build();
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/tokens/revoke")
     ApiResponse<Void> logout(@RequestBody @Valid LogoutRequest request) throws ParseException, JOSEException {
         log.info("Logout request received");
         authenticationService.logout(request);
@@ -69,7 +69,7 @@ public class AuthenticationController {
                 .build();
     }
 
-    @PostMapping("/refresh-token")
+    @PostMapping("/tokens/refresh")
     ApiResponse<AuthenticationResponse> refreshToken(@RequestBody @Valid RefreshTokenRequest request) {
         log.info("Refresh token request received");
         var result = authenticationService.refreshToken(request);

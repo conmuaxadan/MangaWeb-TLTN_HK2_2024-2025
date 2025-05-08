@@ -11,6 +11,7 @@ import {
     AdvancedSearchRequest
 } from "../interfaces/models/manga";
 import authService from "./auth-service";
+import { logApiCall } from "../utils/api-logger";
 
 class MangaService {
     /**
@@ -18,6 +19,7 @@ class MangaService {
      * @returns Danh sách manga hoặc null nếu thất bại
      */
     async getAllMangas(): Promise<MangaResponse[] | null> {
+        logApiCall('getAllMangas');
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<MangaResponse[]>>('/mangas');
 
@@ -48,6 +50,7 @@ class MangaService {
      * @returns Danh sách manga có phân trang hoặc null nếu thất bại
      */
     async getPaginatedMangas(page: number = 0, size: number = 10, sort?: string): Promise<PageResponse<MangaResponse> | null> {
+        logApiCall('getPaginatedMangas');
         try {
             let url = `/mangas/paginated?page=${page}&size=${size}`;
             if (sort) {
@@ -81,6 +84,7 @@ class MangaService {
      * @returns Thông tin chi tiết manga hoặc null nếu thất bại
      */
     async getMangaById(id: string): Promise<MangaResponse | null> {
+        logApiCall('getMangaById');
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<MangaResponse>>(`/mangas/${id}`);
 
@@ -107,6 +111,7 @@ class MangaService {
      * @returns Danh sách chapter hoặc null nếu thất bại
      */
     async getChaptersByMangaId(mangaId: string): Promise<ChapterResponse[] | null> {
+        logApiCall('getChaptersByMangaId');
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<ChapterResponse[]>>(`/chapters/manga/${mangaId}`);
 
@@ -128,6 +133,7 @@ class MangaService {
      * @returns Thông tin chi tiết chapter hoặc null nếu thất bại
      */
     async getChapterById(id: string): Promise<ChapterResponse | null> {
+        logApiCall('getChapterById');
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<ChapterResponse>>(`/chapters/${id}`);
 
@@ -148,8 +154,9 @@ class MangaService {
      * @returns Session ID mới hoặc null nếu thất bại
      */
     async getSessionId(): Promise<string | null> {
+        logApiCall('getSessionId');
         try {
-            const apiResponse = await mangaHttpClient.get<ApiResponse<string>>(`/chapters/session`);
+            const apiResponse = await mangaHttpClient.post<ApiResponse<string>>(`/chapters/sessions`);
 
             if (apiResponse.code !== 1000) {
                 console.error(`Lỗi khi lấy session ID:`, apiResponse.message);
@@ -172,6 +179,7 @@ class MangaService {
      * @returns Thông tin chapter sau khi cập nhật lượt xem hoặc null nếu thất bại
      */
     async incrementChapterViews(id: string, userId: string | null = null, sessionId: string, scrollPercentage: number = 0): Promise<ChapterResponse | null> {
+        logApiCall('incrementChapterViews');
         try {
             const request = {
                 chapterId: id,
@@ -180,7 +188,7 @@ class MangaService {
                 scrollPercentage
             };
 
-            const apiResponse = await mangaHttpClient.post<ApiResponse<ChapterResponse>>(`/chapters/${id}/view`, request);
+            const apiResponse = await mangaHttpClient.post<ApiResponse<ChapterResponse>>(`/chapters/${id}/views`, request);
 
             if (apiResponse.code !== 1000) {
                 // Không hiển thị thông báo lỗi vì đây là tính năng ngầm
@@ -201,8 +209,9 @@ class MangaService {
      * @returns Thông tin chapter sau khi cập nhật lượt xem hoặc null nếu thất bại
      */
     async simpleIncrementChapterView(id: string): Promise<ChapterResponse | null> {
+        logApiCall('simpleIncrementChapterView');
         try {
-            const apiResponse = await mangaHttpClient.post<ApiResponse<ChapterResponse>>(`/chapters/${id}/increment-view`);
+            const apiResponse = await mangaHttpClient.post<ApiResponse<ChapterResponse>>(`/chapters/${id}/views/increment`);
 
             if (apiResponse.code !== 1000) {
                 // Không hiển thị thông báo lỗi vì đây là tính năng ngầm
@@ -222,6 +231,7 @@ class MangaService {
      * @returns Danh sách thể loại hoặc null nếu thất bại
      */
     async getAllGenres(): Promise<GenreResponse[] | null> {
+        logApiCall('getAllGenres');
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<GenreResponse[]>>('/genres');
 
@@ -243,6 +253,7 @@ class MangaService {
      * @returns Thông tin thể loại hoặc null nếu thất bại
      */
     async getGenreByName(name: string): Promise<GenreResponse | null> {
+        logApiCall('getGenreByName');
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<GenreResponse>>(`/genres/${name}`);
 
@@ -266,6 +277,7 @@ class MangaService {
      * @returns Danh sách manga phù hợp với từ khóa tìm kiếm hoặc null nếu thất bại
      */
     async searchManga(keyword: string, page: number = 0, size: number = 10): Promise<PageResponse<MangaResponse> | null> {
+        logApiCall('searchManga');
         try {
             const url = `/mangas/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${size}`;
             const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaResponse>>>(url);
@@ -301,10 +313,11 @@ class MangaService {
         page: number = 0,
         size: number = 10
     ): Promise<PageResponse<MangaResponse> | null> {
+        logApiCall('advancedSearch');
         try {
             console.log('Advanced search request:', JSON.stringify(searchRequest, null, 2));
             const apiResponse = await mangaHttpClient.post<ApiResponse<PageResponse<MangaResponse>>>(
-                `/mangas/advanced-search?page=${page}&size=${size}`,
+                `/mangas/search/advanced?page=${page}&size=${size}`,
                 searchRequest
             );
 
@@ -351,6 +364,7 @@ class MangaService {
      * @returns Danh sách manga thuộc thể loại hoặc null nếu thất bại
      */
     async findByGenre(genreName: string, page: number = 0, size: number = 10): Promise<PageResponse<MangaResponse> | null> {
+        logApiCall('findByGenre');
         try {
             const url = `/mangas/genre/${encodeURIComponent(genreName)}?page=${page}&size=${size}`;
             const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaResponse>>>(url);
@@ -382,6 +396,7 @@ class MangaService {
      * @returns Danh sách tóm tắt manga có phân trang hoặc null nếu thất bại
      */
     async getMangaSummaries(page: number = 0, size: number = 10, sort: string = "lastChapterAddedAt,desc"): Promise<PageResponse<MangaSummaryResponse> | null> {
+        logApiCall('getMangaSummaries');
         try {
             let url = `/mangas/summaries?page=${page}&size=${size}`;
             if (sort) {
@@ -415,6 +430,7 @@ class MangaService {
      * @returns Danh sách manga được gợi ý hoặc null nếu thất bại
      */
     async getPersonalRecommendations(limit: number = 6): Promise<MangaResponse[] | null> {
+        logApiCall('getPersonalRecommendations');
         try {
             // Lấy thông tin người dùng hiện tại từ token
             const currentUser = authService.getCurrentUser();

@@ -11,6 +11,7 @@ const Authenticate = () => {
 
     useEffect(() => {
         const code = searchParams.get("code");
+
         if (code) {
             handleGoogleCallback(code);
         } else {

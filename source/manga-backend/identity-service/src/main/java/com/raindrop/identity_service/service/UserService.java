@@ -149,6 +149,22 @@ public class UserService {
         log.info("User deleted successfully: {}", request.getUsername());
     }
 
+    /**
+     * Xóa người dùng theo username
+     * @param username Username của người dùng cần xóa
+     */
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public void deleteUserByUsername(String username) {
+        log.info("Admin attempting to delete user: {}", username);
+        User user = userRepository.findByUsername(username).orElseThrow(() -> {
+            log.warn("Delete failed: User not found - {}", username);
+            return new AppException(ErrorCode.USER_NOT_EXISTED);
+        });
+
+        userRepository.delete(user);
+        log.info("User deleted successfully: {}", username);
+    }
+
     public UserResponse getMyInfo() {
         var context = SecurityContextHolder.getContext();
         if (context.getAuthentication() == null || context.getAuthentication().getName() == null) {
