@@ -61,7 +61,7 @@ const AdvancedSearch: React.FC = () => {
     // Xử lý query params khi component được mount hoặc URL thay đổi
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
-        
+
         // Lấy các tham số tìm kiếm từ URL
         const titleParam = searchParams.get('title') || '';
         const authorParam = searchParams.get('author') || '';
@@ -70,7 +70,7 @@ const AdvancedSearch: React.FC = () => {
         const yearParam = searchParams.get('year') || '';
         const orderByParam = searchParams.get('orderBy') || 'lastChapterAddedAt,desc';
         const pageParam = parseInt(searchParams.get('page') || '0');
-        
+
         // Cập nhật state
         setTitle(titleParam);
         setAuthor(authorParam);
@@ -79,7 +79,7 @@ const AdvancedSearch: React.FC = () => {
         setYearOfRelease(yearParam);
         setOrderBy(orderByParam);
         setCurrentPage(pageParam);
-        
+
         // Nếu có ít nhất một tham số tìm kiếm, thực hiện tìm kiếm
         if (titleParam || authorParam || genresParam || statusParam || yearParam) {
             performSearch(
@@ -106,7 +106,7 @@ const AdvancedSearch: React.FC = () => {
     ) => {
         setLoading(true);
         setError(null);
-        
+
         try {
             const searchParams: AdvancedSearchRequest = {
                 title: searchTitle || undefined,
@@ -116,9 +116,9 @@ const AdvancedSearch: React.FC = () => {
                 yearOfRelease: searchYear,
                 orderBy: searchOrderBy
             };
-            
+
             const results = await mangaService.advancedSearch(searchParams, page, pageSize);
-            
+
             if (results) {
                 setSearchResults(results.content);
                 setTotalPages(results.totalPages);
@@ -142,10 +142,10 @@ const AdvancedSearch: React.FC = () => {
     // Hàm xử lý submit form
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Tạo object chứa các tham số tìm kiếm
         const params: Record<string, string> = {};
-        
+
         if (title) params.title = title;
         if (author) params.author = author;
         if (selectedGenres.length > 0) params.genres = selectedGenres.join(',');
@@ -153,7 +153,7 @@ const AdvancedSearch: React.FC = () => {
         if (yearOfRelease) params.year = yearOfRelease;
         params.orderBy = orderBy;
         params.page = '0'; // Reset về trang đầu tiên khi tìm kiếm mới
-        
+
         // Chuyển hướng đến URL với các tham số tìm kiếm
         navigate({
             pathname: '/search',
@@ -169,14 +169,14 @@ const AdvancedSearch: React.FC = () => {
         setStatus('');
         setYearOfRelease('');
         setOrderBy('lastChapterAddedAt,desc');
-        
+
         // Chuyển hướng đến URL không có tham số tìm kiếm
         navigate('/search');
     };
 
     // Hàm xử lý chọn/bỏ chọn thể loại
     const handleGenreToggle = (genre: string) => {
-        setSelectedGenres(prev => 
+        setSelectedGenres(prev =>
             prev.includes(genre)
                 ? prev.filter(g => g !== genre)
                 : [...prev, genre]
@@ -187,7 +187,7 @@ const AdvancedSearch: React.FC = () => {
     const handlePageChange = (page: number) => {
         const searchParams = new URLSearchParams(location.search);
         searchParams.set('page', page.toString());
-        
+
         navigate({
             pathname: '/search',
             search: searchParams.toString()
@@ -498,9 +498,10 @@ const AdvancedSearch: React.FC = () => {
                                                         </div>
                                                     </div>
                                                     <div className="absolute bottom-0 left-0 z-[2] w-full px-3 py-2">
-                                                        <h3 className="mb-2 line-clamp-2 text-sm font-semibold leading-tight text-white transition group-hover:line-clamp-4">
+                                                        <h3 className="mb-1 line-clamp-2 text-sm font-semibold leading-tight text-white transition group-hover:line-clamp-4">
                                                             {manga.title}
                                                         </h3>
+                                                        <p className="mb-1 text-xs text-gray-400 line-clamp-1">{manga.author || 'Không rõ'}</p>
                                                         <span className="flex items-center justify-between gap-1 text-xs text-gray-300">
                                                             <span className="flex items-center gap-1">
                                                                 <i className="fa fa-eye text-yellow-500"></i>{manga.views || 0}

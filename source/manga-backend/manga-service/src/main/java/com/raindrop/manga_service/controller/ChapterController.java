@@ -7,7 +7,6 @@ import com.raindrop.manga_service.dto.response.ApiResponse;
 import com.raindrop.manga_service.dto.response.ChapterResponse;
 import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.service.ChapterService;
-import com.raindrop.manga_service.service.ViewLogService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,6 @@ import java.util.List;
 @Slf4j
 public class ChapterController {
     ChapterService chapterService;
-    ViewLogService viewLogService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -84,19 +82,11 @@ public class ChapterController {
                     .scrollPercentage(request.getScrollPercentage())
                     .build();
         }
-
-        // Ghi nhận lượt xem
-        boolean viewLogged = viewLogService.logChapterView(
-                request.getChapterId(),
-                request.getUserId(),
-                request.getSessionId(),
-                request.getScrollPercentage());
-
         // Lấy thông tin chapter sau khi cập nhật lượt xem
         ChapterResponse chapterResponse = chapterService.getChapterById(id);
 
         return ApiResponse.<ChapterResponse>builder()
-                .message(viewLogged ? "Chapter view logged successfully" : "Chapter view not logged (already viewed recently or scroll percentage too low)")
+                .message("Chapter view logged successfully")
                 .result(chapterResponse)
                 .build();
     }
@@ -116,18 +106,6 @@ public class ChapterController {
         return ApiResponse.<ChapterResponse>builder()
                 .message("Chapter view incremented successfully")
                 .result(chapterResponse)
-                .build();
-    }
-
-    /**
-     * Tạo session ID mới
-     * @return Session ID mới
-     */
-    @PostMapping("/sessions")
-    ApiResponse<String> generateSessionId() {
-        return ApiResponse.<String>builder()
-                .message("Session ID generated successfully")
-                .result(viewLogService.generateSessionId())
                 .build();
     }
 

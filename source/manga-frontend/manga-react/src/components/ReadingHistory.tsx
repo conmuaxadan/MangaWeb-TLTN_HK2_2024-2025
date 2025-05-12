@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getMangaImageUrl } from '../utils/file-utils';
 
 interface HistoryItem {
     id: string;
@@ -89,17 +90,21 @@ const ReadingHistory = () => {
                     {history.map((item) => (
                         <li key={item.id} className="group">
                             <div className="flex gap-3">
-                                <Link 
-                                    className="block w-full shrink-0" 
-                                    title={item.title} 
+                                <Link
+                                    className="block w-full shrink-0"
+                                    title={item.title}
                                     to={`/mangas/${item.id}`}
                                 >
                                     <div style={{ position: 'relative', width: '100%', paddingBottom: '150%' }}>
                                         <div className="shrink-0 overflow-hidden rounded group-hover:shadow-lg" style={{ position: 'absolute', inset: 0 }}>
-                                            <img 
-                                                className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]" 
-                                                alt={item.title} 
-                                                src={`http://localhost:8888/api/v1/upload/files/${item.coverUrl}`} 
+                                            <img
+                                                className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
+                                                alt={item.title}
+                                                src={getMangaImageUrl(item.coverUrl)}
+                                                onError={(e) => {
+                                                    const target = e.target as HTMLImageElement;
+                                                    target.src = '/images/default-manga-cover.jpg';
+                                                }}
                                             />
                                         </div>
                                     </div>

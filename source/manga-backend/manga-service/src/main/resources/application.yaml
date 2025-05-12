@@ -40,9 +40,8 @@ spring:
       max-request-size: 100MB
 app:
   services:
-    upload: http://localhost:8084/upload
-  profile-service:
-    url: http://localhost:8081/profile
+    upload: http://localhost:8083/upload
+    history: http://localhost:8087/history
 
 feign:
   httpclient:

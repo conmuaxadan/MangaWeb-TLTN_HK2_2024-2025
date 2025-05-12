@@ -44,6 +44,7 @@ export interface AdvancedSearchRequest {
 export interface MangaSummaryResponse {
     id: string;
     title: string;
+    author?: string;
     coverUrl?: string;
     lastChapterId?: string;
     lastChapterAddedAt?: string;

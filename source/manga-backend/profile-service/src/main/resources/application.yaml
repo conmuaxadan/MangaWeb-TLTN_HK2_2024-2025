@@ -31,7 +31,8 @@ spring:
 app:
   services:
     manga: http://localhost:8082/manga
-    upload: http://localhost:8084/upload
+    upload: http://localhost:8083/upload
+    history: http://localhost:8087/history
 jwt:
   signerKey: "o6lSCt2tIkiqLnuj/m+P/My5Nq4w6C47rvMCAQIXJp8+I4lxliuh/EMEFM/YS9Aa"
 

@@ -9,6 +9,7 @@ import { getMangaImageUrl } from '../utils/file-utils';
 interface MangaCardData {
     id: string;
     title: string;
+    author: string;
     image: string;
     chapter: string;
     timeAgo: string;
@@ -48,6 +49,7 @@ const LatestUpdates: React.FC = () => {
                     const processedData = result.content.map(manga => ({
                         id: manga.id,
                         title: manga.title,
+                        author: manga.author || 'Không rõ',
                         image: manga.coverUrl || '/images/default-manga-cover.jpg',
                         chapter: manga.lastChapterNumber ? `C. ${manga.lastChapterNumber}` : 'Chưa có chapter',
                         timeAgo: manga.lastChapterAddedAt
@@ -122,9 +124,10 @@ const LatestUpdates: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="absolute bottom-0 left-0 z-[2] w-full px-3 py-2">
-                                            <h3 className="mb-2 line-clamp-2 text-sm font-semibold leading-tight text-white transition group-hover:line-clamp-4">
+                                            <h3 className="mb-1 line-clamp-2 text-sm font-semibold leading-tight text-white transition group-hover:line-clamp-4">
                                                 {manga.title}
                                             </h3>
+                                            <p className="mb-1 text-xs text-gray-400 line-clamp-1">{manga.author}</p>
                                             <span className="flex items-center justify-between gap-1 text-xs text-gray-300">
                                                 <span className="flex items-center gap-1">
                                                     <i className="fa fa-eye text-yellow-500"></i>{manga.views}

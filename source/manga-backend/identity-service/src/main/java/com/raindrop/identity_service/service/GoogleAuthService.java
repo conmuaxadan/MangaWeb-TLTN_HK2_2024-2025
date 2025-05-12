@@ -9,10 +9,14 @@ import com.raindrop.identity_service.dto.response.AuthenticationResponse;
 import com.raindrop.identity_service.dto.response.GoogleUserInfoResponse;
 import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
+import com.raindrop.identity_service.enums.AuthProvider;
 import com.raindrop.identity_service.enums.ErrorCode;
 import com.raindrop.identity_service.exception.AppException;
 import com.raindrop.identity_service.mapper.ProfileMapper;
+import com.raindrop.identity_service.entity.LinkedAccount;
+import com.raindrop.identity_service.repository.LinkedAccountRepository;
 import com.raindrop.identity_service.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -41,6 +45,7 @@ public class GoogleAuthService {
     final UserRepository userRepository;
     final PasswordEncoder passwordEncoder;
     final UserProfileEventProducer userProfileEventProducer;
+    final LinkedAccountRepository linkedAccountRepository;
 
     @Value("${google.client-id}")
     String clientId;
@@ -62,6 +67,7 @@ public class GoogleAuthService {
      * @param redirectUri URI chuyển hướng
      * @return Thông tin xác thực
      */
+    @Transactional
     public AuthenticationResponse googleLogin(String code, String redirectUri) {
         try {
             log.info("Processing Google login with code: {}", code.substring(0, Math.min(code.length(), 10)) + "...");
@@ -69,26 +75,72 @@ public class GoogleAuthService {
             // Lấy thông tin người dùng từ Google
             GoogleUserInfoResponse googleUserInfo = getGoogleUserInfo(code, redirectUri);
 
-            // Tìm hoặc tạo người dùng
-            User user = findOrCreateUser(googleUserInfo);
+            // Tìm tài khoản đã liên kết với Google ID này
+            var linkedAccount = linkedAccountRepository.findByProviderAndProviderUserId(
+                AuthProvider.GOOGLE, googleUserInfo.getGoogleId());
+
+            User user;
+
+            if (linkedAccount.isPresent()) {
+                // Nếu đã liên kết, lấy user chính
+                user = linkedAccount.get().getUser();
+                log.info("Found linked account for Google ID: {}", googleUserInfo.getGoogleId());
+            } else {
+                // Tìm user có email trùng với Google
+                var existingUser = userRepository.findByEmail(googleUserInfo.getEmail());
+
+                if (existingUser.isPresent()) {
+                    user = existingUser.get();
+
+                    // Chỉ tự động liên kết nếu tài khoản hiện có là LOCAL
+                    if (user.getAuthProvider() == AuthProvider.LOCAL) {
+                        // Tạo liên kết mới
+                        LinkedAccount newLink = LinkedAccount.builder()
+                            .user(user)
+                            .provider(AuthProvider.GOOGLE)
+                            .email(googleUserInfo.getEmail())
+                            .providerUserId(googleUserInfo.getGoogleId())
+                            .build();
+
+                        linkedAccountRepository.save(newLink);
+
+                        log.info("Auto-linked Google account to existing LOCAL user with email: {}", googleUserInfo.getEmail());
+                    } else {
+                        log.info("Found existing user with matching email but not LOCAL provider: {}", googleUserInfo.getEmail());
+                    }
+                } else {
+                    // Nếu không tìm thấy, tạo user mới
+                    user = createNewGoogleUser(googleUserInfo);
+                    log.info("Created new user from Google authentication: {}", googleUserInfo.getEmail());
+
+                    // Không tạo LinkedAccount tự động cho user Google mới
+                    // Vì chúng ta chỉ muốn tạo LinkedAccount khi email trùng với tài khoản LOCAL
+                }
+            }
 
             // Xác thực người dùng
             GoogleAuthenticationRequest googleAuthRequest = GoogleAuthenticationRequest.builder()
-                    .username(googleUserInfo.getEmail())
+                    .username(user.getUsername())
                     .build();
 
             return authenticationService.authenticateGG(googleAuthRequest);
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Unexpected error during Google authentication", e);
-            throw new AppException(ErrorCode.GOOGLE_AUTH_ERROR);
+            log.error("Error during Google login: {}", e.getMessage(), e);
+            throw new AppException(ErrorCode.GOOGLE_LOGIN_ERROR);
         }
     }
 
 
 
-    private GoogleUserInfoResponse getGoogleUserInfo(String code, String redirectUri) {
+    /**
+     * Lấy thông tin người dùng từ Google
+     * @param code Mã xác thực từ Google
+     * @param redirectUri URI chuyển hướng
+     * @return Thông tin người dùng Google
+     */
+    public GoogleUserInfoResponse getGoogleUserInfo(String code, String redirectUri) {
         try {
             // Đổi code lấy token từ Google
             String tokenResponse = exchangeCodeForToken(code, redirectUri);
@@ -147,27 +199,26 @@ public class GoogleAuthService {
     }
 
     /**
-     * Tìm hoặc tạo người dùng từ thông tin Google
+     * Tạo người dùng mới từ thông tin Google
      * @param googleUserInfo Thông tin người dùng Google
-     * @return Đối tượng User
+     * @return Đối tượng User mới
      */
-    private User findOrCreateUser(GoogleUserInfoResponse googleUserInfo) {
-        User user = userRepository.findByUsername(googleUserInfo.getEmail()).orElse(null);
+    private User createNewGoogleUser(GoogleUserInfoResponse googleUserInfo) {
+        // Tạo user mới sử dụng Builder
+        var roles = new HashSet<Role>();
+        roles.add(Role.builder().name("USER").build());
 
-        if (user == null) {
-            log.info("Creating new user from Google authentication: {}", googleUserInfo.getEmail());
-            var roles = new HashSet<Role>();
-            roles.add(Role.builder().name("USER").build());
-            user = User.builder()
-                    .username(googleUserInfo.getEmail())
-                    .email(googleUserInfo.getEmail())
-                    .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-                    .roles(roles)
-                    .build();
-            userRepository.save(user);
+        User user = User.builder()
+            .username(googleUserInfo.getEmail())
+            .email(googleUserInfo.getEmail())
+            .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+            .authProvider(AuthProvider.GOOGLE)
+            .roles(roles)
+            .build();
 
-            createUserProfile(user, googleUserInfo.getName());
-        }
+        userRepository.save(user);
+        // Tạo profile
+        createUserProfile(user, googleUserInfo.getName());
 
         return user;
     }

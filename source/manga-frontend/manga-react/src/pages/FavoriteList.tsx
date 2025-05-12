@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { FavoriteMangaResponse } from '../interfaces/models/profile';
-import profileService from '../services/profile-service';
+import { FavoriteResponse } from '../interfaces/models/profile';
+import favoriteService from '../services/favorite-service';
 import { useNavigate } from 'react-router-dom';
 import ProfileLayout from '../components/layouts/ProfileLayout.tsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -11,7 +11,7 @@ import { toast } from 'react-toastify';
 
 const FavoriteList: React.FC = () => {
   const { user } = useAuth();
-  const [favorites, setFavorites] = useState<FavoriteMangaResponse[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
@@ -26,9 +26,9 @@ const FavoriteList: React.FC = () => {
     const fetchFavorites = async () => {
       setLoading(true);
       try {
-        const result = await profileService.getMyFavorites();
+        const result = await favoriteService.getFavorites();
         if (result) {
-          setFavorites(result);
+          setFavorites(result.content || []);
         }
       } catch (error) {
         console.error('Lỗi khi tải danh sách yêu thích:', error);
@@ -42,7 +42,7 @@ const FavoriteList: React.FC = () => {
 
   const handleRemoveFavorite = async (mangaId: string) => {
     try {
-      const success = await profileService.removeFavorite(mangaId);
+      const success = await favoriteService.removeFavorite(mangaId);
       if (success) {
         toast.success('Đã xóa khỏi danh sách yêu thích', { position: 'top-right' });
         // Cập nhật lại danh sách yêu thích
@@ -64,8 +64,9 @@ const FavoriteList: React.FC = () => {
 
   return (
     <ProfileLayout>
-      <div>
-        <h5 className="text-xl font-semibold">Danh sách truyện yêu thích:</h5>
+      <div className="grid grid-cols-1 gap-[30px]">
+        <div>
+          <h5 className="text-xl font-semibold">Danh sách truyện yêu thích:</h5>
 
         {favorites.length === 0 ? (
           <div className="mt-6 rounded-md bg-gray-800 p-6 shadow text-center">
@@ -77,7 +78,7 @@ const FavoriteList: React.FC = () => {
         ) : (
           <div className="grid grid-cols-2 gap-[15px] md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 mt-6">
             {favorites.map((favorite) => (
-              <div key={favorite.id}>
+              <div key={favorite.mangaId}>
                 <div className="group">
                   <figure className="clearfix">
                     <div className="relative mb-2">
@@ -97,9 +98,10 @@ const FavoriteList: React.FC = () => {
                           </div>
                         </div>
                         <div className="absolute bottom-0 left-0 z-[2] w-full px-2 py-1.5">
-                          <h3 className="mb-2 line-clamp-2 text-[12px] font-semibold leading-tight text-white transition group-hover:line-clamp-3">
+                          <h3 className="mb-1 line-clamp-2 text-[12px] font-semibold leading-tight text-white transition group-hover:line-clamp-3">
                             {favorite.mangaTitle}
                           </h3>
+                          <p className="mb-1 text-[10px] text-gray-400 line-clamp-1">{favorite.author || 'Không rõ'}</p>
                           <span className="flex items-center justify-between gap-[4px] text-[10px] text-gray-300">
                             <span className="flex items-center gap-[4px]">
                               <i className="fa fa-eye text-yellow-500"></i>{favorite.views || 0}
@@ -129,6 +131,7 @@ const FavoriteList: React.FC = () => {
             ))}
           </div>
         )}
+        </div>
       </div>
     </ProfileLayout>
   );

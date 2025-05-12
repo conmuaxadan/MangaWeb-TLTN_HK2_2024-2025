@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { CommentResponse } from '../interfaces/models/profile';
-import profileService from '../services/profile-service';
+import commentService from '../services/comment-service';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faTrash, faEdit, faPaperPlane, faClock } from '@fortawesome/free-solid-svg-icons';
+import { getAvatarUrl } from '../utils/file-utils';
 
 interface CommentSectionProps {
   chapterId: string;
@@ -28,16 +29,16 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
   const fetchComments = async (pageNum: number = 0) => {
     setLoading(true);
     try {
-      const response = await profileService.getCommentsByChapterId(chapterId, pageNum);
+      const response = await commentService.getCommentsByChapterId(chapterId, pageNum);
 
       // Khởi tạo một mảng rỗng nếu không có dữ liệu trả về
-      const commentData = response?.result?.content || [];
+      const commentData = response?.content || [];
       setComments(commentData);
 
       // Cập nhật thông tin phân trang
-      if (response?.result) {
-        setTotalPages(response.result.totalPages || 0);
-        setTotalElements(response.result.totalElements || 0);
+      if (response) {
+        setTotalPages(response.totalPages || 0);
+        setTotalElements(response.totalElements || 0);
         setCurrentPage(pageNum);
       } else {
         setTotalPages(0);
@@ -72,11 +73,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
     }
 
     try {
-      const newComment = await profileService.createComment({
-        chapterId,
+      const newComment = await commentService.createComment(
         mangaId,
-        content: commentText
-      });
+        chapterId,
+        commentText
+      );
 
       if (newComment) {
         setComments(prev => [newComment, ...prev]);
@@ -92,7 +93,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
   // Xóa bình luận
   const handleDeleteComment = async (commentId: string) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa bình luận này?')) {
-      const success = await profileService.deleteComment(commentId);
+      const success = await commentService.deleteComment(commentId);
       if (success) {
         setComments(prev => prev.filter(comment => comment.id !== commentId));
       }
@@ -118,7 +119,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
       return;
     }
 
-    const updatedComment = await profileService.updateComment(commentId, editText);
+    const updatedComment = await commentService.updateComment(commentId, editText);
     if (updatedComment) {
       setComments(prev => prev.map(comment =>
         comment.id === commentId ? updatedComment : comment
@@ -164,7 +165,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
           <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
             {isLogin ? (
               <img
-                src={"http://localhost:8888/api/v1/upload/files/"+user?.avatarUrl || "/images/avt_default.jpg"}
+                src={getAvatarUrl(user?.avatarUrl)}
                 alt={user?.displayName || 'User'}
                 className="w-full h-full object-cover"
               />
@@ -220,7 +221,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ chapterId, mangaId }) =
                 <div className="flex items-start">
                   <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
                     <img
-                      src={"http://localhost:8888/api/v1/upload/files/" + comment.userAvatarUrl || "/images/avt_default.jpg"}
+                      src={getAvatarUrl(comment.userAvatarUrl)}
                       alt={comment.username}
                       className="w-full h-full object-cover"
                     />

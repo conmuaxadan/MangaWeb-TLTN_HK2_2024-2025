@@ -1,0 +1,63 @@
+server:
+  port: 8087
+  servlet:
+    context-path: /history
+
+spring:
+  application:
+    name: history-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/history_service
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      group-id: history-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.raindrop.common.event
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+app:
+  services:
+    manga: http://localhost:8082/manga
+    profile: http://localhost:8081/profile
+
+jwt:
+  signerKey: "o6lSCt2tIkiqLnuj/m+P/My5Nq4w6C47rvMCAQIXJp8+I4lxliuh/EMEFM/YS9Aa"
+
+feign:
+  httpclient:
+    enabled: true
+    max-connections: 200
+    max-connections-per-route: 50
+    disable-ssl-validation: true
+  client:
+    config:
+      default:
+        connectTimeout: 60000
+        readTimeout: 60000
+        loggerLevel: full
+      manga-service:
+        connectTimeout: 60000
+        readTimeout: 60000
+        loggerLevel: full
+        decode404: true
+      profile-service:
+        connectTimeout: 60000
+        readTimeout: 60000
+        loggerLevel: full
+        decode404: true

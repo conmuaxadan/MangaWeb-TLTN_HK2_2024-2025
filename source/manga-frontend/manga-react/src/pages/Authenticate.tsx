@@ -13,7 +13,18 @@ const Authenticate = () => {
         const code = searchParams.get("code");
 
         if (code) {
-            handleGoogleCallback(code);
+            // Kiểm tra xem đây là yêu cầu đăng nhập hay liên kết tài khoản
+            const authAction = localStorage.getItem('auth_action');
+
+            if (authAction === 'link_google') {
+                // Xử lý liên kết tài khoản Google
+                handleGoogleLinking(code);
+                // Xóa trạng thái sau khi xử lý
+                localStorage.removeItem('auth_action');
+            } else {
+                // Xử lý đăng nhập bình thường
+                handleGoogleCallback(code);
+            }
         } else {
             toast.error("Không tìm thấy mã xác thực từ Google.", { position: "top-right" });
             navigate("/login");
@@ -39,6 +50,33 @@ const Authenticate = () => {
             const e = error as Error;
             toast.error(e.message, { position: "top-right" });
             navigate("/login");
+        }
+    };
+
+    const handleGoogleLinking = async (code: string) => {
+        try {
+            // Kiểm tra xem người dùng đã đăng nhập chưa
+            const token = localStorage.getItem('token');
+            if (!token) {
+                toast.error("Bạn cần đăng nhập để liên kết tài khoản.", { position: "top-right" });
+                navigate("/login");
+                return;
+            }
+
+            // Gọi API liên kết tài khoản Google
+            const success = await authService.linkGoogleAccount(code);
+
+            if (success) {
+                toast.success("Liên kết tài khoản Google thành công!", { position: "top-right" });
+                navigate("/profile/linked-accounts");
+            } else {
+                toast.error("Liên kết tài khoản Google thất bại.", { position: "top-right" });
+                navigate("/profile/linked-accounts");
+            }
+        } catch (error) {
+            const e = error as Error;
+            toast.error(e.message, { position: "top-right" });
+            navigate("/profile/linked-accounts");
         }
     };
 

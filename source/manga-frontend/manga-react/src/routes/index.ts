@@ -12,7 +12,8 @@ import {
     AdvancedSearch,
     FavoriteList,
     ReadingHistoryList,
-    GenreDetail
+    GenreDetail,
+    LinkedAccounts
 } from "../pages";
 
 // Định nghĩa các route cho ứng dụng
@@ -99,6 +100,12 @@ export const routes: IRoute[] = [
     {
         path: '/profile/reading-history',
         Component: ReadingHistoryList,
+        Layout: Master,
+        requireAuth: true
+    },
+    {
+        path: '/profile/linked-accounts',
+        Component: LinkedAccounts,
         Layout: Master,
         requireAuth: true
     },

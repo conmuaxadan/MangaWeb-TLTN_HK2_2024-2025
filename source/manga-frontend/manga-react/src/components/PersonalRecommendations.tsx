@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { usePersonalRecommendations } from '../hooks/queries/useMangaQueries';
 import { useAuth } from '../contexts/AuthContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
@@ -8,22 +7,62 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { MangaResponse } from '../interfaces/models/manga';
+import { formatDistanceToNow } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
+import mangaService from '../services/manga-service';
 
 const PersonalRecommendations = () => {
-    const { isLogin } = useAuth();
-    const { data: recommendedMangas, isLoading } = usePersonalRecommendations(6);
+    const { isLogin, user } = useAuth();
+    const [recommendedMangas, setRecommendedMangas] = useState<MangaResponse[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [showSection, setShowSection] = useState(false);
+    const [noRecommendations, setNoRecommendations] = useState(false);
+
+    useEffect(() => {
+        const fetchRecommendations = async () => {
+            if (!isLogin || !user) {
+                setIsLoading(false);
+                return;
+            }
+
+            try {
+                // Sử dụng mangaService để lấy gợi ý cá nhân
+                const data = await mangaService.getPersonalRecommendations(6);
+                if (data && data.length > 0) {
+                    setRecommendedMangas(data);
+                    setNoRecommendations(false);
+                } else {
+                    setNoRecommendations(true);
+                }
+            } catch (error) {
+                console.error('Error fetching recommendations:', error);
+                setNoRecommendations(true);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchRecommendations();
+    }, [isLogin, user]);
 
     useEffect(() => {
         // Chỉ hiển thị section khi người dùng đã đăng nhập và có dữ liệu gợi ý
         setShowSection(isLogin && !!recommendedMangas && recommendedMangas.length > 0);
     }, [isLogin, recommendedMangas]);
 
-    // Đang tải hoặc không đăng nhập hoặc không có gợi ý, không hiển thị gì cả
-    if (isLoading || !showSection) {
+    // Đang tải, không hiển thị gì cả
+    if (isLoading) {
         return null;
     }
+
+    // Không đăng nhập, không hiển thị gì cả
+    if (!isLogin) {
+        return null;
+    }
+
+    // Có gợi ý, hiển thị danh sách gợi ý
+    if (recommendedMangas.length > 0) {
 
     return (
         <div className="flex flex-col gap-5">
@@ -65,29 +104,62 @@ const PersonalRecommendations = () => {
                             <div className="group bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
                                 <figure className="clearfix">
                                     <div className="relative mb-1">
-                                        <Link title={manga.title} to={`/mangas/${manga.id}`} className="block">
+                                        <a title={manga.title} href={`/mangas/${manga.id}`} className="block">
                                             <div className="relative pb-[150%]">
                                                 <div className="absolute inset-0 w-full h-full overflow-hidden">
                                                     <div className="relative h-full w-full">
                                                         <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
                                                         <img
                                                             src={getMangaImageUrl(manga.coverUrl)}
+                                                            className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
                                                             alt={manga.title}
-                                                            className="absolute inset-0 h-full w-full object-cover transition-all duration-500 group-hover:scale-110"
+                                                            onError={(e) => {
+                                                                const target = e.target as HTMLImageElement;
+                                                                target.src = '/images/default-manga-cover.jpg';
+                                                            }}
                                                         />
-                                                        <div className="absolute bottom-0 left-0 z-[2] p-3 w-full">
-                                                            <h3 className="text-white text-sm font-medium line-clamp-2 mb-1 group-hover:text-purple-400 transition-colors">
-                                                                {manga.title}
-                                                            </h3>
-                                                            <p className="text-gray-400 text-xs line-clamp-1">
-                                                                {manga.author}
-                                                            </p>
-                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </Link>
+                                            <div className="absolute bottom-0 left-0 z-[2] w-full px-2 py-1">
+                                                <h3 className="mb-1 line-clamp-1 text-xs font-semibold leading-tight text-white transition group-hover:line-clamp-2">
+                                                    {manga.title}
+                                                </h3>
+                                                <p className="mb-1 text-[10px] text-gray-400 line-clamp-1">{manga.author || 'Không rõ'}</p>
+                                                <span className="flex items-center justify-between gap-1 text-[10px] text-gray-300">
+                                                    <span className="flex items-center gap-1">
+                                                        <i className="fa fa-eye text-yellow-500"></i>{manga.views || 0}
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <i className="fa fa-comment text-blue-400"></i>{manga.comments || 0}
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <i className="fa fa-heart text-red-500"></i>{manga.loves || 0}
+                                                    </span>
+                                                </span>
+                                            </div>
+                                        </a>
                                     </div>
+                                    <figcaption className="px-2 pb-2">
+                                        <ul className="flex flex-col gap-0">
+                                            <li className="flex items-center justify-between gap-x-1 text-[10px]">
+                                                <a
+                                                    title={manga.lastChapterNumber ? `C. ${manga.lastChapterNumber}` : 'Chưa có chapter'}
+                                                    className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition visited:text-gray-400 hover:text-purple-400 text-gray-200"
+                                                    href={manga.lastChapterId
+                                                        ? `/mangas/${manga.id}/chapters/${manga.lastChapterId}`
+                                                        : `/mangas/${manga.id}`}
+                                                >
+                                                    {manga.lastChapterNumber ? `C. ${manga.lastChapterNumber}` : 'Chưa có chapter'}
+                                                </a>
+                                                <span className="whitespace-nowrap leading-tight text-gray-400">
+                                                    {manga.lastChapterAddedAt
+                                                        ? formatDistanceToNow(new Date(manga.lastChapterAddedAt), { locale: vi }).replace('trước', '')
+                                                        : 'Chưa cập nhật'}
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </figcaption>
                                 </figure>
                             </div>
                         </SwiperSlide>
@@ -96,6 +168,11 @@ const PersonalRecommendations = () => {
             </div>
         </div>
     );
+    }
+
+    // Không có gợi ý, không hiển thị gì cả
+    console.log("Không có gợi ý nào cho người dùng");
+    return null;
 };
 
 export default PersonalRecommendations;

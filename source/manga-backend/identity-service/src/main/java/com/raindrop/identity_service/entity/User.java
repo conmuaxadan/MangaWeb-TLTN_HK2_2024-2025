@@ -1,5 +1,6 @@
 package com.raindrop.identity_service.entity;
 
+import com.raindrop.identity_service.enums.AuthProvider;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -21,9 +22,18 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
+
+    @Column(unique = true)
     String username;
+
     String password;
+
+    @Column(unique = true)
     String email;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    AuthProvider authProvider = AuthProvider.LOCAL; // Mặc định là LOCAL
 
     @ManyToMany
     Set<Role> roles;

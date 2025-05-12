@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { ReadingHistoryResponse } from '../interfaces/models/profile';
-import profileService from '../services/profile-service';
+import historyService from '../services/history-service';
 import { useNavigate } from 'react-router-dom';
 import ProfileLayout from '../components/layouts/ProfileLayout.tsx';
 import { getMangaImageUrl } from '../utils/file-utils';
@@ -25,7 +25,7 @@ const ReadingHistoryList: React.FC = () => {
     const fetchReadingHistory = async () => {
       setLoading(true);
       try {
-        const result = await profileService.getMyReadingHistory();
+        const result = await historyService.getMyReadingHistory();
         if (result) {
           console.log('Reading history data:', result);
           setReadingHistory(result);
@@ -52,8 +52,9 @@ const ReadingHistoryList: React.FC = () => {
 
   return (
     <ProfileLayout>
-      <div>
-        <h5 className="text-xl font-semibold">Lịch sử đọc truyện:</h5>
+      <div className="grid grid-cols-1 gap-[30px]">
+        <div>
+          <h5 className="text-xl font-semibold">Lịch sử đọc truyện:</h5>
 
         {readingHistory.length === 0 ? (
           <div className="mt-6 rounded-md bg-gray-800 p-6 shadow text-center">
@@ -85,9 +86,10 @@ const ReadingHistoryList: React.FC = () => {
                           </div>
                         </div>
                         <div className="absolute bottom-0 left-0 z-[2] w-full px-2 py-1.5">
-                          <h3 className="mb-2 line-clamp-2 text-[12px] font-semibold leading-tight text-white transition group-hover:line-clamp-3">
+                          <h3 className="mb-1 line-clamp-2 text-[12px] font-semibold leading-tight text-white transition group-hover:line-clamp-3">
                             {history.mangaTitle}
                           </h3>
+                          <p className="mb-1 text-[10px] text-gray-400 line-clamp-1">{history.author || 'Không rõ'}</p>
                           <span className="flex items-center justify-between gap-[4px] text-[10px] text-gray-300">
                             <span className="flex items-center gap-[4px]">
                               <i className="fa fa-book text-green-500"></i>Ch.{history.chapterNumber}
@@ -106,6 +108,7 @@ const ReadingHistoryList: React.FC = () => {
             ))}
           </div>
         )}
+        </div>
       </div>
     </ProfileLayout>
   );

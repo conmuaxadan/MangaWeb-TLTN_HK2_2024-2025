@@ -147,7 +147,8 @@ const ProfileSettings: React.FC = () => {
 
   return (
     <ProfileLayout>
-      <div>
+      <div className="grid grid-cols-1 gap-[30px]">
+        <div>
         {/* Đổi mật khẩu */}
         <div className="mt-5 rounded-md bg-gray-800 p-6 shadow">
           <h6 className="mb-4 text-lg font-semibold">Đổi mật khẩu</h6>
@@ -266,6 +267,7 @@ const ProfileSettings: React.FC = () => {
               </ul>
             </div>
           </form>
+        </div>
         </div>
       </div>
     </ProfileLayout>

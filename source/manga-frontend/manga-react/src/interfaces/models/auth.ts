@@ -18,6 +18,8 @@ export interface GoogleLoginRequest {
     redirectUri: string;
 }
 
+
+
 // User Registration Request
 export interface UserRegistrationRequest {
     username: string;
@@ -31,6 +33,7 @@ export interface UserResponse {
     username: string;
     email: string;
     roles: RoleResponse[];
+    authProvider?: string; // LOCAL, GOOGLE, etc.
 }
 
 // Role Response
@@ -49,4 +52,29 @@ export interface PermissionResponse {
 // Refresh Token Request
 export interface RefreshTokenRequest {
     refreshToken: string;
+}
+
+// Google Link Request
+export interface GoogleLinkRequest {
+    code: string;
+    redirectUri: string;
+}
+
+
+
+// Link Local Account Request
+export interface LinkLocalAccountRequest {
+    username: string;
+    email: string;
+    password: string;
+}
+
+// Linked Account Response
+export interface LinkedAccountResponse {
+    id: string;
+    provider: string; // LOCAL, GOOGLE, etc.
+    username?: string;
+    email?: string;
+    providerUserId?: string;
+    linkedAt: string | Date; // Hỗ trợ cả string và Date để tương thích với backend
 }

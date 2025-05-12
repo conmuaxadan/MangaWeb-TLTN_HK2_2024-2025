@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import profileService from '../services/profile-service';
+import commentService from '../services/comment-service';
 import { getAvatarUrl } from '../utils/file-utils';
 
 interface Comment {
@@ -25,11 +25,11 @@ const RecentComments = () => {
         const fetchLatestComments = async () => {
             try {
                 setLoading(true);
-                const response = await profileService.getLatestComments(10);
+                const response = await commentService.getLatestComments(10);
 
-                if (response && response.result) {
+                if (response) {
                     // Chuyển đổi dữ liệu từ API sang định dạng phù hợp
-                    const formattedComments = response.result.content.map((comment: any) => ({
+                    const formattedComments = response.content.map((comment: any) => ({
                         id: comment.id,
                         content: comment.content,
                         username: comment.username,

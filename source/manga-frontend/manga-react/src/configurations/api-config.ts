@@ -5,6 +5,9 @@ export const API_CONFIG = {
     MANGA_SERVICE: '/manga',
     PROFILE_SERVICE: '/profile',
     UPLOAD_SERVICE: '/upload',
+    HISTORY_SERVICE: '/history',
+    COMMENT_SERVICE: '/comment',
+    FAVORITE_SERVICE: '/favorite',
     FILES_PATH: '/upload/files',
 };
 
@@ -18,7 +21,7 @@ export const DEFAULT_HEADERS = {
 
 // Authentication header
 export const getAuthHeader = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(TOKEN_STORAGE.ACCESS_TOKEN);
     return token ? { 'Authorization': `Bearer ${token}` } : {};
 };
 

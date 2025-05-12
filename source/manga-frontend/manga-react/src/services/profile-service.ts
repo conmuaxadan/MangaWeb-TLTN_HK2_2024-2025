@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import { profileHttpClient, identityHttpClient } from "./http-client";
+import { profileHttpClient, identityHttpClient, commentHttpClient, favoriteHttpClient, historyHttpClient } from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
 import { AxiosError } from "axios";
 import {
@@ -28,7 +28,7 @@ class ProfileService {
     async getUserProfile(profileId: string): Promise<UserProfileResponse | null> {
         logApiCall('getUserProfile');
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<UserProfileResponse>>(`/users/${profileId}`);
+            const apiResponse = await profileHttpClient.get<ApiResponse<UserProfileResponse>>(`/profiles/${profileId}`);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy thông tin profile", { position: "top-right" });
@@ -50,7 +50,7 @@ class ProfileService {
     async getUserProfileByUserId(userId: string): Promise<UserProfileResponse | null> {
         logApiCall('getUserProfileByUserId');
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<UserProfileResponse>>(`/users/by-user-id/${userId}`);
+            const apiResponse = await profileHttpClient.get<ApiResponse<UserProfileResponse>>(`/profiles/by-user-id/${userId}`);
 
             if (apiResponse.code !== 1000) {
                 // Không hiển thị thông báo lỗi vì đây là tính năng ngầm
@@ -74,7 +74,7 @@ class ProfileService {
     async updateProfile(data: { displayName: string }): Promise<UserProfileResponse | null> {
         logApiCall('updateProfile');
         try {
-            const apiResponse = await profileHttpClient.put<ApiResponse<UserProfileResponse>>('/users/me', data);
+            const apiResponse = await profileHttpClient.put<ApiResponse<UserProfileResponse>>('/profiles/me', data);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể cập nhật thông tin profile", { position: "top-right" });
@@ -100,10 +100,10 @@ class ProfileService {
             console.log('Uploading avatar...');
 
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('image', file);
 
             // Gọi API cập nhật avatar
-            const apiResponse = await profileHttpClient.post<ApiResponse<UserProfileResponse>>('/users/me/avatar', formData, {
+            const apiResponse = await profileHttpClient.post<ApiResponse<UserProfileResponse>>('/profiles/me/avatar', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -200,7 +200,7 @@ class ProfileService {
      */
     async getMyComments(page: number = 0, size: number = 20): Promise<ApiResponse<CommentPageResponse> | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<CommentPageResponse>>(
+            const apiResponse = await commentHttpClient.get<ApiResponse<CommentPageResponse>>(
                 `/comments/me?page=${page}&size=${size}&sort=createdAt,desc`
             );
 
@@ -223,7 +223,7 @@ class ProfileService {
      */
     async updateUserProfile(request: UserProfileRequest): Promise<UserProfileResponse | null> {
         try {
-            const apiResponse = await profileHttpClient.put<ApiResponse<UserProfileResponse>>(`/users/${request.userId}`, request);
+            const apiResponse = await profileHttpClient.put<ApiResponse<UserProfileResponse>>(`/profiles/${request.userId}`, request);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể cập nhật thông tin profile", { position: "top-right" });
@@ -247,7 +247,7 @@ class ProfileService {
         try {
             console.log('Sending update profile request:', request);
 
-            const apiResponse = await profileHttpClient.put<ApiResponse<UserProfileResponse>>('/users/me', request);
+            const apiResponse = await profileHttpClient.put<ApiResponse<UserProfileResponse>>('/profiles/me', request);
 
             console.log('Update profile response:', apiResponse);
 
@@ -289,7 +289,7 @@ class ProfileService {
      */
     async getReadingHistory(userId: string): Promise<ReadingHistoryResponse[] | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<ReadingHistoryResponse[]>>(`/users/${userId}/reading-history`);
+            const apiResponse = await historyHttpClient.get<ApiResponse<ReadingHistoryResponse[]>>(`/reading-histories/user/${userId}`);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy lịch sử đọc", { position: "top-right" });
@@ -311,8 +311,8 @@ class ProfileService {
      */
     async getMangaReadingHistory(userId: string, mangaId: string): Promise<ReadingHistoryResponse | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<ReadingHistoryResponse>>(
-                `/users/${userId}/reading-history/manga/${mangaId}`
+            const apiResponse = await historyHttpClient.get<ApiResponse<ReadingHistoryResponse>>(
+                `/reading-histories/user/${userId}/manga/${mangaId}`
             );
 
             if (apiResponse.code !== 1000) {
@@ -334,7 +334,7 @@ class ProfileService {
      */
     async getFavoriteMangas(userId: string): Promise<FavoriteMangaResponse[] | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<FavoriteMangaResponse[]>>(`/users/${userId}/favorites`);
+            const apiResponse = await favoriteHttpClient.get<ApiResponse<FavoriteMangaResponse[]>>(`/favorites/user/${userId}`);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách manga yêu thích", { position: "top-right" });
@@ -354,7 +354,7 @@ class ProfileService {
      */
     async getMyFavorites(): Promise<FavoriteMangaResponse[] | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<FavoritePageResponse>>(`/favorites?page=0&size=100&sort=createdAt,desc`);
+            const apiResponse = await favoriteHttpClient.get<ApiResponse<FavoritePageResponse>>(`/favorites?page=0&size=100&sort=createdAt,desc`);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách manga yêu thích", { position: "top-right" });
@@ -379,7 +379,7 @@ class ProfileService {
      */
     async isMangaFavorite(userId: string, mangaId: string): Promise<boolean> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<boolean>>(`/users/${userId}/favorites/manga/${mangaId}`);
+            const apiResponse = await favoriteHttpClient.get<ApiResponse<boolean>>(`/favorites/user/${userId}/manga/${mangaId}`);
 
             if (apiResponse.code !== 1000) {
                 return false;
@@ -407,8 +407,8 @@ class ProfileService {
                 chapterId,
             };
 
-            const apiResponse = await profileHttpClient.post<ApiResponse<ReadingHistoryResponse>>(
-                `/users/${userId}/reading-history`,
+            const apiResponse = await historyHttpClient.post<ApiResponse<ReadingHistoryResponse>>(
+                `/reading-histories`,
                 request
             );
 
@@ -437,14 +437,14 @@ class ProfileService {
 
             if (isFavorite) {
                 // Xóa khỏi danh sách yêu thích
-                const deleteResponse = await profileHttpClient.delete<ApiResponse<void>>(`/users/${userId}/favorites/manga/${mangaId}`);
+                const deleteResponse = await favoriteHttpClient.delete<ApiResponse<void>>(`/favorites/user/${userId}/manga/${mangaId}`);
                 if (deleteResponse.code === 1000) {
                     toast.success("Xóa khỏi danh sách yêu thích thành công", { position: "top-right" });
                 }
                 return false;
             } else {
                 // Thêm vào danh sách yêu thích
-                const addResponse = await profileHttpClient.post<ApiResponse<FavoriteMangaResponse>>(`/users/${userId}/favorites/manga/${mangaId}`, {});
+                const addResponse = await favoriteHttpClient.post<ApiResponse<FavoriteMangaResponse>>(`/favorites/manga/${mangaId}`, {});
                 if (addResponse.code === 1000) {
                     toast.success("Thêm vào danh sách yêu thích thành công", { position: "top-right" });
                 }
@@ -464,7 +464,7 @@ class ProfileService {
      */
     async getLatestComments(limit: number = 10): Promise<ApiResponse<CommentPageResponse> | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<CommentPageResponse>>(
+            const apiResponse = await commentHttpClient.get<ApiResponse<CommentPageResponse>>(
                 `/comments/latest?size=${limit}&sort=createdAt,desc`
             );
 
@@ -487,7 +487,7 @@ class ProfileService {
      */
     async countCommentsByMangaId(mangaId: string): Promise<number> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<number>>(`/comments/byManga/${mangaId}/count`);
+            const apiResponse = await commentHttpClient.get<ApiResponse<number>>(`/comments/mangas/${mangaId}/count`);
 
             if (apiResponse.code !== 1000) {
                 console.error(`Lỗi đếm bình luận của manga ID ${mangaId}:`, apiResponse.message);
@@ -510,8 +510,8 @@ class ProfileService {
      */
     async getCommentsByChapterId(chapterId: string, page: number = 0, size: number = 10): Promise<ApiResponse<CommentPageResponse> | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<CommentPageResponse>>(
-                `/comments/byChapter/${chapterId}?page=${page}&size=${size}&sort=createdAt,desc`
+            const apiResponse = await commentHttpClient.get<ApiResponse<CommentPageResponse>>(
+                `/comments/chapters/${chapterId}?page=${page}&size=${size}&sort=createdAt,desc`
             );
 
             if (apiResponse.code !== 1000) {
@@ -533,7 +533,7 @@ class ProfileService {
      */
     async createComment(request: CommentRequest): Promise<CommentResponse | null> {
         try {
-            const apiResponse = await profileHttpClient.post<ApiResponse<CommentResponse>>(
+            const apiResponse = await commentHttpClient.post<ApiResponse<CommentResponse>>(
                 '/comments',
                 request
             );
@@ -558,7 +558,7 @@ class ProfileService {
      */
     async deleteComment(commentId: string): Promise<boolean> {
         try {
-            const apiResponse = await profileHttpClient.delete<ApiResponse<void>>(`/comments/${commentId}`);
+            const apiResponse = await commentHttpClient.delete<ApiResponse<void>>(`/comments/${commentId}`);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể xóa bình luận", { position: "top-right" });
@@ -582,7 +582,7 @@ class ProfileService {
      */
     async updateComment(commentId: string, content: string): Promise<CommentResponse | null> {
         try {
-            const apiResponse = await profileHttpClient.put<ApiResponse<CommentResponse>>(
+            const apiResponse = await commentHttpClient.put<ApiResponse<CommentResponse>>(
                 `/comments/${commentId}`,
                 content
             );
@@ -609,7 +609,7 @@ class ProfileService {
     async addFavorite(mangaId: string): Promise<FavoriteMangaResponse | null> {
         try {
             const request: FavoriteRequest = { mangaId };
-            const apiResponse = await profileHttpClient.post<ApiResponse<FavoriteMangaResponse>>('/favorites', request);
+            const apiResponse = await favoriteHttpClient.post<ApiResponse<FavoriteMangaResponse>>('/favorites', request);
 
             if (apiResponse.code !== 1000) {
                 console.error(apiResponse.message || "Không thể thêm vào danh sách yêu thích");
@@ -632,7 +632,7 @@ class ProfileService {
      */
     async removeFavorite(mangaId: string): Promise<boolean> {
         try {
-            const apiResponse = await profileHttpClient.delete<ApiResponse<void>>(`/favorites/${mangaId}`);
+            const apiResponse = await favoriteHttpClient.delete<ApiResponse<void>>(`/favorites/${mangaId}`);
 
             if (apiResponse.code !== 1000) {
                 console.error(apiResponse.message || "Không thể xóa khỏi danh sách yêu thích");
@@ -655,7 +655,7 @@ class ProfileService {
      */
     async isFavorite(mangaId: string): Promise<boolean> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<boolean>>(`/favorites/${mangaId}/check`);
+            const apiResponse = await favoriteHttpClient.get<ApiResponse<boolean>>(`/favorites/${mangaId}/check`);
 
             if (apiResponse.code !== 1000) {
                 console.error(apiResponse.message || "Không thể kiểm tra trạng thái yêu thích");
@@ -677,7 +677,7 @@ class ProfileService {
      */
     async getFavorites(page: number = 0, size: number = 20): Promise<ApiResponse<FavoritePageResponse> | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<FavoritePageResponse>>(
+            const apiResponse = await favoriteHttpClient.get<ApiResponse<FavoritePageResponse>>(
                 `/favorites?page=${page}&size=${size}&sort=createdAt,desc`
             );
 
@@ -699,7 +699,7 @@ class ProfileService {
      */
     async getMyReadingHistory(): Promise<ReadingHistoryResponse[] | null> {
         try {
-            const apiResponse = await profileHttpClient.get<ApiResponse<ReadingHistoryPageResponse>>(`/reading-history?page=0&size=100&sort=updatedAt,desc`);
+            const apiResponse = await historyHttpClient.get<ApiResponse<ReadingHistoryPageResponse>>(`/reading-histories?page=0&size=100&sort=updatedAt,desc`);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy lịch sử đọc", { position: "top-right" });
@@ -721,7 +721,7 @@ class ProfileService {
      */
     async removeReadingHistory(historyId: string): Promise<boolean> {
         try {
-            const apiResponse = await profileHttpClient.delete<ApiResponse<void>>(`/reading-history/${historyId}`);
+            const apiResponse = await historyHttpClient.delete<ApiResponse<void>>(`/reading-histories/${historyId}`);
 
             if (apiResponse.code !== 1000) {
                 console.error(apiResponse.message || "Không thể xóa lịch sử đọc");
@@ -752,7 +752,7 @@ class ProfileService {
 
             console.log('Sending reading history request:', request);
 
-            const apiResponse = await profileHttpClient.post<ApiResponse<ReadingHistoryResponse>>('/reading-history', request);
+            const apiResponse = await historyHttpClient.post<ApiResponse<ReadingHistoryResponse>>('/reading-histories', request);
 
             if (apiResponse.code !== 1000) {
                 console.error(apiResponse.message || "Không thể đánh dấu đã đọc chapter");
@@ -789,7 +789,7 @@ class ProfileService {
 
             console.log('Sending anonymous reading history request:', request);
 
-            const apiResponse = await profileHttpClient.post<ApiResponse<AnonymousReadingHistoryResponse>>('/anonymousReadingHistories', request);
+            const apiResponse = await historyHttpClient.post<ApiResponse<AnonymousReadingHistoryResponse>>('/anonymous-reading-histories', request);
 
             if (apiResponse.code !== 1000) {
                 console.error(apiResponse.message || "Không thể đánh dấu đã đọc chapter cho người dùng không đăng nhập");
@@ -799,7 +799,7 @@ class ProfileService {
             console.log('Lưu lịch sử đọc ẩn danh thành công:', apiResponse.result);
             return apiResponse.result;
         } catch (error) {
-            console.error(`Lỗi đánh dấu đã đọc chapter ${chapterId} của manga ${mangaId} cho người dùng không đăng nhập:`, error);
+            console.error(`Lỗi đánh dấu đã đọc chapter ${chapterId} của manga ${mangaId} cho phiên ${sessionId}:`, error);
             return null;
         }
     }

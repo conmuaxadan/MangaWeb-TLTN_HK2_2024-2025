@@ -25,7 +25,9 @@ public class SecurityConfig {
             "/auth/tokens/validate",
             "/auth/tokens/revoke",
             "/auth/google/tokens",
-            "/auth/tokens/refresh"};
+            "/auth/tokens/refresh",
+            "/users/accounts/google",
+            "/users/accounts/local"};
 
     @Autowired
     private CustomJwtDecoder customJwtDecoder;

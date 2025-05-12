@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class MangaSummaryResponse {
     String id;
     String title;
+    String author;
     String coverUrl;
     String lastChapterId;
     LocalDateTime lastChapterAddedAt;

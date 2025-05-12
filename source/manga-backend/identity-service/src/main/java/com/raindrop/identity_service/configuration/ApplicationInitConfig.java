@@ -4,6 +4,7 @@ import com.raindrop.common.event.UserProfileEvent;
 import com.raindrop.identity_service.dto.request.UserProfileRequest;
 import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
+import com.raindrop.identity_service.enums.AuthProvider;
 import com.raindrop.identity_service.mapper.ProfileMapper;
 import com.raindrop.identity_service.repository.RoleRepository;
 import com.raindrop.identity_service.repository.UserRepository;
@@ -17,8 +18,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.raindrop.identity_service.kafka.UserProfileEventProducer;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.HashSet;
 
@@ -50,6 +49,8 @@ public class ApplicationInitConfig {
                         .password(passwordEncoder.encode("admin"))
                         .roles(roles)
                         .build();
+
+                user.setAuthProvider(AuthProvider.LOCAL);
                 user = userRepository.save(user);
 
                 UserProfileEvent profileEvent = UserProfileEvent.builder()
@@ -58,9 +59,7 @@ public class ApplicationInitConfig {
                         .displayName(user.getUsername())
                         .avatarUrl(null)
                         .build();
-
                 userProfileEventProducer.sendUserProfileEvent(profileEvent);
-
                 log.warn("Admin user created with password: admin");
             }
         };

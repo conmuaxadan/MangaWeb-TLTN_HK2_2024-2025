@@ -7,13 +7,15 @@ import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.entity.Manga;
 import com.raindrop.manga_service.mapper.MangaMapper;
 import com.raindrop.manga_service.repository.MangaRepository;
-import com.raindrop.manga_service.repository.httpclient.ProfileClient;
+import com.raindrop.manga_service.repository.httpclient.HistoryClient;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 
 import java.util.*;
@@ -25,7 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RecommendationService {
     MangaRepository mangaRepository;
-    ProfileClient profileClient;
+    HistoryClient historyClient;
     MangaMapper mangaMapper;
 
     /**
@@ -37,14 +39,15 @@ public class RecommendationService {
     public List<MangaResponse> getRecommendationsByGenre(String userId, Integer limit) {
         // Số lượng manga gợi ý mặc định là 6
         int recommendationLimit = (limit != null && limit > 0) ? limit : 6;
-
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var header = attributes.getRequest().getHeader("Authorization");
         try {
             // 1. Lấy lịch sử đọc gần đây (tối đa 3 manga)
             log.info("Gọi API lấy lịch sử đọc gần đây cho người dùng: {}", userId);
 
             ApiResponse<List<ReadingHistoryResponse>> historyResponse;
             try {
-                historyResponse = profileClient.getRecentReadingHistory(userId, 3);
+                historyResponse = historyClient.getRecentReadingHistory(header,userId, 3);
             } catch (Exception e) {
                 log.error("Lỗi khi gọi API lấy lịch sử đọc: {}", e.getMessage());
                 return Collections.emptyList();
@@ -71,7 +74,8 @@ public class RecommendationService {
             ApiResponse<List<String>> allReadMangaIdsResponse;
             List<String> allReadMangaIds;
             try {
-                allReadMangaIdsResponse = profileClient.getAllReadMangaIds(userId);
+
+                allReadMangaIdsResponse = historyClient.getAllReadMangaIds(header,userId);
                 if (allReadMangaIdsResponse.getCode() != 1000 || allReadMangaIdsResponse.getResult() == null) {
                     log.warn("Không thể lấy tất cả mangaId đã đọc, sử dụng danh sách gần đây");
                     allReadMangaIds = new ArrayList<>(recentMangaIds);

@@ -54,6 +54,13 @@ public enum ErrorCode {
     GOOGLE_EMAIL_NOT_VERIFIED(1203, "Google email not verified", HttpStatus.BAD_REQUEST),
     GOOGLE_INVALID_ID_TOKEN(1204, "Invalid Google ID token", HttpStatus.BAD_REQUEST),
     GOOGLE_USER_DISABLED(1205, "Google user is disabled", HttpStatus.FORBIDDEN),
+    GOOGLE_LOGIN_ERROR(1206, "Error during Google login", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // Linked account related errors (1220-1249)
+    ACCOUNT_ALREADY_LINKED(1220, "This account is already linked to another user", HttpStatus.BAD_REQUEST),
+    LINKED_ACCOUNT_NOT_FOUND(1221, "Linked account not found", HttpStatus.NOT_FOUND),
+    CANNOT_UNLINK_LAST_ACCOUNT(1222, "Cannot unlink the last account", HttpStatus.BAD_REQUEST),
+    LINK_ACCOUNT_FAILED(1223, "Failed to link account", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // Refresh token related errors (1250-1299)
     INVALID_REFRESH_TOKEN(1250, "Invalid or expired refresh token", HttpStatus.UNAUTHORIZED),

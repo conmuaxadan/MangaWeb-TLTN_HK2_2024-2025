@@ -58,11 +58,26 @@ export interface ReadingHistoryResponse {
     mangaCoverUrl?: string;
     chapterTitle?: string;
     chapterNumber: number;
+    author?: string;
 }
 
 // Favorite Request
 export interface FavoriteRequest {
     mangaId: string;
+}
+
+// Favorite Response
+export interface FavoriteResponse {
+    userId: string;
+    mangaId: string;
+    mangaTitle: string;
+    mangaCoverUrl?: string;
+    addedAt: string;
+    author?: string;
+    description?: string;
+    views?: number;
+    loves?: number;
+    comments?: number;
 }
 
 // Favorite Manga Response

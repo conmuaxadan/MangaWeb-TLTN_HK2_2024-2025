@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import mangaService from '../services/manga-service.ts';
 import profileService from '../services/profile-service.ts';
+import historyService from '../services/history-service';
 import sessionService from '../services/session-service';
 import {MangaResponse, ChapterResponse, ChapterPageResponse} from '../interfaces/models/manga.ts';
 import { useAuth } from '../contexts/AuthContext';
@@ -209,7 +210,7 @@ const Chapter: React.FC = () => {
           if (isLogin && id) {
             // Người dùng đã đăng nhập
             try {
-              await profileService.markAsRead(id, currentChapter.id);
+              await historyService.markAsRead(id, currentChapter.id);
               console.log('Lưu lịch sử đọc và tăng lượt xem thành công cho chapter ID:', currentChapter.id);
             } catch (readErr) {
               console.error('Lỗi khi lưu lịch sử đọc:', readErr);
@@ -218,7 +219,7 @@ const Chapter: React.FC = () => {
             // Người dùng không đăng nhập, sử dụng sessionId
             try {
               console.log('Gọi API markAnonymousRead với sessionId:', currentSessionId);
-              const result = await profileService.markAnonymousRead(id, currentChapter.id, currentSessionId);
+              const result = await historyService.markAnonymousRead(id, currentChapter.id, currentSessionId);
               if (result) {
                 console.log('Lưu lịch sử đọc ẩn danh thành công:', result);
               } else {

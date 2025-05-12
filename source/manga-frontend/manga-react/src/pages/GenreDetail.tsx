@@ -1,30 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { useMangasByGenre } from '../hooks/queries/useMangaQueries';
 import { MangaResponse } from '../interfaces/models/manga';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { getMangaImageUrl } from '../utils/file-utils';
 
-
+interface PagedResponse {
+  content: MangaResponse[];
+  totalPages: number;
+  totalElements: number;
+  number: number;
+  size: number;
+}
 
 const GenreDetail: React.FC = () => {
   const { genreName } = useParams<{ genreName: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-
+  
+  // State for managing data, loading and error
+  const [data, setData] = useState<PagedResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   // Lấy trang hiện tại từ URL, mặc định là 0 (trang đầu tiên)
   const currentPage = parseInt(searchParams.get('page') || '0');
   const pageSize = 20; // Số truyện mỗi trang
 
-  // Sử dụng hook để lấy danh sách manga theo thể loại
-  const { data, isLoading, isError, error } = useMangasByGenre(
-    genreName || '',
-    currentPage,
-    pageSize
-  );
+  // Fetch manga data by genre
+  useEffect(() => {
+    const fetchMangasByGenre = async () => {
+      if (!genreName) {
+        setIsError(true);
+        setError(new Error('Genre name is required'));
+        setIsLoading(false);
+        return;
+      }
 
+      setIsLoading(true);
+      setIsError(false);
+      
+      try {
+        // Replace with your actual API endpoint
+        const response = await fetch(`/api/manga/genres/${encodeURIComponent(genreName)}?page=${currentPage}&size=${pageSize}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch mangas for genre ${genreName}`);
+        }
+        
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setIsError(true);
+        setError(err instanceof Error ? err : new Error('An unknown error occurred'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
+    fetchMangasByGenre();
+  }, [genreName, currentPage, pageSize]);
 
   // Xử lý chuyển trang
   const handlePageChange = (page: number) => {

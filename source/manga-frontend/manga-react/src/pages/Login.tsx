@@ -95,10 +95,10 @@ const Login = () => {
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Tên đăng nhập */}
+                            {/* Tên đăng nhập hoặc Email */}
                             <div>
                                 <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
-                                    Tên đăng nhập
+                                    Tên đăng nhập hoặc Email
                                 </label>
                                 <div className="relative input-icon-container flex items-center overflow-hidden border border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-indigo-500 bg-zinc-700/50 transition-all duration-200">
                                     <span className="pl-4 text-gray-400">
@@ -107,7 +107,7 @@ const Login = () => {
                                     <input
                                         id="username"
                                         type="text"
-                                        placeholder="Nhập tên đăng nhập"
+                                        placeholder="Nhập tên đăng nhập hoặc email"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
                                         className="w-full p-3 bg-transparent text-white focus:outline-none"

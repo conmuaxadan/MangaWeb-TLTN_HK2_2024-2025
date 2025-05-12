@@ -5,6 +5,8 @@ app:
 spring:
   application:
     name: api-gateway
+  codec:
+    max-in-memory-size: 10MB
   cloud:
     gateway:
       routes:
@@ -27,8 +29,26 @@ spring:
           filters:
             - StripPrefix=2
         - id: upload_service
-          uri: http://localhost:8084
+          uri: http://localhost:8083
           predicates:
             - Path=${app.api-prefix}/upload/**
+          filters:
+            - StripPrefix=2
+        - id: history_service
+          uri: http://localhost:8087
+          predicates:
+            - Path=${app.api-prefix}/history/**
+          filters:
+            - StripPrefix=2
+        - id: comment_service
+          uri: http://localhost:8085
+          predicates:
+            - Path=${app.api-prefix}/comment/**
+          filters:
+            - StripPrefix=2
+        - id: favorite_service
+          uri: http://localhost:8086
+          predicates:
+            - Path=${app.api-prefix}/favorite/**
           filters:
             - StripPrefix=2

@@ -1,8 +1,9 @@
 import React, { ReactNode } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faCog, faSignOutAlt, faHeart, faHistory } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faCog, faSignOutAlt, faHeart, faHistory, faLink } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../contexts/AuthContext.tsx';
+import { getAvatarUrl } from '../../utils/file-utils';
 
 interface ProfileLayoutProps {
   children: ReactNode;
@@ -37,7 +38,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ children }) => {
                   <div>
                     <div className="relative mx-auto size-28">
                       <img
-                        src={"http://localhost:8888/api/v1/upload/files/"+user?.avatarUrl}
+                        src={getAvatarUrl(user?.avatarUrl)}
                         className="h-full w-full rounded-full shadow ring-4 ring-gray-700"
                         id="profile-image"
                         alt="Profile"
@@ -74,6 +75,14 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ children }) => {
                           <FontAwesomeIcon icon={faHistory} />
                         </span>
                         <h6 className="mb-0 font-semibold">Lịch sử đọc</h6>
+                      </Link>
+                    </li>
+                    <li className={`navbar-item account-menu ${isActive('/profile/linked-accounts') ? 'active' : ''}`}>
+                      <Link to="/profile/linked-accounts" className="navbar-link flex items-center rounded py-2 text-gray-400 hover:text-white">
+                        <span className="mb-0 mr-2 text-[18px]">
+                          <FontAwesomeIcon icon={faLink} />
+                        </span>
+                        <h6 className="mb-0 font-semibold">Tài khoản liên kết</h6>
                       </Link>
                     </li>
                     <li className={`navbar-item account-menu ${isActive('/profile/settings') ? 'active' : ''}`}>

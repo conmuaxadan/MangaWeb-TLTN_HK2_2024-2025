@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { UserProfileResponse } from '../interfaces/models/profile';
 import profileService from '../services/profile-service';
+import commentService from '../services/comment-service';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faClock, faComment, faBookmark } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
@@ -26,9 +27,9 @@ const Profile: React.FC = () => {
       setLoading(true);
       try {
         // Lấy số lượng bình luận của người dùng
-        const comments = await profileService.getMyComments();
-        if (comments && comments.result) {
-          setCommentCount(comments.result.totalElements || 0);
+        const comments = await commentService.getMyComments();
+        if (comments) {
+          setCommentCount(comments.totalElements || 0);
         }
 
         // Sử dụng thông tin user từ AuthContext nếu có
@@ -55,7 +56,7 @@ const Profile: React.FC = () => {
 
   return (
     <ProfileLayout>
-      <div className="grid grid-cols-1 gap-[30px] pt-6">
+      <div className="grid grid-cols-1 gap-[30px]">
         <div>
           <h5 className="text-xl font-semibold">Thông tin tài khoản:</h5>
           <div className="mt-6 flex flex-col gap-3">

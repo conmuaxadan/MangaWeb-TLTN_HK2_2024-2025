@@ -6,13 +6,13 @@ import { API_CONFIG } from '../configurations/api-config';
  * @returns URL đầy đủ của file
  */
 export const getFileUrl = (fileName: string): string => {
-    if (!fileName) return '';
-    
+    if (!fileName) return null;
+
     // Nếu fileName đã là URL đầy đủ, trả về nguyên vẹn
     if (fileName.startsWith('http://') || fileName.startsWith('https://')) {
         return fileName;
     }
-    
+
     return `${API_CONFIG.BASE_URL}${API_CONFIG.FILES_PATH}/${fileName}`;
 };
 
@@ -22,6 +22,7 @@ export const getFileUrl = (fileName: string): string => {
  * @returns URL đầy đủ của ảnh manga
  */
 export const getMangaImageUrl = (fileName: string): string => {
+    if (!fileName) return '/images/default-manga-cover.jpg';
     return getFileUrl(fileName);
 };
 
@@ -41,5 +42,6 @@ export const getAvatarUrl = (fileName: string): string => {
  * @returns URL đầy đủ của ảnh trang manga
  */
 export const getMangaPageUrl = (fileName: string): string => {
+    if (!fileName) return '/images/default-manga-page.jpg';
     return getFileUrl(fileName);
 };

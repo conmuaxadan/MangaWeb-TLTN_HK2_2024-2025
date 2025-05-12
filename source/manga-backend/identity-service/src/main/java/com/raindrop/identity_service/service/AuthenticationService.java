@@ -12,20 +12,21 @@ import com.raindrop.identity_service.dto.request.LogoutRequest;
 import com.raindrop.identity_service.dto.request.RefreshTokenRequest;
 import com.raindrop.identity_service.dto.response.AuthenticationResponse;
 import com.raindrop.identity_service.dto.response.IntrospectResponse;
-import com.raindrop.identity_service.entity.InvalidatedToken;
-import com.raindrop.identity_service.entity.RefreshToken;
+import com.raindrop.identity_service.entity.LinkedAccount;
 import com.raindrop.identity_service.entity.User;
+import com.raindrop.identity_service.enums.AuthProvider;
 import com.raindrop.identity_service.exception.AppException;
 import com.raindrop.identity_service.enums.ErrorCode;
-import com.raindrop.identity_service.repository.InvalidatedTokenRepository;
-import com.raindrop.identity_service.repository.RefreshTokenRepository;
+import com.raindrop.identity_service.repository.LinkedAccountRepository;
 import com.raindrop.identity_service.repository.UserRepository;
+import com.raindrop.identity_service.service.TokenRedisService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -46,8 +47,9 @@ import java.util.UUID;
 @FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
 public class AuthenticationService {
     UserRepository userRepository;
-    InvalidatedTokenRepository invalidatedTokenRepository;
-    RefreshTokenRepository refreshTokenRepository;
+    LinkedAccountRepository linkedAccountRepository;
+    TokenRedisService tokenRedisService;
+    RedisTemplate<String, Object> redisTemplate;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -78,31 +80,89 @@ public class AuthenticationService {
 
     @Transactional
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        log.info("Authenticating user: {}", request.getUsername());
-        var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> {
-            log.warn("Authentication failed: User not found - {}", request.getUsername());
-            return new AppException(ErrorCode.INVALID_CREDENTIALS);
-        });
+        log.info("Authenticating user with input: {}", request.getUsername());
 
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+        String usernameOrEmail = request.getUsername();
+        User user = null;
 
-        if (!authenticated) {
-            log.warn("Authentication failed: Invalid password for user {}", request.getUsername());
-            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+        // Tìm kiếm user theo username hoặc email
+        var userByUsername = userRepository.findByUsername(usernameOrEmail);
+        if (userByUsername.isPresent()) {
+            user = userByUsername.get();
+
+            // Kiểm tra mật khẩu
+            PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+            boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+
+            if (!authenticated) {
+                log.warn("Authentication failed: Invalid password for user {}", usernameOrEmail);
+                throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+            }
+        } else {
+            var userByEmail = userRepository.findByEmail(usernameOrEmail);
+            if (userByEmail.isPresent()) {
+                user = userByEmail.get();
+
+                // Kiểm tra mật khẩu
+                PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+                boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+
+                if (!authenticated) {
+                    log.warn("Authentication failed: Invalid password for user {}", usernameOrEmail);
+                    throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+                }
+            } else {
+                // Tìm trong LinkedAccount
+                var linkedAccountByUsername =
+                    linkedAccountRepository.findByProviderAndUsername(AuthProvider.LOCAL, usernameOrEmail);
+
+                if (linkedAccountByUsername.isPresent()) {
+                    LinkedAccount linkedAccount = linkedAccountByUsername.get();
+
+                    // Kiểm tra mật khẩu
+                    PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+                    boolean authenticated = passwordEncoder.matches(request.getPassword(), linkedAccount.getPassword());
+
+                    if (!authenticated) {
+                        log.warn("Authentication failed: Invalid password for linked account {}", usernameOrEmail);
+                        throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+                    }
+
+                    user = linkedAccount.getUser();
+                } else {
+                    var linkedAccountByEmail =
+                        linkedAccountRepository.findByProviderAndEmail(AuthProvider.LOCAL, usernameOrEmail);
+
+                    if (linkedAccountByEmail.isPresent()) {
+                        LinkedAccount linkedAccount = linkedAccountByEmail.get();
+
+                        // Kiểm tra mật khẩu
+                        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+                        boolean authenticated = passwordEncoder.matches(request.getPassword(), linkedAccount.getPassword());
+
+                        if (!authenticated) {
+                            log.warn("Authentication failed: Invalid password for linked account {}", usernameOrEmail);
+                            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+                        }
+
+                        user = linkedAccount.getUser();
+                    } else {
+                        log.warn("Authentication failed: User not found with username/email - {}", usernameOrEmail);
+                        throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+                    }
+                }
+            }
         }
 
-        log.info("User authenticated successfully: {}", request.getUsername());
+        log.info("User authenticated successfully: {}", user.getUsername());
 
-        // Tạo access token
+        // Tạo access token và refresh token cho user chính
         var accessToken = generateToken(user);
-
-        // Tạo refresh token
         var refreshToken = createRefreshToken(user);
 
         return AuthenticationResponse.builder()
                 .token(accessToken)
-                .refreshToken(refreshToken.getToken())
+                .refreshToken(refreshToken)
                 .authenticated(true)
                 .expiresIn(ACCESS_TOKEN_EXPIRATION)
                 .build();
@@ -126,7 +186,7 @@ public class AuthenticationService {
 
         return AuthenticationResponse.builder()
                 .token(accessToken)
-                .refreshToken(refreshToken.getToken())
+                .refreshToken(refreshToken)
                 .authenticated(true)
                 .expiresIn(ACCESS_TOKEN_EXPIRATION)
                 .build();
@@ -145,19 +205,16 @@ public class AuthenticationService {
 
         log.info("Invalidating token for user: {}", subject);
 
-        // Thêm token vào danh sách token đã bị vô hiệu hóa
-        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-                .id(jit)
-                .expiryTime(expirationTime)
-                .build();
-        invalidatedTokenRepository.save(invalidatedToken);
+        // Tính thời gian còn lại của token (tính bằng giây)
+        long expirationTimeInSeconds = (expirationTime.getTime() - System.currentTimeMillis()) / 1000;
+        if (expirationTimeInSeconds > 0) {
+            // Thêm token vào blacklist trong Redis
+            tokenRedisService.addToBlacklist(jit, expirationTimeInSeconds);
+        }
 
         // Thu hồi tất cả refresh token của người dùng
-        User user = userRepository.findById(subject).orElse(null);
-        if (user != null) {
-            refreshTokenRepository.revokeAllUserTokens(user);
-            log.info("All refresh tokens revoked for user: {}", subject);
-        }
+        tokenRedisService.revokeAllUserRefreshTokens(subject);
+        log.info("All refresh tokens revoked for user: {}", subject);
 
         log.info("User logged out successfully: {}", subject);
     }
@@ -182,8 +239,9 @@ public class AuthenticationService {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        if (invalidatedTokenRepository.existsById(tokenId)) {
-            log.warn("Token verification failed: Token has been invalidated for user {}", subject);
+        // Kiểm tra token có trong blacklist của Redis không
+        if (tokenRedisService.isBlacklisted(tokenId)) {
+            log.warn("Token verification failed: Token has been blacklisted for user {}", subject);
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
@@ -207,6 +265,7 @@ public class AuthenticationService {
                 .jwtID(tokenId)
                 .claim("scope", buildScope(user))
                 .claim("email", user.getEmail())
+                .claim("authProvider", user.getAuthProvider().name())
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
@@ -244,26 +303,22 @@ public class AuthenticationService {
     /**
      * Tạo mới refresh token cho người dùng
      * @param user Người dùng cần tạo refresh token
-     * @return RefreshToken đã được lưu vào database
+     * @return String refresh token value
      */
     @Transactional
-    public RefreshToken createRefreshToken(User user) {
+    public String createRefreshToken(User user) {
         log.info("Creating refresh token for user: {}", user.getUsername());
 
         // Tạo refresh token mới
-        RefreshToken refreshToken = RefreshToken.builder()
-                .user(user)
-                .token(UUID.randomUUID().toString())
-                .expiryDate(LocalDateTime.now().plusSeconds(REFRESH_TOKEN_EXPIRATION))
-                .revoked(false)
-                .build();
+        String tokenId = UUID.randomUUID().toString();
+        String refreshTokenValue = UUID.randomUUID().toString();
 
-        // Lưu vào database
-        refreshToken = refreshTokenRepository.save(refreshToken);
-        log.info("Refresh token created successfully for user: {}, expires at: {}",
-                user.getUsername(), refreshToken.getExpiryDate());
+        // Lưu vào Redis
+        tokenRedisService.saveRefreshToken(tokenId, user.getId(), refreshTokenValue, REFRESH_TOKEN_EXPIRATION);
 
-        return refreshToken;
+        log.info("Refresh token created successfully for user: {}", user.getUsername());
+
+        return refreshTokenValue;
     }
 
     /**
@@ -274,34 +329,37 @@ public class AuthenticationService {
     @Transactional
     public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
         log.info("Processing refresh token request");
+        String requestToken = refreshTokenRequest.getRefreshToken();
 
-        // Tìm refresh token trong database
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenRequest.getRefreshToken())
+        // Kiểm tra refresh token trong Redis
+        String redisToken = tokenRedisService.getRefreshToken(requestToken);
+        if (redisToken == null) {
+            log.warn("Refresh token not found in Redis: {}", requestToken);
+            throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        // Lấy userId từ refresh token
+        String userId = tokenRedisService.getUserIdFromToken(requestToken);
+        if (userId == null) {
+            log.warn("User ID not found for refresh token: {}", requestToken);
+            throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        // Tìm user trong database
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
-                    log.warn("Refresh token not found: {}", refreshTokenRequest.getRefreshToken());
-                    return new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+                    log.warn("User not found with ID: {}", userId);
+                    return new AppException(ErrorCode.USER_NOT_EXISTED);
                 });
 
-        // Kiểm tra refresh token có hợp lệ không
-        if (refreshToken.isRevoked()) {
-            log.warn("Refresh token has been revoked: {}", refreshToken.getToken());
-            throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
-        }
-
-        if (refreshToken.isExpired()) {
-            log.warn("Refresh token has expired: {}", refreshToken.getToken());
-            throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
-        }
-
         // Tạo access token mới
-        User user = refreshToken.getUser();
         String accessToken = generateToken(user);
 
         log.info("Token refreshed successfully for user: {}", user.getUsername());
 
         return AuthenticationResponse.builder()
                 .token(accessToken)
-                .refreshToken(refreshToken.getToken()) // Giữ nguyên refresh token
+                .refreshToken(requestToken) // Giữ nguyên refresh token
                 .authenticated(true)
                 .expiresIn(ACCESS_TOKEN_EXPIRATION)
                 .build();

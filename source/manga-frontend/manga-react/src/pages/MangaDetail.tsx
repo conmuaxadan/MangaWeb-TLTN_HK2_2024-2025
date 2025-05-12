@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {useParams, Link} from 'react-router-dom';
 import mangaService from '../services/manga-service.ts';
 import profileService from '../services/profile-service.ts';
+import favoriteService from '../services/favorite-service';
 import {MangaResponse, ChapterResponse, MangaStatusDisplayNames} from '../interfaces/models/manga.ts';
 import {formatDistanceToNow} from 'date-fns';
 import {vi} from 'date-fns/locale';
@@ -84,7 +85,7 @@ const MangaDetail: React.FC = () => {
             if (!id || !isLogin) return;
 
             try {
-                const status = await profileService.isFavorite(id);
+                const status = await favoriteService.isFavorite(id);
                 setIsFavorite(status);
             } catch (error) {
                 console.error('Lỗi khi kiểm tra trạng thái yêu thích:', error);
@@ -117,7 +118,7 @@ const MangaDetail: React.FC = () => {
 
             if (isFavorite) {
                 // Xóa khỏi danh sách yêu thích
-                const success = await profileService.removeFavorite(id);
+                const success = await favoriteService.removeFavorite(id);
                 if (success) {
                     setIsFavorite(false);
                     // Cập nhật số lượng yêu thích trên UI
@@ -130,7 +131,7 @@ const MangaDetail: React.FC = () => {
                 }
             } else {
                 // Thêm vào danh sách yêu thích
-                const result = await profileService.addFavorite(id);
+                const result = await favoriteService.addFavorite(id);
                 if (result) {
                     setIsFavorite(true);
                     // Cập nhật số lượng yêu thích trên UI
@@ -227,7 +228,7 @@ const MangaDetail: React.FC = () => {
                                          style={{position: 'absolute', inset: 0}}>
                                         <img
                                             className="h-full w-full object-cover"
-                                            src={getMangaImageUrl(manga.coverUrl) || '/images/default-manga-cover.jpg'}
+                                            src={getMangaImageUrl(manga.coverUrl)}
                                             alt={manga.title}
                                         />
                                     </div>

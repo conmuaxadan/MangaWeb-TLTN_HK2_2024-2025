@@ -40,6 +40,7 @@ public interface MangaMapper {
      */
     @Mapping(target = "id", source = "id")
     @Mapping(target = "title", source = "title")
+    @Mapping(target = "author", source = "author")
     @Mapping(target = "coverUrl", source = "coverUrl")
     @Mapping(target = "lastChapterId", source = "lastChapterId")
     @Mapping(target = "lastChapterAddedAt", source = "lastChapterAddedAt")

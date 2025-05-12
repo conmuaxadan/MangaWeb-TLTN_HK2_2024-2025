@@ -122,6 +122,7 @@ const RecommendedManga = () => {
                                                 <h3 className="mb-1 line-clamp-1 text-xs font-semibold leading-tight text-white transition group-hover:line-clamp-2">
                                                     {manga.title}
                                                 </h3>
+                                                <p className="mb-1 text-[10px] text-gray-400 line-clamp-1">{manga.author || 'Không rõ'}</p>
                                                 <span className="flex items-center justify-between gap-1 text-[10px] text-gray-300">
                                                     <span className="flex items-center gap-1">
                                                         <i className="fa fa-eye text-yellow-500"></i>{manga.views || 0}

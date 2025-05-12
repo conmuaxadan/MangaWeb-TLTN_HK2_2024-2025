@@ -2,17 +2,23 @@ package com.raindrop.identity_service.service;
 
 import com.raindrop.common.event.UserProfileEvent;
 import com.raindrop.identity_service.dto.request.ChangePasswordRequest;
+import com.raindrop.identity_service.dto.request.GoogleLinkRequest;
+import com.raindrop.identity_service.dto.request.LinkLocalAccountRequest;
 import com.raindrop.identity_service.dto.request.UserRequest;
+import com.raindrop.identity_service.dto.response.LinkedAccountResponse;
 import com.raindrop.identity_service.dto.response.UserResponse;
+import com.raindrop.identity_service.entity.LinkedAccount;
 import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
+import com.raindrop.identity_service.enums.AuthProvider;
 import com.raindrop.identity_service.exception.AppException;
 import com.raindrop.identity_service.enums.ErrorCode;
 import com.raindrop.identity_service.mapper.ProfileMapper;
 import com.raindrop.identity_service.mapper.UserMapper;
+import com.raindrop.identity_service.repository.LinkedAccountRepository;
 import com.raindrop.identity_service.repository.RoleRepository;
 import com.raindrop.identity_service.repository.UserRepository;
-import com.raindrop.identity_service.repository.httpclient.ProfileClient;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,6 +38,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,9 +50,10 @@ public class UserService {
     UserMapper userMapper;
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
-    ProfileClient profileClient;
     ProfileMapper profileMapper;
     UserProfileEventProducer userProfileEventProducer;
+    LinkedAccountRepository linkedAccountRepository;
+    GoogleAuthService googleAuthService;
 
 
     public UserResponse createUser(UserRequest request) {
@@ -63,6 +71,7 @@ public class UserService {
         var roles = new HashSet<Role>();
         roles.add(Role.builder().name("USER").build());
         user.setRoles(roles);
+        user.setAuthProvider(AuthProvider.LOCAL);
 
         log.debug("Saving user to database: {}", request.getUsername());
         user = userRepository.save(user);
@@ -224,5 +233,160 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
         log.info("Password changed successfully for user ID: {}", userId);
+    }
+
+    /**
+     * Lấy thông tin người dùng hiện tại từ SecurityContext
+     * @return Đối tượng User hiện tại
+     */
+    private User getCurrentAuthenticatedUser() {
+        var context = SecurityContextHolder.getContext();
+        if (context.getAuthentication() == null) {
+            log.warn("No authentication found");
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        // Lấy ID của user từ token JWT
+        String userId = null;
+        if (context.getAuthentication() instanceof JwtAuthenticationToken jwtAuthenticationToken) {
+            Jwt jwt = jwtAuthenticationToken.getToken();
+            userId = jwt.getSubject(); // Subject trong JWT là ID của user
+        }
+
+        if (userId == null) {
+            log.warn("Could not extract user ID from token");
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        return userRepository.findById(userId).orElseThrow(() -> {
+            return new AppException(ErrorCode.USER_NOT_EXISTED);
+        });
+    }
+
+    /**
+     * Liên kết tài khoản hiện tại với tài khoản Google
+     * @param code Mã xác thực từ Google
+     * @param redirectUri URI chuyển hướng
+     */
+    @Transactional
+    public void linkGoogleAccount(String code, String redirectUri) {
+        // Lấy user hiện tại
+        User currentUser = getCurrentAuthenticatedUser();
+
+        // Lấy thông tin từ Google
+        var googleUserInfo = googleAuthService.getGoogleUserInfo(code, redirectUri);
+
+        // Kiểm tra xem Google ID này đã được liên kết với tài khoản khác chưa
+        Optional<LinkedAccount> existingLink = linkedAccountRepository.findByProviderAndProviderUserId(
+            AuthProvider.GOOGLE, googleUserInfo.getGoogleId());
+
+        if (existingLink.isPresent()) {
+            // Nếu đã liên kết với tài khoản khác
+            if (!existingLink.get().getUser().getId().equals(currentUser.getId())) {
+                throw new AppException(ErrorCode.ACCOUNT_ALREADY_LINKED);
+            }
+            // Nếu đã liên kết với tài khoản hiện tại, không làm gì
+            return;
+        }
+
+        // Tạo liên kết mới sử dụng Builder
+        LinkedAccount linkedAccount = LinkedAccount.builder()
+            .user(currentUser)
+            .provider(AuthProvider.GOOGLE)
+            .email(googleUserInfo.getEmail())
+            .providerUserId(googleUserInfo.getGoogleId())
+            .build();
+
+        linkedAccountRepository.save(linkedAccount);
+
+        log.info("Linked Google account {} to user {}", googleUserInfo.getEmail(), currentUser.getUsername());
+    }
+
+    /**
+     * Liên kết tài khoản hiện tại với tài khoản Local mới
+     * @param request Thông tin tài khoản local mới
+     */
+    @Transactional
+    public void linkLocalAccount(LinkLocalAccountRequest request) {
+        // Lấy user hiện tại
+        User currentUser = getCurrentAuthenticatedUser();
+
+        // Kiểm tra xem username và email đã tồn tại chưa
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
+
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
+
+        // Kiểm tra trong LinkedAccount
+        if (linkedAccountRepository.existsByProviderAndUsername(AuthProvider.LOCAL, request.getUsername())) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
+
+        if (linkedAccountRepository.existsByProviderAndEmail(AuthProvider.LOCAL, request.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
+
+        // Tạo liên kết mới sử dụng Builder
+        LinkedAccount linkedAccount = LinkedAccount.builder()
+            .user(currentUser)
+            .provider(AuthProvider.LOCAL)
+            .username(request.getUsername())
+            .email(request.getEmail())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .build();
+
+        linkedAccountRepository.save(linkedAccount);
+
+        log.info("Linked Local account {} to user {}", request.getUsername(), currentUser.getUsername());
+    }
+
+    /**
+     * Lấy danh sách tài khoản đã liên kết của người dùng hiện tại
+     * @return Danh sách tài khoản đã liên kết
+     */
+    public List<LinkedAccountResponse> getLinkedAccounts() {
+        User currentUser = getCurrentAuthenticatedUser();
+        List<LinkedAccount> linkedAccounts = linkedAccountRepository.findAllByUser(currentUser);
+
+        return linkedAccounts.stream()
+            .map(account -> LinkedAccountResponse.builder()
+                .id(account.getId())
+                .provider(account.getProvider())
+                .username(account.getUsername())
+                .email(account.getEmail())
+                .providerUserId(account.getProviderUserId())
+                .linkedAt(account.getLinkedAt())
+                .build())
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Hủy liên kết tài khoản
+     * @param linkedAccountId ID của tài khoản liên kết cần hủy
+     */
+    @Transactional
+    public void unlinkAccount(String linkedAccountId) {
+        User currentUser = getCurrentAuthenticatedUser();
+
+        LinkedAccount linkedAccount = linkedAccountRepository.findById(linkedAccountId)
+            .orElseThrow(() -> new AppException(ErrorCode.LINKED_ACCOUNT_NOT_FOUND));
+
+        // Kiểm tra xem linkedAccount có thuộc về user hiện tại không
+        if (!linkedAccount.getUser().getId().equals(currentUser.getId())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // Không cần kiểm tra số lượng tài khoản liên kết
+        // Vì việc xóa tài khoản liên kết không ảnh hưởng đến tài khoản chính
+        // List<LinkedAccount> userAccounts = linkedAccountRepository.findAllByUser(currentUser);
+        // if (userAccounts.size() <= 1) {
+        //     throw new AppException(ErrorCode.CANNOT_UNLINK_LAST_ACCOUNT);
+        // }
+
+        linkedAccountRepository.delete(linkedAccount);
+        log.info("Unlinked account {} from user {}", linkedAccountId, currentUser.getUsername());
     }
 }

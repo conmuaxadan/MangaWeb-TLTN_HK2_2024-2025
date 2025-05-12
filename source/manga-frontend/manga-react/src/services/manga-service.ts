@@ -443,19 +443,22 @@ class MangaService {
             const apiResponse = await mangaHttpClient.get<ApiResponse<MangaResponse[]>>(url);
 
             if (apiResponse.code !== 1000) {
-                console.log(apiResponse.message || "Không thể lấy gợi ý manga");
+                console.log(`Lỗi API (${apiResponse.code}): ${apiResponse.message || "Không thể lấy gợi ý manga"}`);
                 return null;
             }
 
             // Nếu kết quả rỗng, trả về null để không hiển thị phần gợi ý
             if (!apiResponse.result || apiResponse.result.length === 0) {
-                console.log("Không có gợi ý nào cho người dùng");
+                console.log("Không có gợi ý nào cho người dùng - API trả về danh sách rỗng");
                 return null;
             }
 
             return apiResponse.result;
         } catch (error) {
             console.error("Lỗi lấy gợi ý manga:", error);
+            if (error instanceof Error) {
+                console.log(`Chi tiết lỗi: ${error.message}`);
+            }
             return null;
         }
     }
