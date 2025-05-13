@@ -33,9 +33,16 @@ class HttpClient {
                     } else {
                         // Kiểm tra xem endpoint có yêu cầu xác thực không
                         const url = config.url || '';
-                        const isAnonymousEndpoint = url.includes('anonymous-reading-histories');
+                        // Danh sách các endpoint công khai không yêu cầu chuyển hướng đến trang login
+                        const isPublicEndpoint =
+                            url.includes('anonymous-reading-histories') ||
+                            url.includes('reading-histories') ||
+                            url.includes('mangas') ||
+                            url.includes('chapters') ||
+                            url.includes('genres') ||
+                            url.includes('comments/latest');
 
-                        if (!isAnonymousEndpoint) {
+                        if (!isPublicEndpoint) {
                             // Nếu làm mới thất bại và không phải endpoint ẩn danh, xóa token và chuyển hướng đến trang đăng nhập
                             localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
                             localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
@@ -46,7 +53,7 @@ class HttpClient {
                                 window.location.href = '/login';
                             }
                         } else {
-                            console.log('Không chuyển hướng đến trang đăng nhập cho endpoint anonymous-reading-history');
+                            console.log('Không chuyển hướng đến trang đăng nhập cho endpoint công khai: ' + url);
                         }
                     }
                 } else {
@@ -82,12 +89,19 @@ class HttpClient {
                             // Unauthorized - thử refresh token trước khi đăng xuất
                             {
                             // Kiểm tra xem endpoint có yêu cầu xác thực không
-                            // Nếu là endpoint anonymous-reading-history, không chuyển hướng đến trang đăng nhập
+                            // Nếu là endpoint công khai, không chuyển hướng đến trang đăng nhập
                             const url = error.config?.url || '';
-                            const isAnonymousEndpoint = url.includes('anonymousReadingHistories');
+                            // Danh sách các endpoint công khai không yêu cầu chuyển hướng đến trang login
+                            const isPublicEndpoint =
+                                url.includes('anonymousReadingHistories') ||
+                                url.includes('reading-histories') ||
+                                url.includes('mangas') ||
+                                url.includes('chapters') ||
+                                url.includes('genres') ||
+                                url.includes('comments/latest');
 
-                            if (isAnonymousEndpoint) {
-                                console.log('Không chuyển hướng đến trang đăng nhập cho endpoint anonymous-reading-history');
+                            if (isPublicEndpoint) {
+                                console.log('Không chuyển hướng đến trang đăng nhập cho endpoint công khai: ' + url);
                                 break;
                             }
 

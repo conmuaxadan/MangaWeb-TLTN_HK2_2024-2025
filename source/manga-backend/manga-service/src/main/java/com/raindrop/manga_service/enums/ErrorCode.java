@@ -23,14 +23,15 @@ public enum ErrorCode {
     CHAPTER_INVALID_DATA(2103, "Invalid chapter data", HttpStatus.BAD_REQUEST),
     CHAPTER_NO_PAGES(2104, "Chapter must have at least one page", HttpStatus.BAD_REQUEST),
 
+    // Page related errors (2300-2399)
+    PAGE_NOT_FOUND(2301, "Page not found", HttpStatus.NOT_FOUND),
+    PAGE_INDEX_OUT_OF_RANGE(2302, "Page index is out of range", HttpStatus.BAD_REQUEST),
+    PAGE_UPLOAD_FAILED(2303, "Failed to upload page", HttpStatus.INTERNAL_SERVER_ERROR),
+
     // Genre related errors (2200-2299)
     GENRE_NOT_FOUND(2201, "Genre not found", HttpStatus.NOT_FOUND),
     GENRE_ALREADY_EXISTS(2202, "Genre with this name already exists", HttpStatus.BAD_REQUEST),
     GENRE_INVALID_DATA(2203, "Invalid genre data", HttpStatus.BAD_REQUEST),
-
-    // Page related errors (2300-2399)
-    PAGE_NOT_FOUND(2301, "Page not found", HttpStatus.NOT_FOUND),
-    PAGE_UPLOAD_FAILED(2302, "Failed to upload page", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // File upload related errors (2400-2499)
     FILE_UPLOAD_FAILED(2401, "Failed to upload file", HttpStatus.INTERNAL_SERVER_ERROR),

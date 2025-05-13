@@ -10,13 +10,14 @@ import org.mapstruct.Mapping;
 public interface CommentMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "userId", ignore = true)
-    @Mapping(target = "username", ignore = true)
-    @Mapping(target = "userAvatarUrl", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Comment toComment(CommentRequest request);
 
     @Mapping(target = "mangaTitle", ignore = true)
     @Mapping(target = "chapterTitle", ignore = true)
+    @Mapping(target = "chapterNumber", ignore = true)
+    @Mapping(target = "username", ignore = true)
+    @Mapping(target = "userAvatarUrl", ignore = true)
     CommentResponse toCommentResponse(Comment comment);
 }

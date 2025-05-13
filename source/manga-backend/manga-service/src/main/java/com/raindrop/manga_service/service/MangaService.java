@@ -367,4 +367,35 @@ public class MangaService {
             return response;
         });
     }
+
+    /**
+     * Lấy số chapter cao nhất của một truyện
+     * @param mangaId ID của truyện
+     * @return Số chapter cao nhất
+     */
+    public Integer getHighestChapterNumber(String mangaId) {
+        log.info("Getting highest chapter number for manga: {}", mangaId);
+
+        // Kiểm tra truyện có tồn tại không
+        Manga manga = mangaRepository.findById(mangaId)
+                .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
+
+        // Lấy danh sách chapter của truyện
+        List<Chapter> chapters = chapterRepository.findByMangaId(mangaId);
+
+        if (chapters.isEmpty()) {
+            // Nếu truyện chưa có chapter nào, trả về 0
+            log.info("Manga {} has no chapters yet", mangaId);
+            return 0;
+        }
+
+        // Tìm số chapter cao nhất
+        int highestChapterNumber = chapters.stream()
+                .mapToInt(Chapter::getChapterNumber)
+                .max()
+                .orElse(0);
+
+        log.info("Highest chapter number for manga {} is {}", mangaId, highestChapterNumber);
+        return highestChapterNumber;
+    }
 }

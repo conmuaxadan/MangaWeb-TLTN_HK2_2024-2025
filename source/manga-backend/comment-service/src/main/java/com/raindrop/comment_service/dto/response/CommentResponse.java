@@ -26,4 +26,5 @@ public class CommentResponse {
     // Thông tin về manga và chapter
     String mangaTitle;
     String chapterTitle;
+    String chapterNumber; // Thêm trường chapterNumber để hiển thị số chương
 }

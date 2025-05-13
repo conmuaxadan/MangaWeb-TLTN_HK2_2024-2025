@@ -22,16 +22,9 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    // Thay vì sử dụng UserProfile, chúng ta sẽ lưu trữ userId
+    // Chỉ lưu trữ userId, các thông tin khác sẽ lấy từ profile-service khi cần
     @Column(name = "user_id", nullable = false)
     String userId;
-    
-    // Thông tin bổ sung về người dùng
-    @Column(name = "username")
-    String username;
-    
-    @Column(name = "user_avatar_url")
-    String userAvatarUrl;
 
     @Column(name = "chapter_id", nullable = false)
     String chapterId;

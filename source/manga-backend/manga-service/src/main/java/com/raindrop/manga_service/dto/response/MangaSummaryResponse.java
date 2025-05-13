@@ -23,4 +23,6 @@ public class MangaSummaryResponse {
     int loves;
     int comments;
     Integer lastChapterNumber;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 }

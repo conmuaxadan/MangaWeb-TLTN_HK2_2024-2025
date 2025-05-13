@@ -20,6 +20,9 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/mangas",
+            "/reading-histories/user/**",
+            "/anonymous-reading-histories/**",
+            "/reading-histories/manga/**"
     };
 
     @Autowired
@@ -29,6 +32,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/anonymous-reading-histories").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/reading-histories").permitAll()
                         .requestMatchers(HttpMethod.POST, "/mangas", "/chapters", "/genres").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/mangas/{id}", "/chapters/{id}", "/genres/{id}").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/mangas/{id}", "/chapters/{id}", "/genres/{id}").hasAuthority("ROLE_ADMIN")

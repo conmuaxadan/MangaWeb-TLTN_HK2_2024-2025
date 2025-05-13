@@ -27,7 +27,10 @@ public class SecurityConfig {
             "/auth/google/tokens",
             "/auth/tokens/refresh",
             "/users/accounts/google",
-            "/users/accounts/local"};
+            "/users/accounts/local",
+            "/roles",                // Cho phép xem danh sách vai trò
+            "/permissions"           // Cho phép xem danh sách quyền hạn
+    };
 
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
@@ -36,6 +39,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/me", "/roles", "/permissions").permitAll()
                         .anyRequest()
                         .authenticated());
 

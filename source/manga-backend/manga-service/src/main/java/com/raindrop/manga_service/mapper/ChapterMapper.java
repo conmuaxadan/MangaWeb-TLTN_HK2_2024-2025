@@ -17,6 +17,8 @@ import java.util.List;
 public interface ChapterMapper {
     @Mapping(target = "id", source = "id")
     @Mapping(target = "views", source = "views")
+    @Mapping(target = "comments", source = "comments")
+    @Mapping(target = "mangaId", source = "manga.id")
     ChapterResponse toChapterResponse(Chapter chapter);
 
 }

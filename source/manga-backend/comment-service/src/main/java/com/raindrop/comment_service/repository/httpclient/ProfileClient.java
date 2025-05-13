@@ -12,12 +12,10 @@ public interface ProfileClient {
 
     /**
      * Lấy thông tin profile của người dùng
-     * @param token JWT token
      * @param userId ID của người dùng
      * @return Thông tin profile của người dùng
      */
     @GetMapping("/profiles/by-user-id/{userId}")
     ApiResponse<UserProfileResponse> getUserProfile(
-            @RequestHeader("Authorization") String token,
             @PathVariable("userId") String userId);
 }

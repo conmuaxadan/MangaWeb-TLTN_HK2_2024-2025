@@ -4,6 +4,7 @@ import com.raindrop.manga_service.dto.request.ChapterRequest;
 import com.raindrop.manga_service.dto.request.MangaRequest;
 import com.raindrop.manga_service.dto.request.ViewLogRequest;
 import com.raindrop.manga_service.dto.response.ApiResponse;
+import com.raindrop.manga_service.dto.response.ChapterInfoResponse;
 import com.raindrop.manga_service.dto.response.ChapterResponse;
 import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.service.ChapterService;
@@ -146,6 +147,88 @@ public class ChapterController {
         return ApiResponse.<List<ChapterResponse>>builder()
                 .message("Chapters for manga retrieved successfully")
                 .result(chapterService.getChaptersByMangaId(mangaId))
+                .build();
+    }
+
+    /**
+     * Lấy thông tin cơ bản của chapter
+     * @param id ID của chapter
+     * @return Thông tin cơ bản của chapter
+     */
+    @GetMapping("/{id}/info")
+    ApiResponse<ChapterInfoResponse> getChapterInfo(@PathVariable String id) {
+        return ApiResponse.<ChapterInfoResponse>builder()
+                .message("Chapter info retrieved successfully")
+                .result(chapterService.getChapterInfo(id))
+                .build();
+    }
+
+    /**
+     * Cập nhật chapter
+     * @param id ID của chapter
+     * @param title Tiêu đề mới của chapter
+     * @param pages Danh sách trang mới (nếu có)
+     * @return Thông tin chapter sau khi cập nhật
+     */
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    ApiResponse<ChapterResponse> updateChapter(
+            @PathVariable String id,
+            @RequestParam(value = "title", required = false, defaultValue = "") String title,
+            @RequestParam(value = "pages", required = false) List<MultipartFile> pages
+    ) {
+        ChapterRequest request = ChapterRequest.builder()
+                .title(title)
+                .pages(pages)
+                .build();
+
+        log.info("Update chapter request: {}", request);
+
+        return ApiResponse.<ChapterResponse>builder()
+                .message("Chapter updated successfully")
+                .result(chapterService.updateChapter(id, request))
+                .build();
+    }
+
+    /**
+     * Cập nhật một trang cụ thể trong chapter
+     * @param id ID của chapter
+     * @param pageIndex Vị trí của trang cần cập nhật
+     * @param page File ảnh mới
+     * @return Thông tin chapter sau khi cập nhật
+     */
+    @PutMapping(value = "/{id}/pages/{pageIndex}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    ApiResponse<ChapterResponse> updateChapterPage(
+            @PathVariable String id,
+            @PathVariable int pageIndex,
+            @RequestParam("page") MultipartFile page
+    ) {
+        log.info("Update chapter page request: chapterId={}, pageIndex={}", id, pageIndex);
+
+        return ApiResponse.<ChapterResponse>builder()
+                .message("Chapter page updated successfully")
+                .result(chapterService.updateChapterPage(id, pageIndex, page))
+                .build();
+    }
+
+    /**
+     * Xóa một trang cụ thể trong chapter
+     * @param id ID của chapter
+     * @param pageIndex Vị trí của trang cần xóa
+     * @return Thông tin chapter sau khi xóa trang
+     */
+    @DeleteMapping("/{id}/pages/{pageIndex}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    ApiResponse<ChapterResponse> deleteChapterPage(
+            @PathVariable String id,
+            @PathVariable int pageIndex
+    ) {
+        log.info("Delete chapter page request: chapterId={}, pageIndex={}", id, pageIndex);
+
+        return ApiResponse.<ChapterResponse>builder()
+                .message("Chapter page deleted successfully")
+                .result(chapterService.deleteChapterPage(id, pageIndex))
                 .build();
     }
 }

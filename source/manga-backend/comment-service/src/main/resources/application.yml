@@ -13,7 +13,9 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      # Chỉ sử dụng create-drop trong môi trường phát triển
+      # Trong môi trường production, nên sử dụng update hoặc validate
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
@@ -56,6 +58,7 @@ security:
 app:
   services:
     profile: http://localhost:8081/profile
+    manga: http://localhost:8082/manga
 
 # Feign Client Configuration
 feign:

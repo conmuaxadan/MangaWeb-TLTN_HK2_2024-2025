@@ -19,16 +19,16 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
-            "/users",
-            "/comments/chapter/{chapterId}",
-            "/comments/byChapter/{chapterId}",
-            "/comments/count/manga/{mangaId}",
-            "/comments/byManga/{mangaId}/count",
-            "/comments/latest",
-            "/reading-history/users/{userId}/recent",
-            "/reading-history/users/{userId}/all-read-manga-ids",
-            "/anonymousReadingHistories/**",
-            "/sessions/{sessionId}/readingHistories/**"
+            "/profiles/by-user-id/{userId}",
+//            "/comments/chapter/{chapterId}",
+//            "/comments/byChapter/{chapterId}",
+//            "/comments/count/manga/{mangaId}",
+//            "/comments/byManga/{mangaId}/count",
+//            "/comments/latest",
+//            "/reading-history/users/{userId}/recent",
+//            "/reading-history/users/{userId}/all-read-manga-ids",
+//            "/anonymousReadingHistories/**",
+//            "/sessions/{sessionId}/readingHistories/**"
     };
 
     @Autowired
@@ -37,8 +37,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
-                request.requestMatchers(HttpMethod.GET, "/comments/latest", "/comments/chapter/{chapterId}", "/comments/count/manga/{mangaId}", "/reading-history/users/{userId}/recent", "/reading-history/users/{userId}/all-read-manga-ids", "/anonymous-reading-history/session/{sessionId}/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/users", "/anonymous-reading-history").permitAll()
+                request.requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
                         .anyRequest()
                         .authenticated());
 

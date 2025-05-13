@@ -213,4 +213,17 @@ public class MangaController {
                 .result(mangaService.findByGenre(genreName, pageable))
                 .build();
     }
+
+    /**
+     * Lấy số chapter cao nhất của một truyện
+     * @param id ID của truyện
+     * @return Số chapter cao nhất
+     */
+    @GetMapping("/{id}/highest-chapter-number")
+    ApiResponse<Integer> getHighestChapterNumber(@PathVariable String id) {
+        return ApiResponse.<Integer>builder()
+                .message("Highest chapter number retrieved successfully")
+                .result(mangaService.getHighestChapterNumber(id))
+                .build();
+    }
 }

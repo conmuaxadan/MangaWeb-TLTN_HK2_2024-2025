@@ -155,4 +155,58 @@ public class CommentController {
                 .message("Comment deleted successfully")
                 .build();
     }
+
+    /**
+     * Lấy tất cả bình luận (dành cho admin)
+     * @param pageable Thông tin phân trang
+     * @return Danh sách bình luận có phân trang
+     */
+    @GetMapping("/admin/all")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ApiResponse<Page<CommentResponse>> getAllComments(
+            @PageableDefault(size = 20, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ApiResponse.<Page<CommentResponse>>builder()
+                .code(1000)
+                .message("All comments retrieved successfully")
+                .result(commentService.getAllComments(pageable))
+                .build();
+    }
+
+    /**
+     * Xóa bình luận (dành cho admin)
+     * @param commentId ID của bình luận
+     * @return Thông báo xóa thành công
+     */
+    @DeleteMapping("/admin/{commentId}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public ApiResponse<Void> adminDeleteComment(
+            @PathVariable String commentId
+    ) {
+        commentService.adminDeleteComment(commentId);
+        return ApiResponse.<Void>builder()
+                .code(1000)
+                .message("Comment deleted successfully by admin")
+                .build();
+    }
+
+    /**
+     * Tìm kiếm bình luận (dành cho admin)
+     * @param keyword Từ khóa tìm kiếm
+     * @param pageable Thông tin phân trang
+     * @return Danh sách bình luận có phân trang
+     */
+    @GetMapping("/admin/search")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ApiResponse<Page<CommentResponse>> searchComments(
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 20, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ApiResponse.<Page<CommentResponse>>builder()
+                .code(1000)
+                .message("Comments searched successfully")
+                .result(commentService.searchComments(keyword, pageable))
+                .build();
+    }
 }

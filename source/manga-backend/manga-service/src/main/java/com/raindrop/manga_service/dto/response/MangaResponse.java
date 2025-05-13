@@ -29,4 +29,6 @@ public class MangaResponse {
     String lastChapterId;
     LocalDateTime lastChapterAddedAt;
     List<String> chapters = new ArrayList<>();
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 }

@@ -34,31 +34,52 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
     @NonFinal
     String[] publicEndpoints = {
+            // Identity Service
             "/identity/users",
             "/identity/users/me",
             "/identity/auth/tokens",
             "/identity/auth/tokens/validate",
             "/identity/auth/google/tokens",
             "/identity/auth/tokens/refresh",
+            "/identity/roles",           // Cho phép xem danh sách vai trò
+            "/identity/permissions",      // Cho phép xem danh sách quyền hạn
+
+            // Manga Service
             "/manga/mangas",
             "/manga/mangas/paginated",
             "/manga/mangas/summaries",
             "/manga/mangas/{id}",
+            "/manga/mangas/search",       // Cho phép tìm kiếm manga
+            "/manga/mangas/search/advanced", // Cho phép tìm kiếm nâng cao
             "/manga/chapters",
             "/manga/chapters/manga/{mangaId}",
             "/manga/chapters/manga",
             "/manga/chapters/{id}",
             "/manga/chapters/{id}/views",
             "/manga/chapters/{id}/views/increment",
+            "/manga/chapters/{id}/info",
             "/manga/chapters/byManga/{mangaId}",
             "/manga/genres",
             "/manga/genres/{name}",
+
+            // History Service
             "/history/anonymous-reading-histories/**",
             "/history/reading-histories/user/**",
+            "/history/reading-histories/manga/**",
+            "/history/reading-histories",
+
+            // Profile Service
+            "/profile/profiles/by-user-id/**",
+
+            // Comment Service
             "/comment/comments/chapters/**",
             "/comment/comments/mangas/**",
             "/comment/comments/latest",
+
+            // Favorite Service
             "/favorite/favorites/*/count",
+
+            // Upload Service
             "/upload/files",
             "/upload/files/{fileName}"
     };

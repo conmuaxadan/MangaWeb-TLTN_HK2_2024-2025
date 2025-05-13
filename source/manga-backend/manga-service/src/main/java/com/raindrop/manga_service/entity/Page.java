@@ -3,7 +3,6 @@ package com.raindrop.manga_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Data
 @Entity

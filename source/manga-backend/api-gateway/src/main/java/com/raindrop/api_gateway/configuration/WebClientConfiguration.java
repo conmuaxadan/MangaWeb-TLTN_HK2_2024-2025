@@ -33,7 +33,11 @@ public class WebClientConfiguration {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:4173"));
+        corsConfig.setAllowedOrigins(Arrays.asList(
+            "http://localhost:5173", // manga-react dev
+            "http://localhost:4173", // manga-react preview
+            "http://localhost:3000"  // admin-react
+        ));
         corsConfig.setMaxAge(3600L);
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         corsConfig.setAllowedHeaders(Collections.singletonList("*"));

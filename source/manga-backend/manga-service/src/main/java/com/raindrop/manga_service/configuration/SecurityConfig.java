@@ -23,10 +23,13 @@ public class SecurityConfig {
             "/mangas/paginated",
             "/mangas/summaries",
             "/mangas/{id}",
+            "/mangas/search",           // Cho phép tìm kiếm manga
+            "/mangas/search/advanced",   // Cho phép tìm kiếm nâng cao
             "/chapters",
             "/chapters/{id}",
             "/chapters/{id}/views",
             "/chapters/{id}/views/increment",
+            "/chapters/{id}/info",
             "/chapters/manga/{mangaId}",
             "/chapters/byManga/{mangaId}",
             "/chapters/manga",
