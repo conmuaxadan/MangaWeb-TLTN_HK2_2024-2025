@@ -24,7 +24,10 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = e.getErrorCode();
         ApiResponse response = new ApiResponse();
         response.setCode(errorCode.getCode());
-        response.setMessage(errorCode.getMessage());
+
+        // Sử dụng thông báo tùy chỉnh nếu có, nếu không thì sử dụng thông báo mặc định của ErrorCode
+        response.setMessage(e.getCustomMessage() != null ? e.getCustomMessage() : errorCode.getMessage());
+
         return ResponseEntity.status(errorCode.getHttpStatusCode()).body(response);
     }
 

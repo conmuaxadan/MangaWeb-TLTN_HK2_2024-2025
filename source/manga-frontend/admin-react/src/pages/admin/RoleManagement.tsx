@@ -5,6 +5,7 @@ import { RoleResponse, RoleRequest, PermissionResponse } from '../../interfaces/
 import RoleTable from '../../components/admin/RoleTable';
 import RoleForm from '../../components/admin/RoleForm';
 import Pagination from '../../components/common/Pagination';
+import Modal from '../../components/common/Modal';
 import roleService from '../../services/role-service';
 
 const RoleManagement: React.FC = () => {
@@ -18,16 +19,15 @@ const RoleManagement: React.FC = () => {
   // State cho phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // State cho form thêm/sửa vai trò
-  const [showRoleForm, setShowRoleForm] = useState(false);
-  const [editingRole, setEditingRole] = useState<RoleResponse | null>(null);
+  // State cho modal và form
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentRole, setCurrentRole] = useState<RoleResponse | undefined>(undefined);
 
   // State cho loading
   const [isLoading, setIsLoading] = useState(false);
-  const [isFormSubmitting, setIsFormSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load danh sách vai trò và quyền hạn
   useEffect(() => {
@@ -42,7 +42,6 @@ const RoleManagement: React.FC = () => {
       const response = await roleService.getAllRoles();
       if (response) {
         setRoles(response);
-        setTotalItems(response.length);
         setTotalPages(Math.ceil(response.length / itemsPerPage));
       }
     } catch (error) {
@@ -78,44 +77,61 @@ const RoleManagement: React.FC = () => {
   // Xử lý chuyển trang
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  // Xử lý mở form thêm vai trò
+  // Xử lý mở modal thêm vai trò
   const handleAddRole = () => {
-    setEditingRole(null);
-    setShowRoleForm(true);
+    setCurrentRole(undefined);
+    setIsModalOpen(true);
   };
 
-  // Xử lý mở form sửa vai trò
+  // Xử lý mở modal sửa vai trò
   const handleEditRole = async (role: RoleResponse) => {
     try {
+      console.log("RoleManagement: handleEditRole với role:", role);
       // Lấy thông tin chi tiết của vai trò (bao gồm danh sách quyền hạn)
-      const roleDetail = await roleService.getRoleByName(role.name);
-      if (roleDetail) {
-        setEditingRole(roleDetail);
-        setShowRoleForm(true);
+      if (role.id) {
+        console.log("RoleManagement: Gọi getRoleById với ID:", role.id);
+        const roleDetail = await roleService.getRoleById(role.id);
+        console.log("RoleManagement: Kết quả getRoleById:", roleDetail);
+        if (roleDetail) {
+          setCurrentRole(roleDetail);
+          setIsModalOpen(true);
+        }
+      } else {
+        // Fallback to using name if ID is not available
+        console.log("RoleManagement: Gọi getRoleByName với name:", role.name);
+        const roleDetail = await roleService.getRoleByName(role.name);
+        console.log("RoleManagement: Kết quả getRoleByName:", roleDetail);
+        if (roleDetail) {
+          setCurrentRole(roleDetail);
+          setIsModalOpen(true);
+        }
       }
     } catch (error) {
       console.error(`Lỗi khi lấy thông tin chi tiết vai trò ${role.name}:`, error);
     }
   };
 
-  // Xử lý đóng form
-  const handleCancelForm = () => {
-    setShowRoleForm(false);
-    setEditingRole(null);
+  // Xử lý đóng modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setCurrentRole(undefined);
   };
 
   // Xử lý submit form
   const handleSubmitForm = async (data: RoleRequest) => {
-    setIsFormSubmitting(true);
+    setIsSubmitting(true);
+    console.log("RoleManagement: Gọi submit form với dữ liệu:", data);
+    console.log("RoleManagement: currentRole:", currentRole);
     try {
-      if (editingRole) {
+      if (currentRole) {
         // Cập nhật vai trò
-        const response = await roleService.updateRole(editingRole.name, data);
+        console.log("RoleManagement: Gọi updateRole với ID:", currentRole.id || 0, "và name:", currentRole.name);
+        const response = await roleService.updateRole(currentRole.id || 0, currentRole.name, data);
+        console.log("RoleManagement: Kết quả updateRole:", response);
         if (response) {
           // Cập nhật danh sách vai trò
-          setRoles(roles.map(role => role.name === response.name ? response : role));
-          setShowRoleForm(false);
-          setEditingRole(null);
+          setRoles(roles.map(role => role.id === response.id ? response : role));
+          setIsModalOpen(false);
         }
       } else {
         // Tạo vai trò mới
@@ -123,27 +139,27 @@ const RoleManagement: React.FC = () => {
         if (response) {
           // Thêm vai trò mới vào danh sách
           setRoles([...roles, response]);
-          setShowRoleForm(false);
+          setIsModalOpen(false);
         }
       }
     } catch (error) {
       console.error('Lỗi khi lưu vai trò:', error);
     } finally {
-      setIsFormSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
   // Xử lý xóa vai trò
-  const handleDeleteRole = async (roleName: string) => {
+  const handleDeleteRole = async (roleId: number, roleName: string) => {
     if (window.confirm(`Bạn có chắc chắn muốn xóa vai trò ${roleName}?`)) {
       try {
-        const success = await roleService.deleteRole(roleName);
+        const success = await roleService.deleteRole(roleId, roleName);
         if (success) {
           // Xóa vai trò khỏi danh sách
-          setRoles(roles.filter(role => role.name !== roleName));
+          setRoles(roles.filter(role => role.id !== roleId));
         }
       } catch (error) {
-        console.error(`Lỗi khi xóa vai trò ${roleName}:`, error);
+        console.error(`Lỗi khi xóa vai trò ${roleName} (ID: ${roleId}):`, error);
       }
     }
   };
@@ -152,7 +168,7 @@ const RoleManagement: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Quản lý vai trò</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Quản lý vai trò</h1>
         <button
           onClick={handleAddRole}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
@@ -162,26 +178,31 @@ const RoleManagement: React.FC = () => {
         </button>
       </div>
 
-      {/* Form thêm/sửa vai trò */}
-      {showRoleForm && (
+      {/* Modal thêm/sửa vai trò */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title={currentRole ? 'Chỉnh sửa vai trò' : 'Thêm vai trò mới'}
+        size="lg"
+      >
         <RoleForm
-          initialData={editingRole || undefined}
+          initialData={currentRole}
           permissions={permissions}
           onSubmit={handleSubmitForm}
-          onCancel={handleCancelForm}
-          isLoading={isFormSubmitting}
+          onCancel={handleCloseModal}
+          isLoading={isSubmitting}
         />
-      )}
+      </Modal>
 
       {/* Tìm kiếm */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+      <div className="bg-white rounded-lg shadow-md p-4">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <FontAwesomeIcon icon={faSearch} className="text-gray-500 dark:text-gray-400" />
+            <FontAwesomeIcon icon={faSearch} className="text-gray-500" />
           </div>
           <input
             type="text"
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
             placeholder="Tìm kiếm vai trò..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -204,7 +225,6 @@ const RoleManagement: React.FC = () => {
           totalPages={totalPages}
           onPageChange={paginate}
           totalItems={filteredRoles.length}
-          itemsPerPage={itemsPerPage}
           showingFrom={indexOfFirstItem + 1}
           showingTo={indexOfLastItem > filteredRoles.length ? filteredRoles.length : indexOfLastItem}
         />

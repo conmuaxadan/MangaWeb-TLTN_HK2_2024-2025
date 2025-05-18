@@ -31,4 +31,9 @@ public class MangaResponse {
     List<String> chapters = new ArrayList<>();
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
+
+    // Thông tin xóa mềm
+    boolean deleted;
+    LocalDateTime deletedAt;
+    String deletedBy;
 }

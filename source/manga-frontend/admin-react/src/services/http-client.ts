@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { API_CONFIG, DEFAULT_HEADERS, TIMEOUT, TOKEN_STORAGE, getAuthHeader, isTokenExpired } from '../configurations/api-config';
+import { API_CONFIG, DEFAULT_HEADERS, TIMEOUT, TOKEN_STORAGE, isTokenExpired } from '../configurations/api-config';
 import { toast } from 'react-toastify';
 import authService from './auth-service';
 
@@ -18,53 +18,11 @@ class HttpClient {
             async (config: InternalAxiosRequestConfig) => {
                 // Kiểm tra xem token có hết hạn không
                 const token = localStorage.getItem(TOKEN_STORAGE.ACCESS_TOKEN);
-                const refreshToken = localStorage.getItem(TOKEN_STORAGE.REFRESH_TOKEN);
 
-                // Nếu có token và token đã hết hạn và có refresh token
-                if (token && isTokenExpired() && refreshToken) {
-                    // Thử làm mới token
-                    const refreshResult = await authService.refreshToken();
-
-                    if (refreshResult) {
-                        // Nếu làm mới thành công, sử dụng token mới
-                        if (config.headers) {
-                            config.headers['Authorization'] = `Bearer ${refreshResult.token}`;
-                        }
-                    } else {
-                        // Kiểm tra xem endpoint có yêu cầu xác thực không
-                        const url = config.url || '';
-                        // Danh sách các endpoint công khai không yêu cầu chuyển hướng đến trang login
-                        const isPublicEndpoint =
-                            url.includes('anonymous-reading-histories') ||
-                            url.includes('reading-histories') ||
-                            url.includes('mangas') ||
-                            url.includes('chapters') ||
-                            url.includes('genres') ||
-                            url.includes('comments/latest') ||
-                            url.includes('roles') ||
-                            url.includes('permissions');
-
-                        if (!isPublicEndpoint) {
-                            // Nếu làm mới thất bại và không phải endpoint ẩn danh, xóa token và chuyển hướng đến trang đăng nhập
-                            localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
-                            localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
-                            localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
-
-                            // Chỉ chuyển hướng nếu đường dẫn hiện tại không phải là trang đăng nhập
-                            if (!window.location.pathname.includes('/login')) {
-                                window.location.href = '/login';
-                            }
-                        } else {
-                            console.log('Không chuyển hướng đến trang đăng nhập cho endpoint công khai: ' + url);
-                        }
-                    }
-                } else {
-                    // Thêm auth header nếu token tồn tại và chưa hết hạn
-                    const authHeaders = getAuthHeader();
-                    if (authHeaders['Authorization']) {
-                        if (config.headers) {
-                            config.headers['Authorization'] = authHeaders['Authorization'];
-                        }
+                // Thêm auth header nếu token tồn tại
+                if (token) {
+                    if (config.headers) {
+                        config.headers['Authorization'] = `Bearer ${token}`;
                     }
                 }
 
@@ -80,7 +38,7 @@ class HttpClient {
             (response: AxiosResponse) => {
                 return response;
             },
-            (error) => {
+            async (error) => {
                 // Handle errors
                 if (error.response) {
                     // Server responded with an error status
@@ -109,27 +67,59 @@ class HttpClient {
                                 break;
                             }
 
+                            // Kiểm tra xem token có hết hạn không
+                            const token = localStorage.getItem(TOKEN_STORAGE.ACCESS_TOKEN);
                             const refreshToken = localStorage.getItem(TOKEN_STORAGE.REFRESH_TOKEN);
-                            if (refreshToken) {
-                                // Thử làm mới token
-                                authService.refreshToken().then(result => {
-                                    if (result) {
-                                        // Nếu làm mới thành công, reload trang để thử lại request
-                                        window.location.reload();
+                            const tokenExpired = isTokenExpired();
+
+                            // Nếu token hết hạn và có refresh token, thử làm mới token
+                            if (token && tokenExpired && refreshToken) {
+                                console.log('Token hết hạn, thử làm mới token');
+                                try {
+                                    const refreshResult = await authService.refreshToken();
+                                    if (refreshResult) {
+                                        console.log('Làm mới token thành công, thử lại request');
+                                        // Nếu làm mới thành công và có config gốc, thử lại request
+                                        if (error.config) {
+                                            // Cập nhật token trong header
+                                            error.config.headers['Authorization'] = `Bearer ${refreshResult.token}`;
+                                            // Thử lại request
+                                            return this.instance(error.config);
+                                        }
                                     } else {
-                                        // Nếu làm mới thất bại, đăng xuất
+                                        // Nếu làm mới thất bại, chuyển hướng đến trang đăng nhập
+                                        console.log('Làm mới token thất bại, chuyển hướng đến trang đăng nhập');
                                         localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
                                         localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
                                         localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
+
+                                        if (!window.location.pathname.includes('/login')) {
+                                            window.location.href = '/login';
+                                            toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                                        }
+                                    }
+                                } catch (refreshError) {
+                                    console.error('Lỗi khi làm mới token:', refreshError);
+                                    // Xóa token và chuyển hướng đến trang đăng nhập
+                                    localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
+                                    localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
+                                    localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
+
+                                    if (!window.location.pathname.includes('/login')) {
                                         window.location.href = '/login';
                                         toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
                                     }
-                                });
+                                }
                             } else {
-                                // Không có refresh token, đăng xuất luôn
+                                // Không có refresh token hoặc token chưa hết hạn, đăng xuất luôn
                                 localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
-                                window.location.href = '/login';
-                                toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                                localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
+                                localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
+
+                                if (!window.location.pathname.includes('/login')) {
+                                    window.location.href = '/login';
+                                    toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                                }
                             }
                             break; }
                         case 403:
@@ -146,8 +136,18 @@ class HttpClient {
                             break;
                         default:
                             // Other errors
-                            { const message = data?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
-                            toast.error(message); }
+                            {
+                                // Kiểm tra xem endpoint có phải là /genres không
+                                const url = error.config?.url || '';
+                                const isGenresEndpoint = url.includes('/genres');
+
+                                // Chỉ hiển thị toast error nếu không phải là endpoint /genres
+                                // Vì các endpoint /genres đã được xử lý trong genre-service.ts
+                                if (!isGenresEndpoint) {
+                                    const message = data?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
+                                    toast.error(message);
+                                }
+                            }
                     }
                 } else if (error.request) {
                     // Request was made but no response received
@@ -164,32 +164,67 @@ class HttpClient {
 
     // GET request
     public async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.instance.get<T>(url, config);
-        return response.data;
+        console.log(`HttpClient: Gọi GET ${url}`);
+        try {
+            const response = await this.instance.get<T>(url, config);
+            console.log(`HttpClient: Kết quả GET ${url}:`, response.data);
+            return response.data;
+        } catch (error) {
+            console.error(`HttpClient: Lỗi GET ${url}:`, error);
+            throw error;
+        }
     }
 
     // POST request
     public async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.instance.post<T>(url, data, config);
-        return response.data;
+        console.log(`HttpClient: Gọi POST ${url} với dữ liệu:`, data);
+        try {
+            const response = await this.instance.post<T>(url, data, config);
+            console.log(`HttpClient: Kết quả POST ${url}:`, response.data);
+            return response.data;
+        } catch (error) {
+            console.error(`HttpClient: Lỗi POST ${url}:`, error);
+            throw error;
+        }
     }
 
     // PUT request
     public async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.instance.put<T>(url, data, config);
-        return response.data;
+        console.log(`HttpClient: Gọi PUT ${url} với dữ liệu:`, data);
+        try {
+            const response = await this.instance.put<T>(url, data, config);
+            console.log(`HttpClient: Kết quả PUT ${url}:`, response.data);
+            return response.data;
+        } catch (error) {
+            console.error(`HttpClient: Lỗi PUT ${url}:`, error);
+            throw error;
+        }
     }
 
     // DELETE request
     public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.instance.delete<T>(url, config);
-        return response.data;
+        console.log(`HttpClient: Gọi DELETE ${url}`);
+        try {
+            const response = await this.instance.delete<T>(url, config);
+            console.log(`HttpClient: Kết quả DELETE ${url}:`, response.data);
+            return response.data;
+        } catch (error) {
+            console.error(`HttpClient: Lỗi DELETE ${url}:`, error);
+            throw error;
+        }
     }
 
     // PATCH request
     public async patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.instance.patch<T>(url, data, config);
-        return response.data;
+        console.log(`HttpClient: Gọi PATCH ${url} với dữ liệu:`, data);
+        try {
+            const response = await this.instance.patch<T>(url, data, config);
+            console.log(`HttpClient: Kết quả PATCH ${url}:`, response.data);
+            return response.data;
+        } catch (error) {
+            console.error(`HttpClient: Lỗi PATCH ${url}:`, error);
+            throw error;
+        }
     }
 }
 
@@ -200,5 +235,6 @@ export const profileHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CON
 export const historyHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.HISTORY_SERVICE}`);
 export const commentHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.COMMENT_SERVICE}`);
 export const favoriteHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.FAVORITE_SERVICE}`);
+export const uploadHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.UPLOAD_SERVICE}`);
 
 export default HttpClient;

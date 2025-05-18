@@ -24,7 +24,7 @@ public class RoleController {
     RoleService roleService;
 
     @PostMapping
-    ApiResponse<RoleResponse> createPermission(@RequestBody RoleRequest request) {
+    ApiResponse<RoleResponse> createRole(@RequestBody RoleRequest request) {
         return ApiResponse.<RoleResponse>builder()
                 .message("Role created successfully")
                 .result(roleService.create(request))
@@ -54,8 +54,24 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
-    ApiResponse<Void> delete(@PathVariable String id) {
+    ApiResponse<Void> delete(@PathVariable Long id) {
         roleService.delete(id);
         return ApiResponse.<Void>builder().message("Role deleted successfully").build();
+    }
+
+    @GetMapping("/{id}")
+    ApiResponse<RoleResponse> getRoleById(@PathVariable Long id) {
+        return ApiResponse.<RoleResponse>builder()
+                .message("Role retrieved successfully")
+                .result(roleService.getById(id))
+                .build();
+    }
+
+    @PutMapping("/{id}")
+    ApiResponse<RoleResponse> updateRole(@PathVariable Long id, @RequestBody RoleRequest request) {
+        return ApiResponse.<RoleResponse>builder()
+                .message("Role updated successfully")
+                .result(roleService.update(id, request))
+                .build();
     }
 }

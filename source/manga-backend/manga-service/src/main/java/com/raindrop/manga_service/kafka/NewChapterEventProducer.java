@@ -14,9 +14,9 @@ import org.springframework.stereotype.Component;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class NewChapterEventProducer {
     KafkaTemplate<String, NewChapterEvent> kafkaTemplate;
-    
+
     private static final String NEW_CHAPTER_TOPIC = "manga-new-chapters";
-    
+
     /**
      * Gửi sự kiện chapter mới
      * @param mangaId ID của manga
@@ -25,7 +25,7 @@ public class NewChapterEventProducer {
      * @param chapterNumber Số chapter
      * @param chapterTitle Tiêu đề của chapter
      */
-    public void sendNewChapterEvent(String mangaId, String mangaTitle, String chapterId, int chapterNumber, String chapterTitle) {
+    public void sendNewChapterEvent(String mangaId, String mangaTitle, String chapterId, double chapterNumber, String chapterTitle) {
         NewChapterEvent event = NewChapterEvent.builder()
                 .mangaId(mangaId)
                 .mangaTitle(mangaTitle)
@@ -33,7 +33,7 @@ public class NewChapterEventProducer {
                 .chapterNumber(chapterNumber)
                 .chapterTitle(chapterTitle)
                 .build();
-        
+
         kafkaTemplate.send(NEW_CHAPTER_TOPIC, mangaId, event);
         log.info("Sent NEW_CHAPTER event to Kafka for manga: {}, chapter: {}", mangaTitle, chapterTitle);
     }

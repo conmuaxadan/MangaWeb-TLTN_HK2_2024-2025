@@ -40,6 +40,12 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete, loading 
                 ID
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Ảnh đại diện
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Tên hiển thị
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Tên đăng nhập
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -63,6 +69,24 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete, loading 
                   {user.id}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                  <div className="flex justify-center">
+                    <div className="h-10 w-10">
+                      <img
+                        className="h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-gray-600"
+                        src={"http://localhost:8888/api/v1/upload/files/" + user.avatarUrl}
+                        alt={user.displayName || user.username}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/images/avt_default.jpg';
+                        }}
+                      />
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                  {user.displayName || 'N/A'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {user.username}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
@@ -98,7 +122,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete, loading 
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button 
+                  <button
                     className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3"
                     onClick={() => onEdit(user)}
                   >

@@ -9,9 +9,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-/**
- * Entity lưu trữ thông tin liên kết tài khoản
- */
 @Entity
 @Data
 @NoArgsConstructor
@@ -23,10 +20,8 @@ public class LinkedAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    
     @ManyToOne
     User user; // User chính
-    
     @Enumerated(EnumType.STRING)
     AuthProvider provider; // LOCAL, GOOGLE, FACEBOOK, etc.
     

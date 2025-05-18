@@ -16,7 +16,9 @@ import java.util.Set;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RoleResponse {
+    Long id;
     String name;
+    String description;
     Set<PermissionResponse> permissions;
 
 }

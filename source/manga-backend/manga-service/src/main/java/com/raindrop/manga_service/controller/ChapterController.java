@@ -36,7 +36,7 @@ public class ChapterController {
             @RequestParam("pages") List<MultipartFile> pages
     ) {
         ChapterRequest request = ChapterRequest.builder()
-                .chapterNumber(Integer.parseInt(chapterNumber))
+                .chapterNumber(Double.parseDouble(chapterNumber))
                 .title("Chương " + chapterNumber)
                 .mangaId(mangaId)
                 .pages(pages)

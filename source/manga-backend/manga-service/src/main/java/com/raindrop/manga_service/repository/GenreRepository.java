@@ -4,6 +4,6 @@ import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.entity.Manga;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface GenreRepository extends JpaRepository<Genre, String> {
+public interface GenreRepository extends JpaRepository<Genre, Long> {
     Genre findByName(String name);
 }

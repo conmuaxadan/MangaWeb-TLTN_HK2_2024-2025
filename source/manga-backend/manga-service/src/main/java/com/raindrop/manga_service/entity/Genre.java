@@ -19,9 +19,11 @@ import java.util.List;
 @EntityListeners(AuditingEntityListener.class)
 public class Genre {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
+    @Column(unique = true)
     String name;
+    String description;
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;

@@ -24,10 +24,10 @@ public class PermissionService {
     PermissionMapper permissionMapper;
 
     public PermissionResponse create(PermissionRequest request) {
+        log.info("Creating permission with name: {} and description: {}", request.getName(), request.getDescription());
         Permission permission = permissionMapper.toPermission(request);
         permission = permissionRepository.save(permission);
         return permissionMapper.toPermissionResponse(permission);
-
     }
 
     public List<PermissionResponse> getAll() {
@@ -35,8 +35,21 @@ public class PermissionService {
         return permissions.stream().map(permissionMapper::toPermissionResponse).toList();
     }
 
-    public void delete(String id) {
+    public void delete(Long id) {
         permissionRepository.deleteById(id);
+    }
 
+    public PermissionResponse update(Long id, PermissionRequest request) {
+        log.info("Updating permission with id: {}, name: {} and description: {}", id, request.getName(), request.getDescription());
+
+        Permission permission = permissionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Permission not found with id: " + id));
+
+        // Update fields
+        permission.setDescription(request.getDescription());
+        // Note: We don't update the name field as it might be used as a key in other places
+
+        permission = permissionRepository.save(permission);
+        return permissionMapper.toPermissionResponse(permission);
     }
 }

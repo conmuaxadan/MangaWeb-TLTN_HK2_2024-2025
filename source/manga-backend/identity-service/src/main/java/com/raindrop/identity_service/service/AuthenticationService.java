@@ -83,7 +83,7 @@ public class AuthenticationService {
         log.info("Authenticating user with input: {}", request.getUsername());
 
         String usernameOrEmail = request.getUsername();
-        User user = null;
+        User user;
 
         // Tìm kiếm user theo username hoặc email
         var userByUsername = userRepository.findByUsername(usernameOrEmail);
@@ -113,44 +113,7 @@ public class AuthenticationService {
                 }
             } else {
                 // Tìm trong LinkedAccount
-                var linkedAccountByUsername =
-                    linkedAccountRepository.findByProviderAndUsername(AuthProvider.LOCAL, usernameOrEmail);
-
-                if (linkedAccountByUsername.isPresent()) {
-                    LinkedAccount linkedAccount = linkedAccountByUsername.get();
-
-                    // Kiểm tra mật khẩu
-                    PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-                    boolean authenticated = passwordEncoder.matches(request.getPassword(), linkedAccount.getPassword());
-
-                    if (!authenticated) {
-                        log.warn("Authentication failed: Invalid password for linked account {}", usernameOrEmail);
-                        throw new AppException(ErrorCode.INVALID_CREDENTIALS);
-                    }
-
-                    user = linkedAccount.getUser();
-                } else {
-                    var linkedAccountByEmail =
-                        linkedAccountRepository.findByProviderAndEmail(AuthProvider.LOCAL, usernameOrEmail);
-
-                    if (linkedAccountByEmail.isPresent()) {
-                        LinkedAccount linkedAccount = linkedAccountByEmail.get();
-
-                        // Kiểm tra mật khẩu
-                        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-                        boolean authenticated = passwordEncoder.matches(request.getPassword(), linkedAccount.getPassword());
-
-                        if (!authenticated) {
-                            log.warn("Authentication failed: Invalid password for linked account {}", usernameOrEmail);
-                            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
-                        }
-
-                        user = linkedAccount.getUser();
-                    } else {
-                        log.warn("Authentication failed: User not found with username/email - {}", usernameOrEmail);
-                        throw new AppException(ErrorCode.INVALID_CREDENTIALS);
-                    }
-                }
+                user = findUserByLinkedAccount(usernameOrEmail, request.getPassword());
             }
         }
 
@@ -169,18 +132,15 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public AuthenticationResponse authenticateGG(GoogleAuthenticationRequest request) {
+    public AuthenticationResponse googleAuthenticate(GoogleAuthenticationRequest request) {
         log.info("Authenticating Google user: {}", request.getUsername());
         var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> {
             log.warn("Google authentication failed: User not found - {}", request.getUsername());
             return new AppException(ErrorCode.USER_NOT_EXISTED);
         });
-
         log.info("Google user authenticated successfully: {}", request.getUsername());
-
         // Tạo access token
         var accessToken = generateToken(user);
-
         // Tạo refresh token
         var refreshToken = createRefreshToken(user);
 
@@ -265,6 +225,7 @@ public class AuthenticationService {
                 .jwtID(tokenId)
                 .claim("scope", buildScope(user))
                 .claim("email", user.getEmail())
+                .claim("username", user.getUsername())
                 .claim("authProvider", user.getAuthProvider().name())
                 .build();
 
@@ -365,5 +326,54 @@ public class AuthenticationService {
                 .build();
     }
 
+    /**
+     * Tìm kiếm người dùng thông qua tài khoản liên kết
+     * @param usernameOrEmail Username hoặc email của tài khoản liên kết
+     * @param password Mật khẩu của tài khoản liên kết
+     * @return Đối tượng User nếu tìm thấy và xác thực thành công
+     * @throws AppException Nếu không tìm thấy hoặc xác thực thất bại
+     */
+    private User findUserByLinkedAccount(String usernameOrEmail, String password) {
+        // Tìm kiếm theo username
+        var linkedAccountByUsername =
+            linkedAccountRepository.findByProviderAndUsername(AuthProvider.LOCAL, usernameOrEmail);
 
+        if (linkedAccountByUsername.isPresent()) {
+            LinkedAccount linkedAccount = linkedAccountByUsername.get();
+
+            // Kiểm tra mật khẩu
+            PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+            boolean authenticated = passwordEncoder.matches(password, linkedAccount.getPassword());
+
+            if (!authenticated) {
+                log.warn("Authentication failed: Invalid password for linked account {}", usernameOrEmail);
+                throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+            }
+
+            return linkedAccount.getUser();
+        }
+
+        // Tìm kiếm theo email
+        var linkedAccountByEmail =
+            linkedAccountRepository.findByProviderAndEmail(AuthProvider.LOCAL, usernameOrEmail);
+
+        if (linkedAccountByEmail.isPresent()) {
+            LinkedAccount linkedAccount = linkedAccountByEmail.get();
+
+            // Kiểm tra mật khẩu
+            PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+            boolean authenticated = passwordEncoder.matches(password, linkedAccount.getPassword());
+
+            if (!authenticated) {
+                log.warn("Authentication failed: Invalid password for linked account {}", usernameOrEmail);
+                throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+            }
+
+            return linkedAccount.getUser();
+        }
+
+        // Không tìm thấy tài khoản liên kết
+        log.warn("Authentication failed: User not found with username/email - {}", usernameOrEmail);
+        throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+    }
 }

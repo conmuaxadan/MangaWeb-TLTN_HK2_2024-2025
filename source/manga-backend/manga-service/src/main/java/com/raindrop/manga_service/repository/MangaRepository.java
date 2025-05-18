@@ -15,8 +15,29 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecificationExecutor<Manga> {
+    // Tìm manga theo tiêu đề và chưa bị xóa
+    Manga findByTitleAndDeletedFalse(String name);
+
+    // Tìm manga theo tiêu đề (bất kể đã xóa hay chưa)
     Manga findByTitle(String name);
+
+    // Tìm manga theo ID và chưa bị xóa
+    Optional<Manga> findByIdAndDeletedFalse(String mangaId);
+
+    // Tìm manga theo ID (bất kể đã xóa hay chưa)
     Optional<Manga> findById(String mangaId);
+
+    // Tìm tất cả manga chưa bị xóa
+    List<Manga> findByDeletedFalse();
+
+    // Tìm tất cả manga đã bị xóa
+    List<Manga> findByDeletedTrue();
+
+    // Phân trang cho manga chưa bị xóa
+    Page<Manga> findByDeletedFalse(Pageable pageable);
+
+    // Phân trang cho manga đã bị xóa
+    Page<Manga> findByDeletedTrue(Pageable pageable);
 
     /**
      * Tăng lượt xem của manga mà không cập nhật thời gian updatedAt

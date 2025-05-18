@@ -62,16 +62,20 @@ const Header = () => {
                   <FontAwesomeIcon icon={faUser} />
                 </div>
               )}
-              <span className="hidden md:inline-block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {userProfile?.displayName || user?.username || user?.email || 'Admin'}
-              </span>
+              <div className="hidden md:block">
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {userProfile?.displayName || user?.displayName || 'Admin'}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">@{user?.username || ''}</div>
+              </div>
             </button>
 
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 border border-gray-200 dark:border-gray-700">
                 <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{userProfile?.displayName || user?.username || 'Admin'}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email || ''}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{userProfile?.displayName || user?.displayName || 'Admin'}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">@{user?.username || ''}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{userProfile?.email || user?.email || ''}</p>
                 </div>
                 <button
                   onClick={handleLogout}

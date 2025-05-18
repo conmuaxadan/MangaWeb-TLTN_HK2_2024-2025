@@ -1,14 +1,11 @@
 package com.raindrop.identity_service.configuration;
 
-import com.raindrop.common.event.UserProfileEvent;
-import com.raindrop.identity_service.dto.request.UserProfileRequest;
 import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.enums.AuthProvider;
-import com.raindrop.identity_service.mapper.ProfileMapper;
 import com.raindrop.identity_service.repository.RoleRepository;
 import com.raindrop.identity_service.repository.UserRepository;
-import com.raindrop.identity_service.repository.httpclient.ProfileClient;
+import com.raindrop.identity_service.repository.PermissionRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -16,10 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import com.raindrop.identity_service.kafka.UserProfileEventProducer;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
+import java.util.Set;
 
 @Configuration
 @RequiredArgsConstructor
@@ -27,39 +24,36 @@ import java.util.HashSet;
 @Slf4j
 public class ApplicationInitConfig {
     PasswordEncoder passwordEncoder;
-    UserProfileEventProducer userProfileEventProducer;
-
 
     @Bean
-    ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository,
-                                        ProfileClient profileClient, ProfileMapper profileMapper) {
+    @Transactional
+    ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository) {
         return args -> {
+            // Tạo các role nếu chưa tồn tại
             if (!roleRepository.existsByName("USER")) {
                 roleRepository.save(Role.builder().name("USER").build());
             }
             if (!roleRepository.existsByName("ADMIN")) {
                 roleRepository.save(Role.builder().name("ADMIN").build());
             }
+
+            // Tạo admin user nếu chưa tồn tại
             if (!userRepository.existsByUsername("admin")) {
-                var roles = new HashSet<Role>();
-                roles.add(Role.builder().name("ADMIN").build());
+                // Lấy ADMIN role và tạo user với role này
+                Role adminRole = roleRepository.findByName("ADMIN");
+
                 User user = User.builder()
                         .username("admin")
                         .email("jotaro903@gmail.com")
+                        .displayName("admin")
+                        .avatarUrl("default.jpg")
                         .password(passwordEncoder.encode("admin"))
-                        .roles(roles)
                         .build();
 
                 user.setAuthProvider(AuthProvider.LOCAL);
-                user = userRepository.save(user);
+                user.setRoles(Set.of(adminRole));
 
-                UserProfileEvent profileEvent = UserProfileEvent.builder()
-                        .userId(user.getId())
-                        .email(user.getEmail())
-                        .displayName(user.getUsername())
-                        .avatarUrl(null)
-                        .build();
-                userProfileEventProducer.sendUserProfileEvent(profileEvent);
+                user = userRepository.save(user);
                 log.warn("Admin user created with password: admin");
             }
         };

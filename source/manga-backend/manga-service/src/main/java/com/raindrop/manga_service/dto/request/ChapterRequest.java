@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ChapterRequest {
-    int chapterNumber;
+    double chapterNumber;
     String title;
     List<MultipartFile> pages;
     String mangaId;

@@ -6,7 +6,7 @@ import { GenreResponse } from '../../interfaces/models/genre';
 interface GenreTableProps {
   genres: GenreResponse[];
   onEdit: (genre: GenreResponse) => void;
-  onDelete: (genreName: string) => void;
+  onDelete: (id: number, name: string) => void;
   isLoading?: boolean;
 }
 
@@ -38,7 +38,13 @@ const GenreTable: React.FC<GenreTableProps> = ({
         <thead className="bg-gray-50 dark:bg-gray-700">
           <tr>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              ID
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
               Tên thể loại
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              Mô tả
             </th>
             <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
               Thao tác
@@ -47,9 +53,15 @@ const GenreTable: React.FC<GenreTableProps> = ({
         </thead>
         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
           {genres.map((genre) => (
-            <tr key={genre.name} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+            <tr key={genre.id || genre.name} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                {genre.id !== undefined ? genre.id : 'Không có ID'}
+              </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                 {genre.name}
+              </td>
+              <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                {genre.description || <span className="text-gray-400 italic">Không có mô tả</span>}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button
@@ -59,7 +71,7 @@ const GenreTable: React.FC<GenreTableProps> = ({
                   <FontAwesomeIcon icon={faEdit} /> Sửa
                 </button>
                 <button
-                  onClick={() => onDelete(genre.name)}
+                  onClick={() => genre.id && onDelete(genre.id, genre.name)}
                   className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                 >
                   <FontAwesomeIcon icon={faTrash} /> Xóa

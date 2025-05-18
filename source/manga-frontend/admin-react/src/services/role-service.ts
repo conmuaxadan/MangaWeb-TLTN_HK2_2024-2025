@@ -78,45 +78,29 @@ class RoleService {
 
     /**
      * Cập nhật vai trò
-     * @param roleName Tên vai trò cần cập nhật
+     * @param roleId ID của vai trò cần cập nhật
+     * @param roleName Tên vai trò (dùng để hiển thị thông báo)
      * @param roleRequest Thông tin vai trò cần cập nhật
      * @returns Thông tin vai trò đã cập nhật hoặc null nếu thất bại
      */
-    async updateRole(roleName: string, roleRequest: RoleRequest): Promise<RoleResponse | null> {
+    async updateRole(roleId: number, roleName: string, roleRequest: RoleRequest): Promise<RoleResponse | null> {
         logApiCall('updateRole');
+        console.log(`Gọi API cập nhật vai trò ID ${roleId}, name ${roleName} với dữ liệu:`, roleRequest);
         try {
-            // Kiểm tra xem có phải vai trò đặc biệt không (ADMIN, USER)
-            if (roleName === 'ADMIN' || roleName === 'USER') {
-                // Giả lập cập nhật thành công cho vai trò đặc biệt
-                toast.success(`Cập nhật vai trò ${roleName} thành công`, { position: "top-right" });
+            // Gọi API cập nhật vai trò
+            const apiResponse = await identityHttpClient.put<ApiResponse<RoleResponse>>(`/roles/${roleId}`, roleRequest);
+            console.log('Kết quả API cập nhật vai trò:', apiResponse);
 
-                // Tạo một đối tượng RoleResponse mới với thông tin đã cập nhật
-                return {
-                    name: roleName,
-                    permissions: roleRequest.permissions.map(p => ({ name: p })),
-                    description: roleRequest.description
-                };
-            }
-
-            // Xử lý các vai trò khác
-            // Xóa vai trò cũ
-            const deleteSuccess = await this.deleteRole(roleName);
-            if (!deleteSuccess) {
-                toast.error(`Không thể xóa vai trò ${roleName} để cập nhật`, { position: "top-right" });
-                return null;
-            }
-
-            // Tạo vai trò mới với cùng tên
-            const newRole = await this.createRole(roleRequest);
-            if (!newRole) {
-                toast.error(`Không thể tạo lại vai trò ${roleName} sau khi xóa`, { position: "top-right" });
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể cập nhật vai trò", { position: "top-right" });
                 return null;
             }
 
             toast.success("Cập nhật vai trò thành công", { position: "top-right" });
-            return newRole;
+            return apiResponse.result;
         } catch (error) {
-            console.error(`Lỗi cập nhật vai trò ${roleName}:`, error);
+            console.error(`Lỗi cập nhật vai trò ${roleName} (ID: ${roleId}):`, error);
+            console.error('Chi tiết lỗi:', error);
             toast.error("Đã xảy ra lỗi khi cập nhật vai trò", { position: "top-right" });
             return null;
         }
@@ -124,10 +108,11 @@ class RoleService {
 
     /**
      * Xóa vai trò
-     * @param roleName Tên vai trò cần xóa
+     * @param roleId ID của vai trò cần xóa
+     * @param roleName Tên vai trò (dùng để hiển thị thông báo)
      * @returns true nếu thành công, false nếu thất bại
      */
-    async deleteRole(roleName: string): Promise<boolean> {
+    async deleteRole(roleId: number, roleName: string): Promise<boolean> {
         logApiCall('deleteRole');
 
         // Kiểm tra xem có phải vai trò đặc biệt không (ADMIN, USER)
@@ -138,7 +123,7 @@ class RoleService {
         }
 
         try {
-            const apiResponse = await identityHttpClient.delete<ApiResponse<void>>(`/roles/${roleName}`);
+            const apiResponse = await identityHttpClient.delete<ApiResponse<void>>(`/roles/${roleId}`);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể xóa vai trò", { position: "top-right" });
@@ -148,7 +133,7 @@ class RoleService {
             toast.success("Xóa vai trò thành công", { position: "top-right" });
             return true;
         } catch (error) {
-            console.error(`Lỗi xóa vai trò ${roleName}:`, error);
+            console.error(`Lỗi xóa vai trò ${roleName} (ID: ${roleId}):`, error);
             toast.error("Đã xảy ra lỗi khi xóa vai trò", { position: "top-right" });
             return false;
         }
@@ -200,13 +185,14 @@ class RoleService {
 
     /**
      * Xóa quyền hạn
-     * @param permissionName Tên quyền hạn cần xóa
+     * @param permissionId ID của quyền hạn cần xóa
+     * @param permissionName Tên quyền hạn (dùng để hiển thị thông báo)
      * @returns true nếu thành công, false nếu thất bại
      */
-    async deletePermission(permissionName: string): Promise<boolean> {
+    async deletePermission(permissionId: number, permissionName: string): Promise<boolean> {
         logApiCall('deletePermission');
         try {
-            const apiResponse = await identityHttpClient.delete<ApiResponse<void>>(`/permissions/${permissionName}`);
+            const apiResponse = await identityHttpClient.delete<ApiResponse<void>>(`/permissions/${permissionId}`);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể xóa quyền hạn", { position: "top-right" });
@@ -216,14 +202,67 @@ class RoleService {
             toast.success("Xóa quyền hạn thành công", { position: "top-right" });
             return true;
         } catch (error) {
-            console.error(`Lỗi xóa quyền hạn ${permissionName}:`, error);
+            console.error(`Lỗi xóa quyền hạn ${permissionName} (ID: ${permissionId}):`, error);
             toast.error("Đã xảy ra lỗi khi xóa quyền hạn", { position: "top-right" });
             return false;
         }
     }
 
     /**
-     * Lấy thông tin chi tiết của vai trò
+     * Lấy thông tin chi tiết của vai trò theo ID
+     * @param roleId ID của vai trò
+     * @returns Thông tin chi tiết vai trò hoặc null nếu thất bại
+     */
+    async getRoleById(roleId: number): Promise<RoleResponse | null> {
+        logApiCall('getRoleById');
+        console.log(`RoleService: Gọi API lấy thông tin vai trò ID ${roleId}`);
+        try {
+            const apiResponse = await identityHttpClient.get<ApiResponse<RoleResponse>>(`/roles/${roleId}`);
+            console.log(`RoleService: Kết quả API lấy thông tin vai trò ID ${roleId}:`, apiResponse);
+
+            if (apiResponse.code !== 1000) {
+                console.error(`Không thể lấy thông tin vai trò ID ${roleId}: ${apiResponse.message}`);
+                return null;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi lấy thông tin vai trò ID ${roleId}:`, error);
+            console.error('Chi tiết lỗi:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Cập nhật quyền hạn
+     * @param permissionId ID của quyền hạn cần cập nhật
+     * @param permissionRequest Thông tin quyền hạn cần cập nhật
+     * @returns Thông tin quyền hạn đã cập nhật hoặc null nếu thất bại
+     */
+    async updatePermission(permissionId: number, permissionRequest: { name: string, description?: string }): Promise<PermissionResponse | null> {
+        logApiCall('updatePermission');
+        console.log(`Gọi API cập nhật quyền hạn ID ${permissionId} với dữ liệu:`, permissionRequest);
+        try {
+            const apiResponse = await identityHttpClient.put<ApiResponse<PermissionResponse>>(`/permissions/${permissionId}`, permissionRequest);
+            console.log('Kết quả API cập nhật quyền hạn:', apiResponse);
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể cập nhật quyền hạn", { position: "top-right" });
+                return null;
+            }
+
+            toast.success("Cập nhật quyền hạn thành công", { position: "top-right" });
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi cập nhật quyền hạn ID ${permissionId}:`, error);
+            console.error('Chi tiết lỗi:', error);
+            toast.error("Đã xảy ra lỗi khi cập nhật quyền hạn", { position: "top-right" });
+            return null;
+        }
+    }
+
+    /**
+     * Lấy thông tin chi tiết của vai trò theo tên
      * @param roleName Tên vai trò
      * @returns Thông tin chi tiết vai trò hoặc null nếu thất bại
      */

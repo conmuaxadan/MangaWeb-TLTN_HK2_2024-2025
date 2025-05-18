@@ -2,9 +2,8 @@ package com.raindrop.identity_service.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.raindrop.common.event.UserProfileEvent;
+import com.raindrop.common.event.UserEvent;
 import com.raindrop.identity_service.dto.request.GoogleAuthenticationRequest;
-import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.AuthenticationResponse;
 import com.raindrop.identity_service.dto.response.GoogleUserInfoResponse;
 import com.raindrop.identity_service.entity.Role;
@@ -12,14 +11,16 @@ import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.enums.AuthProvider;
 import com.raindrop.identity_service.enums.ErrorCode;
 import com.raindrop.identity_service.exception.AppException;
-import com.raindrop.identity_service.mapper.ProfileMapper;
 import com.raindrop.identity_service.entity.LinkedAccount;
+import com.raindrop.identity_service.kafka.UserEventProducer;
 import com.raindrop.identity_service.repository.LinkedAccountRepository;
+import com.raindrop.identity_service.repository.RoleRepository;
 import com.raindrop.identity_service.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -28,8 +29,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
-import com.raindrop.identity_service.kafka.UserProfileEventProducer;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,47 +37,51 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class GoogleAuthService {
-    final AuthenticationService authenticationService;
-    final UserRepository userRepository;
-    final PasswordEncoder passwordEncoder;
-    final UserProfileEventProducer userProfileEventProducer;
-    final LinkedAccountRepository linkedAccountRepository;
+    AuthenticationService authenticationService;
+    UserRepository userRepository;
+    PasswordEncoder passwordEncoder;
+    LinkedAccountRepository linkedAccountRepository;
+    RoleRepository roleRepository;
+
+    UserEventProducer userEventProducer;
 
     @Value("${google.client-id}")
+    @NonFinal
     String clientId;
 
     @Value("${google.client-secret}")
+    @NonFinal
     String clientSecret;
 
     @Value("${google.token-uri}")
+    @NonFinal
     String tokenUri;
 
     @Value("${google.user-info-uri}")
+    @NonFinal
     String userInfoUri;
 
-    final ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Xử lý đăng nhập Google
-     * @param code Mã xác thực từ Google
+     *
+     * @param code        Mã xác thực từ Google
      * @param redirectUri URI chuyển hướng
      * @return Thông tin xác thực
      */
     @Transactional
     public AuthenticationResponse googleLogin(String code, String redirectUri) {
         try {
-            log.info("Processing Google login with code: {}", code.substring(0, Math.min(code.length(), 10)) + "...");
-
+            log.info("Processing Google login request");
             // Lấy thông tin người dùng từ Google
             GoogleUserInfoResponse googleUserInfo = getGoogleUserInfo(code, redirectUri);
-
             // Tìm tài khoản đã liên kết với Google ID này
             var linkedAccount = linkedAccountRepository.findByProviderAndProviderUserId(
-                AuthProvider.GOOGLE, googleUserInfo.getGoogleId());
-
+                    AuthProvider.GOOGLE, googleUserInfo.getGoogleId());
             User user;
 
             if (linkedAccount.isPresent()) {
@@ -88,22 +91,18 @@ public class GoogleAuthService {
             } else {
                 // Tìm user có email trùng với Google
                 var existingUser = userRepository.findByEmail(googleUserInfo.getEmail());
-
                 if (existingUser.isPresent()) {
                     user = existingUser.get();
-
                     // Chỉ tự động liên kết nếu tài khoản hiện có là LOCAL
                     if (user.getAuthProvider() == AuthProvider.LOCAL) {
                         // Tạo liên kết mới
                         LinkedAccount newLink = LinkedAccount.builder()
-                            .user(user)
-                            .provider(AuthProvider.GOOGLE)
-                            .email(googleUserInfo.getEmail())
-                            .providerUserId(googleUserInfo.getGoogleId())
-                            .build();
-
+                                .user(user)
+                                .provider(AuthProvider.GOOGLE)
+                                .email(googleUserInfo.getEmail())
+                                .providerUserId(googleUserInfo.getGoogleId())
+                                .build();
                         linkedAccountRepository.save(newLink);
-
                         log.info("Auto-linked Google account to existing LOCAL user with email: {}", googleUserInfo.getEmail());
                     } else {
                         log.info("Found existing user with matching email but not LOCAL provider: {}", googleUserInfo.getEmail());
@@ -112,18 +111,14 @@ public class GoogleAuthService {
                     // Nếu không tìm thấy, tạo user mới
                     user = createNewGoogleUser(googleUserInfo);
                     log.info("Created new user from Google authentication: {}", googleUserInfo.getEmail());
-
-                    // Không tạo LinkedAccount tự động cho user Google mới
-                    // Vì chúng ta chỉ muốn tạo LinkedAccount khi email trùng với tài khoản LOCAL
                 }
             }
-
             // Xác thực người dùng
             GoogleAuthenticationRequest googleAuthRequest = GoogleAuthenticationRequest.builder()
                     .username(user.getUsername())
                     .build();
 
-            return authenticationService.authenticateGG(googleAuthRequest);
+            return authenticationService.googleAuthenticate(googleAuthRequest);
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
@@ -133,10 +128,10 @@ public class GoogleAuthService {
     }
 
 
-
     /**
      * Lấy thông tin người dùng từ Google
-     * @param code Mã xác thực từ Google
+     *
+     * @param code        Mã xác thực từ Google
      * @param redirectUri URI chuyển hướng
      * @return Thông tin người dùng Google
      */
@@ -152,9 +147,12 @@ public class GoogleAuthService {
             String userInfoResponse = getUserInfo(accessToken);
             JsonNode userJson = parseAndValidateJsonResponse(userInfoResponse, ErrorCode.GOOGLE_USER_INFO_ERROR, "Google User Info error");
 
+            log.info(userJson.toString());
+
             String email = userJson.get("email").asText();
             String name = userJson.get("name") != null ? userJson.get("name").asText() : email;
             String googleId = userJson.get("sub").asText();
+            String picture = userJson.get("picture").asText();
 
             log.info("User authenticated via Google - Email: {}, Google ID: {}", email, googleId);
 
@@ -162,6 +160,7 @@ public class GoogleAuthService {
                     .email(email)
                     .name(name)
                     .googleId(googleId)
+                    .picture(picture)
                     .build();
         } catch (AppException e) {
             throw e;
@@ -173,9 +172,10 @@ public class GoogleAuthService {
 
     /**
      * Phân tích và xác thực phản hồi JSON
+     *
      * @param jsonResponse Phản hồi JSON
-     * @param errorCode Mã lỗi nếu có lỗi
-     * @param errorPrefix Tiền tố lỗi cho log
+     * @param errorCode    Mã lỗi nếu có lỗi
+     * @param errorPrefix  Tiền tố lỗi cho log
      * @return JsonNode đã phân tích
      */
     private JsonNode parseAndValidateJsonResponse(String jsonResponse, ErrorCode errorCode, String errorPrefix) {
@@ -200,49 +200,51 @@ public class GoogleAuthService {
 
     /**
      * Tạo người dùng mới từ thông tin Google
+     *
      * @param googleUserInfo Thông tin người dùng Google
      * @return Đối tượng User mới
      */
     private User createNewGoogleUser(GoogleUserInfoResponse googleUserInfo) {
-        // Tạo user mới sử dụng Builder
+        // Tìm kiếm role USER đã tồn tại trong cơ sở dữ liệu
         var roles = new HashSet<Role>();
-        roles.add(Role.builder().name("USER").build());
+        Role userRole = roleRepository.findByName("USER");
+        if (userRole == null) {
+            log.error("Default USER role not found in database");
+            throw new AppException(ErrorCode.ROLE_NOT_FOUND);
+        }
+        roles.add(userRole);
+
+        // Kiểm tra và tạo displayName độc nhất
+        String displayName = googleUserInfo.getName();
+        String originalDisplayName = displayName;
+        int counter = 1;
+
+        // Nếu displayName đã tồn tại, thêm số vào sau
+        while (userRepository.existsByDisplayName(displayName)) {
+            displayName = originalDisplayName + counter;
+            counter++;
+            log.debug("Display name already exists, trying: {}", displayName);
+        }
 
         User user = User.builder()
-            .username(googleUserInfo.getEmail())
-            .email(googleUserInfo.getEmail())
-            .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-            .authProvider(AuthProvider.GOOGLE)
-            .roles(roles)
-            .build();
-
+                .username(googleUserInfo.getEmail())
+                .email(googleUserInfo.getEmail())
+                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                .authProvider(AuthProvider.GOOGLE)
+                .roles(roles)
+                .displayName(displayName) // Sử dụng displayName đã được kiểm tra tính độc nhất
+                .avatarUrl(googleUserInfo.getPicture())
+                .build();
         userRepository.save(user);
-        // Tạo profile
-        createUserProfile(user, googleUserInfo.getName());
 
+        UserEvent userEvent = UserEvent.builder()
+                .email(user.getEmail())
+                .displayName(user.getDisplayName())
+                .avatarUrl(user.getAvatarUrl())
+                .build();
+        userEventProducer.sendNewUserEvent(userEvent);
         return user;
     }
-
-    /**
-     * Tạo hồ sơ người dùng
-     * @param user Đối tượng User
-     * @param displayName Tên hiển thị
-     */
-    private void createUserProfile(User user, String displayName) {
-        UserProfileEvent profileEvent = UserProfileEvent.builder()
-                .userId(user.getId())
-                .email(user.getEmail())
-                .displayName(displayName)
-                .avatarUrl(null)
-                .build();
-
-        log.info("Creating user profile for user: {}", profileEvent.getEmail());
-
-        //Publish message to Kafka
-        userProfileEventProducer.sendUserProfileEvent(profileEvent);
-        log.info("New user created successfully: {}", user.getEmail());
-    }
-
 
     private String exchangeCodeForToken(String code, String redirectUri) throws Exception {
         log.debug("Exchanging code for token with Google OAuth");
@@ -296,7 +298,6 @@ public class GoogleAuthService {
             throw e;
         }
     }
-
 
 
 }

@@ -28,6 +28,7 @@ export const routes: IRoute[] = [
         Layout: null,
         requireAuth: false
     },
+
     // Admin routes
     {
         path: '/admin',

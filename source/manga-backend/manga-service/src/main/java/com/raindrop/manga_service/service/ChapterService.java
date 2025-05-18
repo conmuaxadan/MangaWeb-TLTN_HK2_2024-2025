@@ -9,14 +9,12 @@ import com.raindrop.manga_service.dto.response.PageResponse;
 import com.raindrop.manga_service.entity.Chapter;
 import com.raindrop.manga_service.entity.Manga;
 import com.raindrop.manga_service.entity.Page;
-import com.raindrop.manga_service.entity.ViewLog;
 import com.raindrop.manga_service.enums.ErrorCode;
 import com.raindrop.manga_service.exception.AppException;
 import com.raindrop.manga_service.mapper.ChapterMapper;
 import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.repository.MangaRepository;
 import com.raindrop.manga_service.repository.PageRepository;
-import com.raindrop.manga_service.repository.ViewLogRepository;
 import com.raindrop.manga_service.repository.httpclient.UploadClient;
 import jakarta.transaction.Transactional;
 import com.raindrop.manga_service.kafka.NewChapterEventProducer;
@@ -73,7 +71,7 @@ public class ChapterService {
                 ApiResponse<FileDataResponse> apiResponse = uploadClient.uploadMedia(header, file);
                 Page page = Page.builder()
                         .index(i)
-                        .pageUrl(apiResponse.getResult().getName())
+                        .pageUrl(apiResponse.getResult().getFileName())
                         .chapter(chapter) // Gán Chapter cho Page
                         .build();
                 page = pageRepository.save(page); // Lưu Page
@@ -264,7 +262,7 @@ public class ChapterService {
                     ApiResponse<FileDataResponse> apiResponse = uploadClient.uploadMedia(header, file);
                     Page page = Page.builder()
                             .index(startIndex + i) // Sử dụng index mới
-                            .pageUrl(apiResponse.getResult().getName())
+                            .pageUrl(apiResponse.getResult().getFileName())
                             .chapter(chapter)
                             .build();
                     page = pageRepository.save(page);
@@ -331,7 +329,7 @@ public class ChapterService {
             ApiResponse<FileDataResponse> apiResponse = uploadClient.uploadMedia(header, pageFile);
 
             // Cập nhật URL của trang
-            pageToUpdate.setPageUrl(apiResponse.getResult().getName());
+            pageToUpdate.setPageUrl(apiResponse.getResult().getFileName());
             pageRepository.save(pageToUpdate);
 
             // Lưu chapter đã cập nhật

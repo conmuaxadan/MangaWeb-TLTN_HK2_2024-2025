@@ -1,6 +1,6 @@
 package com.raindrop.notification_service.kafka;
 
-import com.raindrop.common.event.UserProfileEvent;
+import com.raindrop.common.event.UserEvent;
 import com.raindrop.notification_service.dto.request.Recipient;
 import com.raindrop.notification_service.dto.request.SendEmailRequest;
 import com.raindrop.notification_service.service.EmailService;
@@ -18,7 +18,7 @@ public class UserProfileEventConsumer {
     EmailService emailService;
 
     @KafkaListener(topics = "onboard-successful")
-    public void consumeUserProfileEvent(UserProfileEvent message) {
+    public void consumeUserProfileEvent(UserEvent message) {
         log.info("Received user profile event: {}", message);
         
         SendEmailRequest request = SendEmailRequest.builder()

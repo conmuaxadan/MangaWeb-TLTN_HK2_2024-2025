@@ -1,12 +1,14 @@
 // Genre Request
 export interface GenreRequest {
     name: string;
+    description?: string;
 }
 
 // Genre Response
 export interface GenreResponse {
-    id?: string;
+    id?: number;
     name: string;
+    description?: string;
 }
 
 // Genre Page Response

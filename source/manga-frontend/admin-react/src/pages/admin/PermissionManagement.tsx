@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faSearch, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { PermissionResponse } from '../../interfaces/models/auth';
 import Pagination from '../../components/common/Pagination';
+import Modal from '../../components/common/Modal';
+import PermissionForm from '../../components/admin/PermissionForm';
 import roleService from '../../services/role-service';
 
 const PermissionManagement: React.FC = () => {
@@ -16,15 +18,13 @@ const PermissionManagement: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  // State cho form thêm/sửa quyền hạn
-  const [showForm, setShowForm] = useState(false);
-  const [editingPermission, setEditingPermission] = useState<PermissionResponse | null>(null);
-  const [formData, setFormData] = useState({ name: '', description: '' });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // State cho modal và form
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPermission, setCurrentPermission] = useState<PermissionResponse | undefined>(undefined);
 
   // State cho loading
   const [isLoading, setIsLoading] = useState(false);
-  const [isFormSubmitting, setIsFormSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // State cho chỉnh sửa inline
   const [editingInline, setEditingInline] = useState<string | null>(null);
@@ -65,82 +65,79 @@ const PermissionManagement: React.FC = () => {
   // Xử lý chuyển trang
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  // Xử lý mở form thêm quyền hạn
+  // Xử lý mở modal thêm quyền hạn
   const handleAddPermission = () => {
-    setEditingPermission(null);
-    setFormData({ name: '', description: '' });
-    setShowForm(true);
+    setCurrentPermission(undefined);
+    setIsModalOpen(true);
   };
 
-  // Xử lý đóng form
-  const handleCancelForm = () => {
-    setShowForm(false);
-    setEditingPermission(null);
-    setErrors({});
+  // Xử lý mở modal sửa quyền hạn
+  const handleEditPermission = (permission: PermissionResponse) => {
+    setCurrentPermission(permission);
+    setIsModalOpen(true);
   };
 
-  // Xử lý thay đổi form
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    // Xóa lỗi khi người dùng nhập lại
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+  // Xử lý đóng modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setCurrentPermission(undefined);
   };
 
   // Xử lý submit form
-  const handleSubmitForm = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validate form
-    const newErrors: Record<string, string> = {};
-    if (!formData.name) {
-      newErrors.name = 'Tên quyền hạn không được để trống';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setIsFormSubmitting(true);
+  const handleSubmitForm = async (data: { name: string; description: string }) => {
+    setIsSubmitting(true);
 
     try {
-      if (editingPermission) {
-        // Cập nhật quyền hạn (chưa có API nên giả lập)
-        setPermissions(permissions.map(p =>
-          p.name === editingPermission.name
-            ? { ...formData }
-            : p
-        ));
+      if (currentPermission) {
+        // Cập nhật quyền hạn
+        if (currentPermission.id) {
+          console.log("Gọi API cập nhật quyền hạn từ modal:", currentPermission.id, data);
+          const updatedPermission = await roleService.updatePermission(currentPermission.id, data);
+          if (updatedPermission) {
+            // Cập nhật danh sách quyền hạn
+            setPermissions(permissions.map(p =>
+              p.id === currentPermission.id
+                ? updatedPermission
+                : p
+            ));
+          } else {
+            // Nếu API thất bại, vẫn cập nhật UI để trải nghiệm người dùng tốt hơn
+            setPermissions(permissions.map(p =>
+              p.id === currentPermission.id
+                ? { ...p, ...data }
+                : p
+            ));
+          }
+        } else {
+          // Fallback nếu không có ID
+          setPermissions(permissions.map(p =>
+            p.name === currentPermission.name
+              ? { ...p, ...data }
+              : p
+          ));
+        }
+        setIsModalOpen(false);
       } else {
         // Tạo quyền hạn mới
-        const response = await roleService.createPermission(formData);
+        const response = await roleService.createPermission(data);
         if (response) {
           // Thêm quyền hạn mới vào danh sách
           setPermissions([...permissions, response]);
-          setShowForm(false);
-          setEditingPermission(null);
+          setIsModalOpen(false);
         }
       }
     } catch (error) {
       console.error('Lỗi khi lưu quyền hạn:', error);
     } finally {
-      setIsFormSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
   // Xử lý bắt đầu chỉnh sửa inline
   const handleStartInlineEdit = (permission: PermissionResponse) => {
+    // Sử dụng name để hiển thị trong UI, nhưng lưu ID để xử lý
     setEditingInline(permission.name);
+    console.log("Bắt đầu chỉnh sửa permission:", permission);
     setInlineFormData({
       name: permission.name,
       description: permission.description || ''
@@ -157,16 +154,51 @@ const PermissionManagement: React.FC = () => {
   };
 
   // Xử lý lưu chỉnh sửa inline
-  const handleSaveInlineEdit = () => {
+  const handleSaveInlineEdit = async () => {
     if (!inlineFormData.description) {
       inlineFormData.description = '';
     }
 
-    setPermissions(permissions.map(p =>
-      p.name === editingInline
-        ? { ...inlineFormData }
-        : p
-    ));
+    // Tìm permission đang được chỉnh sửa
+    const editingPermission = permissions.find(p => p.name === editingInline);
+
+    if (editingPermission && editingPermission.id) {
+      try {
+        // Gọi API cập nhật permission
+        const updatedPermission = await roleService.updatePermission(editingPermission.id, inlineFormData);
+
+        if (updatedPermission) {
+          // Cập nhật state với kết quả trả về từ API
+          setPermissions(permissions.map(p =>
+            p.id === editingPermission.id
+              ? updatedPermission
+              : p
+          ));
+        } else {
+          // Nếu API thất bại, vẫn cập nhật UI để trải nghiệm người dùng tốt hơn
+          setPermissions(permissions.map(p =>
+            p.id === editingPermission.id
+              ? { ...p, ...inlineFormData }
+              : p
+          ));
+        }
+      } catch (error) {
+        console.error(`Lỗi khi cập nhật quyền hạn ${editingInline}:`, error);
+        // Vẫn cập nhật UI dù có lỗi
+        setPermissions(permissions.map(p =>
+          p.id === editingPermission.id
+            ? { ...p, ...inlineFormData }
+            : p
+        ));
+      }
+    } else {
+      // Fallback nếu không có ID
+      setPermissions(permissions.map(p =>
+        p.name === editingInline
+          ? { ...p, ...inlineFormData }
+          : p
+      ));
+    }
 
     setEditingInline(null);
   };
@@ -177,16 +209,16 @@ const PermissionManagement: React.FC = () => {
   };
 
   // Xử lý xóa quyền hạn
-  const handleDeletePermission = async (permissionName: string) => {
+  const handleDeletePermission = async (permissionId: number, permissionName: string) => {
     if (window.confirm(`Bạn có chắc chắn muốn xóa quyền hạn ${permissionName}?`)) {
       try {
-        const success = await roleService.deletePermission(permissionName);
+        const success = await roleService.deletePermission(permissionId, permissionName);
         if (success) {
           // Xóa quyền hạn khỏi danh sách
-          setPermissions(permissions.filter(p => p.name !== permissionName));
+          setPermissions(permissions.filter(p => p.id !== permissionId));
         }
       } catch (error) {
-        console.error(`Lỗi khi xóa quyền hạn ${permissionName}:`, error);
+        console.error(`Lỗi khi xóa quyền hạn ${permissionName} (ID: ${permissionId}):`, error);
       }
     }
   };
@@ -205,90 +237,30 @@ const PermissionManagement: React.FC = () => {
         </button>
       </div>
 
-      {/* Form thêm/sửa quyền hạn */}
-      {showForm && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-            {editingPermission ? 'Chỉnh sửa quyền hạn' : 'Thêm quyền hạn mới'}
-          </h2>
-
-          <form onSubmit={handleSubmitForm} className="space-y-6">
-            {/* Name */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Tên quyền hạn
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleFormChange}
-                disabled={!!editingPermission} // Disable nếu đang chỉnh sửa
-                className={`w-full px-3 py-2 border ${
-                  errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white ${
-                  editingPermission ? 'bg-gray-100 dark:bg-gray-600' : ''
-                }`}
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
-              )}
-            </div>
-
-            {/* Description */}
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Mô tả
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleFormChange}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* Buttons */}
-            <div className="flex justify-end space-x-3 pt-4">
-              <button
-                type="button"
-                onClick={handleCancelForm}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                disabled={isFormSubmitting}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isFormSubmitting ? (
-                  <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Đang xử lý...
-                  </span>
-                ) : editingPermission ? 'Cập nhật' : 'Thêm mới'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      {/* Modal thêm/sửa quyền hạn */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title={currentPermission ? 'Chỉnh sửa quyền hạn' : 'Thêm quyền hạn mới'}
+        size="md"
+      >
+        <PermissionForm
+          initialData={currentPermission}
+          onSubmit={handleSubmitForm}
+          onCancel={handleCloseModal}
+          isLoading={isSubmitting}
+        />
+      </Modal>
 
       {/* Tìm kiếm */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+      <div className="bg-white rounded-lg shadow-md p-4">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <FontAwesomeIcon icon={faSearch} className="text-gray-500 dark:text-gray-400" />
+            <FontAwesomeIcon icon={faSearch} className="text-gray-500" />
           </div>
           <input
             type="text"
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
             placeholder="Tìm kiếm quyền hạn..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -316,6 +288,9 @@ const PermissionManagement: React.FC = () => {
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      ID
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Tên quyền hạn
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -331,6 +306,9 @@ const PermissionManagement: React.FC = () => {
                     <tr key={permission.name} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       {editingInline === permission.name ? (
                         <>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            {permission.id || '-'}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <input
                               type="text"
@@ -368,6 +346,9 @@ const PermissionManagement: React.FC = () => {
                       ) : (
                         <>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            {permission.id || '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                             {permission.name}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
@@ -375,14 +356,14 @@ const PermissionManagement: React.FC = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button
-                              onClick={() => handleStartInlineEdit(permission)}
-                              className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3"
+                              onClick={() => handleEditPermission(permission)}
+                              className="text-indigo-600 hover:text-indigo-900 mr-3"
                             >
                               <FontAwesomeIcon icon={faEdit} />
                             </button>
                             <button
-                              onClick={() => handleDeletePermission(permission.name)}
-                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                              onClick={() => handleDeletePermission(permission.id, permission.name)}
+                              className="text-red-600 hover:text-red-900"
                             >
                               <FontAwesomeIcon icon={faTrash} />
                             </button>

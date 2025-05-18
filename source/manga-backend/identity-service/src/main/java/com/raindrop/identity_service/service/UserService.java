@@ -1,8 +1,7 @@
 package com.raindrop.identity_service.service;
 
-import com.raindrop.common.event.UserProfileEvent;
+import com.raindrop.common.event.UserEvent;
 import com.raindrop.identity_service.dto.request.ChangePasswordRequest;
-import com.raindrop.identity_service.dto.request.GoogleLinkRequest;
 import com.raindrop.identity_service.dto.request.LinkLocalAccountRequest;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.LinkedAccountResponse;
@@ -13,17 +12,17 @@ import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.enums.AuthProvider;
 import com.raindrop.identity_service.exception.AppException;
 import com.raindrop.identity_service.enums.ErrorCode;
-import com.raindrop.identity_service.mapper.ProfileMapper;
+import com.raindrop.identity_service.kafka.UserEventProducer;
 import com.raindrop.identity_service.mapper.UserMapper;
 import com.raindrop.identity_service.repository.LinkedAccountRepository;
 import com.raindrop.identity_service.repository.RoleRepository;
 import com.raindrop.identity_service.repository.UserRepository;
+import com.raindrop.identity_service.repository.httpclient.UploadClient;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import com.raindrop.identity_service.kafka.UserProfileEventProducer;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,6 +34,9 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashSet;
 import java.util.List;
@@ -50,10 +52,11 @@ public class UserService {
     UserMapper userMapper;
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
-    ProfileMapper profileMapper;
-    UserProfileEventProducer userProfileEventProducer;
     LinkedAccountRepository linkedAccountRepository;
     GoogleAuthService googleAuthService;
+    UploadClient uploadClient;
+
+    UserEventProducer userEventProducer;
 
 
     public UserResponse createUser(UserRequest request) {
@@ -64,39 +67,45 @@ public class UserService {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
 
+        // Kiểm tra email đã tồn tại chưa
+        if (userRepository.existsByEmail(request.getEmail())) {
+            log.warn("User creation failed: Email already exists - {}", request.getEmail());
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
+
+        // Kiểm tra displayName đã tồn tại chưa (nếu có)
+        String displayName = request.getDisplayName() != null ? request.getDisplayName() : request.getUsername();
+        if (userRepository.existsByDisplayName(displayName)) {
+            log.warn("User creation failed: Display name already exists - {}", displayName);
+            throw new AppException(ErrorCode.DISPLAYNAME_EXISTED);
+        }
+
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        // Assign default role
+        // Assign default role - tìm kiếm role USER đã tồn tại trong cơ sở dữ liệu
         var roles = new HashSet<Role>();
-        roles.add(Role.builder().name("USER").build());
+        Role userRole = roleRepository.findByName("USER");
+        if (userRole == null) {
+            log.error("Default USER role not found in database");
+            throw new AppException(ErrorCode.ROLE_NOT_FOUND);
+        }
+        roles.add(userRole);
         user.setRoles(roles);
         user.setAuthProvider(AuthProvider.LOCAL);
+        user.setDisplayName(request.getDisplayName() != null ? request.getDisplayName() : request.getUsername());
+        user.setAvatarUrl("default.jpg");
 
         log.debug("Saving user to database: {}", request.getUsername());
         user = userRepository.save(user);
         log.info("User saved successfully with ID: {}", user.getId());
-
-        // Prepare profile data
-        var profileRequest = profileMapper.toUserProfileRequest(request);
-        profileRequest.setUserId(user.getId());
-
-        UserProfileEvent profileEvent = UserProfileEvent.builder()
-                .userId(profileRequest.getUserId())
-                .email(profileRequest.getEmail())
-                .displayName(profileRequest.getDisplayName())
-                .avatarUrl("default.jpg")
+        UserEvent userEvent = UserEvent.builder()
+                .email(user.getEmail())
+                .displayName(user.getDisplayName())
+                .avatarUrl(user.getAvatarUrl())
                 .build();
 
-        log.info("Creating user profile for user: {}", profileEvent.getEmail());
-
-//        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-//        var header = attributes.getRequest().getHeader("Authorization");
-//        profileClient.createProfile(header,profileRequest);
-
-        //Publish message to Kafka
-        userProfileEventProducer.sendUserProfileEvent(profileEvent);
-
+        userEventProducer.sendNewUserEvent(userEvent);
         return userMapper.toUserResponse(user);
     }
 
@@ -131,31 +140,70 @@ public class UserService {
         }));
     }
 
-    @PostAuthorize("returnObject.username == authentication.name")
     public User updateUser(UserRequest request) {
-        User user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
-        if (request.getPassword() == null && request.getEmail() == null) {
-            throw new AppException(ErrorCode.VALIDATION_ERROR);
-        }
-        userMapper.updateUser(user, request);
-        user.setPassword(new BCryptPasswordEncoder(10).encode(request.getPassword()));
-
-        var roles = roleRepository.findAllById(request.getRoles());
-        user.setRoles(new HashSet<>(roles));
-
-        return userRepository.save(user);
-    }
-
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public void deleteUser(UserRequest request) {
-        log.info("Admin attempting to delete user: {}", request.getUsername());
+        log.info("Updating user: {}", request.getUsername());
         User user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> {
-            log.warn("Delete failed: User not found - {}", request.getUsername());
+            log.warn("Update failed: User not found - {}", request.getUsername());
             return new AppException(ErrorCode.USER_NOT_EXISTED);
         });
 
-        userRepository.delete(user);
-        log.info("User deleted successfully: {}", request.getUsername());
+        // Lưu trữ email hiện tại để đảm bảo không bị thay đổi
+        String currentEmail = user.getEmail();
+
+        // Cập nhật thông tin cơ bản (trừ username và email)
+        userMapper.updateUser(user, request);
+
+        // Khôi phục email ban đầu
+        user.setEmail(currentEmail);
+
+        // Cập nhật mật khẩu nếu có
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            log.debug("Updating password for user: {}", request.getUsername());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        // Cập nhật displayName nếu có
+        if (request.getDisplayName() != null) {
+            // Kiểm tra nếu displayName mới khác với displayName hiện tại
+            if (!request.getDisplayName().equals(user.getDisplayName())) {
+                // Kiểm tra xem displayName mới đã tồn tại chưa
+                if (userRepository.existsByDisplayName(request.getDisplayName())) {
+                    log.warn("Update failed: Display name already exists - {}", request.getDisplayName());
+                    throw new AppException(ErrorCode.DISPLAYNAME_EXISTED);
+                }
+
+                log.debug("Updating display name for user: {} to {}", request.getUsername(), request.getDisplayName());
+                user.setDisplayName(request.getDisplayName());
+            }
+        }
+
+        // Cập nhật avatarUrl nếu có
+        if (request.getAvatarUrl() != null) {
+            log.debug("Updating avatar URL for user: {} to {}", request.getUsername(), request.getAvatarUrl());
+            user.setAvatarUrl(request.getAvatarUrl());
+        }
+
+        // Cập nhật roles nếu có
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+            log.debug("Updating roles for user: {}", request.getUsername());
+            var roles = roleRepository.findAllById(request.getRoles());
+            user.setRoles(new HashSet<>(roles));
+        }
+
+        // Ghi log nếu có yêu cầu cập nhật email
+        if (request.getEmail() != null && !request.getEmail().equals(currentEmail)) {
+            log.warn("Attempted to update email for user: {} from {} to {}, but email updates are not allowed",
+                    request.getUsername(), currentEmail, request.getEmail());
+        }
+
+        user = userRepository.save(user);
+        log.info("User updated successfully: {}", request.getUsername());
+
+        return user;
+    }
+
+    public UserResponse getUserById(String id) {
+        return userMapper.toUserResponse(userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found")));
     }
 
     /**
@@ -172,24 +220,6 @@ public class UserService {
 
         userRepository.delete(user);
         log.info("User deleted successfully: {}", username);
-    }
-
-    public UserResponse getMyInfo() {
-        var context = SecurityContextHolder.getContext();
-        if (context.getAuthentication() == null || context.getAuthentication().getName() == null) {
-            log.warn("User info request failed: No authentication found");
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
-        }
-
-        String name = context.getAuthentication().getName();
-        log.info("User requesting their own information: {}", name);
-
-        User user = userRepository.findByUsername(name).orElseThrow(() -> {
-            log.warn("User info request failed: User not found in database - {}", name);
-            return new AppException(ErrorCode.USER_NOT_EXISTED);
-        });
-
-        return userMapper.toUserResponse(user);
     }
 
     /**
@@ -378,15 +408,145 @@ public class UserService {
         if (!linkedAccount.getUser().getId().equals(currentUser.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
-
-        // Không cần kiểm tra số lượng tài khoản liên kết
-        // Vì việc xóa tài khoản liên kết không ảnh hưởng đến tài khoản chính
-        // List<LinkedAccount> userAccounts = linkedAccountRepository.findAllByUser(currentUser);
-        // if (userAccounts.size() <= 1) {
-        //     throw new AppException(ErrorCode.CANNOT_UNLINK_LAST_ACCOUNT);
-        // }
-
         linkedAccountRepository.delete(linkedAccount);
         log.info("Unlinked account {} from user {}", linkedAccountId, currentUser.getUsername());
+    }
+
+
+    /**
+     * Cập nhật ảnh đại diện của người dùng
+     * @param userId ID của người dùng
+     * @param file File ảnh đại diện mới
+     * @return Thông tin người dùng đã cập nhật
+     */
+    @Transactional
+    public UserResponse updateAvatar(String userId, MultipartFile file) {
+        log.info("Updating avatar for user ID: {}", userId);
+
+        // Kiểm tra file
+        if (file == null || file.isEmpty()) {
+            log.warn("Avatar update failed: Empty file for user ID: {}", userId);
+            throw new AppException(ErrorCode.VALIDATION_ERROR);
+        }
+
+        // Kiểm tra loại file
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            log.warn("Avatar update failed: Invalid file type for user ID: {}", userId);
+            throw new AppException(ErrorCode.VALIDATION_ERROR);
+        }
+
+        User user = userRepository.findById(userId).orElseThrow(() -> {
+            log.warn("Avatar update failed: User not found - ID: {}", userId);
+            return new AppException(ErrorCode.USER_NOT_EXISTED);
+        });
+
+        try {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes == null) {
+                log.error("Cannot access request attributes");
+                throw new AppException(ErrorCode.SERVER_ERROR);
+            }
+
+            var header = attributes.getRequest().getHeader("Authorization");
+            if (header == null || header.isEmpty()) {
+                log.warn("Authorization header is missing");
+                throw new AppException(ErrorCode.UNAUTHENTICATED);
+            }
+
+            // Xóa ảnh cũ nếu có và không phải ảnh mặc định
+            String oldAvatarUrl = user.getAvatarUrl();
+            if (oldAvatarUrl != null && !oldAvatarUrl.isEmpty() && !oldAvatarUrl.contains("i.pinimg.com")) {
+                try {
+                    // Lấy tên file từ URL
+                    String fileName = oldAvatarUrl.substring(oldAvatarUrl.lastIndexOf("/") + 1);
+                    uploadClient.deleteFile(header, fileName);
+                    log.info("Deleted old avatar: {}", fileName);
+                } catch (Exception e) {
+                    log.warn("Failed to delete old avatar: {}", oldAvatarUrl, e);
+                    // Tiếp tục xử lý ngay cả khi xóa ảnh cũ thất bại
+                }
+            }
+
+            // Upload ảnh mới
+            var uploadResponse = uploadClient.uploadAvatar(header, file);
+            if (uploadResponse.getCode() != 1000 || uploadResponse.getResult() == null) {
+                log.error("Failed to upload avatar: {}", uploadResponse.getMessage());
+                throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
+            }
+
+            String newAvatarUrl = uploadResponse.getResult().getFileName();
+            user.setAvatarUrl(newAvatarUrl);
+            log.info("Uploaded new avatar: {}", newAvatarUrl);
+
+            user = userRepository.save(user);
+            log.info("Avatar updated successfully for user ID: {}", userId);
+
+            return userMapper.toUserResponse(user);
+
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error updating avatar for user ID: {}", userId, e);
+            throw new AppException(ErrorCode.SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Xóa ảnh đại diện của người dùng
+     * @param userId ID của người dùng
+     * @return Thông tin người dùng đã cập nhật
+     */
+    @Transactional
+    public UserResponse deleteAvatar(String userId) {
+        log.info("Deleting avatar for user ID: {}", userId);
+
+        User user = userRepository.findById(userId).orElseThrow(() -> {
+            log.warn("Avatar deletion failed: User not found - ID: {}", userId);
+            return new AppException(ErrorCode.USER_NOT_EXISTED);
+        });
+
+        try {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes == null) {
+                log.error("Cannot access request attributes");
+                throw new AppException(ErrorCode.SERVER_ERROR);
+            }
+
+            var header = attributes.getRequest().getHeader("Authorization");
+            if (header == null || header.isEmpty()) {
+                log.warn("Authorization header is missing");
+                throw new AppException(ErrorCode.UNAUTHENTICATED);
+            }
+
+            // Xóa ảnh cũ nếu có và không phải ảnh mặc định
+            String oldAvatarUrl = user.getAvatarUrl();
+            if (oldAvatarUrl != null && !oldAvatarUrl.isEmpty() &&
+                !oldAvatarUrl.equals("default.jpg") &&
+                !oldAvatarUrl.contains("i.pinimg.com")) {
+                try {
+                    // Lấy tên file từ URL
+                    String fileName = oldAvatarUrl.substring(oldAvatarUrl.lastIndexOf("/") + 1);
+                    uploadClient.deleteFile(header, fileName);
+                    log.info("Deleted avatar: {}", fileName);
+                } catch (Exception e) {
+                    log.warn("Failed to delete avatar: {}", oldAvatarUrl, e);
+                    // Tiếp tục xử lý ngay cả khi xóa ảnh cũ thất bại
+                }
+            }
+
+            // Đặt lại avatar mặc định
+            user.setAvatarUrl("default.jpg");
+            user = userRepository.save(user);
+            log.info("Avatar reset to default for user ID: {}", userId);
+
+            return userMapper.toUserResponse(user);
+
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error deleting avatar for user ID: {}", userId, e);
+            throw new AppException(ErrorCode.SERVER_ERROR);
+        }
     }
 }

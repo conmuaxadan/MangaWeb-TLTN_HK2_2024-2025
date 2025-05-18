@@ -22,7 +22,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, userProfile, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -84,13 +84,22 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="absolute bottom-0 w-full border-t border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center space-x-3 mb-3">
             <div className="flex-shrink-0">
-              <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white">
-                <FontAwesomeIcon icon={faUser} />
-              </div>
+              {userProfile?.avatarUrl ? (
+                <img
+                  src={`http://localhost:8888/api/v1/upload/files/${userProfile.avatarUrl}`}
+                  alt="Avatar"
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white">
+                  <FontAwesomeIcon icon={faUser} />
+                </div>
+              )}
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{user?.username || 'Admin'}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Admin</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{userProfile?.displayName || user?.displayName || 'Admin'}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">@{user?.username || ''}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{userProfile?.email || user?.email || ''}</p>
             </div>
           </div>
           <button

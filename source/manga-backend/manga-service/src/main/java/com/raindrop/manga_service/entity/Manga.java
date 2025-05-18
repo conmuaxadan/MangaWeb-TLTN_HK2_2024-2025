@@ -49,4 +49,14 @@ public class Manga {
     String lastChapterId;
     // Thời gian thêm chapter mới nhất
     LocalDateTime lastChapterAddedAt;
+
+    // Các trường cho xóa mềm
+    @Column(nullable = false)
+    boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by")
+    String deletedBy;
 }

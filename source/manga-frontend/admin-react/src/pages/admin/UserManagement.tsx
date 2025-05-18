@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faPlus, faSearch, faFilter } from '@fortawesome/free-solid-svg-icons';
+import {faPlus, faSearch, faFilter } from '@fortawesome/free-solid-svg-icons';
 import { UserResponse, UserRequest, RoleResponse } from '../../interfaces/models/auth';
 import UserTable from '../../components/admin/UserTable';
 import Pagination from '../../components/common/Pagination';
 import UserForm from '../../components/admin/UserForm';
+import Modal from '../../components/common/Modal';
 import userService from '../../services/user-service';
 import roleService from '../../services/role-service';
+import {toast} from "react-toastify";
 
 const UserManagement: React.FC = () => {
   // State cho danh sách người dùng và vai trò
@@ -21,16 +23,15 @@ const UserManagement: React.FC = () => {
   // State cho phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // State cho form thêm/sửa người dùng
-  const [showUserForm, setShowUserForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<UserResponse | null>(null);
+  // State cho modal và form
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserResponse | undefined>(undefined);
 
   // State cho loading
   const [isLoading, setIsLoading] = useState(false);
-  const [isFormSubmitting, setIsFormSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load danh sách người dùng
   useEffect(() => {
@@ -45,7 +46,6 @@ const UserManagement: React.FC = () => {
       const response = await userService.getAllUsers();
       if (response) {
         setUsers(response);
-        setTotalItems(response.length);
         setTotalPages(Math.ceil(response.length / itemsPerPage));
       }
     } catch (error) {
@@ -85,36 +85,43 @@ const UserManagement: React.FC = () => {
   // Xử lý chuyển trang
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  // Xử lý mở form thêm người dùng
+  // Xử lý mở modal thêm người dùng
   const handleAddUser = () => {
-    setEditingUser(null);
-    setShowUserForm(true);
+    setCurrentUser(undefined);
+    setIsModalOpen(true);
   };
 
-  // Xử lý mở form sửa người dùng
+  // Xử lý mở modal sửa người dùng
   const handleEditUser = (user: UserResponse) => {
-    setEditingUser(user);
-    setShowUserForm(true);
+    setCurrentUser(user);
+    setIsModalOpen(true);
   };
 
-  // Xử lý đóng form
-  const handleCancelForm = () => {
-    setShowUserForm(false);
-    setEditingUser(null);
+  // Xử lý đóng modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setCurrentUser(undefined);
   };
 
   // Xử lý submit form
   const handleSubmitForm = async (data: UserRequest) => {
-    setIsFormSubmitting(true);
+    setIsSubmitting(true);
     try {
-      if (editingUser) {
+      if (currentUser) {
         // Cập nhật người dùng
-        const response = await userService.updateUser(data);
+        // Đảm bảo giữ nguyên email và username khi cập nhật
+        const updateData = {
+          ...data,
+          id: currentUser.id,
+          email: currentUser.email,
+          username: currentUser.username
+        };
+
+        const response = await userService.updateUser(updateData);
         if (response) {
           // Cập nhật danh sách người dùng
           setUsers(users.map(user => user.id === response.id ? response : user));
-          setShowUserForm(false);
-          setEditingUser(null);
+          setIsModalOpen(false);
         }
       } else {
         // Tạo người dùng mới
@@ -122,13 +129,27 @@ const UserManagement: React.FC = () => {
         if (response) {
           // Thêm người dùng mới vào danh sách
           setUsers([...users, response]);
-          setShowUserForm(false);
+          setIsModalOpen(false);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Lỗi khi lưu người dùng:', error);
+
+      // Hiển thị thông báo lỗi cụ thể dựa trên mã lỗi
+      const errorCode = error?.response?.data?.code;
+      const errorMessage = error?.response?.data?.message;
+
+      if (errorCode === 1108) {
+        toast.error("Tên hiển thị đã tồn tại, vui lòng chọn tên khác", { position: "top-right" });
+      } else if (errorCode === 1107) {
+        toast.error("Email đã tồn tại, vui lòng sử dụng email khác", { position: "top-right" });
+      } else if (errorCode === 1100) {
+        toast.error("Tên đăng nhập đã tồn tại, vui lòng chọn tên khác", { position: "top-right" });
+      } else {
+        toast.error(errorMessage || "Có lỗi xảy ra khi lưu người dùng", { position: "top-right" });
+      }
     } finally {
-      setIsFormSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -151,7 +172,7 @@ const UserManagement: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Quản lý người dùng</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Quản lý người dùng</h1>
         <button
           onClick={handleAddUser}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
@@ -161,28 +182,33 @@ const UserManagement: React.FC = () => {
         </button>
       </div>
 
-      {/* Form thêm/sửa người dùng */}
-      {showUserForm && (
+      {/* Modal thêm/sửa người dùng */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title={currentUser ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
+        size="lg"
+      >
         <UserForm
-          initialData={editingUser || undefined}
+          initialData={currentUser}
           roles={roles}
           onSubmit={handleSubmitForm}
-          onCancel={handleCancelForm}
-          isLoading={isFormSubmitting}
+          onCancel={handleCloseModal}
+          isLoading={isSubmitting}
         />
-      )}
+      </Modal>
 
       {/* Tìm kiếm và lọc */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+      <div className="bg-white rounded-lg shadow-md p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Tìm kiếm */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FontAwesomeIcon icon={faSearch} className="text-gray-500 dark:text-gray-400" />
+              <FontAwesomeIcon icon={faSearch} className="text-gray-500" />
             </div>
             <input
               type="text"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
               placeholder="Tìm kiếm theo tên hoặc email"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -192,10 +218,10 @@ const UserManagement: React.FC = () => {
           {/* Lọc theo vai trò */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FontAwesomeIcon icon={faFilter} className="text-gray-500 dark:text-gray-400" />
+              <FontAwesomeIcon icon={faFilter} className="text-gray-500" />
             </div>
             <select
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
             >
@@ -211,10 +237,10 @@ const UserManagement: React.FC = () => {
           {/* Lọc theo nhà cung cấp */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FontAwesomeIcon icon={faFilter} className="text-gray-500 dark:text-gray-400" />
+              <FontAwesomeIcon icon={faFilter} className="text-gray-500" />
             </div>
             <select
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
               value={filterProvider}
               onChange={(e) => setFilterProvider(e.target.value)}
             >
@@ -241,7 +267,6 @@ const UserManagement: React.FC = () => {
           totalPages={totalPages}
           onPageChange={paginate}
           totalItems={filteredUsers.length}
-          itemsPerPage={itemsPerPage}
           showingFrom={indexOfFirstItem + 1}
           showingTo={indexOfLastItem > filteredUsers.length ? filteredUsers.length : indexOfLastItem}
         />

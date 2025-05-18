@@ -21,7 +21,7 @@ public class Chapter {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    int chapterNumber;
+    double chapterNumber;
     String title;
     int views;
     int comments;

@@ -14,7 +14,7 @@ import java.util.Set;
 
 public interface ChapterRepository extends JpaRepository<Chapter, String> {
     Chapter findByTitle(String title);
-    Optional<Chapter> findByMangaAndChapterNumber(Manga manga, int chapterNumber);
+    Optional<Chapter> findByMangaAndChapterNumber(Manga manga, double chapterNumber);
     Set<Chapter> findByManga(Manga manga);
     List<Chapter> findByMangaId(String mangaId);
 

@@ -22,22 +22,19 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-
     @Column(unique = true)
     String username;
-
     String password;
-
     @Column(unique = true)
     String email;
-
+    @Column(unique = true)
+    String displayName;
+    String avatarUrl;
     @Enumerated(EnumType.STRING)
     @Builder.Default
     AuthProvider authProvider = AuthProvider.LOCAL; // Mặc định là LOCAL
-
     @ManyToMany
     Set<Role> roles;
-
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;

@@ -14,7 +14,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ChapterResponse {
     String id;
-    int chapterNumber;
+    double chapterNumber;
     String title;
     int views;
     int comments;

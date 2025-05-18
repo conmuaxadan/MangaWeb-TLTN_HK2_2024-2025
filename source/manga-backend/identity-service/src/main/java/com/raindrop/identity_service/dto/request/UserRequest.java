@@ -28,5 +28,9 @@ public class UserRequest {
     @NotBlank(message = "EMAIL_REQUIRED")
     @Email(message = "EMAIL_INVALID")
     String email;
-    List<String> roles;
+
+    String displayName;
+    String avatarUrl;
+
+    List<Long> roles;
 }

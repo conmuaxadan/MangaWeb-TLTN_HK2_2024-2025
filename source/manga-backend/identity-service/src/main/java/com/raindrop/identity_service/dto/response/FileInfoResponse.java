@@ -1,4 +1,4 @@
-package com.raindrop.profile_service.dto.response;
+package com.raindrop.identity_service.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -9,5 +9,5 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FileInfoResponse {
-    String name;
+    String fileName;
 }

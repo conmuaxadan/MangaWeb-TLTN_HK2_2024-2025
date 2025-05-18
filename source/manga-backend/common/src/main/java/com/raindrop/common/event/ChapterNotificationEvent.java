@@ -13,7 +13,7 @@ public class ChapterNotificationEvent {
     private String mangaId;
     private String mangaTitle;
     private String chapterId;
-    private int chapterNumber;
+    private double chapterNumber;
     private String chapterTitle;
     private String userEmail;
 }

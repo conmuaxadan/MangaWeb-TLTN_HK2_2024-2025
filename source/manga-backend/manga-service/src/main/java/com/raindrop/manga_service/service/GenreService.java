@@ -2,6 +2,7 @@ package com.raindrop.manga_service.service;
 
 import com.raindrop.manga_service.dto.request.GenreRequest;
 import com.raindrop.manga_service.dto.response.GenreResponse;
+import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.enums.ErrorCode;
 import com.raindrop.manga_service.exception.AppException;
 import com.raindrop.manga_service.mapper.GenreMapper;
@@ -29,7 +30,13 @@ public class GenreService {
         return genreMapper.toGenreResponse(genre);
     }
 
-    public GenreResponse getGenre(String name){
+    public GenreResponse getGenreById(Long id){
+        var genre = genreRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.GENRE_NOT_FOUND));
+        return genreMapper.toGenreResponse(genre);
+    }
+
+    public GenreResponse getGenreByName(String name){
         var genre = genreRepository.findByName(name);
         if (genre == null) {
             throw new AppException(ErrorCode.GENRE_NOT_FOUND);
@@ -38,23 +45,66 @@ public class GenreService {
     }
 
     public List<GenreResponse> getAllGenres(){
-        return genreRepository.findAll().stream().map(genreMapper::toGenreResponse).toList();
+        List<Genre> genres = genreRepository.findAll();
+        log.info("Found {} genres", genres.size());
+        for (Genre genre : genres) {
+            log.info("Genre: id={}, name={}, description={}", genre.getId(), genre.getName(), genre.getDescription());
+        }
+
+        List<GenreResponse> responses = genres.stream()
+                .map(genre -> {
+                    GenreResponse response = genreMapper.toGenreResponse(genre);
+                    log.info("Mapped Genre to GenreResponse: id={} -> id={}", genre.getId(), response.getId());
+                    return response;
+                })
+                .toList();
+
+        return responses;
     }
 
-    public void deleteGenre(String name){
+    public void deleteGenreById(Long id){
+        var genre = genreRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.GENRE_NOT_FOUND));
+
+        try {
+            genreRepository.delete(genre);
+        } catch (Exception e) {
+            log.error("Error deleting genre with ID {}: {}", id, e.getMessage());
+            throw new AppException(ErrorCode.GENRE_IN_USE, "Không thể xóa thể loại này vì nó đang được sử dụng trong một hoặc nhiều truyện. Hãy gỡ bỏ thể loại khỏi các truyện trước khi xóa.");
+        }
+    }
+
+    public void deleteGenreByName(String name){
         var genre = genreRepository.findByName(name);
         if (genre == null) {
             throw new AppException(ErrorCode.GENRE_NOT_FOUND);
         }
-        genreRepository.delete(genre);
+
+        try {
+            genreRepository.delete(genre);
+        } catch (Exception e) {
+            log.error("Error deleting genre with name {}: {}", name, e.getMessage());
+            throw new AppException(ErrorCode.GENRE_IN_USE, "Không thể xóa thể loại này vì nó đang được sử dụng trong một hoặc nhiều truyện. Hãy gỡ bỏ thể loại khỏi các truyện trước khi xóa.");
+        }
     }
 
-    public GenreResponse updateGenre(String name, GenreRequest request){
+    public GenreResponse updateGenreById(Long id, GenreRequest request){
+        var genre = genreRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.GENRE_NOT_FOUND));
+        genre.setName(request.getName());
+        genre.setDescription(request.getDescription());
+        genreRepository.save(genre);
+
+        return genreMapper.toGenreResponse(genre);
+    }
+
+    public GenreResponse updateGenreByName(String name, GenreRequest request){
         var genre = genreRepository.findByName(name);
         if (genre == null) {
             throw new AppException(ErrorCode.GENRE_NOT_FOUND);
         }
         genre.setName(request.getName());
+        genre.setDescription(request.getDescription());
         genreRepository.save(genre);
 
         return genreMapper.toGenreResponse(genre);

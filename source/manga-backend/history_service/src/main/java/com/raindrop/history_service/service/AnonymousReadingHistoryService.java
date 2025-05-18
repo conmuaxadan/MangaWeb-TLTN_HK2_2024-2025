@@ -33,11 +33,10 @@ public class AnonymousReadingHistoryService {
      * Đánh dấu đã đọc chapter cho người dùng không đăng nhập
      * @param request Thông tin chapter đã đọc
      * @param ipAddress Địa chỉ IP của người dùng
-     * @param userAgent User-Agent của trình duyệt
      * @return Thông tin lịch sử đọc
      */
     @Transactional
-    public AnonymousReadingHistoryResponse markChapterAsRead(AnonymousReadingHistoryRequest request, String ipAddress, String userAgent) {
+    public AnonymousReadingHistoryResponse markChapterAsRead(AnonymousReadingHistoryRequest request, String ipAddress) {
         log.info("Marking chapter {} of manga {} as read for anonymous user with session {}",
                 request.getChapterId(), request.getMangaId(), request.getSessionId());
 
@@ -51,7 +50,7 @@ public class AnonymousReadingHistoryService {
             readingHistory = existingHistory.get();
         } else {
             // Tạo lịch sử đọc mới
-            readingHistory = anonymousReadingHistoryMapper.toAnonymousReadingHistory(request, ipAddress, userAgent);
+            readingHistory = anonymousReadingHistoryMapper.toAnonymousReadingHistory(request, ipAddress);
         }
 
         // Lưu lịch sử đọc

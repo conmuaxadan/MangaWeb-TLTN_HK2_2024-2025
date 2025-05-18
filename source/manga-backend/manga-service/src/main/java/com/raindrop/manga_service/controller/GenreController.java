@@ -31,35 +31,69 @@ public class GenreController {
                 .build();
     }
 
-    @GetMapping("/{name}")
-    ApiResponse<GenreResponse> getGenre(@PathVariable String name) {
+    @GetMapping("/{id}")
+    ApiResponse<GenreResponse> getGenreById(@PathVariable Long id) {
         return ApiResponse.<GenreResponse>builder()
                 .message("Genre retrieved successfully")
-                .result(genreService.getGenre(name))
+                .result(genreService.getGenreById(id))
+                .build();
+    }
+
+    @GetMapping("/name/{name}")
+    ApiResponse<GenreResponse> getGenreByName(@PathVariable String name) {
+        return ApiResponse.<GenreResponse>builder()
+                .message("Genre retrieved successfully")
+                .result(genreService.getGenreByName(name))
                 .build();
     }
 
     @GetMapping()
     ApiResponse<List<GenreResponse>> getAllGenres() {
+        List<GenreResponse> genres = genreService.getAllGenres();
+        log.info("Returning {} genres to client", genres.size());
+        for (GenreResponse genre : genres) {
+            log.info("Controller - GenreResponse: id={} ({}), name={}, description={}",
+                    genre.getId(), genre.getId() != null ? genre.getId().getClass().getSimpleName() : "null",
+                    genre.getName(), genre.getDescription());
+        }
+
         return ApiResponse.<List<GenreResponse>>builder()
                 .message("Genres retrieved successfully")
-                .result(genreService.getAllGenres())
+                .result(genres)
                 .build();
     }
 
-    @PutMapping("/{name}")
+    @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    ApiResponse<GenreResponse> updateGenre(@PathVariable String name, @RequestBody GenreRequest request) {
+    ApiResponse<GenreResponse> updateGenreById(@PathVariable Long id, @RequestBody GenreRequest request) {
         return ApiResponse.<GenreResponse>builder()
                 .message("Genre updated successfully")
-                .result(genreService.updateGenre(name, request))
+                .result(genreService.updateGenreById(id, request))
                 .build();
     }
 
-    @DeleteMapping("/{name}")
+    @PutMapping("/name/{name}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    ApiResponse<Void> deleteGenre(@PathVariable String name) {
-        genreService.deleteGenre(name);
+    ApiResponse<GenreResponse> updateGenreByName(@PathVariable String name, @RequestBody GenreRequest request) {
+        return ApiResponse.<GenreResponse>builder()
+                .message("Genre updated successfully")
+                .result(genreService.updateGenreByName(name, request))
+                .build();
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    ApiResponse<Void> deleteGenreById(@PathVariable Long id) {
+        genreService.deleteGenreById(id);
+        return ApiResponse.<Void>builder()
+                .message("Genre deleted successfully")
+                .build();
+    }
+
+    @DeleteMapping("/name/{name}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    ApiResponse<Void> deleteGenreByName(@PathVariable String name) {
+        genreService.deleteGenreByName(name);
         return ApiResponse.<Void>builder()
                 .message("Genre deleted successfully")
                 .build();

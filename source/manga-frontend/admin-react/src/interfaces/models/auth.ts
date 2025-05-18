@@ -32,6 +32,8 @@ export interface UserResponse {
     id: string;
     username: string;
     email: string;
+    displayName?: string;
+    avatarUrl?: string;
     roles: RoleResponse[];
     authProvider?: string; // LOCAL, GOOGLE, etc.
     createdAt?: string;
@@ -43,7 +45,9 @@ export interface UserRequest {
     username: string;
     password: string;
     email: string;
-    role: string;
+    displayName?: string;
+    avatarUrl?: string;
+    roles: number[];
 }
 
 // User Filter
@@ -56,13 +60,15 @@ export interface UserFilter {
 
 // Role Response
 export interface RoleResponse {
+    id: number;
     name: string;
-    description?: string;
+    description: string;
     permissions?: PermissionResponse[];
 }
 
 // Permission Response
 export interface PermissionResponse {
+    id?: number;
     name: string;
     description?: string;
 }
@@ -70,8 +76,8 @@ export interface PermissionResponse {
 // Role Request (for create/update)
 export interface RoleRequest {
     name: string;
-    permissions: string[];
-    description?: string;
+    permissions: number[];
+    description: string;
 }
 
 // Refresh Token Request

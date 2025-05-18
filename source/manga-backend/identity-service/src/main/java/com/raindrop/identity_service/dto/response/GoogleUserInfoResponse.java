@@ -21,4 +21,5 @@ public class GoogleUserInfoResponse {
     String email;
     String name;
     String googleId;
+    String picture;
 }

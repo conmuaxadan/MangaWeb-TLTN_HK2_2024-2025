@@ -122,6 +122,7 @@ class AuthService {
         try {
             const token = localStorage.getItem(TOKEN_STORAGE.ACCESS_TOKEN);
             if (!token) {
+                console.log("getMyInfo: Không tìm thấy token");
                 return null;
             }
 
@@ -133,14 +134,29 @@ class AuthService {
             }).join(''));
 
             const payload = JSON.parse(jsonPayload);
+            console.log("getMyInfo: Token payload:", payload);
+
+            // Kiểm tra xem token có chứa scope (quyền) không
+            if (!payload.scope) {
+                console.warn("getMyInfo: Token không chứa thông tin quyền (scope)");
+            }
+
+            // Kiểm tra xem scope có chứa ROLE_ADMIN không
+            const hasAdminRole = payload.scope && payload.scope.includes('ROLE_ADMIN');
+            console.log("getMyInfo: Có quyền ADMIN:", hasAdminRole);
 
             // Tạo đối tượng UserResponse từ payload
             return {
                 id: payload.sub, // subject trong JWT là user ID
-                username: payload.preferred_username || payload.email,
+                username: payload.username,
                 email: payload.email,
-                roles: [{ name: payload.scope || 'ROLE_USER' }],
-                authProvider: payload.authProvider || 'LOCAL'
+                roles: [{
+                    name: payload.scope || 'ROLE_USER',
+                    id: 0,
+                    description: ""
+                }],
+                authProvider: payload.authProvider || 'LOCAL',
+                displayName: payload.displayName,
             };
         } catch (error) {
             console.error("Lỗi lấy thông tin người dùng từ token:", error);

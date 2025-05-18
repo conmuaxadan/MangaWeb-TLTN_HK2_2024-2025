@@ -23,6 +23,7 @@ spring:
       static-locations: file:uploads/,classpath:/static
 app:
   upload:
+    url: http://localhost:8083/upload/files/
     manga: C:/uploads/manga/
     user: C:/uploads/user/
 

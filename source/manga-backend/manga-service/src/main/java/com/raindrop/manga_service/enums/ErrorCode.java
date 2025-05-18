@@ -16,6 +16,10 @@ public enum ErrorCode {
     MANGA_NOT_FOUND(2001, "Manga not found", HttpStatus.NOT_FOUND),
     MANGA_ALREADY_EXISTS(2002, "Manga with this title already exists", HttpStatus.BAD_REQUEST),
     MANGA_INVALID_DATA(2003, "Invalid manga data", HttpStatus.BAD_REQUEST),
+    MANGA_DELETE_ERROR(2004, "Error deleting manga", HttpStatus.INTERNAL_SERVER_ERROR),
+    MANGA_ALREADY_DELETED(2005, "Manga is already deleted", HttpStatus.BAD_REQUEST),
+    MANGA_NOT_DELETED(2006, "Manga is not deleted", HttpStatus.BAD_REQUEST),
+    MANGA_RESTORE_ERROR(2007, "Error restoring manga", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // Chapter related errors (2100-2199)
     CHAPTER_NOT_FOUND(2101, "Chapter not found", HttpStatus.NOT_FOUND),
@@ -32,6 +36,7 @@ public enum ErrorCode {
     GENRE_NOT_FOUND(2201, "Genre not found", HttpStatus.NOT_FOUND),
     GENRE_ALREADY_EXISTS(2202, "Genre with this name already exists", HttpStatus.BAD_REQUEST),
     GENRE_INVALID_DATA(2203, "Invalid genre data", HttpStatus.BAD_REQUEST),
+    GENRE_IN_USE(2204, "Genre is in use", HttpStatus.BAD_REQUEST),
 
     // File upload related errors (2400-2499)
     FILE_UPLOAD_FAILED(2401, "Failed to upload file", HttpStatus.INTERNAL_SERVER_ERROR),

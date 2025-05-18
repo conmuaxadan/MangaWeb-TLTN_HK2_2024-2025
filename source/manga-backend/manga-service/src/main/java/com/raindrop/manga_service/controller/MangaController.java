@@ -154,12 +154,50 @@ public class MangaController {
                 .build();
     }
 
+    /**
+     * Xóa mềm manga
+     * @param id ID của manga cần xóa
+     * @param jwt JWT token của người dùng
+     * @return Thông báo xóa thành công
+     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    ApiResponse<Void> deleteManga(@PathVariable String id) {
-        mangaService.deleteManga(id);
+    ApiResponse<Void> deleteManga(
+            @PathVariable String id,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt
+    ) {
+        String userId = jwt.getSubject();
+        mangaService.deleteManga(id, userId);
         return ApiResponse.<Void>builder()
                 .message("Manga deleted successfully")
+                .build();
+    }
+
+    /**
+     * Lấy danh sách manga đã bị xóa
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga đã bị xóa
+     */
+    @GetMapping("/deleted")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    ApiResponse<Page<MangaResponse>> getDeletedMangas(Pageable pageable) {
+        return ApiResponse.<Page<MangaResponse>>builder()
+                .message("Deleted mangas retrieved successfully")
+                .result(mangaService.getAllDeletedMangasPaginated(pageable))
+                .build();
+    }
+
+    /**
+     * Khôi phục manga đã xóa
+     * @param id ID của manga cần khôi phục
+     * @return Thông tin manga đã khôi phục
+     */
+    @PostMapping("/{id}/restore")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    ApiResponse<MangaResponse> restoreManga(@PathVariable String id) {
+        return ApiResponse.<MangaResponse>builder()
+                .message("Manga restored successfully")
+                .result(mangaService.restoreManga(id))
                 .build();
     }
 
@@ -220,8 +258,8 @@ public class MangaController {
      * @return Số chapter cao nhất
      */
     @GetMapping("/{id}/highest-chapter-number")
-    ApiResponse<Integer> getHighestChapterNumber(@PathVariable String id) {
-        return ApiResponse.<Integer>builder()
+    ApiResponse<Double> getHighestChapterNumber(@PathVariable String id) {
+        return ApiResponse.<Double>builder()
                 .message("Highest chapter number retrieved successfully")
                 .result(mangaService.getHighestChapterNumber(id))
                 .build();

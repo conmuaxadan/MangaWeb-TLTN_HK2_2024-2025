@@ -84,8 +84,8 @@ public class MangaService {
             try {
                 log.info("Uploading cover image for manga: {}", request.getTitle());
                 var response = uploadClient.uploadMedia(header,request.getCover());
-                manga.setCoverUrl(response.getResult().getName());
-                log.info("Cover image uploaded successfully: {}", response.getResult().getName());
+                manga.setCoverUrl(response.getResult().getFileName());
+                log.info("Cover image uploaded successfully: {}", response.getResult().getFileName());
             } catch (Exception e) {
                 log.error("Error uploading cover image: {}", e.getMessage());
                 throw new AppException(ErrorCode.COVER_UPLOAD_FAILED);
@@ -97,7 +97,7 @@ public class MangaService {
     }
 
     public MangaResponse getMangaByName(String title) {
-        var manga = mangaRepository.findByTitle(title);
+        var manga = mangaRepository.findByTitleAndDeletedFalse(title);
         if (manga == null) {
             throw new AppException(ErrorCode.MANGA_NOT_FOUND);
         }
@@ -105,7 +105,7 @@ public class MangaService {
     }
 
     public MangaResponse getMangaById(String id) {
-        Manga manga = mangaRepository.findById(id)
+        Manga manga = mangaRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
         MangaResponse response = mangaMapper.toMangaResponse(manga);
 
@@ -122,9 +122,20 @@ public class MangaService {
 
 
     public List<MangaResponse> getAllMangas() {
-        log.info("Getting all mangas");
-        List<Manga> mangas = mangaRepository.findAll();
-        log.info("Retrieved {} mangas", mangas.size());
+        log.info("Getting all active mangas");
+        List<Manga> mangas = mangaRepository.findByDeletedFalse();
+        log.info("Retrieved {} active mangas", mangas.size());
+        return mangas.stream().map(mangaMapper::toMangaResponse).toList();
+    }
+
+    /**
+     * Lấy danh sách tất cả manga đã bị xóa
+     * @return Danh sách manga đã bị xóa
+     */
+    public List<MangaResponse> getAllDeletedMangas() {
+        log.info("Getting all deleted mangas");
+        List<Manga> mangas = mangaRepository.findByDeletedTrue();
+        log.info("Retrieved {} deleted mangas", mangas.size());
         return mangas.stream().map(mangaMapper::toMangaResponse).toList();
     }
 
@@ -134,10 +145,23 @@ public class MangaService {
      * @return Danh sách manga có phân trang
      */
     public Page<MangaResponse> getAllMangasPaginated(Pageable pageable) {
-        log.info("Getting paginated mangas with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        Page<Manga> mangasPage = mangaRepository.findAll(pageable);
+        log.info("Getting paginated active mangas with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        Page<Manga> mangasPage = mangaRepository.findByDeletedFalse(pageable);
         Page<MangaResponse> mangaResponsePage = mangasPage.map(mangaMapper::toMangaResponse);
-        log.info("Retrieved {} mangas out of {} total", mangaResponsePage.getNumberOfElements(), mangaResponsePage.getTotalElements());
+        log.info("Retrieved {} active mangas out of {} total", mangaResponsePage.getNumberOfElements(), mangaResponsePage.getTotalElements());
+        return mangaResponsePage;
+    }
+
+    /**
+     * Lấy danh sách manga đã bị xóa có phân trang
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga đã bị xóa có phân trang
+     */
+    public Page<MangaResponse> getAllDeletedMangasPaginated(Pageable pageable) {
+        log.info("Getting paginated deleted mangas with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        Page<Manga> mangasPage = mangaRepository.findByDeletedTrue(pageable);
+        Page<MangaResponse> mangaResponsePage = mangasPage.map(mangaMapper::toMangaResponse);
+        log.info("Retrieved {} deleted mangas out of {} total", mangaResponsePage.getNumberOfElements(), mangaResponsePage.getTotalElements());
         return mangaResponsePage;
     }
 
@@ -168,10 +192,121 @@ public class MangaService {
         return mangaSummaryResponsePage;
     }
 
-    public void deleteManga(String id) {
+    /**
+     * Xóa mềm manga
+     * @param id ID của manga cần xóa
+     * @param userId ID của người dùng thực hiện xóa
+     */
+    @Transactional
+    public void softDeleteManga(String id, String userId) {
+        log.info("Soft deleting manga with ID: {}", id);
+
+        // Tìm manga cần xóa
         var manga = mangaRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
-        mangaRepository.delete(manga);
+
+        // Kiểm tra xem manga đã bị xóa chưa
+        if (manga.isDeleted()) {
+            log.warn("Manga already deleted: {}", id);
+            throw new AppException(ErrorCode.MANGA_ALREADY_DELETED);
+        }
+
+        try {
+            // Đánh dấu manga đã bị xóa
+            manga.setDeleted(true);
+            manga.setDeletedAt(java.time.LocalDateTime.now());
+            manga.setDeletedBy(userId);
+
+            // Lưu manga
+            mangaRepository.save(manga);
+            log.info("Successfully soft deleted manga: {}", id);
+        } catch (Exception e) {
+            log.error("Error soft deleting manga: {}", id, e);
+            throw new AppException(ErrorCode.MANGA_DELETE_ERROR, "Error soft deleting manga: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Khôi phục manga đã xóa
+     * @param id ID của manga cần khôi phục
+     * @return Thông tin manga đã khôi phục
+     */
+    @Transactional
+    public MangaResponse restoreManga(String id) {
+        log.info("Restoring manga with ID: {}", id);
+
+        // Tìm manga cần khôi phục
+        var manga = mangaRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
+
+        // Kiểm tra xem manga có bị xóa không
+        if (!manga.isDeleted()) {
+            log.warn("Manga is not deleted: {}", id);
+            throw new AppException(ErrorCode.MANGA_NOT_DELETED);
+        }
+
+        try {
+            // Đánh dấu manga chưa bị xóa
+            manga.setDeleted(false);
+            manga.setDeletedAt(null);
+            manga.setDeletedBy(null);
+
+            // Lưu manga
+            manga = mangaRepository.save(manga);
+            log.info("Successfully restored manga: {}", id);
+
+            return mangaMapper.toMangaResponse(manga);
+        } catch (Exception e) {
+            log.error("Error restoring manga: {}", id, e);
+            throw new AppException(ErrorCode.MANGA_RESTORE_ERROR, "Error restoring manga: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Xóa cứng manga (chỉ dùng cho mục đích quản trị đặc biệt)
+     * @param id ID của manga cần xóa
+     */
+    @Transactional
+    public void hardDeleteManga(String id) {
+        log.info("Hard deleting manga with ID: {}", id);
+
+        // Tìm manga cần xóa
+        var manga = mangaRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
+
+        try {
+            // Xóa tất cả các chapter liên quan
+            Set<Chapter> chapters = chapterRepository.findByManga(manga);
+            log.info("Found {} chapters to delete for manga: {}", chapters.size(), id);
+
+            for (Chapter chapter : chapters) {
+                log.info("Deleting chapter: {}", chapter.getId());
+                chapterRepository.delete(chapter);
+            }
+
+            // Xóa mối quan hệ với Genre
+            log.info("Clearing genre relationships for manga: {}", id);
+            manga.getGenres().clear();
+            mangaRepository.save(manga);
+
+            // Xóa manga
+            log.info("Deleting manga: {}", id);
+            mangaRepository.delete(manga);
+            log.info("Successfully hard deleted manga: {}", id);
+        } catch (Exception e) {
+            log.error("Error hard deleting manga: {}", id, e);
+            throw new AppException(ErrorCode.MANGA_DELETE_ERROR, "Error hard deleting manga: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Xóa manga (sử dụng xóa mềm theo mặc định)
+     * @param id ID của manga cần xóa
+     * @param userId ID của người dùng thực hiện xóa
+     */
+    @Transactional
+    public void deleteManga(String id, String userId) {
+        softDeleteManga(id, userId);
     }
 
     public MangaResponse updateManga(String id, MangaRequest request) {
@@ -195,8 +330,8 @@ public class MangaService {
                 uploadClient.deleteMedia(header,manga.getCoverUrl());
                 log.info("Uploading new cover image for manga: {}", manga.getTitle());
                 var response = uploadClient.uploadMedia(header,request.getCover());
-                manga.setCoverUrl(response.getResult().getName());
-                log.info("New cover image uploaded successfully: {}", response.getResult().getName());
+                manga.setCoverUrl(response.getResult().getFileName());
+                log.info("New cover image uploaded successfully: {}", response.getResult().getFileName());
             } catch (Exception e) {
                 log.error("Error uploading new cover image: {}", e.getMessage());
                 throw new AppException(ErrorCode.COVER_UPLOAD_FAILED);
@@ -373,7 +508,7 @@ public class MangaService {
      * @param mangaId ID của truyện
      * @return Số chapter cao nhất
      */
-    public Integer getHighestChapterNumber(String mangaId) {
+    public Double getHighestChapterNumber(String mangaId) {
         log.info("Getting highest chapter number for manga: {}", mangaId);
 
         // Kiểm tra truyện có tồn tại không
@@ -386,12 +521,12 @@ public class MangaService {
         if (chapters.isEmpty()) {
             // Nếu truyện chưa có chapter nào, trả về 0
             log.info("Manga {} has no chapters yet", mangaId);
-            return 0;
+            return 0.0;
         }
 
         // Tìm số chapter cao nhất
-        int highestChapterNumber = chapters.stream()
-                .mapToInt(Chapter::getChapterNumber)
+        double highestChapterNumber = chapters.stream()
+                .mapToDouble(Chapter::getChapterNumber)
                 .max()
                 .orElse(0);
 

@@ -11,8 +11,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class UserProfileEvent {
-    String userId;
+public class UserEvent {
     String email;
     String displayName;
     String avatarUrl;

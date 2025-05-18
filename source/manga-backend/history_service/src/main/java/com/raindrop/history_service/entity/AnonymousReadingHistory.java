@@ -26,23 +26,20 @@ public class AnonymousReadingHistory {
 
     @Column(name = "session_id", nullable = false)
     String sessionId;
-    
+
     @Column(name = "manga_id", nullable = false)
     String mangaId;
-    
+
     @Column(name = "chapter_id", nullable = false)
     String chapterId;
-    
+
     @Column(name = "ip_address")
     String ipAddress;
-    
-    @Column(name = "user_agent")
-    String userAgent;
-    
+
     @Column(name = "created_at", updatable = false)
     @CreatedDate
     LocalDateTime createdAt;
-    
+
     @Column(name = "updated_at")
     @LastModifiedDate
     LocalDateTime updatedAt;

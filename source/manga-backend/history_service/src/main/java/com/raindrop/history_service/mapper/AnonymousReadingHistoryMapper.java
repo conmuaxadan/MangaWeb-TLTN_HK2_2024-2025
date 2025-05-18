@@ -8,13 +8,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class AnonymousReadingHistoryMapper {
 
-    public AnonymousReadingHistory toAnonymousReadingHistory(AnonymousReadingHistoryRequest request, String ipAddress, String userAgent) {
+    public AnonymousReadingHistory toAnonymousReadingHistory(AnonymousReadingHistoryRequest request, String ipAddress) {
         return AnonymousReadingHistory.builder()
                 .sessionId(request.getSessionId())
                 .mangaId(request.getMangaId())
                 .chapterId(request.getChapterId())
                 .ipAddress(ipAddress)
-                .userAgent(userAgent)
                 .build();
     }
 

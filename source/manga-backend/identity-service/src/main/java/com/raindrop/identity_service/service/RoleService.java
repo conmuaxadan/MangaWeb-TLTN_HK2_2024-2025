@@ -30,6 +30,7 @@ public class RoleService {
         var role = roleMapper.toRole(request);
         var permissions = permissionRepository.findAllById(request.getPermissions());
         role.setPermissions(new HashSet<>(permissions));
+        role.setDescription(request.getDescription());
         roleRepository.save(role);
 
         return roleMapper.toRoleResponse(role);
@@ -55,7 +56,34 @@ public class RoleService {
         return roleResponsePage;
     }
 
-    public void delete(String role) {
-        roleRepository.deleteById(role);
+    public void delete(Long id) {
+        log.info("Deleting role with id: {}", id);
+        roleRepository.deleteById(id);
+    }
+
+    public RoleResponse getById(Long id) {
+        log.info("Getting role with id: {}", id);
+        var role = roleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Role not found with id: " + id));
+        return roleMapper.toRoleResponse(role);
+    }
+
+    public RoleResponse update(Long id, RoleRequest request) {
+        log.info("Updating role with id: {}, name: {}", id, request.getName());
+
+        var role = roleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Role not found with id: " + id));
+
+        // Update fields
+        role.setName(request.getName());
+        role.setDescription(request.getDescription());
+
+        // Update permissions
+        var permissions = permissionRepository.findAllById(request.getPermissions());
+        role.setPermissions(new HashSet<>(permissions));
+
+        roleRepository.save(role);
+
+        return roleMapper.toRoleResponse(role);
     }
 }

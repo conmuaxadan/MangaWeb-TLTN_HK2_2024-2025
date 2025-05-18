@@ -27,6 +27,9 @@ public interface MangaMapper {
     @Mapping(target = "lastChapterAddedAt", ignore = true)
     @Mapping(target = "yearOfRelease", source = "yearOfRelease")
     @Mapping(target = "status", source = "status")
+    @Mapping(target = "deleted", constant = "false")
+    @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "deletedBy", ignore = true)
     Manga toManga(MangaRequest request);
 
     @Mapping(target = "genres", source = "genres", qualifiedByName = "genresToStringList")
@@ -58,6 +61,9 @@ public interface MangaMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "lastChapterAddedAt", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "deletedBy", ignore = true)
     void updateManga(@MappingTarget Manga manga, MangaRequest request);
 
     @Named("genresToStringList")

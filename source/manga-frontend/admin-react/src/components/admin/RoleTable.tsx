@@ -6,7 +6,7 @@ import { RoleResponse } from '../../interfaces/models/auth';
 interface RoleTableProps {
   roles: RoleResponse[];
   onEdit: (role: RoleResponse) => void;
-  onDelete: (roleName: string) => void;
+  onDelete: (roleId: number, roleName: string) => void;
   loading?: boolean;
 }
 
@@ -37,6 +37,9 @@ const RoleTable: React.FC<RoleTableProps> = ({ roles, onEdit, onDelete, loading 
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                ID
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Tên vai trò
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -53,6 +56,9 @@ const RoleTable: React.FC<RoleTableProps> = ({ roles, onEdit, onDelete, loading 
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {roles.map((role) => (
               <tr key={role.name} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                  {role.id || '-'}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                   {role.name}
                 </td>
@@ -83,7 +89,7 @@ const RoleTable: React.FC<RoleTableProps> = ({ roles, onEdit, onDelete, loading 
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button 
+                  <button
                     className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3"
                     onClick={() => onEdit(role)}
                   >
@@ -91,7 +97,7 @@ const RoleTable: React.FC<RoleTableProps> = ({ roles, onEdit, onDelete, loading 
                   </button>
                   <button
                     className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                    onClick={() => onDelete(role.name)}
+                    onClick={() => onDelete(role.id, role.name)}
                   >
                     <FontAwesomeIcon icon={faTrash} />
                   </button>

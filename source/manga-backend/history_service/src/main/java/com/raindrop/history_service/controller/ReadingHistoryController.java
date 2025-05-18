@@ -36,7 +36,7 @@ public class ReadingHistoryController {
      */
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Page<ReadingHistoryResponse>>> getCurrentUserReadingHistory(
+    public ApiResponse<Page<ReadingHistoryResponse>> getCurrentUserReadingHistory(
             @AuthenticationPrincipal Jwt jwt,
             @PageableDefault(size = 10, sort = "updatedAt") Pageable pageable
     ) {
@@ -45,11 +45,11 @@ public class ReadingHistoryController {
 
         Page<ReadingHistoryResponse> readingHistory = readingHistoryService.getReadingHistory(userId, pageable);
 
-        return ResponseEntity.ok(ApiResponse.<Page<ReadingHistoryResponse>>builder()
+        return ApiResponse.<Page<ReadingHistoryResponse>>builder()
                 .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
-                .build());
+                .build();
     }
 
     /**
@@ -59,7 +59,7 @@ public class ReadingHistoryController {
      * @return Danh sách lịch sử đọc có phân trang
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<Page<ReadingHistoryResponse>>> getUserReadingHistory(
+    public ApiResponse<Page<ReadingHistoryResponse>> getUserReadingHistory(
             @PathVariable String userId,
             @PageableDefault(size = 10, sort = "updatedAt") Pageable pageable
     ) {
@@ -67,11 +67,11 @@ public class ReadingHistoryController {
 
         Page<ReadingHistoryResponse> readingHistory = readingHistoryService.getReadingHistory(userId, pageable);
 
-        return ResponseEntity.ok(ApiResponse.<Page<ReadingHistoryResponse>>builder()
+        return ApiResponse.<Page<ReadingHistoryResponse>>builder()
                 .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
-                .build());
+                .build();
     }
 
     /**
@@ -82,7 +82,7 @@ public class ReadingHistoryController {
      */
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<ReadingHistoryResponse>> markChapterAsReadForCurrentUser(
+    public ApiResponse<ReadingHistoryResponse> markChapterAsReadForCurrentUser(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody @Valid ReadingHistoryRequest request
     ) {
@@ -91,11 +91,11 @@ public class ReadingHistoryController {
 
         ReadingHistoryResponse response = readingHistoryService.markChapterAsRead(userId, request);
 
-        return ResponseEntity.ok(ApiResponse.<ReadingHistoryResponse>builder()
+        return ApiResponse.<ReadingHistoryResponse>builder()
                 .code(1000)
                 .message("Chapter marked as read successfully")
                 .result(response)
-                .build());
+                .build();
     }
 
     /**
@@ -105,7 +105,7 @@ public class ReadingHistoryController {
      * @return Thông tin lịch sử đọc
      */
     @PostMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<ReadingHistoryResponse>> markChapterAsReadForUser(
+    public ApiResponse<ReadingHistoryResponse> markChapterAsReadForUser(
             @PathVariable String userId,
             @RequestBody @Valid ReadingHistoryRequest request
     ) {
@@ -113,11 +113,11 @@ public class ReadingHistoryController {
 
         ReadingHistoryResponse response = readingHistoryService.markChapterAsRead(userId, request);
 
-        return ResponseEntity.ok(ApiResponse.<ReadingHistoryResponse>builder()
+        return ApiResponse.<ReadingHistoryResponse>builder()
                 .code(1000)
                 .message("Chapter marked as read successfully")
                 .result(response)
-                .build());
+                .build();
     }
 
     /**
@@ -127,8 +127,7 @@ public class ReadingHistoryController {
      * @return Thông tin lịch sử đọc
      */
     @GetMapping("/manga/{mangaId}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<ReadingHistoryResponse>> getMangaReadingHistoryForCurrentUser(
+    public ApiResponse<ReadingHistoryResponse> getMangaReadingHistoryForCurrentUser(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable String mangaId
     ) {
@@ -137,11 +136,11 @@ public class ReadingHistoryController {
 
         ReadingHistoryResponse readingHistory = readingHistoryService.getMangaReadingHistory(userId, mangaId);
 
-        return ResponseEntity.ok(ApiResponse.<ReadingHistoryResponse>builder()
+        return ApiResponse.<ReadingHistoryResponse>builder()
                 .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
-                .build());
+                .build();
     }
 
     /**
@@ -151,7 +150,7 @@ public class ReadingHistoryController {
      * @return Thông tin lịch sử đọc
      */
     @GetMapping("/user/{userId}/manga/{mangaId}")
-    public ResponseEntity<ApiResponse<ReadingHistoryResponse>> getMangaReadingHistoryForUser(
+    public ApiResponse<ReadingHistoryResponse> getMangaReadingHistoryForUser(
             @PathVariable String userId,
             @PathVariable String mangaId
     ) {
@@ -159,11 +158,11 @@ public class ReadingHistoryController {
 
         ReadingHistoryResponse readingHistory = readingHistoryService.getMangaReadingHistory(userId, mangaId);
 
-        return ResponseEntity.ok(ApiResponse.<ReadingHistoryResponse>builder()
+        return ApiResponse.<ReadingHistoryResponse>builder()
                 .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
-                .build());
+                .build();
     }
 
     /**
@@ -174,20 +173,18 @@ public class ReadingHistoryController {
      */
     @GetMapping("/recent")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<List<ReadingHistoryResponse>>> getRecentReadingHistoryForCurrentUser(
+    public ApiResponse<List<ReadingHistoryResponse>> getRecentReadingHistoryForCurrentUser(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam(defaultValue = "3") int limit
     ) {
         String userId = jwt.getSubject();
         log.info("Getting recent reading history for current user {}, limit: {}", userId, limit);
-
         List<ReadingHistoryResponse> recentHistory = readingHistoryService.getRecentReadingHistory(userId, limit);
-
-        return ResponseEntity.ok(ApiResponse.<List<ReadingHistoryResponse>>builder()
+        return ApiResponse.<List<ReadingHistoryResponse>>builder()
                 .code(1000)
                 .message("Recent reading history retrieved successfully")
                 .result(recentHistory)
-                .build());
+                .build();
     }
 
     /**
@@ -197,7 +194,7 @@ public class ReadingHistoryController {
      * @return Danh sách lịch sử đọc gần đây
      */
     @GetMapping("/user/{userId}/recent")
-    public ResponseEntity<ApiResponse<List<ReadingHistoryResponse>>> getRecentReadingHistoryForUser(
+    public ApiResponse<List<ReadingHistoryResponse>> getRecentReadingHistoryForUser(
             @PathVariable String userId,
             @RequestParam(defaultValue = "3") int limit
     ) {
@@ -205,11 +202,11 @@ public class ReadingHistoryController {
 
         List<ReadingHistoryResponse> recentHistory = readingHistoryService.getRecentReadingHistory(userId, limit);
 
-        return ResponseEntity.ok(ApiResponse.<List<ReadingHistoryResponse>>builder()
+        return ApiResponse.<List<ReadingHistoryResponse>>builder()
                 .code(1000)
                 .message("Recent reading history retrieved successfully")
                 .result(recentHistory)
-                .build());
+                .build();
     }
 
     /**
@@ -218,8 +215,7 @@ public class ReadingHistoryController {
      * @return Danh sách tất cả mangaId đã đọc
      */
     @GetMapping("/manga-ids")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<List<String>>> getAllReadMangaIdsForCurrentUser(
+    public ApiResponse<List<String>> getAllReadMangaIdsForCurrentUser(
             @AuthenticationPrincipal Jwt jwt
     ) {
         String userId = jwt.getSubject();
@@ -227,11 +223,11 @@ public class ReadingHistoryController {
 
         List<String> mangaIds = readingHistoryService.getAllReadMangaIds(userId);
 
-        return ResponseEntity.ok(ApiResponse.<List<String>>builder()
+        return ApiResponse.<List<String>>builder()
                 .code(1000)
                 .message("Read manga IDs retrieved successfully")
                 .result(mangaIds)
-                .build());
+                .build();
     }
 
     /**
@@ -240,17 +236,16 @@ public class ReadingHistoryController {
      * @return Danh sách tất cả mangaId đã đọc
      */
     @GetMapping("/user/{userId}/manga-ids")
-    public ResponseEntity<ApiResponse<List<String>>> getAllReadMangaIdsForUser(
+    public ApiResponse<List<String>> getAllReadMangaIdsForUser(
             @PathVariable String userId
     ) {
         log.info("Getting all read manga IDs for user {}", userId);
-
         List<String> mangaIds = readingHistoryService.getAllReadMangaIds(userId);
 
-        return ResponseEntity.ok(ApiResponse.<List<String>>builder()
+        return ApiResponse.<List<String>>builder()
                 .code(1000)
                 .message("Read manga IDs retrieved successfully")
                 .result(mangaIds)
-                .build());
+                .build();
     }
 }

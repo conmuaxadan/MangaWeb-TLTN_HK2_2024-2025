@@ -12,14 +12,19 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
-  const { login, isLogin } = useAuth();
+  const { login, isLogin, isAdmin } = useAuth();
 
-  // Nếu đã đăng nhập, chuyển hướng đến trang dashboard
+  // Nếu đã đăng nhập và có quyền admin, chuyển hướng đến trang dashboard
   useEffect(() => {
     if (isLogin) {
-      navigate('/admin');
+      if (isAdmin) {
+        navigate('/admin');
+      } else {
+        // Không hiển thị thông báo về quyền, chỉ đăng xuất người dùng
+        authService.logout();
+      }
     }
-  }, [isLogin, navigate]);
+  }, [isLogin, isAdmin, navigate]);
 
   // Animation effect khi component mount
   useEffect(() => {
@@ -38,15 +43,40 @@ const Login: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await authService.login(username, password);
-      
+
       if (response !== false) {
-        toast.success('Đăng nhập thành công!', { position: 'top-right' });
+        // Đăng nhập thành công, kiểm tra quyền admin
         login({
           token: response.token,
           refreshToken: response.refreshToken,
           expiresIn: response.expiresIn
         });
-        navigate('/admin');
+
+        // Kiểm tra quyền admin từ token
+        try {
+          const base64Url = response.token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+
+          const payload = JSON.parse(jsonPayload);
+          const hasAdminRole = payload.scope && payload.scope.includes('ROLE_ADMIN');
+
+          if (hasAdminRole) {
+            toast.success('Đăng nhập thành công!', { position: 'top-right' });
+            navigate('/admin');
+          } else {
+            // Không hiển thị thông báo về quyền, chỉ thông báo sai thông tin đăng nhập
+            toast.error('Sai thông tin đăng nhập. Vui lòng kiểm tra lại tên đăng nhập và mật khẩu.', { position: 'top-right' });
+            // Đăng xuất người dùng không có quyền admin
+            authService.logout();
+          }
+        } catch (error) {
+          console.error('Lỗi khi kiểm tra quyền admin:', error);
+          toast.error('Đã xảy ra lỗi khi kiểm tra quyền. Vui lòng thử lại sau.', { position: 'top-right' });
+          authService.logout();
+        }
       } else {
         toast.error('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.', { position: 'top-right' });
       }
@@ -84,6 +114,8 @@ const Login: React.FC = () => {
                 Đăng nhập để quản lý hệ thống
               </p>
             </div>
+
+
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Username field */}
@@ -128,9 +160,9 @@ const Login: React.FC = () => {
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    <FontAwesomeIcon 
-                      icon={showPassword ? faEyeSlash : faEye} 
-                      className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" 
+                    <FontAwesomeIcon
+                      icon={showPassword ? faEyeSlash : faEye}
+                      className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
                     />
                   </button>
                 </div>

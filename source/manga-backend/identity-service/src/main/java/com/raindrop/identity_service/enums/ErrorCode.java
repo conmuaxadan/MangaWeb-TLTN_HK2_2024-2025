@@ -44,8 +44,9 @@ public enum ErrorCode {
     PASSWORD_TOO_SHORT(1105, "Password must be at least 8 characters", HttpStatus.BAD_REQUEST),
     EMAIL_INVALID(1106, "Invalid email format", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(1107, "Email already exists", HttpStatus.BAD_REQUEST),
-    ROLE_NOT_FOUND(1108, "Role not found", HttpStatus.NOT_FOUND),
-    INVALID_ROLE_ASSIGNMENT(1109, "Invalid role assignment", HttpStatus.BAD_REQUEST),
+    DISPLAYNAME_EXISTED(1108, "Display name already exists", HttpStatus.BAD_REQUEST),
+    ROLE_NOT_FOUND(1109, "Role not found", HttpStatus.NOT_FOUND),
+    INVALID_ROLE_ASSIGNMENT(1110, "Invalid role assignment", HttpStatus.BAD_REQUEST),
 
     // Google OAuth related errors (1200-1299)
     GOOGLE_AUTH_ERROR(1200, "Error during Google authentication", HttpStatus.BAD_REQUEST),
@@ -76,6 +77,8 @@ public enum ErrorCode {
     // Communication errors (1400-1499)
     KAFKA_PUBLISH_ERROR(1400, "Failed to publish message to Kafka", HttpStatus.INTERNAL_SERVER_ERROR),
     SERVICE_COMMUNICATION_ERROR(1401, "Error communicating with another service", HttpStatus.INTERNAL_SERVER_ERROR),
+    SERVER_ERROR(1402, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_UPLOAD_ERROR(1403, "Failed to upload file", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // Database errors (1500-1599)
     DATABASE_ERROR(1500, "Database error", HttpStatus.INTERNAL_SERVER_ERROR),

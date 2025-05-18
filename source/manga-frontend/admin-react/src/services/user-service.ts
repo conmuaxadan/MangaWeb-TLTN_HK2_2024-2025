@@ -148,6 +148,94 @@ class UserService {
             return false;
         }
     }
+
+    /**
+     * Lấy thông tin profile của người dùng theo ID
+     * @param userId ID của người dùng
+     * @returns Thông tin profile hoặc null nếu thất bại
+     */
+    async getProfileByUserId(userId: string): Promise<UserResponse | null> {
+        logApiCall('getProfileByUserId');
+        try {
+            const apiResponse = await identityHttpClient.get<ApiResponse<UserResponse>>(`/users/byUserId/${userId}`);
+
+            if (apiResponse.code !== 1000) {
+                console.error(`Lỗi lấy thông tin profile của người dùng ID ${userId}:`, apiResponse.message);
+                return null;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi lấy thông tin profile của người dùng ID ${userId}:`, error);
+            // Không hiển thị thông báo lỗi vì đây là tính năng ngầm
+            return null;
+        }
+    }
+
+    /**
+     * Upload avatar cho người dùng
+     * @param file File ảnh avatar
+     * @param userId ID của người dùng (tùy chọn, mặc định là người dùng hiện tại)
+     * @returns Thông tin người dùng đã cập nhật hoặc null nếu thất bại
+     */
+    async uploadAvatar(file: File, userId?: string): Promise<UserResponse | null> {
+        logApiCall('uploadAvatar');
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            // Xác định endpoint dựa trên userId
+            const endpoint = userId
+                ? `/users/${userId}/avatar` // Endpoint cho admin cập nhật avatar của người dùng khác
+                : '/users/me/avatar';      // Endpoint cho người dùng cập nhật avatar của chính mình
+
+            const apiResponse = await identityHttpClient.post<ApiResponse<UserResponse>>(
+                endpoint,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+            );
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể cập nhật ảnh đại diện", { position: "top-right" });
+                return null;
+            }
+
+            toast.success("Cập nhật ảnh đại diện thành công", { position: "top-right" });
+            return apiResponse.result;
+        } catch (error) {
+            console.error("Lỗi upload avatar:", error);
+            toast.error("Lỗi khi cập nhật ảnh đại diện", { position: "top-right" });
+            return null;
+        }
+    }
+
+    /**
+     * Xóa avatar của người dùng
+     * @param userId ID của người dùng
+     * @returns Thông tin người dùng đã cập nhật hoặc null nếu thất bại
+     */
+    async deleteAvatar(userId: string): Promise<UserResponse | null> {
+        logApiCall('deleteAvatar');
+        try {
+            const apiResponse = await identityHttpClient.delete<ApiResponse<UserResponse>>(`/users/${userId}/avatar`);
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể xóa ảnh đại diện", { position: "top-right" });
+                return null;
+            }
+
+            toast.success("Xóa ảnh đại diện thành công", { position: "top-right" });
+            return apiResponse.result;
+        } catch (error) {
+            console.error("Lỗi xóa avatar:", error);
+            toast.error("Lỗi khi xóa ảnh đại diện", { position: "top-right" });
+            return null;
+        }
+    }
 }
 
 export default new UserService();

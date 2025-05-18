@@ -18,7 +18,10 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public class Permission {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
     String name;
+    String description;
     @Column(updatable = false)
     @CreatedDate
     LocalDateTime createdAt;

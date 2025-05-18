@@ -14,7 +14,12 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -65,11 +70,65 @@ public class UserController {
                 .build();
     }
 
+    @GetMapping("/byUserId/{userId}")
+    ApiResponse<UserResponse> getUserByUserId(@PathVariable String userId) {
+        return ApiResponse.<UserResponse>builder()
+                .message("User retrieved successfully")
+                .result(userService.getUserById(userId))
+                .build();
+    }
+
     @PutMapping()
     ApiResponse<UserResponse> updateUser(@RequestBody UserRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .message("User updated successfully")
                 .result(userMapper.toUserResponse(userService.updateUser(request)))
+                .build();
+    }
+
+    /**
+     * Cập nhật ảnh đại diện của người dùng hiện tại
+     * @param jwt JWT token của người dùng
+     * @param file File ảnh đại diện
+     * @return Thông tin người dùng đã cập nhật
+     */
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ApiResponse<UserResponse> updateMyAvatar(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestPart("image") MultipartFile file
+    ) {
+        String userId = jwt.getSubject();
+        log.info("Updating avatar for current user {}", userId);
+
+        UserResponse response = userService.updateAvatar(userId, file);
+
+        return ApiResponse.<UserResponse>builder()
+                .code(1000)
+                .message("Avatar updated successfully")
+                .result(response)
+                .build();
+    }
+
+    /**
+     * Cập nhật ảnh đại diện của người dùng khác (chỉ dành cho admin)
+     * @param userId ID của người dùng cần cập nhật
+     * @param file File ảnh đại diện
+     * @return Thông tin người dùng đã cập nhật
+     */
+    @PostMapping(value = "/{userId}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    ApiResponse<UserResponse> updateUserAvatar(
+            @PathVariable String userId,
+            @RequestPart("image") MultipartFile file
+    ) {
+        log.info("Admin updating avatar for user {}", userId);
+
+        UserResponse response = userService.updateAvatar(userId, file);
+
+        return ApiResponse.<UserResponse>builder()
+                .code(1000)
+                .message("Avatar updated successfully")
+                .result(response)
                 .build();
     }
 
@@ -81,11 +140,22 @@ public class UserController {
                 .build();
     }
 
-    @GetMapping("/me")
-    ApiResponse<UserResponse> getMyInfo() {
+    /**
+     * Xóa ảnh đại diện của người dùng (chỉ dành cho admin)
+     * @param userId ID của người dùng cần xóa avatar
+     * @return Thông tin người dùng đã cập nhật
+     */
+    @DeleteMapping("/{userId}/avatar")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    ApiResponse<UserResponse> deleteUserAvatar(@PathVariable String userId) {
+        log.info("Admin deleting avatar for user {}", userId);
+
+        UserResponse response = userService.deleteAvatar(userId);
+
         return ApiResponse.<UserResponse>builder()
-                .message("User retrieved successfully")
-                .result(userService.getMyInfo())
+                .code(1000)
+                .message("Avatar deleted successfully")
+                .result(response)
                 .build();
     }
 

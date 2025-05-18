@@ -38,8 +38,16 @@ public class PermissionController {
     }
 
     @DeleteMapping("/{id}")
-    ApiResponse<Void> delete(@PathVariable String id) {
+    ApiResponse<Void> deleteById(@PathVariable Long id) {
         permissionService.delete(id);
-        return ApiResponse.<Void>builder().message("Permissions deleted successfully").build();
+        return ApiResponse.<Void>builder().message("Permission deleted successfully").build();
+    }
+
+    @PutMapping("/{id}")
+    ApiResponse<PermissionResponse> updatePermission(@PathVariable Long id, @RequestBody PermissionRequest request) {
+        return ApiResponse.<PermissionResponse>builder()
+                .message("Permission updated successfully")
+                .result(permissionService.update(id, request))
+                .build();
     }
 }

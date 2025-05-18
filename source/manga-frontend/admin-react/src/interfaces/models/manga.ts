@@ -28,6 +28,10 @@ export interface MangaResponse {
     status?: MangaStatus;
     updatedAt: string;
     lastChapterAddedAt?: string;
+    // Trường cho xóa mềm
+    deleted: boolean;
+    deletedAt?: string;
+    deletedBy?: string;
 }
 
 // Advanced Search Request

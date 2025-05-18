@@ -28,10 +28,10 @@ const MangaForm: React.FC<MangaFormProps> = ({
   const [coverPreview, setCoverPreview] = useState<string>('');
   const [yearOfRelease, setYearOfRelease] = useState<number>(new Date().getFullYear());
   const [status, setStatus] = useState<MangaStatus>(MangaStatus.ONGOING);
-  
+
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   // Available genres
   const [availableGenres, setAvailableGenres] = useState<GenreResponse[]>([]);
   const [loadingGenres, setLoadingGenres] = useState(false);
@@ -64,7 +64,7 @@ const MangaForm: React.FC<MangaFormProps> = ({
       setSelectedGenres(initialData.genres || []);
       setYearOfRelease(initialData.yearOfRelease || new Date().getFullYear());
       setStatus(initialData.status || MangaStatus.ONGOING);
-      
+
       if (initialData.coverUrl) {
         setCoverPreview(getMangaImageUrl(initialData.coverUrl));
       }
@@ -77,14 +77,14 @@ const MangaForm: React.FC<MangaFormProps> = ({
     if (files && files.length > 0) {
       const file = files[0];
       setCoverFile(file);
-      
+
       // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         setCoverPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-      
+
       // Clear error if exists
       if (errors.cover) {
         setErrors(prev => ({ ...prev, cover: '' }));
@@ -96,7 +96,7 @@ const MangaForm: React.FC<MangaFormProps> = ({
   const handleGenreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
     setSelectedGenres(selectedOptions);
-    
+
     // Clear error if exists
     if (errors.genres) {
       setErrors(prev => ({ ...prev, genres: '' }));
@@ -106,27 +106,27 @@ const MangaForm: React.FC<MangaFormProps> = ({
   // Validate form
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!title.trim()) {
       newErrors.title = 'Tiêu đề không được để trống';
     }
-    
+
     if (!author.trim()) {
       newErrors.author = 'Tác giả không được để trống';
     }
-    
+
     if (!description.trim()) {
       newErrors.description = 'Mô tả không được để trống';
     }
-    
+
     if (selectedGenres.length === 0) {
       newErrors.genres = 'Phải chọn ít nhất một thể loại';
     }
-    
+
     if (!initialData && !coverFile) {
       newErrors.cover = 'Phải chọn ảnh bìa';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -134,11 +134,11 @@ const MangaForm: React.FC<MangaFormProps> = ({
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     // Create FormData object
     const formData = new FormData();
     formData.append('title', title);
@@ -147,24 +147,24 @@ const MangaForm: React.FC<MangaFormProps> = ({
     formData.append('genres', selectedGenres.join(','));
     formData.append('yearOfRelease', yearOfRelease.toString());
     formData.append('status', status);
-    
+
     if (coverFile) {
       formData.append('cover', coverFile);
     }
-    
+
     onSubmit(formData);
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+    <div className="bg-white rounded-lg p-6">
+      <h2 className="text-xl font-semibold mb-4 text-gray-900">
         {initialData ? 'Chỉnh sửa truyện' : 'Thêm truyện mới'}
       </h2>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Title */}
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
             Tiêu đề <span className="text-red-500">*</span>
           </label>
           <input
@@ -174,17 +174,17 @@ const MangaForm: React.FC<MangaFormProps> = ({
             onChange={(e) => setTitle(e.target.value)}
             disabled={isLoading}
             className={`w-full px-3 py-2 border ${
-              errors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-            } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white`}
+              errors.title ? 'border-red-500' : 'border-gray-300'
+            } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
           />
           {errors.title && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.title}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.title}</p>
           )}
         </div>
-        
+
         {/* Author */}
         <div>
-          <label htmlFor="author" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-1">
             Tác giả <span className="text-red-500">*</span>
           </label>
           <input
@@ -194,14 +194,14 @@ const MangaForm: React.FC<MangaFormProps> = ({
             onChange={(e) => setAuthor(e.target.value)}
             disabled={isLoading}
             className={`w-full px-3 py-2 border ${
-              errors.author ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-            } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white`}
+              errors.author ? 'border-red-500' : 'border-gray-300'
+            } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
           />
           {errors.author && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.author}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.author}</p>
           )}
         </div>
-        
+
         {/* Description */}
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -221,7 +221,7 @@ const MangaForm: React.FC<MangaFormProps> = ({
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description}</p>
           )}
         </div>
-        
+
         {/* Genres */}
         <div>
           <label htmlFor="genres" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -258,7 +258,7 @@ const MangaForm: React.FC<MangaFormProps> = ({
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.genres}</p>
           )}
         </div>
-        
+
         {/* Cover Image */}
         <div>
           <label htmlFor="cover" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -288,7 +288,7 @@ const MangaForm: React.FC<MangaFormProps> = ({
               )}
             </div>
             {coverPreview && (
-              <div className="w-24 h-32 overflow-hidden rounded-md border border-gray-300 dark:border-gray-600">
+              <div className="w-36 h-48 overflow-hidden rounded-md border border-gray-300 dark:border-gray-600 shadow-sm hover:shadow-md transition-shadow">
                 <img
                   src={coverPreview}
                   alt="Cover preview"
@@ -298,7 +298,7 @@ const MangaForm: React.FC<MangaFormProps> = ({
             )}
           </div>
         </div>
-        
+
         {/* Year of Release */}
         <div>
           <label htmlFor="yearOfRelease" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -315,7 +315,7 @@ const MangaForm: React.FC<MangaFormProps> = ({
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
           />
         </div>
-        
+
         {/* Status */}
         <div>
           <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -335,7 +335,7 @@ const MangaForm: React.FC<MangaFormProps> = ({
             ))}
           </select>
         </div>
-        
+
         {/* Buttons */}
         <div className="flex justify-end space-x-3">
           <button

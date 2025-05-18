@@ -25,7 +25,7 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
   const [title, setTitle] = useState<string>('');
   const [mangaId, setMangaId] = useState<string>('');
   const [pageFiles, setPageFiles] = useState<File[]>([]);
-  const [pagePreviews, setPagePreviews] = useState<string[]>([]);
+  const [pagePreviews, setPagePreviews] = useState<any[]>([]);
 
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -74,11 +74,13 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
         const sortedPages = [...initialData.pages].sort((a, b) => a.index - b.index);
         const previews = sortedPages.map(page => {
           // Thêm tiền tố API Gateway nếu URL không bắt đầu bằng http
+          let url;
           if (page.pageUrl.startsWith('http')) {
-            return page.pageUrl;
+            url = page.pageUrl;
           } else {
-            return `http://localhost:8888/api/v1/upload/files/${page.pageUrl}`;
+            url = `http://localhost:8888/api/v1/upload/files/${page.pageUrl}`;
           }
+          return { url };
         });
         setPagePreviews(previews);
       }
@@ -93,16 +95,59 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
     }
   }, [initialData, availableMangas]);
 
+  // Hàm trích xuất số thứ tự từ tên file
+  const extractPageNumber = (fileName: string): number => {
+    // Tìm số trong tên file
+    const match = fileName.match(/\d+/);
+    if (match) {
+      return parseInt(match[0], 10);
+    }
+    return 0; // Mặc định nếu không tìm thấy số
+  };
+
+  // Interface cho thông tin trang
+  interface PageInfo {
+    url: string;
+    fileName?: string;
+    fileNumber?: number;
+  }
+
   // Handle page files change
   const handlePageFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       const newFiles = Array.from(files);
+
+      // Sắp xếp files theo số thứ tự trong tên file
+      newFiles.sort((a, b) => {
+        const numA = extractPageNumber(a.name);
+        const numB = extractPageNumber(b.name);
+        return numA - numB;
+      });
+
       setPageFiles(prev => [...prev, ...newFiles]);
 
-      // Create preview URLs
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      setPagePreviews(prev => [...prev, ...newPreviews]);
+      // Tạo thông tin preview với tên file và số thứ tự
+      const newPreviews = newFiles.map(file => {
+        const url = URL.createObjectURL(file);
+        return {
+          url,
+          fileName: file.name,
+          fileNumber: extractPageNumber(file.name)
+        };
+      });
+
+      // Cập nhật pagePreviews
+      setPagePreviews(prev => {
+        // Nếu prev là mảng chuỗi (từ initialData), chuyển đổi thành mảng PageInfo
+        const prevPageInfos = prev.map(p => {
+          if (typeof p === 'string') {
+            return { url: p };
+          }
+          return p;
+        });
+        return [...prevPageInfos, ...newPreviews];
+      });
 
       // Clear error if exists
       if (errors.pages) {
@@ -110,9 +155,9 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
       }
 
       // Hiển thị thông báo đã thêm trang
-      toast.success(`Đã thêm ${newFiles.length} trang mới`, {
+      toast.success(`Đã thêm ${newFiles.length} trang mới theo thứ tự số trong tên file`, {
         position: "top-right",
-        autoClose: 1500,
+        autoClose: 2000,
         hideProgressBar: true
       });
 
@@ -183,9 +228,9 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
 
       // Kiểm tra xem preview có phải là URL object không
       const preview = pagePreviews[index];
-      if (preview && preview.startsWith('blob:')) {
+      if (preview && preview.url && preview.url.startsWith('blob:')) {
         // Nếu là URL object, revoke để tránh memory leak
-        URL.revokeObjectURL(preview);
+        URL.revokeObjectURL(preview.url);
       }
 
       // Xóa preview tại vị trí index
@@ -227,8 +272,8 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
 
           // Revoke tất cả các URL object để tránh memory leak
           pagePreviews.forEach(preview => {
-            if (preview && preview.startsWith('blob:')) {
-              URL.revokeObjectURL(preview);
+            if (preview && preview.url && preview.url.startsWith('blob:')) {
+              URL.revokeObjectURL(preview.url);
             }
           });
 
@@ -256,8 +301,8 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
 
         // Revoke tất cả các URL object để tránh memory leak
         pagePreviews.forEach(preview => {
-          if (preview && preview.startsWith('blob:')) {
-            URL.revokeObjectURL(preview);
+          if (preview && preview.url && preview.url.startsWith('blob:')) {
+            URL.revokeObjectURL(preview.url);
           }
         });
 
@@ -302,17 +347,21 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
 
             if (updatedChapter) {
               // Cập nhật preview
-              if (pagePreviews[index] && pagePreviews[index].startsWith('blob:')) {
-                URL.revokeObjectURL(pagePreviews[index]);
+              if (pagePreviews[index] && pagePreviews[index].url && pagePreviews[index].url.startsWith('blob:')) {
+                URL.revokeObjectURL(pagePreviews[index].url);
               }
 
               // Tạo URL mới cho preview
-              const newPreview = URL.createObjectURL(file);
+              const newPreviewUrl = URL.createObjectURL(file);
 
               // Cập nhật mảng pagePreviews
               setPagePreviews(prev => {
                 const newPreviews = [...prev];
-                newPreviews[index] = newPreview;
+                newPreviews[index] = {
+                  url: newPreviewUrl,
+                  fileName: file.name,
+                  fileNumber: extractPageNumber(file.name)
+                };
                 return newPreviews;
               });
 
@@ -343,17 +392,21 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
           // Chỉ cập nhật preview và file trong state
 
           // Nếu có preview cũ, revoke nó
-          if (pagePreviews[index] && pagePreviews[index].startsWith('blob:')) {
-            URL.revokeObjectURL(pagePreviews[index]);
+          if (pagePreviews[index] && pagePreviews[index].url && pagePreviews[index].url.startsWith('blob:')) {
+            URL.revokeObjectURL(pagePreviews[index].url);
           }
 
           // Tạo URL mới cho preview
-          const newPreview = URL.createObjectURL(file);
+          const newPreviewUrl = URL.createObjectURL(file);
 
           // Cập nhật mảng pagePreviews
           setPagePreviews(prev => {
             const newPreviews = [...prev];
-            newPreviews[index] = newPreview;
+            newPreviews[index] = {
+              url: newPreviewUrl,
+              fileName: file.name,
+              fileNumber: extractPageNumber(file.name)
+            };
             return newPreviews;
           });
 
@@ -527,26 +580,30 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
   // Clean up object URLs when component unmounts
   useEffect(() => {
     return () => {
-      pagePreviews.forEach(preview => URL.revokeObjectURL(preview));
+      pagePreviews.forEach(preview => {
+        if (preview && preview.url && preview.url.startsWith('blob:')) {
+          URL.revokeObjectURL(preview.url);
+        }
+      });
     };
   }, [pagePreviews]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+    <div className="bg-white rounded-lg p-6">
+      <h2 className="text-xl font-semibold mb-4 text-gray-900">
         {initialData ? 'Chỉnh sửa chapter' : 'Thêm chapter mới'}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Manga Selection */}
         <div>
-          <label htmlFor="mangaSearch" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="mangaSearch" className="block text-sm font-medium text-gray-700 mb-1">
             Truyện <span className="text-red-500">*</span>
           </label>
           {loadingMangas ? (
             <div className="flex items-center space-x-2">
               <FontAwesomeIcon icon={faSpinner} className="animate-spin text-indigo-500" />
-              <span className="text-sm text-gray-500 dark:text-gray-400">Đang tải danh sách truyện...</span>
+              <span className="text-sm text-gray-500">Đang tải danh sách truyện...</span>
             </div>
           ) : (
             <div className="relative" ref={searchRef}>
@@ -608,10 +665,10 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
             Số chapter <span className="text-red-500">*</span>
           </label>
           <input
-            type="number"
+            type="number" step="0.1"
             id="chapterNumber"
             value={chapterNumber}
-            onChange={(e) => setChapterNumber(parseInt(e.target.value))}
+            onChange={(e) => setChapterNumber(parseFloat(e.target.value))}
             disabled={isLoading || (!!initialData && initialData.chapterNumber)}
             min="1"
             className={`w-full px-3 py-2 border ${
@@ -645,9 +702,14 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
 
         {/* Pages */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Trang <span className="text-red-500">*</span>
-          </label>
+          <div className="flex justify-between items-center mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Trang <span className="text-red-500">*</span>
+            </label>
+            <span className="text-xs text-gray-500 italic">
+              Gợi ý: Đặt tên file theo dạng 1.jpg, 2.jpg, 3.jpg... để sắp xếp đúng thứ tự
+            </span>
+          </div>
 
           <div className="flex space-x-2 mb-2">
             <label
@@ -655,7 +717,7 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
               className="flex-1 flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
             >
               <FontAwesomeIcon icon={faPlus} className="mr-2" />
-              Thêm trang
+              Thêm trang (nhiều file)
               <input
                 type="file"
                 id="pages"
@@ -664,6 +726,7 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
                 onChange={handlePageFilesChange}
                 disabled={isLoading}
                 className="sr-only"
+                title="Chọn nhiều file cùng lúc, các file sẽ được sắp xếp theo số thứ tự trong tên file"
               />
             </label>
 
@@ -690,7 +753,7 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
               {pagePreviews.map((preview, index) => (
                 <div key={index} className="relative">
                   <img
-                    src={preview}
+                    src={preview.url}
                     alt={`Page ${index + 1}`}
                     className="w-full h-40 object-cover rounded-md border border-gray-300 dark:border-gray-600"
                   />
@@ -714,6 +777,11 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-center py-1 text-xs">
                     Trang {index + 1}
+                    {preview.fileName && (
+                      <span className="ml-1 text-yellow-300" title={preview.fileName}>
+                        (File: {preview.fileNumber || '?'})
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

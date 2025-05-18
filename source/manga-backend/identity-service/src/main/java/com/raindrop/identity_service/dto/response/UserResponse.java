@@ -1,7 +1,6 @@
 package com.raindrop.identity_service.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.raindrop.identity_service.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +20,8 @@ public class UserResponse {
     String id;
     String username;
     String email;
+    String displayName;
+    String avatarUrl;
     Set<RoleResponse> roles;
     String authProvider;
     LocalDateTime createdAt;

@@ -57,7 +57,7 @@ public class ChapterNotificationEventConsumer {
                 "<h2 style='color: #333; border-bottom: 1px solid #ddd; padding-bottom: 10px;'>Chapter mới đã được thêm vào truyện bạn yêu thích!</h2>" +
                 "<div style='background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;'>" +
                 "<p style='margin: 5px 0;'><strong>Truyện:</strong> %s</p>" +
-                "<p style='margin: 5px 0;'><strong>Chapter %d:</strong> %s</p>" +
+                "<p style='margin: 5px 0;'><strong>Chapter %.1f:</strong> %s</p>" +
                 "</div>" +
                 "<p style='margin: 15px 0;'>" +
                 "<a href='http://localhost:3000/mangas/%s/chapters/%s' " +

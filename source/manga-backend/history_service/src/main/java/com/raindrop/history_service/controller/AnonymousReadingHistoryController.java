@@ -31,23 +31,22 @@ public class AnonymousReadingHistoryController {
      * @return Thông tin lịch sử đọc
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<AnonymousReadingHistoryResponse>> markChapterAsRead(
+    public ApiResponse<AnonymousReadingHistoryResponse> markChapterAsRead(
             @RequestBody @Valid AnonymousReadingHistoryRequest request,
             HttpServletRequest httpRequest
     ) {
         String ipAddress = httpRequest.getRemoteAddr();
-        String userAgent = httpRequest.getHeader("User-Agent");
 
         log.info("Marking chapter {} of manga {} as read for anonymous user with session {}",
                 request.getChapterId(), request.getMangaId(), request.getSessionId());
 
-        AnonymousReadingHistoryResponse response = anonymousReadingHistoryService.markChapterAsRead(request, ipAddress, userAgent);
+        AnonymousReadingHistoryResponse response = anonymousReadingHistoryService.markChapterAsRead(request, ipAddress);
 
-        return ResponseEntity.ok(ApiResponse.<AnonymousReadingHistoryResponse>builder()
+        return ApiResponse.<AnonymousReadingHistoryResponse>builder()
                 .code(1000)
                 .message("Chapter marked as read successfully")
                 .result(response)
-                .build());
+                .build();
     }
 
     /**
@@ -57,7 +56,7 @@ public class AnonymousReadingHistoryController {
      * @return Danh sách lịch sử đọc có phân trang
      */
     @GetMapping("/session/{sessionId}")
-    public ResponseEntity<ApiResponse<Page<AnonymousReadingHistoryResponse>>> getSessionReadingHistory(
+    public ApiResponse<Page<AnonymousReadingHistoryResponse>> getSessionReadingHistory(
             @PathVariable String sessionId,
             @PageableDefault(size = 10, sort = "updatedAt") Pageable pageable
     ) {
@@ -65,11 +64,11 @@ public class AnonymousReadingHistoryController {
 
         Page<AnonymousReadingHistoryResponse> readingHistory = anonymousReadingHistoryService.getReadingHistory(sessionId, pageable);
 
-        return ResponseEntity.ok(ApiResponse.<Page<AnonymousReadingHistoryResponse>>builder()
+        return ApiResponse.<Page<AnonymousReadingHistoryResponse>>builder()
                 .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
-                .build());
+                .build();
     }
 
     /**
@@ -79,7 +78,7 @@ public class AnonymousReadingHistoryController {
      * @return Thông tin lịch sử đọc
      */
     @GetMapping("/session/{sessionId}/manga/{mangaId}")
-    public ResponseEntity<ApiResponse<AnonymousReadingHistoryResponse>> getSessionMangaReadingHistory(
+    public ApiResponse<AnonymousReadingHistoryResponse> getSessionMangaReadingHistory(
             @PathVariable String sessionId,
             @PathVariable String mangaId
     ) {
@@ -87,11 +86,11 @@ public class AnonymousReadingHistoryController {
 
         AnonymousReadingHistoryResponse readingHistory = anonymousReadingHistoryService.getMangaReadingHistory(sessionId, mangaId);
 
-        return ResponseEntity.ok(ApiResponse.<AnonymousReadingHistoryResponse>builder()
+        return ApiResponse.<AnonymousReadingHistoryResponse>builder()
                 .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
-                .build());
+                .build();
     }
 
     /**
@@ -99,14 +98,14 @@ public class AnonymousReadingHistoryController {
      * @return Số lượng phiên duy nhất
      */
     @GetMapping("/sessions/count")
-    public ResponseEntity<ApiResponse<Long>> countDistinctSessions() {
+    public ApiResponse<Long> countDistinctSessions() {
         Long count = anonymousReadingHistoryService.countDistinctSessions();
 
-        return ResponseEntity.ok(ApiResponse.<Long>builder()
+        return ApiResponse.<Long>builder()
                 .code(1000)
                 .message("Distinct sessions counted successfully")
                 .result(count)
-                .build());
+                .build();
     }
 
     /**
@@ -115,14 +114,14 @@ public class AnonymousReadingHistoryController {
      * @return Số lượng phiên duy nhất
      */
     @GetMapping("/manga/{mangaId}/sessions/count")
-    public ResponseEntity<ApiResponse<Long>> countDistinctSessionsByMangaId(@PathVariable String mangaId) {
+    public ApiResponse<Long> countDistinctSessionsByMangaId(@PathVariable String mangaId) {
         Long count = anonymousReadingHistoryService.countDistinctSessionsByMangaId(mangaId);
 
-        return ResponseEntity.ok(ApiResponse.<Long>builder()
+        return ApiResponse.<Long>builder()
                 .code(1000)
                 .message("Distinct sessions counted successfully")
                 .result(count)
-                .build());
+                .build();
     }
 
     /**
@@ -131,13 +130,13 @@ public class AnonymousReadingHistoryController {
      * @return Số lượng phiên duy nhất
      */
     @GetMapping("/chapter/{chapterId}/sessions/count")
-    public ResponseEntity<ApiResponse<Long>> countDistinctSessionsByChapterId(@PathVariable String chapterId) {
+    public ApiResponse<Long> countDistinctSessionsByChapterId(@PathVariable String chapterId) {
         Long count = anonymousReadingHistoryService.countDistinctSessionsByChapterId(chapterId);
 
-        return ResponseEntity.ok(ApiResponse.<Long>builder()
+        return ApiResponse.<Long>builder()
                 .code(1000)
                 .message("Distinct sessions counted successfully")
                 .result(count)
-                .build());
+                .build();
     }
 }

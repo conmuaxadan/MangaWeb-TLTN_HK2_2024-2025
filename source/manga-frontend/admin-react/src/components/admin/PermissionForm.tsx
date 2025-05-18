@@ -1,26 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { RoleRequest, RoleResponse, PermissionResponse } from '../../interfaces/models/auth';
+import { PermissionResponse } from '../../interfaces/models/auth';
 
-interface RoleFormProps {
-  initialData?: RoleResponse;
-  permissions: PermissionResponse[];
-  onSubmit: (data: RoleRequest) => void;
+interface PermissionFormProps {
+  initialData?: PermissionResponse;
+  onSubmit: (data: { name: string; description: string }) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
 
-const RoleForm: React.FC<RoleFormProps> = ({
+const PermissionForm: React.FC<PermissionFormProps> = ({
   initialData,
-  permissions,
   onSubmit,
   onCancel,
   isLoading = false
 }) => {
-  const [formData, setFormData] = useState<RoleRequest>({
-    name: '',
-    permissions: [],
-    description: ''
-  });
+  const [formData, setFormData] = useState({ name: '', description: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Cập nhật formData khi initialData thay đổi
@@ -28,19 +22,18 @@ const RoleForm: React.FC<RoleFormProps> = ({
     if (initialData) {
       setFormData({
         name: initialData.name,
-        permissions: initialData.permissions?.map(p => p.id || 0) || [],
         description: initialData.description || ''
       });
     } else {
       // Reset form khi tạo mới
       setFormData({
         name: '',
-        permissions: [],
         description: ''
       });
     }
   }, [initialData]);
 
+  // Xử lý thay đổi form
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -57,52 +50,31 @@ const RoleForm: React.FC<RoleFormProps> = ({
     }
   };
 
-  const handlePermissionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
-    setFormData(prev => ({
-      ...prev,
-      permissions: selectedOptions
-    }));
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    // Validate name
-    if (!formData.name) {
-      newErrors.name = 'Tên vai trò không được để trống';
-    } else if (formData.name.length < 3) {
-      newErrors.name = 'Tên vai trò phải có ít nhất 3 ký tự';
-    }
-
-    // Validate permissions
-    if (formData.permissions.length === 0) {
-      newErrors.permissions = 'Phải chọn ít nhất một quyền hạn';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
+  // Xử lý submit form
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (validateForm()) {
-      onSubmit(formData);
+    // Validate form
+    const newErrors: Record<string, string> = {};
+    if (!formData.name) {
+      newErrors.name = 'Tên quyền hạn không được để trống';
     }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    onSubmit(formData);
   };
 
   return (
     <div className="bg-white rounded-lg p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">
-        {initialData ? 'Chỉnh sửa vai trò' : 'Thêm vai trò mới'}
-      </h2>
-
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name */}
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            Tên vai trò
+            Tên quyền hạn
           </label>
           <input
             type="text"
@@ -137,36 +109,6 @@ const RoleForm: React.FC<RoleFormProps> = ({
           />
         </div>
 
-        {/* Permissions */}
-        <div>
-          <label htmlFor="permissions" className="block text-sm font-medium text-gray-700 mb-1">
-            Quyền hạn
-          </label>
-          <select
-            id="permissions"
-            name="permissions"
-            multiple
-            value={formData.permissions}
-            onChange={handlePermissionChange}
-            className={`w-full px-3 py-2 border ${
-              errors.permissions ? 'border-red-500' : 'border-gray-300'
-            } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
-            size={Math.min(permissions.length, 8)}
-          >
-            {permissions.map(permission => (
-              <option key={permission.name} value={permission.id}>
-                {permission.name} {permission.description ? `- ${permission.description}` : ''} (ID: {permission.id})
-              </option>
-            ))}
-          </select>
-          {errors.permissions && (
-            <p className="mt-1 text-sm text-red-600">{errors.permissions}</p>
-          )}
-          <p className="mt-1 text-xs text-gray-500">
-            Giữ Ctrl (hoặc Cmd trên Mac) để chọn nhiều quyền hạn.
-          </p>
-        </div>
-
         {/* Buttons */}
         <div className="flex justify-end space-x-3 pt-4">
           <button
@@ -197,4 +139,4 @@ const RoleForm: React.FC<RoleFormProps> = ({
   );
 };
 
-export default RoleForm;
+export default PermissionForm;

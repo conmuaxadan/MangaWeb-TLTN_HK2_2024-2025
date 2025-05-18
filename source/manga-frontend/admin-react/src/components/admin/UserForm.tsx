@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UserRequest, UserResponse, RoleResponse } from '../../interfaces/models/auth';
+import userService from '../../services/user-service';
+import uploadService from '../../services/upload-service';
+import { getAvatarUrl } from '../../utils/file-utils';
 
 interface UserFormProps {
   initialData?: UserResponse;
@@ -20,10 +23,17 @@ const UserForm: React.FC<UserFormProps> = ({
     username: '',
     password: '',
     email: '',
-    role: ''
+    displayName: '',
+    avatarUrl: '',
+    roles: []
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [oldAvatarUrl, setOldAvatarUrl] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cập nhật formData khi initialData thay đổi
   useEffect(() => {
@@ -32,17 +42,32 @@ const UserForm: React.FC<UserFormProps> = ({
         username: initialData.username,
         password: '', // Không hiển thị mật khẩu khi chỉnh sửa
         email: initialData.email,
-        role: initialData.roles.length > 0 ? initialData.roles[0].name : ''
+        displayName: initialData.displayName || '',
+        avatarUrl: initialData.avatarUrl || '',
+        roles: initialData.roles.length > 0 ? [initialData.roles[0].id || 0] : []
       });
+
+      // Thiết lập avatar preview nếu có
+      if (initialData.avatarUrl) {
+        // Sử dụng getAvatarUrl để hiển thị đúng URL ảnh
+        setAvatarPreview(getAvatarUrl(initialData.avatarUrl));
+      }
     } else {
       // Reset form khi tạo mới
       setFormData({
         username: '',
         password: '',
         email: '',
-        role: ''
+        displayName: '',
+        avatarUrl: '',
+        roles: []
       });
+      setAvatarPreview('');
+      setAvatarFile(null);
     }
+
+    // Reset oldAvatarUrl khi component được khởi tạo lại
+    setOldAvatarUrl('');
   }, [initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -62,10 +87,10 @@ const UserForm: React.FC<UserFormProps> = ({
   };
 
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { value } = e.target;
+    const value = parseInt(e.target.value);
     setFormData(prev => ({
       ...prev,
-      role: value
+      roles: value ? [value] : []
     }));
   };
 
@@ -99,33 +124,143 @@ const UserForm: React.FC<UserFormProps> = ({
       newErrors.email = 'Email không hợp lệ';
     }
 
-    // Validate role
-    if (!formData.role) {
-      newErrors.role = 'Vai trò không được để trống';
+    // Validate roles
+    if (!formData.roles || formData.roles.length === 0) {
+      newErrors.roles = 'Vai trò không được để trống';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Xử lý khi chọn file avatar
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
 
-    if (validateForm()) {
-      onSubmit(formData);
+      // Kiểm tra loại file
+      if (!file.type.startsWith('image/')) {
+        alert('Chỉ chấp nhận file ảnh');
+        return;
+      }
+
+      // Kiểm tra kích thước file (giới hạn 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Ảnh không được vượt quá 5MB');
+        return;
+      }
+
+      setAvatarFile(file);
+
+      // Tạo preview URL cho avatar
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
+  // Xử lý khi click vào nút xóa avatar
+  const handleRemoveAvatar = async () => {
+    if (initialData?.id) {
+      // Nếu đang chỉnh sửa user hiện có, gọi API xóa avatar
+      try {
+        const response = await userService.deleteAvatar(initialData.id);
+        if (response) {
+          // Cập nhật formData với avatarUrl mới (default.jpg)
+          setFormData(prev => ({
+            ...prev,
+            avatarUrl: response.avatarUrl || ''
+          }));
+
+          // Cập nhật preview
+          setAvatarPreview(response.avatarUrl ? getAvatarUrl(response.avatarUrl) : '');
+
+          // Xóa file đã chọn (nếu có)
+          setAvatarFile(null);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }
+      } catch (error) {
+        console.error('Lỗi khi xóa avatar:', error);
+      }
+    } else {
+      // Nếu đang tạo user mới, chỉ cần xóa file đã chọn
+      setAvatarFile(null);
+      setAvatarPreview('');
+      setFormData(prev => ({
+        ...prev,
+        avatarUrl: ''
+      }));
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    // Nếu có file avatar mới, upload trước khi submit form
+    if (avatarFile) {
+      setIsUploading(true);
+      try {
+        // Nếu đang chỉnh sửa người dùng hiện có, sử dụng userId của người dùng đó
+        const response = await userService.uploadAvatar(
+          avatarFile,
+          initialData?.id // Truyền userId nếu đang chỉnh sửa người dùng hiện có
+        );
+
+        if (response && response.avatarUrl) {
+          // Cập nhật avatarUrl trong formData
+          setFormData(prev => ({
+            ...prev,
+            avatarUrl: response.avatarUrl
+          }));
+
+          // Xóa file đã upload
+          setAvatarFile(null);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+
+          // Submit form với avatarUrl mới
+          onSubmit({
+            ...formData,
+            avatarUrl: response.avatarUrl
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Lỗi khi upload avatar:', error);
+        alert('Có lỗi xảy ra khi tải lên ảnh. Vui lòng thử lại.');
+        return;
+      } finally {
+        setIsUploading(false);
+      }
+    }
+
+    // Nếu không có file avatar mới hoặc upload thất bại, submit form với dữ liệu hiện tại
+    onSubmit(formData);
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+    <div className="bg-white rounded-lg p-6">
+      <h2 className="text-xl font-semibold text-gray-900 mb-6">
         {initialData ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Username */}
         <div>
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
             Tên đăng nhập
           </label>
           <input
@@ -136,19 +271,19 @@ const UserForm: React.FC<UserFormProps> = ({
             onChange={handleChange}
             disabled={!!initialData} // Disable nếu đang chỉnh sửa
             className={`w-full px-3 py-2 border ${
-              errors.username ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-            } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white ${
-              initialData ? 'bg-gray-100 dark:bg-gray-600' : ''
+              errors.username ? 'border-red-500' : 'border-gray-300'
+            } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
+              initialData ? 'bg-gray-100' : ''
             }`}
           />
           {errors.username && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.username}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.username}</p>
           )}
         </div>
 
         {/* Password */}
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
             {initialData ? 'Mật khẩu mới (để trống nếu không đổi)' : 'Mật khẩu'}
           </label>
           <div className="relative">
@@ -159,12 +294,12 @@ const UserForm: React.FC<UserFormProps> = ({
               value={formData.password}
               onChange={handleChange}
               className={`w-full px-3 py-2 border ${
-                errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white pr-10`}
+                errors.password ? 'border-red-500' : 'border-gray-300'
+              } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 pr-10`}
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
@@ -180,10 +315,10 @@ const UserForm: React.FC<UserFormProps> = ({
             </button>
           </div>
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
           )}
           {!errors.password && (
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-xs text-gray-500">
               Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.
             </p>
           )}
@@ -191,7 +326,7 @@ const UserForm: React.FC<UserFormProps> = ({
 
         {/* Email */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Email
           </label>
           <input
@@ -201,35 +336,146 @@ const UserForm: React.FC<UserFormProps> = ({
             value={formData.email}
             onChange={handleChange}
             className={`w-full px-3 py-2 border ${
-              errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-            } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white`}
+              errors.email ? 'border-red-500' : 'border-gray-300'
+            } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
+              initialData ? 'bg-gray-50' : ''
+            }`}
+            disabled={!!initialData} // Vô hiệu hóa khi chỉnh sửa người dùng hiện có
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
           )}
+          {initialData && (
+            <p className="mt-1 text-xs text-gray-500">
+              Email không thể thay đổi sau khi tạo tài khoản
+            </p>
+          )}
+        </div>
+
+        {/* Display Name */}
+        <div>
+          <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
+            Tên hiển thị
+          </label>
+          <input
+            type="text"
+            id="displayName"
+            name="displayName"
+            value={formData.displayName}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Tên hiển thị của người dùng (không bắt buộc, phải là duy nhất)
+          </p>
+        </div>
+
+        {/* Avatar Upload */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Ảnh đại diện
+          </label>
+          <div className="mt-1 flex items-center space-x-4">
+            {/* Avatar Preview */}
+            <div className="flex-shrink-0">
+              <div className="h-20 w-20 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview.startsWith('data:') ? avatarPreview : getAvatarUrl(avatarPreview)}
+                    alt="Avatar Preview"
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/images/avt_default.jpg';
+                    }}
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center bg-gray-100 text-gray-400">
+                    <svg className="h-12 w-12" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Upload Controls */}
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center">
+                <input
+                  type="file"
+                  id="avatar"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-1.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Chọn ảnh
+                </button>
+
+                {avatarFile && (
+                  <span className="ml-2 text-sm text-gray-600">
+                    Ảnh đã chọn: {avatarFile.name}
+                  </span>
+                )}
+
+                {avatarPreview && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    className="ml-2 px-3 py-1.5 bg-red-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    Xóa
+                  </button>
+                )}
+              </div>
+
+              {/* Hiển thị URL ảnh nếu có (chỉ để xem) */}
+              {formData.avatarUrl && (
+                <div className="flex items-center">
+                  <input
+                    type="text"
+                    id="avatarUrl"
+                    name="avatarUrl"
+                    value={formData.avatarUrl}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm bg-gray-50 text-gray-500"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            Tải lên ảnh đại diện (không bắt buộc). Ảnh sẽ được tải lên khi bạn nhấn nút "Cập nhật" hoặc "Thêm mới". Nếu bạn xóa ảnh, file cũng chỉ được xóa khi bạn nhấn "Cập nhật".
+          </p>
         </div>
 
         {/* Role */}
         <div>
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
             Vai trò
           </label>
           <select
-            id="role"
-            name="role"
-            value={formData.role}
+            id="roles"
+            name="roles"
+            value={formData.roles.length > 0 ? formData.roles[0] : ''}
             onChange={handleRoleChange}
-            className={`w-full px-3 py-2 border ${errors.role ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white`}
+            className={`w-full px-3 py-2 border ${errors.roles ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
           >
             <option value="">Chọn vai trò</option>
             {roles.map(role => (
-              <option key={role.name} value={role.name}>
-                {role.name}
+              <option key={role.name} value={role.id}>
+                {role.name} (ID: {role.id})
               </option>
             ))}
           </select>
-          {errors.role && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.role}</p>
+          {errors.roles && (
+            <p className="mt-1 text-sm text-red-600">{errors.roles}</p>
           )}
         </div>
 
@@ -238,22 +484,22 @@ const UserForm: React.FC<UserFormProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Hủy
           </button>
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || isUploading}
             className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? (
+            {isLoading || isUploading ? (
               <span className="flex items-center">
                 <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Đang xử lý...
+                {isUploading ? 'Đang tải ảnh lên...' : 'Đang xử lý...'}
               </span>
             ) : initialData ? 'Cập nhật' : 'Thêm mới'}
           </button>

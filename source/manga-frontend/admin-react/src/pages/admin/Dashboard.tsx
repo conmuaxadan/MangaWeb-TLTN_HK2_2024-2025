@@ -349,9 +349,15 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, value, increase, icon, col
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-sm text-green-600 dark:text-green-400">
-              +{increase} hôm nay
-            </div>
+            {increase > 0 ? (
+              <div className="text-sm text-green-600 dark:text-green-400">
+                +{increase} hôm nay
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Không có mới hôm nay
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -50,7 +50,7 @@ public class FileService {
 
         file.transferTo(new File(fileData.getFilePath()));
         return FileInfoResponse.builder()
-                .name(fileName)
+                .fileName(fileName)
                 .build();
     }
 
@@ -63,11 +63,12 @@ public class FileService {
         FileInfo fileData = fileDataRepository.save(FileInfo.builder()
                 .name(fileName)
                 .filePath(USER_FOLDER_PATH + fileName)
+                        .fileType(file.getContentType())
                 .build());
 
         file.transferTo(new File(fileData.getFilePath()));
         return FileInfoResponse.builder()
-                .name(fileName)
+                .fileName(fileName)
                 .build();
     }
 

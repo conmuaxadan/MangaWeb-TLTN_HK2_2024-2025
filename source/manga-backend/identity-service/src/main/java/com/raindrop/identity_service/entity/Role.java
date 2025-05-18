@@ -19,8 +19,11 @@ import java.util.Set;
 @EntityListeners(AuditingEntityListener.class)
 public class Role {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
     String name;
-    @ManyToMany
+    String description;
+    @ManyToMany(fetch = FetchType.EAGER)
     Set<Permission> permissions;
     @Column(updatable = false)
     @CreatedDate

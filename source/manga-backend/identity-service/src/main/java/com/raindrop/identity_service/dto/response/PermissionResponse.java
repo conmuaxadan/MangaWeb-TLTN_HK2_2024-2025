@@ -14,5 +14,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PermissionResponse {
+    Long id;
     String name;
+    String description;
 }

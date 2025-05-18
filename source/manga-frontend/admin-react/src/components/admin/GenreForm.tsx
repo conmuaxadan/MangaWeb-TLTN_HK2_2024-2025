@@ -15,7 +15,8 @@ const GenreForm: React.FC<GenreFormProps> = ({
   isLoading = false
 }) => {
   const [formData, setFormData] = useState<GenreRequest>({
-    name: ''
+    name: '',
+    description: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -23,23 +24,25 @@ const GenreForm: React.FC<GenreFormProps> = ({
   useEffect(() => {
     if (initialData) {
       setFormData({
-        name: initialData.name
+        name: initialData.name,
+        description: initialData.description || ''
       });
     } else {
       // Reset form khi tạo mới
       setFormData({
-        name: ''
+        name: '',
+        description: ''
       });
     }
   }, [initialData]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    
+
     // Xóa lỗi khi người dùng bắt đầu nhập
     if (errors[name]) {
       setErrors(prev => ({
@@ -51,34 +54,34 @@ const GenreForm: React.FC<GenreFormProps> = ({
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     // Validate name
     if (!formData.name.trim()) {
       newErrors.name = 'Tên thể loại không được để trống';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       onSubmit(formData);
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+    <div className="bg-white p-6 rounded-lg">
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">
         {initialData ? 'Chỉnh sửa thể loại' : 'Thêm thể loại mới'}
       </h2>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name */}
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
             Tên thể loại
           </label>
           <input
@@ -89,21 +92,37 @@ const GenreForm: React.FC<GenreFormProps> = ({
             onChange={handleChange}
             disabled={isLoading}
             className={`w-full px-3 py-2 border ${
-              errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-            } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white`}
+              errors.name ? 'border-red-500' : 'border-gray-300'
+            } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
           />
           {errors.name && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.name}</p>
           )}
         </div>
-        
+
+        {/* Description */}
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+            Mô tả
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            disabled={isLoading}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
         {/* Buttons */}
         <div className="flex justify-end space-x-3">
           <button
             type="button"
             onClick={onCancel}
             disabled={isLoading}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Hủy
           </button>

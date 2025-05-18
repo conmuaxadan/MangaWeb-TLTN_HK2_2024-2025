@@ -50,10 +50,7 @@ public class AuthenticationController {
                 .result(result)
                 .build();
     }
-
-
-
-
+    
     @PostMapping("/tokens/validate")
     ApiResponse<IntrospectResponse> introspect(@RequestBody @Valid IntrospectRequest request) throws ParseException, JOSEException {
         log.debug("Token introspection request");
