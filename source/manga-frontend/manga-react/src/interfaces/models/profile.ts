@@ -1,27 +1,19 @@
-// User Profile Response
-export interface UserProfileResponse {
+// User Response from Identity Service
+export interface UserResponse {
     id: string;
-    userId: string;
+    username: string;
     email: string;
     displayName: string;
     avatarUrl?: string;
+    roles?: any[];
+    authProvider?: string;
     createdAt?: string;
-    updatedAt?: string;
-}
-
-// User Profile Request
-export interface UserProfileRequest {
-    userId: string;
-    email?: string;
-    displayName: string;
-    avatarUrl?: string;
 }
 
 // Reading History Request
 export interface ReadingHistoryRequest {
     mangaId: string;
     chapterId: string;
-    // Không còn lưu lastPage nữa
 }
 
 // Anonymous Reading History Request
@@ -111,8 +103,7 @@ export interface CommentRequest {
 export interface CommentResponse {
     id: string;
     userId: string;
-    profileId?: string;
-    username: string;
+    displayName: string; // Đây là displayName từ backend
     chapterId: string;
     mangaId: string;
     content: string;

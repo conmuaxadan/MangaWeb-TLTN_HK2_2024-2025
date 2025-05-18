@@ -1,6 +1,5 @@
 import { toast } from "react-toastify";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
-import { AxiosError } from "axios";
 import {
     ReadingHistoryRequest,
     ReadingHistoryResponse,
@@ -8,7 +7,6 @@ import {
     AnonymousReadingHistoryRequest,
     AnonymousReadingHistoryResponse
 } from "../interfaces/models/profile";
-import { logApiCall } from "../utils/api-logger";
 import HttpClient from "./http-client";
 import { API_CONFIG } from "../configurations/api-config";
 

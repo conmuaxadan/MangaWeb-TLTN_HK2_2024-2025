@@ -116,7 +116,7 @@ class AuthService {
      * Lấy thông tin người dùng hiện tại từ JWT token
      * @returns Thông tin người dùng hoặc false nếu thất bại
      */
-    getCurrentUser(): { userId: string, email: string, authProvider?: string } | false {
+    getCurrentUser(): { userId: string, email: string, authProvider?: string, username?: string } | false {
         logApiCall('getCurrentUser');
         try {
             const token = localStorage.getItem(TOKEN_STORAGE.ACCESS_TOKEN);
@@ -137,7 +137,8 @@ class AuthService {
             return {
                 userId: payload.sub, // ID người dùng là subject của token
                 email: payload.email, // Email được thêm vào claim
-                authProvider: payload.authProvider // Loại tài khoản (LOCAL, GOOGLE, etc.)
+                authProvider: payload.authProvider, // Loại tài khoản (LOCAL, GOOGLE, etc.)
+                username: payload.username
             };
         } catch (error) {
             console.error("Lỗi giải mã JWT token:", error);

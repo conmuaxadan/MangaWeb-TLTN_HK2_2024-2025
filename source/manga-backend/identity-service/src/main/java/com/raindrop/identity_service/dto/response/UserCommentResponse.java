@@ -1,6 +1,6 @@
-package com.raindrop.comment_service.dto.response;
+package com.raindrop.identity_service.dto.response;
 
-
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,9 +12,8 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class UserProfileResponse {
-    String id;
-    String email;
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class UserCommentResponse {
     String displayName;
     String avatarUrl;
 }

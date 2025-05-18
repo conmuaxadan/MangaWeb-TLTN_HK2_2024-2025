@@ -1,10 +1,12 @@
 package com.raindrop.identity_service.service;
 
 import com.raindrop.common.event.UserEvent;
+import com.raindrop.identity_service.dto.request.ChangeDisplayNameRequest;
 import com.raindrop.identity_service.dto.request.ChangePasswordRequest;
 import com.raindrop.identity_service.dto.request.LinkLocalAccountRequest;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.LinkedAccountResponse;
+import com.raindrop.identity_service.dto.response.UserCommentResponse;
 import com.raindrop.identity_service.dto.response.UserResponse;
 import com.raindrop.identity_service.entity.LinkedAccount;
 import com.raindrop.identity_service.entity.Role;
@@ -206,6 +208,14 @@ public class UserService {
         return userMapper.toUserResponse(userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found")));
     }
 
+    public UserCommentResponse getUserCommentById(String userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        return UserCommentResponse.builder()
+                .displayName(user.getDisplayName())
+                .avatarUrl(user.getAvatarUrl())
+                .build();
+    }
+
     /**
      * Xóa người dùng theo username
      * @param username Username của người dùng cần xóa
@@ -263,6 +273,21 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
         log.info("Password changed successfully for user ID: {}", userId);
+    }
+
+    public void updateDisplayName(String userId, ChangeDisplayNameRequest request) {
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new AppException(ErrorCode.USER_NOT_EXISTED));
+        // Kiểm tra nếu displayName mới khác với displayName hiện tại
+        if (!request.getDisplayName().equals(user.getDisplayName())) {
+            // Kiểm tra xem displayName mới đã tồn tại chưa
+            if (userRepository.existsByDisplayName(request.getDisplayName())) {
+                throw new AppException(ErrorCode.DISPLAYNAME_EXISTED);
+            }
+
+            user.setDisplayName(request.getDisplayName());
+            userRepository.save(user);
+        }
     }
 
     /**

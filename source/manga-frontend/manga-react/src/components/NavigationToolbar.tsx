@@ -88,13 +88,6 @@ const NavigationToolbar: React.FC = () => {
               </div>
             )}
           </div>
-          <Link
-            to="/rankings"
-            className="flex items-center text-sm font-medium text-gray-300 hover:text-white transition-colors"
-          >
-            <i className="fas fa-trophy mr-2"></i>
-            Xếp hạng
-          </Link>
         </div>
         <div className="flex items-center space-x-4">
           <Link

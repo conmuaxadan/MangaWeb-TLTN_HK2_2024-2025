@@ -1,24 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { MangaResponse } from '../interfaces/models/manga';
+import { MangaResponse, PageResponse } from '../interfaces/models/manga';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { getMangaImageUrl } from '../utils/file-utils';
+import mangaService from '../services/manga-service';
 
-interface PagedResponse {
-  content: MangaResponse[];
-  totalPages: number;
-  totalElements: number;
-  number: number;
-  size: number;
-}
+// Sử dụng PageResponse từ interfaces/models/manga.ts
 
 const GenreDetail: React.FC = () => {
   const { genreName } = useParams<{ genreName: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // State for managing data, loading and error
-  const [data, setData] = useState<PagedResponse | null>(null);
+  const [data, setData] = useState<PageResponse<MangaResponse> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -39,19 +34,19 @@ const GenreDetail: React.FC = () => {
 
       setIsLoading(true);
       setIsError(false);
-      
+
       try {
-        // Replace with your actual API endpoint
-        const response = await fetch(`/api/manga/genres/${encodeURIComponent(genreName)}?page=${currentPage}&size=${pageSize}`);
-        if (!response.ok) {
+        // Sử dụng mangaService để lấy manga theo thể loại
+        const result = await mangaService.findByGenre(genreName, currentPage, pageSize);
+        if (!result) {
           throw new Error(`Failed to fetch mangas for genre ${genreName}`);
         }
-        
-        const result = await response.json();
+
         setData(result);
       } catch (err) {
         setIsError(true);
         setError(err instanceof Error ? err : new Error('An unknown error occurred'));
+        console.error('Error fetching manga by genre:', err);
       } finally {
         setIsLoading(false);
       }

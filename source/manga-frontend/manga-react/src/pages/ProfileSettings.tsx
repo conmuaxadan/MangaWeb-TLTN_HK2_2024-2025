@@ -12,7 +12,7 @@ const ProfileSettings: React.FC = () => {
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState<string>(user?.displayName || '');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
+  // const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
   const [loading, setLoading] = useState<boolean>(false);
   const [oldPassword, setOldPassword] = useState<string>('');
   const [newPassword, setNewPassword] = useState<string>('');
@@ -37,12 +37,12 @@ const ProfileSettings: React.FC = () => {
       const file = e.target.files[0];
       setAvatarFile(file);
 
-      // Tạo preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      // // Tạo preview
+      // const reader = new FileReader();
+      // reader.onloadend = () => {
+      //   setAvatarPreview(reader.result as string);
+      // };
+      // reader.readAsDataURL(file);
     }
   };
 
@@ -96,13 +96,7 @@ const ProfileSettings: React.FC = () => {
 
     setLoading(true);
     try {
-      // Cập nhật tên hiển thị
-      const updateData = {
-        displayName: displayName
-      };
-
-      const result = await profileService.updateProfile(updateData);
-
+      await profileService.updateProfile(displayName);
       toast.success('Cập nhật tên hiển thị thành công', { position: 'top-right' });
 
       // Reload trang để cập nhật thông tin
@@ -150,7 +144,7 @@ const ProfileSettings: React.FC = () => {
       <div className="grid grid-cols-1 gap-[30px]">
         <div>
         {/* Đổi mật khẩu */}
-        <div className="mt-5 rounded-md bg-gray-800 p-6 shadow">
+        <div className="rounded-md bg-gray-800 p-6 shadow">
           <h6 className="mb-4 text-lg font-semibold">Đổi mật khẩu</h6>
           <form onSubmit={handleUpdatePassword}>
             <div>

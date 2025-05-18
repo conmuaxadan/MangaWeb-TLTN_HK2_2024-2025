@@ -16,7 +16,7 @@ public class ReadingHistoryResponse {
     String mangaId;
     String chapterId;
     String mangaTitle;
-    Integer chapterNumber;
+    double chapterNumber;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 

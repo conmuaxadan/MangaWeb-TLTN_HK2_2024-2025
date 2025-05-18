@@ -1,7 +1,6 @@
 import { toast } from "react-toastify";
 import { commentHttpClient } from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
-import { AxiosError } from "axios";
 import {
     CommentRequest,
     CommentResponse,

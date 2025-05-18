@@ -51,17 +51,18 @@ public class ReadingHistoryService {
         } else {
             // Tạo lịch sử đọc mới
             readingHistory = readingHistoryMapper.toReadingHistory(request, userId);
-        }
 
+            // Gửi sự kiện tăng lượt xem qua Kafka
+            chapterViewEventProducer.sendChapterViewEvent(
+                    request.getChapterId(),
+                    request.getMangaId(),
+                    userId
+            );
+        }
         // Lưu lịch sử đọc
         readingHistory = readingHistoryRepository.save(readingHistory);
 
-        // Gửi sự kiện tăng lượt xem qua Kafka
-        chapterViewEventProducer.sendChapterViewEvent(
-                request.getChapterId(),
-                request.getMangaId(),
-                userId
-        );
+
         log.info("Sent chapter view event for chapter {} of manga {}",
                 request.getChapterId(), request.getMangaId());
 
@@ -76,15 +77,15 @@ public class ReadingHistoryService {
             // Xử lý dữ liệu từ response và bổ sung vào response
             if (mangaResponse != null && mangaResponse.getResult() != null) {
                 var mangaInfo = mangaResponse.getResult();
-                response.setMangaTitle((String) ((Map<String, Object>) mangaInfo).get("title"));
-                response.setMangaCoverUrl((String) ((Map<String, Object>) mangaInfo).get("coverUrl"));
-                response.setAuthor((String) ((Map<String, Object>) mangaInfo).get("author"));
+                response.setMangaTitle(mangaInfo.getTitle());
+                response.setMangaCoverUrl(mangaInfo.getCoverUrl());
+                response.setAuthor(mangaInfo.getAuthor());
             }
 
             if (chapterResponse != null && chapterResponse.getResult() != null) {
                 var chapterInfo = chapterResponse.getResult();
-                response.setChapterTitle((String) ((Map<String, Object>) chapterInfo).get("title"));
-                response.setChapterNumber((Integer) ((Map<String, Object>) chapterInfo).get("chapterNumber"));
+                response.setChapterTitle(chapterInfo.getTitle());
+                response.setChapterNumber(chapterInfo.getChapterNumber());
             }
 
         } catch (Exception e) {
@@ -118,15 +119,15 @@ public class ReadingHistoryService {
                 // Xử lý dữ liệu từ response và bổ sung vào response
                 if (mangaResponse != null && mangaResponse.getResult() != null) {
                     var mangaInfo = mangaResponse.getResult();
-                    response.setMangaTitle((String) ((Map<String, Object>) mangaInfo).get("title"));
-                    response.setMangaCoverUrl((String) ((Map<String, Object>) mangaInfo).get("coverUrl"));
-                    response.setAuthor((String) ((Map<String, Object>) mangaInfo).get("author"));
+                    response.setMangaTitle(mangaInfo.getTitle());
+                    response.setMangaCoverUrl(mangaInfo.getCoverUrl());
+                    response.setAuthor(mangaInfo.getAuthor());
                 }
 
                 if (chapterResponse != null && chapterResponse.getResult() != null) {
                     var chapterInfo = chapterResponse.getResult();
-                    response.setChapterTitle((String) ((Map<String, Object>) chapterInfo).get("title"));
-                    response.setChapterNumber((Integer) ((Map<String, Object>) chapterInfo).get("chapterNumber"));
+                    response.setChapterTitle(chapterInfo.getTitle());
+                    response.setChapterNumber(chapterInfo.getChapterNumber());
                 }
 
             } catch (Exception e) {
@@ -161,15 +162,15 @@ public class ReadingHistoryService {
             // Xử lý dữ liệu từ response và bổ sung vào response
             if (mangaResponse != null && mangaResponse.getResult() != null) {
                 var mangaInfo = mangaResponse.getResult();
-                response.setMangaTitle((String) ((Map<String, Object>) mangaInfo).get("title"));
-                response.setMangaCoverUrl((String) ((Map<String, Object>) mangaInfo).get("coverUrl"));
-                response.setAuthor((String) ((Map<String, Object>) mangaInfo).get("author"));
+                response.setMangaTitle(mangaInfo.getTitle());
+                response.setMangaCoverUrl(mangaInfo.getCoverUrl());
+                response.setAuthor(mangaInfo.getAuthor());
             }
 
             if (chapterResponse != null && chapterResponse.getResult() != null) {
                 var chapterInfo = chapterResponse.getResult();
-                response.setChapterTitle((String) ((Map<String, Object>) chapterInfo).get("title"));
-                response.setChapterNumber((Integer) ((Map<String, Object>) chapterInfo).get("chapterNumber"));
+                response.setChapterTitle(chapterInfo.getTitle());
+                response.setChapterNumber(chapterInfo.getChapterNumber());
             }
 
         } catch (Exception e) {
@@ -219,15 +220,15 @@ public class ReadingHistoryService {
                 // Xử lý dữ liệu từ response và bổ sung vào response
                 if (mangaResponse != null && mangaResponse.getResult() != null) {
                     var mangaInfo = mangaResponse.getResult();
-                    response.setMangaTitle((String) ((Map<String, Object>) mangaInfo).get("title"));
-                    response.setMangaCoverUrl((String) ((Map<String, Object>) mangaInfo).get("coverUrl"));
-                    response.setAuthor((String) ((Map<String, Object>) mangaInfo).get("author"));
+                    response.setMangaTitle(mangaInfo.getTitle());
+                    response.setMangaCoverUrl(mangaInfo.getCoverUrl());
+                    response.setAuthor(mangaInfo.getAuthor());
                 }
 
                 if (chapterResponse != null && chapterResponse.getResult() != null) {
                     var chapterInfo = chapterResponse.getResult();
-                    response.setChapterTitle((String) ((Map<String, Object>) chapterInfo).get("title"));
-                    response.setChapterNumber((Integer) ((Map<String, Object>) chapterInfo).get("chapterNumber"));
+                    response.setChapterTitle(chapterInfo.getTitle());
+                    response.setChapterNumber(chapterInfo.getChapterNumber());
                 }
 
             } catch (Exception e) {

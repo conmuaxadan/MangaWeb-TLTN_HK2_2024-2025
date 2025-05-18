@@ -41,8 +41,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/identity/auth/tokens/validate",
             "/identity/auth/google/tokens",
             "/identity/auth/tokens/refresh",
-            "/identity/roles",           // Cho phép xem danh sách vai trò
-            "/identity/permissions",      // Cho phép xem danh sách quyền hạn
+            "/identity/users/comment/{userId}",
 
             // Manga Service
             "/manga/mangas",
@@ -67,9 +66,6 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/history/reading-histories/user/**",
             "/history/reading-histories/manga/**",
             "/history/reading-histories",
-
-            // Profile Service
-            "/profile/profiles/by-user-id/**",
 
             // Comment Service
             "/comment/comments/chapters/**",

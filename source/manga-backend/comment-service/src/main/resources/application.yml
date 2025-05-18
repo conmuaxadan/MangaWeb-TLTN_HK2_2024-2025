@@ -13,9 +13,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      # Chỉ sử dụng create-drop trong môi trường phát triển
-      # Trong môi trường production, nên sử dụng update hoặc validate
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -33,14 +31,6 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
-# Eureka configuration disabled
-# eureka:
-#   client:
-#     service-url:
-#       defaultZone: http://localhost:8761/eureka
-#   instance:
-#     prefer-ip-address: true
-
 logging:
   level:
     com.raindrop.comment_service: DEBUG
@@ -57,8 +47,8 @@ security:
 # API URLs
 app:
   services:
-    profile: http://localhost:8081/profile
     manga: http://localhost:8082/manga
+    identity: http://localhost:8080/identity
 
 # Feign Client Configuration
 feign:

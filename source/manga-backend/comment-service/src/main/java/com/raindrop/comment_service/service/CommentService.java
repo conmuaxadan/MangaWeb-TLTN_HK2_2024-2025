@@ -3,13 +3,14 @@ package com.raindrop.comment_service.service;
 import com.raindrop.comment_service.dto.request.CommentRequest;
 import com.raindrop.comment_service.dto.response.ChapterInfoResponse;
 import com.raindrop.comment_service.dto.response.CommentResponse;
-import com.raindrop.comment_service.dto.response.UserProfileResponse;
+import com.raindrop.comment_service.dto.response.UserCommentResponse;
 import com.raindrop.comment_service.entity.Comment;
 import com.raindrop.comment_service.kafka.CommentEventProducer;
 import com.raindrop.comment_service.mapper.CommentMapper;
 import com.raindrop.comment_service.repository.CommentRepository;
 import com.raindrop.comment_service.repository.httpclient.MangaClient;
-import com.raindrop.comment_service.repository.httpclient.ProfileClient;
+
+import com.raindrop.comment_service.repository.httpclient.UserClient;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Optional;
 
@@ -31,7 +30,7 @@ public class CommentService {
     CommentRepository commentRepository;
     CommentMapper commentMapper;
     CommentEventProducer commentEventProducer;
-    ProfileClient profileClient;
+    UserClient userClient;
     MangaClient mangaClient;
 
     /**
@@ -70,9 +69,9 @@ public class CommentService {
         // Lấy thông tin người dùng từ profile-service
         try {
             // Gọi API mà không cần token xác thực
-            var profileResponse = profileClient.getUserProfile(comment.getUserId());
-            if (profileResponse != null && profileResponse.getResult() != null) {
-                UserProfileResponse userProfile = profileResponse.getResult();
+            var userComment = userClient.getUserProfile(comment.getUserId());
+            if (userComment != null && userComment.getResult() != null) {
+                UserCommentResponse userProfile = userComment.getResult();
                 response.setUsername(userProfile.getDisplayName());
                 response.setUserAvatarUrl(userProfile.getAvatarUrl());
             } else {

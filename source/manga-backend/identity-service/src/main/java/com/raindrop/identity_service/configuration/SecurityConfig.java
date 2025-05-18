@@ -28,8 +28,7 @@ public class SecurityConfig {
             "/auth/tokens/refresh",
             "/users/accounts/google",
             "/users/accounts/local",
-            "/roles",                // Cho phép xem danh sách vai trò
-            "/permissions"           // Cho phép xem danh sách quyền hạn
+            "/users/comment/{userId}",
     };
 
     @Autowired
@@ -39,7 +38,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/users/me", "/roles", "/permissions").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/me", "/roles", "/permissions", "/users/comment/{userId}").permitAll()
                         .anyRequest()
                         .authenticated());
 

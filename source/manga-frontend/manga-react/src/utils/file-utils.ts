@@ -5,7 +5,7 @@ import { API_CONFIG } from '../configurations/api-config';
  * @param fileName Tên file
  * @returns URL đầy đủ của file
  */
-export const getFileUrl = (fileName: string): string => {
+export const getFileUrl = (fileName: string): string | null => {
     if (!fileName) return null;
 
     // Nếu fileName đã là URL đầy đủ, trả về nguyên vẹn
@@ -23,7 +23,7 @@ export const getFileUrl = (fileName: string): string => {
  */
 export const getMangaImageUrl = (fileName: string): string => {
     if (!fileName) return '/images/default-manga-cover.jpg';
-    return getFileUrl(fileName);
+    return <string>getFileUrl(fileName);
 };
 
 /**
@@ -31,9 +31,9 @@ export const getMangaImageUrl = (fileName: string): string => {
  * @param fileName Tên file ảnh avatar
  * @returns URL đầy đủ của ảnh avatar
  */
-export const getAvatarUrl = (fileName: string): string => {
+export const getAvatarUrl = (fileName: string | undefined): string => {
     if (!fileName) return '/images/avt_default.jpg';
-    return getFileUrl(fileName);
+    return <string>getFileUrl(fileName);
 };
 
 /**
@@ -43,5 +43,5 @@ export const getAvatarUrl = (fileName: string): string => {
  */
 export const getMangaPageUrl = (fileName: string): string => {
     if (!fileName) return '/images/default-manga-page.jpg';
-    return getFileUrl(fileName);
+    return <string>getFileUrl(fileName);
 };

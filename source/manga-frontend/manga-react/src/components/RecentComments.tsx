@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import commentService from '../services/comment-service';
-import { getAvatarUrl } from '../utils/file-utils';
+import {getAvatarUrl} from "../utils/file-utils.ts";
 
 interface Comment {
     id: string;
     content: string;
-    username: string;
+    userId: string;
+    displayName?: string;
     userAvatarUrl?: string;
     createdAt: string;
     mangaId: string;
@@ -32,7 +33,8 @@ const RecentComments = () => {
                     const formattedComments = response.content.map((comment: any) => ({
                         id: comment.id,
                         content: comment.content,
-                        username: comment.username,
+                        userId: comment.userId,
+                        displayName: comment.displayName || comment.username || 'Người dùng', // Lấy displayName hoặc username từ response
                         userAvatarUrl: comment.userAvatarUrl,
                         createdAt: comment.createdAt,
                         mangaId: comment.mangaId,
@@ -40,6 +42,9 @@ const RecentComments = () => {
                         chapterId: comment.chapterId,
                         chapterNumber: comment.chapterNumber
                     }));
+
+                    // Log ra để kiểm tra dữ liệu
+                    console.log('Comment data:', response.content);
 
                     setComments(formattedComments);
                     setError(null);
@@ -102,7 +107,7 @@ const RecentComments = () => {
                                     }}
                                 />
                                 <div className="max-w-[150px] truncate text-sm font-medium text-gray-300">
-                                    {comment.username}
+                                    {comment.displayName}
                                 </div>
                             </div>
                             <div className="whitespace-nowrap text-xs text-gray-400">

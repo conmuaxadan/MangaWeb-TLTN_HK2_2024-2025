@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import authService from "../services/auth-service";
 import profileService from "../services/profile-service";
-import { UserProfileResponse } from "../interfaces/models/profile";
+import { UserResponse } from "../interfaces/models/profile";
 import { TOKEN_STORAGE } from "../configurations/api-config";
 
 interface AuthContextType {
     isLogin: boolean;
-    user: UserProfileResponse | null;
+    user: UserResponse | null;
     login: (authResponse: { token: string, refreshToken: string, expiresIn?: number }) => void;
     logout: () => void;
 }
@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isLogin, setIsLogin] = useState<boolean>(() => {
         return !!localStorage.getItem(TOKEN_STORAGE.ACCESS_TOKEN);
     });
-    const [user, setUser] = useState<UserProfileResponse | null>(null);
+    const [user, setUser] = useState<UserResponse | null>(null);
 
     // Lấy thông tin người dùng khi đã đăng nhập
     useEffect(() => {
@@ -27,17 +27,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const tokenInfo = authService.getCurrentUser();
                 if (tokenInfo) {
                     try {
-                        // Sử dụng userId từ token để lấy thông tin profile
-                        const userProfile = await profileService.getUserProfileByUserId(tokenInfo.userId);
-                        if (userProfile) {
-                            setUser(userProfile);
-                        } else {
-                            // Nếu không lấy được thông tin profile, tạo một profile tạm thời từ thông tin token
+                        // Sử dụng API mới để lấy thông tin người dùng từ identity service
+                        const userInfo = await profileService.getUserById(tokenInfo.userId);
+                        if (userInfo) {
+                            // Chuyển đổi từ UserResponse sang UserProfileResponse
                             setUser({
-                                id: "",
-                                userId: tokenInfo.userId,
+                                id: userInfo.id,
+                                username: userInfo.id,
+                                email: userInfo.email,
+                                displayName: userInfo.displayName || userInfo.username,
+                                avatarUrl: userInfo.avatarUrl,
+                                createdAt: userInfo.createdAt,
+                            });
+                        } else {
+                            // Nếu không lấy được thông tin người dùng, tạo một profile tạm thời từ thông tin token
+                            setUser({
+                                id: tokenInfo.userId,
+                                username: tokenInfo.userId,
                                 email: tokenInfo.email,
-                                displayName: tokenInfo.email.split('@')[0], // Tạo displayName từ email
+                                displayName: tokenInfo.userId || tokenInfo.email.split('@')[0], // Tạo displayName từ username hoặc email
                                 avatarUrl: "/images/avt_default.jpg"
                             });
                         }
@@ -45,10 +53,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         console.error("Lỗi khi lấy thông tin profile:", error);
                         // Tạo profile tạm thời từ thông tin token
                         setUser({
-                            id: "",
-                            userId: tokenInfo.userId,
+                            id: tokenInfo.userId,
+                            username: tokenInfo.userId,
                             email: tokenInfo.email,
-                            displayName: tokenInfo.email.split('@')[0], // Tạo displayName từ email
+                            displayName: tokenInfo.userId || tokenInfo.email.split('@')[0], // Tạo displayName từ username hoặc email
                             avatarUrl: "/images/avt_default.jpg"
                         });
                     }

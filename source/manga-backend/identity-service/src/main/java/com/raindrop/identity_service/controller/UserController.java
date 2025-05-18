@@ -1,9 +1,12 @@
 package com.raindrop.identity_service.controller;
 
+import com.raindrop.identity_service.dto.request.ChangeDisplayNameRequest;
 import com.raindrop.identity_service.dto.request.ChangePasswordRequest;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.ApiResponse;
+import com.raindrop.identity_service.dto.response.UserCommentResponse;
 import com.raindrop.identity_service.dto.response.UserResponse;
+import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.mapper.UserMapper;
 import com.raindrop.identity_service.service.UserService;
 import jakarta.validation.Valid;
@@ -48,11 +51,6 @@ public class UserController {
                 .build();
     }
 
-    /**
-     * Lấy danh sách người dùng có phân trang
-     * @param pageable Thông tin phân trang
-     * @return Danh sách người dùng có phân trang
-     */
     @GetMapping("/paginated")
     ApiResponse<Page<UserResponse>> getAllUsersPaginated(
             @PageableDefault(size = 10, sort = "username") Pageable pageable) {
@@ -70,13 +68,22 @@ public class UserController {
                 .build();
     }
 
-    @GetMapping("/byUserId/{userId}")
+    @GetMapping("/id/{userId}")
     ApiResponse<UserResponse> getUserByUserId(@PathVariable String userId) {
         return ApiResponse.<UserResponse>builder()
                 .message("User retrieved successfully")
                 .result(userService.getUserById(userId))
                 .build();
     }
+
+    @GetMapping("/comment/{userId}")
+    ApiResponse<UserCommentResponse> getUserByUserCommentId(@PathVariable String userId) {
+        return ApiResponse.<UserCommentResponse>builder()
+                .message("User retrieved successfully")
+                .result(userService.getUserCommentById(userId))
+                .build();
+    }
+
 
     @PutMapping()
     ApiResponse<UserResponse> updateUser(@RequestBody UserRequest request) {
@@ -164,13 +171,29 @@ public class UserController {
      * @param request Yêu cầu đổi mật khẩu
      * @return Thông báo kết quả
      */
-    @PutMapping("/password")
+    @PostMapping("/password")
     ApiResponse<Void> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
         log.info("Change password request received");
         userService.changePassword(request);
         return ApiResponse.<Void>builder()
                 .code(1000)
                 .message("Password changed successfully")
+                .build();
+    }
+
+    @PutMapping("/me")
+    ApiResponse<Void> changeDisplayName(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody ChangeDisplayNameRequest request
+    ) {
+        String userId = jwt.getSubject();
+        log.info("Updating current user {}", userId);
+
+        userService.updateDisplayName(userId, request);
+        // Trả về thông tin người dùng đã cập nhật
+        return ApiResponse.<Void>builder()
+                .code(1000)
+                .message("User updated successfully")
                 .build();
     }
 }
