@@ -26,6 +26,8 @@ public class SecurityConfig {
             "/auth/tokens/revoke",
             "/auth/google/tokens",
             "/auth/tokens/refresh",
+            "/auth/forgot-password",    // Thêm endpoint quên mật khẩu
+            "/auth/reset-password",     // Thêm endpoint đặt lại mật khẩu
             "/users/accounts/google",
             "/users/accounts/local",
             "/users/comment/{userId}",
@@ -38,7 +40,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/users/me", "/roles", "/permissions", "/users/comment/{userId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/me", "/roles", "/permissions", "/users/comment/{userId}","auth/forgot-password","/auth/reset-password").permitAll()
                         .anyRequest()
                         .authenticated());
 

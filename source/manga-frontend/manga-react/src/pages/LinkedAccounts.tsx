@@ -248,13 +248,13 @@ const LinkedAccounts: React.FC = () => {
     const description = 'Tạo tài khoản local để có thể đăng nhập bằng tên đăng nhập và mật khẩu.';
 
       return (
-          <div className="mt-5 rounded-md bg-gray-800 p-6 shadow">
+          <div className="mt-5 rounded-md bg-white p-6 shadow border border-gray-200">
             <h6 className="mb-4 text-lg font-semibold">{title}</h6>
-            <p className="text-gray-400 mb-4">
+            <p className="text-gray-600 mb-4">
               {description}
             </p>
-            <div className="mb-4 p-3 bg-blue-900/30 border border-blue-700 rounded-md">
-              <p className="text-blue-300 text-sm">
+            <div className="mb-4 p-3 bg-blue-100 border border-blue-300 rounded-md">
+              <p className="text-blue-700 text-sm">
                 <strong>Lưu ý:</strong> Tạo tài khoản Local sẽ cho phép bạn đăng nhập bằng tên đăng nhập và mật khẩu,
                 thay vì phải thông qua Google mỗi lần đăng nhập. Tài khoản Local và tài khoản Google của bạn sẽ chia sẻ cùng một hồ sơ người dùng.
               </p>
@@ -262,12 +262,12 @@ const LinkedAccounts: React.FC = () => {
             <form onSubmit={handleLinkLocalAccount}>
               {/* Tên đăng nhập */}
               <div className="mb-4">
-                <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                   Tên đăng nhập <span className="text-red-500">*</span>
                 </label>
                 <div
-                    className="relative input-icon-container flex items-center overflow-hidden border border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-zinc-700/50 transition-all duration-200">
-              <span className="pl-4 text-gray-400">
+                    className="relative input-icon-container flex items-center overflow-hidden border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-white transition-all duration-200">
+              <span className="pl-4 text-gray-500">
                 <FontAwesomeIcon icon={faUser}/>
               </span>
                   <input
@@ -277,7 +277,7 @@ const LinkedAccounts: React.FC = () => {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       onBlur={validateUsername}
-                      className="w-full p-3 bg-transparent text-white focus:outline-none"
+                      className="w-full p-3 bg-transparent text-gray-900 focus:outline-none"
                   />
                 </div>
                 {usernameError && (
@@ -287,12 +287,12 @@ const LinkedAccounts: React.FC = () => {
 
               {/* Email */}
               <div className="mb-4">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                   Email <span className="text-red-500">*</span>
                 </label>
                 <div
-                    className="relative input-icon-container flex items-center overflow-hidden border border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-zinc-700/50 transition-all duration-200">
-              <span className="pl-4 text-gray-400">
+                    className="relative input-icon-container flex items-center overflow-hidden border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-white transition-all duration-200">
+              <span className="pl-4 text-gray-500">
                 <FontAwesomeIcon icon={faEnvelope}/>
               </span>
                   <input
@@ -302,7 +302,7 @@ const LinkedAccounts: React.FC = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       onBlur={validateEmail}
-                      className="w-full p-3 bg-transparent text-white focus:outline-none"
+                      className="w-full p-3 bg-transparent text-gray-900 focus:outline-none"
                   />
                 </div>
                 {emailError && (
@@ -312,12 +312,12 @@ const LinkedAccounts: React.FC = () => {
 
               {/* Mật khẩu */}
               <div className="mb-4">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Mật khẩu <span className="text-red-500">*</span>
                 </label>
                 <div
-                    className="relative input-icon-container flex items-center overflow-hidden border border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-zinc-700/50 transition-all duration-200">
-              <span className="pl-4 text-gray-400">
+                    className="relative input-icon-container flex items-center overflow-hidden border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-white transition-all duration-200">
+              <span className="pl-4 text-gray-500">
                 <FontAwesomeIcon icon={faLock}/>
               </span>
                   <input
@@ -327,12 +327,12 @@ const LinkedAccounts: React.FC = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       onBlur={validatePassword}
-                      className="w-full p-3 bg-transparent text-white focus:outline-none"
+                      className="w-full p-3 bg-transparent text-gray-900 focus:outline-none"
                   />
                   <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 text-gray-400 hover:text-white"
+                      className="absolute right-3 text-gray-500 hover:text-gray-900"
                   >
                     <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye}/>
                   </button>
@@ -344,12 +344,12 @@ const LinkedAccounts: React.FC = () => {
 
               {/* Xác nhận mật khẩu */}
               <div className="mb-4">
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                   Xác nhận mật khẩu <span className="text-red-500">*</span>
                 </label>
                 <div
-                    className="relative input-icon-container flex items-center overflow-hidden border border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-zinc-700/50 transition-all duration-200">
-              <span className="pl-4 text-gray-400">
+                    className="relative input-icon-container flex items-center overflow-hidden border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-white transition-all duration-200">
+              <span className="pl-4 text-gray-500">
                 <FontAwesomeIcon icon={faLock}/>
               </span>
                   <input
@@ -359,12 +359,12 @@ const LinkedAccounts: React.FC = () => {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       onBlur={validateConfirmPassword}
-                      className="w-full p-3 bg-transparent text-white focus:outline-none"
+                      className="w-full p-3 bg-transparent text-gray-900 focus:outline-none"
                   />
                   <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 text-gray-400 hover:text-white"
+                      className="absolute right-3 text-gray-500 hover:text-gray-900"
                   >
                     <FontAwesomeIcon icon={showConfirmPassword ? faEyeSlash : faEye}/>
                   </button>
@@ -377,7 +377,7 @@ const LinkedAccounts: React.FC = () => {
               <button
                   type="submit"
                   disabled={formLoading}
-                  className="mt-4 w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-800 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="mt-4 w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-100 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {formLoading ? 'Đang xử lý...' : 'Tạo tài khoản Local'}
               </button>
@@ -412,20 +412,20 @@ const LinkedAccounts: React.FC = () => {
       const description = 'Liên kết tài khoản của bạn với Google để đăng nhập dễ dàng hơn.';
 
       return (
-          <div className="mt-5 rounded-md bg-gray-800 p-6 shadow">
+          <div className="mt-5 rounded-md bg-white p-6 shadow border border-gray-200">
             <h6 className="mb-4 text-lg font-semibold">{title}</h6>
-            <p className="text-gray-400 mb-4">
+            <p className="text-gray-600 mb-4">
               {description}
             </p>
-            <div className="mb-4 p-3 bg-blue-900/30 border border-blue-700 rounded-md">
-              <p className="text-blue-300 text-sm">
+            <div className="mb-4 p-3 bg-blue-100 border border-blue-300 rounded-md">
+              <p className="text-blue-700 text-sm">
                 <strong>Lưu ý:</strong> Khi liên kết với Google, bạn có thể đăng nhập bằng tài khoản Google của mình.
                 Tài khoản Google và tài khoản Local của bạn sẽ chia sẻ cùng một hồ sơ người dùng.
               </p>
             </div>
             <button
                 onClick={handleGoogleLink}
-                className="w-full py-3 px-4 bg-white text-gray-800 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-zinc-800 transition-all duration-200 shadow-md"
+                className="w-full py-3 px-4 bg-white text-gray-800 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-gray-100 transition-all duration-200 shadow-md"
             >
               <span className="text-red-500 mr-2">G</span>
               Liên kết với Google <FontAwesomeIcon icon={faExternalLinkAlt} className="ml-1 text-sm"/>
@@ -451,12 +451,12 @@ const LinkedAccounts: React.FC = () => {
               <h5 className="text-xl font-semibold mb-4">Quản lý tài khoản liên kết</h5>
 
             {/* Danh sách tài khoản liên kết */}
-            <div className="rounded-md bg-gray-800 p-6 shadow">
+            <div className="rounded-md bg-white p-6 shadow border border-gray-200">
               <h6 className="mb-4 text-lg font-semibold">Tài khoản đã liên kết</h6>
 
               {userInfo && userInfo.authProvider === 'GOOGLE' && (
-                <div className="mb-4 p-3 bg-blue-900/30 border border-blue-700 rounded-md">
-                  <p className="text-blue-300 text-sm">
+                <div className="mb-4 p-3 bg-blue-100 border border-blue-300 rounded-md">
+                  <p className="text-blue-700 text-sm">
                     <strong>Lưu ý:</strong> Bạn đang sử dụng tài khoản Google để đăng nhập.
                     Bạn có thể tạo thêm tài khoản Local để đăng nhập bằng tên đăng nhập và mật khẩu.
                   </p>
@@ -464,20 +464,20 @@ const LinkedAccounts: React.FC = () => {
               )}
 
               {linkedAccounts.length === 0 ? (
-                  <p className="text-gray-400">Bạn chưa liên kết với bất kỳ tài khoản nào.</p>
+                  <p className="text-gray-600">Bạn chưa liên kết với bất kỳ tài khoản nào.</p>
               ) : (
                   <>
                     <div className="space-y-4">
                     {linkedAccounts.map(account => (
                         <div key={account.id}
-                             className="flex items-center justify-between p-4 border border-gray-700 rounded-lg">
+                             className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                           <div>
                             <div className="font-medium">
                               {account.provider === 'LOCAL' ? 'Tài khoản Local' :
                                   account.provider === 'GOOGLE' ? 'Tài khoản Google' :
                                       `Tài khoản ${account.provider}`}
                             </div>
-                            <div className="text-sm text-gray-400">
+                            <div className="text-sm text-gray-600">
                               {account.username ? `Username: ${account.username}` : ''}
                               {account.email ? (account.username ? ' | ' : '') + `Email: ${account.email}` : ''}
                             </div>
@@ -503,7 +503,7 @@ const LinkedAccounts: React.FC = () => {
                                 console.log('Nút xóa được nhấn cho account:', account.id);
                                 handleUnlink(account.id);
                               }}
-                              className="p-2 text-red-400 hover:text-red-500 focus:outline-none"
+                              className="p-2 text-red-500 hover:text-red-600 focus:outline-none"
                               title="Hủy liên kết"
                               // Không vô hiệu hóa nút xóa tài khoản liên kết
                               disabled={false}

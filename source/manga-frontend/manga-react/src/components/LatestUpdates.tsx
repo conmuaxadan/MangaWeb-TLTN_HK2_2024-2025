@@ -86,7 +86,7 @@ const LatestUpdates: React.FC = () => {
     return (
         <div>
             <div className="relative mb-5 flex items-center justify-between">
-                <h1 className="flex items-center gap-3 text-xl font-semibold text-white border-l-4 border-purple-600 pl-3">
+                <h1 className="flex items-center gap-3 text-xl font-semibold text-gray-900 border-l-4 border-purple-600 pl-3">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" className="text-purple-500 text-2xl" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                         <path d="M256,8C119,8,8,119,8,256S119,504,256,504,504,393,504,256,393,8,256,8Zm92.49,313h0l-20,25a16,16,0,0,1-22.49,2.5h0l-67-49.72a40,40,0,0,1-15-31.23V112a16,16,0,0,1,16-16h32a16,16,0,0,1,16,16V256l58,42.5A16,16,0,0,1,348.49,321Z"></path>
                     </svg>
@@ -103,14 +103,14 @@ const LatestUpdates: React.FC = () => {
             ) : (
                 <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
                     {mangaList.map((manga) => (
-                        <div key={manga.id} className="group bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                        <div key={manga.id} className="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
                             <figure className="clearfix">
                                 <div className="relative mb-2">
                                     <a title={manga.title} href={manga.link} className="block">
                                         <div className="relative pb-[150%]">
                                             <div className="absolute inset-0 w-full h-full overflow-hidden">
                                                 <div className="relative h-full w-full">
-                                                    <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
+                                                    <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900/80 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
                                                     <img
                                                         src={getMangaImageUrl(manga.image)}
                                                         className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
@@ -127,7 +127,7 @@ const LatestUpdates: React.FC = () => {
                                             <h3 className="mb-1 line-clamp-2 text-sm font-semibold leading-tight text-white transition group-hover:line-clamp-4">
                                                 {manga.title}
                                             </h3>
-                                            <p className="mb-1 text-xs text-gray-400 line-clamp-1">{manga.author}</p>
+                                            <p className="mb-1 text-xs text-gray-300 line-clamp-1">{manga.author}</p>
                                             <span className="flex items-center justify-between gap-1 text-xs text-gray-300">
                                                 <span className="flex items-center gap-1">
                                                     <i className="fa fa-eye text-yellow-500"></i>{manga.views}
@@ -147,12 +147,12 @@ const LatestUpdates: React.FC = () => {
                                         <li className="flex items-center justify-between gap-x-2 text-xs">
                                             <a
                                                 title={manga.chapter}
-                                                className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition visited:text-gray-400 hover:text-purple-400 text-gray-200"
+                                                className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition visited:text-gray-500 hover:text-purple-600 text-gray-700"
                                                 href={manga.chapterLink}
                                             >
                                                 {manga.chapter}
                                             </a>
-                                            <span className="whitespace-nowrap leading-tight text-gray-400">
+                                            <span className="whitespace-nowrap leading-tight text-gray-500">
                                                 {manga.timeAgo.replace('trước', '')}
                                             </span>
                                         </li>
@@ -172,13 +172,13 @@ const LatestUpdates: React.FC = () => {
                             {currentPage > 0 ? (
                                 <button
                                     onClick={() => handlePageChange(currentPage - 1)}
-                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200"
+                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-200 text-gray-700 hover:bg-purple-500 hover:text-white transition-colors duration-200"
                                     aria-label="Previous page"
                                 >
                                     &lt;
                                 </button>
                             ) : (
-                                <span className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-gray-400 cursor-not-allowed">
+                                <span className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-200 text-gray-400 cursor-not-allowed">
                                     &lt;
                                 </span>
                             )}
@@ -189,7 +189,7 @@ const LatestUpdates: React.FC = () => {
                             <li>
                                 <button
                                     onClick={() => handlePageChange(0)}
-                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200"
+                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-200 text-gray-700 hover:bg-purple-500 hover:text-white transition-colors duration-200"
                                     aria-label="Page 1"
                                 >
                                     1
@@ -200,7 +200,7 @@ const LatestUpdates: React.FC = () => {
                         {/* Dấu ... đầu */}
                         {currentPage > 3 && (
                             <li>
-                                <span className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white">
+                                <span className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-200 text-gray-700">
                                     ...
                                 </span>
                             </li>
@@ -211,7 +211,7 @@ const LatestUpdates: React.FC = () => {
                             <li>
                                 <button
                                     onClick={() => handlePageChange(currentPage - 1)}
-                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200"
+                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-200 text-gray-700 hover:bg-purple-500 hover:text-white transition-colors duration-200"
                                     aria-label={`Page ${currentPage}`}
                                 >
                                     {currentPage}
@@ -221,7 +221,7 @@ const LatestUpdates: React.FC = () => {
 
                         {/* Trang hiện tại */}
                         <li>
-                            <span className="flex items-center justify-center w-10 h-10 rounded-md bg-purple-600 text-white font-medium" aria-current="page">
+                            <span className="flex items-center justify-center w-10 h-10 rounded-md bg-purple-600 text-gray-50 font-medium" aria-current="page">
                                 {currentPage + 1}
                             </span>
                         </li>
@@ -231,7 +231,7 @@ const LatestUpdates: React.FC = () => {
                             <li>
                                 <button
                                     onClick={() => handlePageChange(currentPage + 1)}
-                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200"
+                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-200 text-gray-700 hover:bg-purple-500 hover:text-white transition-colors duration-200"
                                     aria-label={`Page ${currentPage + 2}`}
                                 >
                                     {currentPage + 2}
@@ -242,7 +242,7 @@ const LatestUpdates: React.FC = () => {
                         {/* Dấu ... cuối */}
                         {currentPage < totalPages - 4 && (
                             <li>
-                                <span className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white">
+                                <span className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-200 text-gray-700">
                                     ...
                                 </span>
                             </li>
@@ -253,7 +253,7 @@ const LatestUpdates: React.FC = () => {
                             <li>
                                 <button
                                     onClick={() => handlePageChange(totalPages - 1)}
-                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200"
+                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-200 text-gray-700 hover:bg-purple-500 hover:text-white transition-colors duration-200"
                                     aria-label={`Page ${totalPages}`}
                                 >
                                     {totalPages}
@@ -266,20 +266,20 @@ const LatestUpdates: React.FC = () => {
                             {currentPage < totalPages - 1 ? (
                                 <button
                                     onClick={() => handlePageChange(currentPage + 1)}
-                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-white hover:bg-purple-500 transition-colors duration-200"
+                                    className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-200 text-gray-700 hover:bg-purple-500 hover:text-white transition-colors duration-200"
                                     aria-label="Next page"
                                 >
                                     &gt;
                                 </button>
                             ) : (
-                                <span className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-800 text-gray-400 cursor-not-allowed">
+                                <span className="flex items-center justify-center w-10 h-10 rounded-md bg-gray-200 text-gray-400 cursor-not-allowed">
                                     &gt;
                                 </span>
                             )}
                         </li>
                     </ul>
 
-                    <div className="text-center text-sm text-gray-400 mt-4">
+                    <div className="text-center text-sm text-gray-500 mt-4">
                         Hiển thị {currentPage * pageSize + 1} - {Math.min((currentPage + 1) * pageSize, totalElements)} trong tổng số {totalElements} truyện
                     </div>
                 </div>

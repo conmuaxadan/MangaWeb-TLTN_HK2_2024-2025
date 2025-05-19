@@ -5,8 +5,9 @@ import { AxiosError } from "axios";
 import {
     FavoriteRequest,
     FavoriteResponse,
-    FavoritePageResponse
-} from "../interfaces/models/profile";
+    FavoritePageResponse,
+    FavoriteMangaResponse
+} from "../interfaces/models/favorite";
 import { logApiCall } from "../utils/api-logger";
 
 class FavoriteService {

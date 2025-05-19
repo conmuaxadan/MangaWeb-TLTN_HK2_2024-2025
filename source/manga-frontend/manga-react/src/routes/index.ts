@@ -13,7 +13,8 @@ import {
     FavoriteList,
     ReadingHistoryList,
     GenreDetail,
-    LinkedAccounts
+    LinkedAccounts,
+    ForgotPassword
 } from "../pages";
 
 // Định nghĩa các route cho ứng dụng
@@ -36,6 +37,12 @@ export const routes: IRoute[] = [
     {
         path: '/register',
         Component: Register,
+        Layout: Master,
+        requireAuth: false
+    },
+    {
+        path: '/forgot-password',
+        Component: ForgotPassword,
         Layout: Master,
         requireAuth: false
     },

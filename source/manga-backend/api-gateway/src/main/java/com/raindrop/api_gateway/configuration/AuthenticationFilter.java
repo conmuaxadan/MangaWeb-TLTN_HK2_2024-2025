@@ -41,6 +41,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/identity/auth/tokens/validate",
             "/identity/auth/google/tokens",
             "/identity/auth/tokens/refresh",
+            "/identity/auth/forgot-password",
+            "/identity/auth/reset-password",
             "/identity/users/comment/{userId}",
 
             // Manga Service
@@ -48,7 +50,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/manga/mangas/paginated",
             "/manga/mangas/summaries",
             "/manga/mangas/{id}",
-            "/manga/mangas/search",       // Cho phép tìm kiếm manga
+            "/manga/mangas/search/**",       // Cho phép tìm kiếm manga
             "/manga/mangas/search/advanced", // Cho phép tìm kiếm nâng cao
             "/manga/chapters",
             "/manga/chapters/manga/{mangaId}",
@@ -59,7 +61,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/manga/chapters/{id}/info",
             "/manga/chapters/byManga/{mangaId}",
             "/manga/genres",
-            "/manga/genres/{name}",
+            "/manga/mangas/genre/{genreName}",
 
             // History Service
             "/history/anonymous-reading-histories/**",

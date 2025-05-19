@@ -16,8 +16,8 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserRequest {
     @NotBlank(message = "USERNAME_REQUIRED")
-    @Size(min = 5, message = "USERNAME_TOO_SHORT")
-    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "USERNAME_INVALID")
+    @Size(min = 6, message = "USERNAME_TOO_SHORT")
+    @Pattern(regexp = "^[a-z0-9]+$", message = "USERNAME_INVALID")
     String username;
 
     @NotBlank(message = "PASSWORD_REQUIRED")
@@ -29,6 +29,7 @@ public class UserRequest {
     @Email(message = "EMAIL_INVALID")
     String email;
 
+    @Size(min = 6, max = 16, message = "Display name must be between 6 and 16 characters")
     String displayName;
     String avatarUrl;
 

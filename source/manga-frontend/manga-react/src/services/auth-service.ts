@@ -2,6 +2,7 @@ import { toast } from "react-toastify";
 import { identityHttpClient } from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
 import { AuthRequest, AuthResponse, GoogleLinkRequest, GoogleLoginRequest, LinkLocalAccountRequest, LinkedAccountResponse, RefreshTokenRequest, UserRegistrationRequest, UserResponse } from "../interfaces/models/auth";
+import { handleApiError } from "../utils/error-handler";
 import { OAuthConfig } from "../configurations/configuration.ts";
 import { TOKEN_STORAGE, setTokenExpiry } from "../configurations/api-config";
 import { logApiCall } from "../utils/api-logger";
@@ -21,12 +22,12 @@ class AuthService {
             const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/tokens', request);
 
             if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Đăng nhập thất bại", {position: "top-right"});
+                toast.error("Thông tin đăng nhập không chính xác", {position: "top-right"});
                 return false;
             }
 
             if (!apiResponse.result || !apiResponse.result.authenticated) {
-                toast.error("Xác thực thất bại", {position: "top-right"});
+                toast.error("Thông tin đăng nhập không chính xác", {position: "top-right"});
                 return false;
             }
 
@@ -42,6 +43,7 @@ class AuthService {
             return apiResponse.result;
         } catch (error) {
             console.error("Lỗi đăng nhập:", error);
+            toast.error("Thông tin đăng nhập không chính xác", {position: "top-right"});
             return false;
         }
     }
@@ -376,6 +378,61 @@ class AuthService {
         } catch (error) {
             console.error("Lỗi lấy thông tin người dùng:", error);
             return null;
+        }
+    }
+
+    /**
+     * Gửi yêu cầu quên mật khẩu
+     * @param email Email của người dùng
+     * @returns Kết quả xử lý
+     */
+    async forgotPassword(email: string): Promise<boolean> {
+        logApiCall('forgotPassword');
+        try {
+            console.log('AuthService: Sending forgot password request for email:', email);
+            const apiResponse = await identityHttpClient.post<ApiResponse<any>>('/auth/forgot-password', { email });
+            console.log('AuthService: Forgot password API response:', apiResponse);
+
+            if (apiResponse.code !== 1000) {
+                console.warn('AuthService: Forgot password failed with code:', apiResponse.code, 'message:', apiResponse.message);
+                toast.error(apiResponse.message || "Không thể gửi yêu cầu đặt lại mật khẩu", { position: "top-right" });
+                return false;
+            }
+
+            console.log('AuthService: Forgot password successful');
+            return true;
+        } catch (error) {
+            console.error('AuthService: Error in forgot password:', error);
+            handleApiError(error, 'Không thể gửi yêu cầu đặt lại mật khẩu');
+            return false;
+        }
+    }
+
+    /**
+     * Xác thực mã và đặt lại mật khẩu
+     * @param email Email của người dùng
+     * @param code Mã xác nhận
+     * @param newPassword Mật khẩu mới
+     * @returns Kết quả xử lý
+     */
+    async resetPassword(email: string, code: string, newPassword: string): Promise<boolean> {
+        logApiCall('resetPassword');
+        try {
+            const apiResponse = await identityHttpClient.post<ApiResponse<any>>('/auth/reset-password', {
+                email,
+                code,
+                newPassword
+            });
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể đặt lại mật khẩu", { position: "top-right" });
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            handleApiError(error, 'Không thể đặt lại mật khẩu');
+            return false;
         }
     }
 }

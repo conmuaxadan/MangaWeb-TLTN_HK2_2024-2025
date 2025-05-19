@@ -11,3 +11,4 @@ export { default as FavoriteList } from './FavoriteList.tsx';
 export { default as ReadingHistoryList } from './ReadingHistoryList.tsx';
 export { default as GenreDetail } from './GenreDetail';
 export { default as LinkedAccounts } from './LinkedAccounts';
+export { default as ForgotPassword } from './ForgotPassword';

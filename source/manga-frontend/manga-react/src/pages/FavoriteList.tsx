@@ -69,8 +69,8 @@ const FavoriteList: React.FC = () => {
           <h5 className="text-xl font-semibold">Danh sách truyện yêu thích:</h5>
 
         {favorites.length === 0 ? (
-          <div className="mt-6 rounded-md bg-gray-800 p-6 shadow text-center">
-            <p className="text-gray-400">Bạn chưa có truyện yêu thích nào.</p>
+          <div className="mt-6 rounded-md bg-white p-6 shadow text-center">
+            <p className="text-gray-600">Bạn chưa có truyện yêu thích nào.</p>
             <a href="/" className="mt-4 inline-block rounded-md border border-purple-600 bg-purple-600 px-5 py-2 text-center align-middle text-base font-semibold tracking-wide text-white duration-500 hover:border-purple-700 hover:bg-purple-700">
               Khám phá truyện
             </a>

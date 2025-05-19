@@ -4,7 +4,7 @@ import {ILayout} from "../../interfaces/ILayout.ts";
 
 const Master: React.FC<ILayout> = ({ children }) => {
     return (
-        <div className="flex flex-col min-h-screen bg-gray-900 text-white">
+        <div className="flex flex-col min-h-screen bg-gray-100 text-gray-900">
             <Header />
             <section className={'flex-grow'}>
                 {children}

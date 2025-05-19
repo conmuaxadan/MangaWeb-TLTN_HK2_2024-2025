@@ -38,26 +38,26 @@ const NavigationToolbar: React.FC = () => {
     };
   }, []);
   return (
-    <div className="hidden md:block bg-gray-800 rounded-lg shadow-md mb-6">
+    <div className="hidden md:block bg-gray-100 rounded-lg shadow-md mb-6">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center space-x-6">
           <Link
             to="/"
-            className="flex items-center text-sm font-medium text-gray-300 hover:text-white transition-colors"
+            className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
           >
             <i className="fas fa-home mr-2"></i>
             Trang chủ
           </Link>
           <Link
             to="/search"
-            className="flex items-center text-sm font-medium text-gray-300 hover:text-white transition-colors"
+            className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
           >
             <i className="fas fa-search mr-2"></i>
             Tìm kiếm nâng cao
           </Link>
           <div className="relative" ref={genreDropdownRef}>
             <button
-              className="flex items-center text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
               onMouseEnter={() => setShowGenreDropdown(true)}
               onClick={() => setShowGenreDropdown(!showGenreDropdown)}
             >
@@ -69,7 +69,7 @@ const NavigationToolbar: React.FC = () => {
             {/* Dropdown menu */}
             {showGenreDropdown && (
               <div
-                className="absolute left-0 top-full mt-2 w-80 bg-gray-800 rounded-lg shadow-lg z-50 p-3"
+                className="absolute left-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg z-50 p-3"
                 onMouseLeave={() => setShowGenreDropdown(false)}
               >
                 <div className="grid grid-cols-3 gap-2 max-h-80 overflow-y-auto">
@@ -77,7 +77,7 @@ const NavigationToolbar: React.FC = () => {
                     <Link
                       key={genre.name}
                       to={`/genre/${genre.name}`}
-                      className="text-sm text-gray-300 hover:text-white hover:bg-gray-700 px-2 py-1 rounded transition-colors"
+                      className="text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 px-2 py-1 rounded transition-colors"
                       onClick={() => setShowGenreDropdown(false)}
                     >
                       {genre.name}
@@ -92,18 +92,19 @@ const NavigationToolbar: React.FC = () => {
         <div className="flex items-center space-x-4">
           <Link
             to="/profile/reading-history"
-            className="flex items-center text-sm font-medium text-gray-300 hover:text-white transition-colors"
+            className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
           >
             <i className="fas fa-history mr-2"></i>
             Lịch sử
           </Link>
           <Link
             to="/profile/favorites"
-            className="flex items-center text-sm font-medium text-gray-300 hover:text-white transition-colors"
+            className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
           >
             <i className="fas fa-heart mr-2"></i>
             Yêu thích
           </Link>
+
         </div>
       </div>
     </div>

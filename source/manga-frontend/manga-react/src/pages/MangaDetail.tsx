@@ -193,22 +193,22 @@ const MangaDetail: React.FC = () => {
                         <div className="flex gap-6">
                             <span className="flex items-center">
                                 <FontAwesomeIcon icon={faHeartSolid} className="mr-2 text-red-500"/>
-                                <span className="text-white">{manga.loves || 0}</span>
+                                <span className="text-gray-900">{manga.loves || 0}</span>
                             </span>
                             <span className="flex items-center">
                   <FontAwesomeIcon icon={faEye} className="mr-2 text-blue-500"/>
-                  <span className="text-white">{manga.views || 0}</span>
+                  <span className="text-gray-900">{manga.views || 0}</span>
                 </span>
                             <span className="flex items-center">
                   <FontAwesomeIcon icon={faComment} className="mr-2 text-yellow-500"/>
-                  <span className="text-white">{totalComments || 0}</span>
+                  <span className="text-gray-900">{totalComments || 0}</span>
                 </span>
                         </div>
                         <span className="flex items-center">
                 <FontAwesomeIcon icon={faClock} className="mr-2 text-green-500"/>
                 <span>
                   <span className="hidden md:inline">Cập nhật lúc: </span>
-                  <span className="text-white font-medium">
+                  <span className="text-gray-900 font-medium">
                     {manga.lastChapterAddedAt
                         ? formatDistanceToNow(new Date(manga.lastChapterAddedAt), {addSuffix: true, locale: vi})
                         : 'Chưa cập nhật'}
@@ -286,13 +286,13 @@ const MangaDetail: React.FC = () => {
                                     <p className="name text-gray-500 flex items-center">
                                         <FontAwesomeIcon icon={faUser} className="mr-2 text-blue-400"/> Tác giả
                                     </p>
-                                    <p className="text-white">{manga.author}</p>
+                                    <p className="text-gray-900">{manga.author}</p>
                                 </li>
                                 <li className="year grid grid-cols-1 md:grid-cols-[1fr_3fr] gap-2">
                                     <p className="name text-gray-500 flex items-center">
                                         <FontAwesomeIcon icon={faClock} className="mr-2 text-yellow-400"/> Năm phát hành
                                     </p>
-                                    <p className="text-white">
+                                    <p className="text-gray-900">
                                         {manga.yearOfRelease || new Date(manga.updatedAt).getFullYear()}
                                     </p>
                                 </li>
@@ -300,7 +300,7 @@ const MangaDetail: React.FC = () => {
                                     <p className="name text-gray-500 flex items-center">
                                         <FontAwesomeIcon icon={faRss} className="mr-2 text-green-400"/> Tình trạng
                                     </p>
-                                    <p className="text-white">
+                                    <p className="text-gray-900">
                                         {manga.status ? MangaStatusDisplayNames[manga.status] : 'Đang tiến hành'}
                                     </p>
                                 </li>
@@ -312,7 +312,7 @@ const MangaDetail: React.FC = () => {
                                         {manga.genres.map((genre, index) => (
                                             <React.Fragment key={genre}>
                                                 <Link
-                                                    className="text-blue-400 transition hover:text-blue-300 bg-gray-800 px-2 py-1 rounded-md text-sm"
+                                                    className="text-blue-600 transition hover:text-blue-800 bg-gray-200 px-2 py-1 rounded-md text-sm"
                                                     to={`/genre/${genre}`}
                                                 >
                                                     {genre}
@@ -366,19 +366,19 @@ const MangaDetail: React.FC = () => {
 
                 {/* Manga Description */}
                 <div className="detail-content mb-10">
-                    <h2 className="mb-4 flex items-center gap-4 text-2xl font-medium text-blue-500 border-b border-gray-700 pb-2">
+                    <h2 className="mb-4 flex items-center gap-4 text-2xl font-medium text-blue-600 border-b border-gray-200 pb-2">
                         <FontAwesomeIcon icon={faPen}/>
                         <span>Nội dung</span>
                     </h2>
-                    <div className="w-full bg-gray-800 rounded-lg p-4 shadow-md">
-                        <div className="w-full [&_pre]:whitespace-pre-wrap [&_pre]:break-words text-white">
+                    <div className="w-full bg-white rounded-lg p-4 shadow-md border border-gray-200">
+                        <div className="w-full [&_pre]:whitespace-pre-wrap [&_pre]:break-words text-gray-900">
                             <p className="leading-relaxed">{manga.description}</p>
                         </div>
-                        <p className="text-gray-400 mt-4 text-sm border-t border-gray-700 pt-4">
-                            Truyện tranh <Link className="text-blue-400 transition hover:text-blue-300 font-medium"
+                        <p className="text-gray-500 mt-4 text-sm border-t border-gray-200 pt-4">
+                            Truyện tranh <Link className="text-blue-600 transition hover:text-blue-800 font-medium"
                                                to={`/mangas/${manga.id}`}>{manga.title}</Link> được
                             cập nhật nhanh và đầy đủ nhất tại <Link
-                            className="text-blue-400 transition hover:text-blue-300 font-medium"
+                            className="text-blue-600 transition hover:text-blue-800 font-medium"
                             to="/">R-Manga</Link>.
                         </p>
                     </div>
@@ -386,13 +386,13 @@ const MangaDetail: React.FC = () => {
 
                 {/* Chapter List */}
                 <div id="nt_listchapter">
-                    <h2 className="mb-4 flex items-center gap-4 text-2xl font-medium text-blue-500 border-b border-gray-700 pb-2">
+                    <h2 className="mb-4 flex items-center gap-4 text-2xl font-medium text-blue-600 border-b border-gray-200 pb-2">
                         <FontAwesomeIcon icon={faList}/>
                         <span>Danh sách chương</span>
                     </h2>
-                    <div className="rounded-xl border border-gray-700 bg-gray-800 p-4 shadow-md">
+                    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-md">
                         <div
-                            className="heading grid grid-cols-1 md:grid-cols-[5fr_4fr_3fr] border-b border-gray-700 pb-4 text-gray-300 font-medium">
+                            className="heading grid grid-cols-1 md:grid-cols-[5fr_4fr_3fr] border-b border-gray-200 pb-4 text-gray-600 font-medium">
                             <div className="no-wrap hidden md:block">Tên chương</div>
                             <div className="no-wrap hidden md:block text-center">Cập nhật</div>
                             <div className="no-wrap hidden md:block text-right">Lượt xem</div>
@@ -402,16 +402,16 @@ const MangaDetail: React.FC = () => {
                                 {currentChapters.length > 0 ? (
                                     currentChapters.map((chapter) => (
                                         <li key={chapter.chapterNumber}
-                                            className="grid grid-cols-1 md:grid-cols-[5fr_4fr_3fr] gap-2 py-3 border-b border-gray-700 last:border-0 hover:bg-gray-700 rounded transition-colors">
+                                            className="grid grid-cols-1 md:grid-cols-[5fr_4fr_3fr] gap-2 py-3 border-b border-gray-200 last:border-0 hover:bg-gray-100 rounded transition-colors">
                                             <div>
                                                 <Link
-                                                    className="text-blue-400 transition hover:text-blue-300 font-medium block"
+                                                    className="text-blue-600 transition hover:text-blue-800 font-medium block"
                                                     to={`/mangas/${manga.id}/chapters/${chapter.id}`}
                                                 >
                                                     {chapter.title}
                                                 </Link>
                                                 <div
-                                                    className="md:hidden flex justify-between mt-2 text-gray-400 text-xs">
+                                                    className="md:hidden flex justify-between mt-2 text-gray-500 text-xs">
                                                     <span>{formatDistanceToNow(new Date(chapter.updatedAt), {
                                                         addSuffix: true,
                                                         locale: vi
@@ -419,19 +419,19 @@ const MangaDetail: React.FC = () => {
                                                     <span>{chapter.views || 0} lượt xem</span>
                                                 </div>
                                             </div>
-                                            <div className="no-wrap hidden md:block text-center text-gray-400">
+                                            <div className="no-wrap hidden md:block text-center text-gray-500">
                                                 {formatDistanceToNow(new Date(chapter.updatedAt), {
                                                     addSuffix: true,
                                                     locale: vi
                                                 })}
                                             </div>
-                                            <div className="hidden md:block text-right text-gray-400">
+                                            <div className="hidden md:block text-right text-gray-500">
                                                 {chapter.views || 0} lượt xem
                                             </div>
                                         </li>
                                     ))
                                 ) : (
-                                    <li className="py-4 text-center text-gray-400">Chưa có chapter nào</li>
+                                    <li className="py-4 text-center text-gray-500">Chưa có chapter nào</li>
                                 )}
                             </ul>
                         </nav>
@@ -447,7 +447,7 @@ const MangaDetail: React.FC = () => {
                                         <button
                                             onClick={() => currentPage > 1 && paginate(currentPage - 1)}
                                             disabled={currentPage === 1}
-                                            className="px-3 py-2 rounded border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700"
+                                            className="px-3 py-2 rounded border border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200"
                                             aria-label="Previous page"
                                         >
                                             &lt;
@@ -466,7 +466,7 @@ const MangaDetail: React.FC = () => {
                                                 return (
                                                     <React.Fragment key={`ellipsis-${page}`}>
                                                         <li className="text-center opacity-50 cursor-not-allowed">
-                                                            <span className="px-3 py-2 text-gray-400">...</span>
+                                                            <span className="px-3 py-2 text-gray-500">...</span>
                                                         </li>
                                                         <li>
                                                             <button
@@ -474,7 +474,7 @@ const MangaDetail: React.FC = () => {
                                                                 className={`px-3 py-2 rounded border ${
                                                                     currentPage === page
                                                                         ? 'bg-blue-600 text-white border-blue-700'
-                                                                        : 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                                                        : 'border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                                 }`}
                                                                 aria-label={`Page ${page}`}
                                                                 aria-current={currentPage === page ? 'page' : undefined}
@@ -508,7 +508,7 @@ const MangaDetail: React.FC = () => {
                                         <button
                                             onClick={() => currentPage < totalPages && paginate(currentPage + 1)}
                                             disabled={currentPage === totalPages}
-                                            className="px-3 py-2 rounded border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700"
+                                            className="px-3 py-2 rounded border border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200"
                                             aria-label="Next page"
                                         >
                                             &gt;
@@ -516,9 +516,9 @@ const MangaDetail: React.FC = () => {
                                     </li>
                                 </ul>
                             </div>
-                            <p className="mb-0 py-2 text-gray-400 text-sm">
+                            <p className="mb-0 py-2 text-gray-500 text-sm">
                                 Đã hiển thị <span
-                                className="text-white font-medium">{currentChapters.length} / {chapters.length}</span> chương
+                                className="text-gray-900 font-medium">{currentChapters.length} / {chapters.length}</span> chương
                             </p>
                         </div>
                     )}

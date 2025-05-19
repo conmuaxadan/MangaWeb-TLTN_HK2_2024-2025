@@ -23,8 +23,9 @@ public class SecurityConfig {
             "/mangas/paginated",
             "/mangas/summaries",
             "/mangas/{id}",
-            "/mangas/search",           // Cho phép tìm kiếm manga
+            "/mangas/search/**",           // Cho phép tìm kiếm manga
             "/mangas/search/advanced",   // Cho phép tìm kiếm nâng cao
+            "/mangas/genre/{genreName}", // Cho phép tìm kiếm manga theo thể loại
             "/chapters",
             "/chapters/{id}",
             "/chapters/{id}/views",
@@ -46,6 +47,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/mangas/search/advanced").permitAll() // Cho phép POST cho tìm kiếm nâng cao
                         .requestMatchers(HttpMethod.POST, "/mangas", "/chapters", "/genres").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/mangas/{id}", "/chapters/{id}", "/genres/{id}").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/mangas/{id}", "/chapters/{id}", "/genres/{id}").hasAuthority("ROLE_ADMIN")

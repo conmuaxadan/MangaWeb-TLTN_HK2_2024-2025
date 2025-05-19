@@ -1,13 +1,10 @@
 package com.raindrop.identity_service.controller;
 
 import com.nimbusds.jose.JOSEException;
-import com.raindrop.identity_service.dto.request.AuthenticationRequest;
-import com.raindrop.identity_service.dto.request.GoogleLoginRequest;
-import com.raindrop.identity_service.dto.request.IntrospectRequest;
-import com.raindrop.identity_service.dto.request.LogoutRequest;
-import com.raindrop.identity_service.dto.request.RefreshTokenRequest;
+import com.raindrop.identity_service.dto.request.*;
 import com.raindrop.identity_service.dto.response.ApiResponse;
 import com.raindrop.identity_service.dto.response.AuthenticationResponse;
+import com.raindrop.identity_service.dto.response.ForgotPasswordResponse;
 import com.raindrop.identity_service.dto.response.IntrospectResponse;
 import com.raindrop.identity_service.service.AuthenticationService;
 import com.raindrop.identity_service.service.GoogleAuthService;
@@ -50,7 +47,7 @@ public class AuthenticationController {
                 .result(result)
                 .build();
     }
-    
+
     @PostMapping("/tokens/validate")
     ApiResponse<IntrospectResponse> introspect(@RequestBody @Valid IntrospectRequest request) throws ParseException, JOSEException {
         log.debug("Token introspection request");
@@ -75,5 +72,22 @@ public class AuthenticationController {
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(result)
                 .build();
+    }
+
+    @PostMapping("/forgot-password")
+    ApiResponse<ForgotPasswordResponse> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+        log.info("Received forgot password request");
+        return ApiResponse.<ForgotPasswordResponse>builder()
+            .result(authenticationService.processForgotPassword(request))
+            .build();
+    }
+
+    @PostMapping("/reset-password")
+    ApiResponse<Void> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
+        log.info("Received reset password request");
+        authenticationService.verifyCodeAndResetPassword(request);
+        return ApiResponse.<Void>builder()
+            .message("Mật khẩu đã được đặt lại thành công")
+            .build();
     }
 }

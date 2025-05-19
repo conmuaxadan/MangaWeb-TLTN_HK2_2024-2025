@@ -25,6 +25,7 @@ const AdvancedSearch: React.FC = () => {
     const [yearOfRelease, setYearOfRelease] = useState<string>('');
     const [orderBy, setOrderBy] = useState<string>('lastChapterAddedAt,desc');
     const [showFilters, setShowFilters] = useState<boolean>(true);
+    const [showGenres, setShowGenres] = useState<boolean>(true);
 
     // State cho kết quả tìm kiếm
     const [searchResults, setSearchResults] = useState<MangaResponse[]>([]);
@@ -63,7 +64,8 @@ const AdvancedSearch: React.FC = () => {
         const searchParams = new URLSearchParams(location.search);
 
         // Lấy các tham số tìm kiếm từ URL
-        const titleParam = searchParams.get('title') || '';
+        const keywordParam = searchParams.get('keyword') || '';
+        const titleParam = searchParams.get('title') || keywordParam; // Sử dụng keyword làm title nếu không có title
         const authorParam = searchParams.get('author') || '';
         const genresParam = searchParams.get('genres') || '';
         const statusParam = searchParams.get('status') || '';
@@ -81,7 +83,7 @@ const AdvancedSearch: React.FC = () => {
         setCurrentPage(pageParam);
 
         // Nếu có ít nhất một tham số tìm kiếm, thực hiện tìm kiếm
-        if (titleParam || authorParam || genresParam || statusParam || yearParam) {
+        if (titleParam || authorParam || genresParam || statusParam || yearParam || keywordParam) {
             performSearch(
                 titleParam,
                 authorParam,
@@ -207,8 +209,8 @@ const AdvancedSearch: React.FC = () => {
                         disabled={currentPage === 0}
                         className={`px-3 py-1 rounded-md ${
                             currentPage === 0
-                                ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                                : 'bg-gray-700 text-white hover:bg-gray-600'
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
                         &laquo;
@@ -239,7 +241,7 @@ const AdvancedSearch: React.FC = () => {
                                 className={`w-8 h-8 flex items-center justify-center rounded-md ${
                                     currentPage === pageNum
                                         ? 'bg-purple-600 text-white'
-                                        : 'bg-gray-700 text-white hover:bg-gray-600'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                             >
                                 {pageNum + 1}
@@ -253,8 +255,8 @@ const AdvancedSearch: React.FC = () => {
                         disabled={currentPage === totalPages - 1}
                         className={`px-3 py-1 rounded-md ${
                             currentPage === totalPages - 1
-                                ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                                : 'bg-gray-700 text-white hover:bg-gray-600'
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
                         &raquo;
@@ -265,22 +267,22 @@ const AdvancedSearch: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 text-white min-h-screen">
+        <div className="bg-gray-100 text-gray-900 min-h-screen">
             <div className="container mx-auto px-4 py-6">
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold mb-2">Tìm kiếm nâng cao</h1>
-                    <p className="text-gray-400">
+                    <p className="text-gray-600">
                         Tìm kiếm truyện theo nhiều tiêu chí khác nhau
                     </p>
                 </div>
 
                 {/* Form tìm kiếm */}
-                <div className="bg-gray-800 rounded-lg shadow-lg p-4 mb-8">
+                <div className="bg-white rounded-lg shadow-lg p-4 mb-8 border border-gray-200">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-semibold">Bộ lọc tìm kiếm</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">Bộ lọc tìm kiếm</h2>
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className="text-gray-400 hover:text-white transition-colors"
+                            className="text-gray-500 hover:text-gray-900 transition-colors"
                         >
                             <FontAwesomeIcon icon={showFilters ? faChevronUp : faChevronDown} />
                         </button>
@@ -291,7 +293,7 @@ const AdvancedSearch: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                                 {/* Tên truyện */}
                                 <div>
-                                    <label htmlFor="title" className="block text-sm font-medium text-gray-400 mb-1">
+                                    <label htmlFor="title" className="block text-sm font-medium text-gray-600 mb-1">
                                         Tên truyện
                                     </label>
                                     <input
@@ -300,13 +302,13 @@ const AdvancedSearch: React.FC = () => {
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder="Nhập tên truyện..."
-                                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     />
                                 </div>
 
                                 {/* Tác giả */}
                                 <div>
-                                    <label htmlFor="author" className="block text-sm font-medium text-gray-400 mb-1">
+                                    <label htmlFor="author" className="block text-sm font-medium text-gray-600 mb-1">
                                         Tác giả
                                     </label>
                                     <input
@@ -315,20 +317,20 @@ const AdvancedSearch: React.FC = () => {
                                         value={author}
                                         onChange={(e) => setAuthor(e.target.value)}
                                         placeholder="Nhập tên tác giả..."
-                                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     />
                                 </div>
 
                                 {/* Tình trạng */}
                                 <div>
-                                    <label htmlFor="status" className="block text-sm font-medium text-gray-400 mb-1">
+                                    <label htmlFor="status" className="block text-sm font-medium text-gray-600 mb-1">
                                         Tình trạng
                                     </label>
                                     <select
                                         id="status"
                                         value={status}
                                         onChange={(e) => setStatus(e.target.value as MangaStatus | '')}
-                                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     >
                                         <option value="">Tất cả</option>
                                         {Object.entries(MangaStatusDisplayNames).map(([key, value]) => (
@@ -341,14 +343,14 @@ const AdvancedSearch: React.FC = () => {
 
                                 {/* Năm phát hành */}
                                 <div>
-                                    <label htmlFor="year" className="block text-sm font-medium text-gray-400 mb-1">
+                                    <label htmlFor="year" className="block text-sm font-medium text-gray-600 mb-1">
                                         Năm phát hành
                                     </label>
                                     <select
                                         id="year"
                                         value={yearOfRelease}
                                         onChange={(e) => setYearOfRelease(e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     >
                                         <option value="">Tất cả</option>
                                         {Array.from(
@@ -364,14 +366,14 @@ const AdvancedSearch: React.FC = () => {
 
                                 {/* Sắp xếp theo */}
                                 <div>
-                                    <label htmlFor="orderBy" className="block text-sm font-medium text-gray-400 mb-1">
+                                    <label htmlFor="orderBy" className="block text-sm font-medium text-gray-600 mb-1">
                                         Sắp xếp theo
                                     </label>
                                     <select
                                         id="orderBy"
                                         value={orderBy}
                                         onChange={(e) => setOrderBy(e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     >
                                         <option value="lastChapterAddedAt,desc">Mới cập nhật</option>
                                         <option value="lastChapterAddedAt,asc">Cũ nhất</option>
@@ -387,29 +389,41 @@ const AdvancedSearch: React.FC = () => {
 
                             {/* Thể loại */}
                             <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-400 mb-2">
-                                    Thể loại
-                                </label>
-                                {loadingGenres ? (
-                                    <div className="flex justify-center items-center h-20">
-                                        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-500"></div>
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                                        {genres.map((genre) => (
-                                            <div
-                                                key={genre.name}
-                                                className={`px-3 py-2 rounded-md cursor-pointer transition-colors ${
-                                                    selectedGenres.includes(genre.name)
-                                                        ? 'bg-purple-600 text-white'
-                                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                                }`}
-                                                onClick={() => handleGenreToggle(genre.name)}
-                                            >
-                                                {genre.name}
-                                            </div>
-                                        ))}
-                                    </div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="block text-sm font-medium text-gray-600">
+                                        Thể loại {selectedGenres.length > 0 && `(${selectedGenres.length} đã chọn)`}
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowGenres(!showGenres)}
+                                        className="text-gray-500 hover:text-gray-900 transition-colors"
+                                    >
+                                        <FontAwesomeIcon icon={showGenres ? faChevronUp : faChevronDown} />
+                                    </button>
+                                </div>
+
+                                {showGenres && (
+                                    loadingGenres ? (
+                                        <div className="flex justify-center items-center h-20">
+                                            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-500"></div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                                            {genres.map((genre) => (
+                                                <div
+                                                    key={genre.name}
+                                                    className={`px-3 py-2 rounded-md cursor-pointer transition-colors ${
+                                                        selectedGenres.includes(genre.name)
+                                                            ? 'bg-purple-600 text-white'
+                                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                    }`}
+                                                    onClick={() => handleGenreToggle(genre.name)}
+                                                >
+                                                    {genre.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )
                                 )}
                             </div>
 
@@ -417,7 +431,7 @@ const AdvancedSearch: React.FC = () => {
                             <div className="flex flex-col sm:flex-row gap-2">
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-md flex items-center justify-center transition-colors"
+                                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md flex items-center justify-center transition-colors"
                                 >
                                     <FontAwesomeIcon icon={faSearch} className="mr-2" />
                                     Tìm kiếm
@@ -425,7 +439,7 @@ const AdvancedSearch: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={handleReset}
-                                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md flex items-center justify-center transition-colors"
+                                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md flex items-center justify-center transition-colors"
                                 >
                                     <FontAwesomeIcon icon={faRedo} className="mr-2" />
                                     Đặt lại
@@ -444,7 +458,7 @@ const AdvancedSearch: React.FC = () => {
                                 ? `Kết quả tìm kiếm (${totalElements})`
                                 : 'Kết quả tìm kiếm'}
                         </h2>
-                        <div className="text-sm text-gray-400">
+                        <div className="text-sm text-gray-600">
                             {totalElements > 0 && (
                                 <>
                                     Hiển thị {currentPage * pageSize + 1} - {Math.min((currentPage + 1) * pageSize, totalElements)} / {totalElements}
@@ -463,10 +477,10 @@ const AdvancedSearch: React.FC = () => {
                             <p>{error}</p>
                         </div>
                     ) : searchResults.length === 0 ? (
-                        <div className="bg-gray-800 p-8 rounded-lg text-center">
-                            <FontAwesomeIcon icon={faSearch} className="text-4xl text-gray-600 mb-4" />
-                            <h3 className="text-xl font-medium mb-2">Không tìm thấy kết quả</h3>
-                            <p className="text-gray-400">
+                        <div className="bg-white p-8 rounded-lg text-center border border-gray-200">
+                            <FontAwesomeIcon icon={faSearch} className="text-4xl text-gray-400 mb-4" />
+                            <h3 className="text-xl font-medium mb-2 text-gray-900">Không tìm thấy kết quả</h3>
+                            <p className="text-gray-500">
                                 Không tìm thấy truyện nào phù hợp với tiêu chí tìm kiếm của bạn.
                                 <br />
                                 Hãy thử thay đổi các tiêu chí tìm kiếm và thử lại.
@@ -477,14 +491,14 @@ const AdvancedSearch: React.FC = () => {
                             {/* Grid hiển thị kết quả */}
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
                                 {searchResults.map((manga) => (
-                                    <div key={manga.id} className="group bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                                    <div key={manga.id} className="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200">
                                         <figure className="clearfix">
                                             <div className="relative mb-2">
                                                 <a title={manga.title} href={`/mangas/${manga.id}`} className="block">
                                                     <div className="relative pb-[150%]">
                                                         <div className="absolute inset-0 w-full h-full overflow-hidden">
                                                             <div className="relative h-full w-full">
-                                                                <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
+                                                                <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900/80 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
                                                                 <img
                                                                     src={getMangaImageUrl(manga.coverUrl)}
                                                                     className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
@@ -501,7 +515,7 @@ const AdvancedSearch: React.FC = () => {
                                                         <h3 className="mb-1 line-clamp-2 text-sm font-semibold leading-tight text-white transition group-hover:line-clamp-4">
                                                             {manga.title}
                                                         </h3>
-                                                        <p className="mb-1 text-xs text-gray-400 line-clamp-1">{manga.author || 'Không rõ'}</p>
+                                                        <p className="mb-1 text-xs text-gray-300 line-clamp-1">{manga.author || 'Không rõ'}</p>
                                                         <span className="flex items-center justify-between gap-1 text-xs text-gray-300">
                                                             <span className="flex items-center gap-1">
                                                                 <i className="fa fa-eye text-yellow-500"></i>{manga.views || 0}
@@ -522,16 +536,16 @@ const AdvancedSearch: React.FC = () => {
                                                         {manga.chapters && manga.chapters.length > 0 ? (
                                                             <a
                                                                 title={`Chapter ${manga.chapters.length}`}
-                                                                className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition visited:text-gray-400 hover:text-purple-400 text-gray-200"
+                                                                className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition visited:text-gray-500 hover:text-purple-600 text-gray-700"
                                                                 href={`/mangas/${manga.id}/chapters/${manga.chapters[manga.chapters.length - 1]}`}
                                                             >
                                                                 Chapter {manga.chapters.length}
                                                             </a>
                                                         ) : (
-                                                            <span className="text-gray-400">Chưa có chapter</span>
+                                                            <span className="text-gray-500">Chưa có chapter</span>
                                                         )}
                                                         {manga.lastChapterAddedAt && (
-                                                            <span className="whitespace-nowrap leading-tight text-gray-400">
+                                                            <span className="whitespace-nowrap leading-tight text-gray-500">
                                                                 {formatDistanceToNow(new Date(manga.lastChapterAddedAt), { locale: vi }).replace('trước', '')}
                                                             </span>
                                                         )}

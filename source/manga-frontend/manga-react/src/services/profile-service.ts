@@ -2,9 +2,7 @@ import { toast } from "react-toastify";
 import { identityHttpClient, commentHttpClient} from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
 import { AxiosError } from "axios";
-import {
-    UserResponse
-} from "../interfaces/models/profile";
+import { UserResponse, ChangeDisplayNameRequest, ChangePasswordRequest } from "../interfaces/models/user";
 import { logApiCall } from "../utils/api-logger";
 
 class ProfileService {
@@ -35,25 +33,62 @@ class ProfileService {
 
 
     /**
-     * Cập nhật thông tin người dùng
-     * @param displayName Thông tin cần cập nhật
-     * @returns Thông tin người dùng đã cập nhật hoặc null nếu thất bại
+     * Cập nhật tên hiển thị của người dùng
+     * @param displayName Tên hiển thị mới
+     * @returns true nếu cập nhật thành công, false nếu thất bại
      */
     async updateProfile(displayName: string): Promise<boolean> {
         logApiCall('updateProfile');
         try {
-            const apiResponse = await identityHttpClient.put<ApiResponse<UserResponse>>('/users/me', displayName);
-
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể cập nhật thông tin người dùng", { position: "top-right" });
+            // Kiểm tra độ dài của displayName
+            if (!displayName || displayName.trim().length < 6) {
+                toast.error("Tên hiển thị phải có ít nhất 6 ký tự", { position: "top-right" });
                 return false;
             }
 
-            toast.success("Cập nhật thông tin thành công", { position: "top-right" });
+            if (displayName.length > 16) {
+                toast.error("Tên hiển thị không được vượt quá 16 ký tự", { position: "top-right" });
+                return false;
+            }
+
+            // Sử dụng DTO để gửi request
+            const request: ChangeDisplayNameRequest = { displayName };
+            const apiResponse = await identityHttpClient.put<ApiResponse<UserResponse>>('/users/me', request);
+
+            if (apiResponse.code !== 1000) {
+                // Xử lý các mã lỗi cụ thể
+                if (apiResponse.code === 1108) {
+                    toast.error("Tên hiển thị đã tồn tại", { position: "top-right" });
+                } else if (apiResponse.code === 1111) {
+                    toast.error("Tên hiển thị phải có ít nhất 6 ký tự", { position: "top-right" });
+                } else if (apiResponse.code === 1112) {
+                    toast.error("Tên hiển thị không được vượt quá 16 ký tự", { position: "top-right" });
+                } else {
+                    toast.error(apiResponse.message || "Không thể cập nhật tên hiển thị", { position: "top-right" });
+                }
+                return false;
+            }
+
+            toast.success("Cập nhật tên hiển thị thành công", { position: "top-right" });
             return true;
         } catch (error) {
-            console.error("Lỗi cập nhật thông tin người dùng:", error);
-            toast.error("Không thể cập nhật thông tin người dùng", { position: "top-right" });
+            console.error("Lỗi cập nhật tên hiển thị:", error);
+
+            if (error instanceof AxiosError && error.response) {
+                const apiResponse = error.response.data as ApiResponse<any>;
+                if (apiResponse.code === 1108) {
+                    toast.error("Tên hiển thị đã tồn tại", { position: "top-right" });
+                } else if (apiResponse.code === 1111) {
+                    toast.error("Tên hiển thị phải có ít nhất 6 ký tự", { position: "top-right" });
+                } else if (apiResponse.code === 1112) {
+                    toast.error("Tên hiển thị không được vượt quá 16 ký tự", { position: "top-right" });
+                } else {
+                    toast.error(apiResponse.message || "Không thể cập nhật tên hiển thị", { position: "top-right" });
+                }
+            } else {
+                toast.error("Không thể cập nhật tên hiển thị", { position: "top-right" });
+            }
+
             return false;
         }
     }
@@ -121,10 +156,12 @@ class ProfileService {
             console.log('Sending change password request to identity service:', '/users/change-password');
             console.log('Request data:', { oldPassword: '***', newPassword: '***' });
 
-            const apiResponse = await identityHttpClient.post<ApiResponse<void>>('/users/password', {
+            // Sử dụng DTO để gửi request
+            const request: ChangePasswordRequest = {
                 oldPassword,
                 newPassword
-            });
+            };
+            const apiResponse = await identityHttpClient.post<ApiResponse<void>>('/users/password', request);
 
             console.log('Change password response:', apiResponse);
 

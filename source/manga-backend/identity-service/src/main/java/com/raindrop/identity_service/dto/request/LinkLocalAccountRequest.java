@@ -19,12 +19,14 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LinkLocalAccountRequest {
     @NotBlank(message = "USERNAME_REQUIRED")
+    @jakarta.validation.constraints.Size(min = 6, message = "USERNAME_TOO_SHORT")
+    @jakarta.validation.constraints.Pattern(regexp = "^[a-z0-9]+$", message = "USERNAME_INVALID")
     String username;
-    
+
     @NotBlank(message = "EMAIL_REQUIRED")
     @Email(message = "INVALID_EMAIL")
     String email;
-    
+
     @NotBlank(message = "PASSWORD_REQUIRED")
     String password;
 }

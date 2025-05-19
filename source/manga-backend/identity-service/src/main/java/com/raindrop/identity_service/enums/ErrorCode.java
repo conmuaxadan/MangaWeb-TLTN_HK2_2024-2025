@@ -38,13 +38,15 @@ public enum ErrorCode {
     // User related errors (1100-1199)
     USER_EXISTED(1100, "User already exists", HttpStatus.BAD_REQUEST),
     USER_NOT_EXISTED(1101, "User does not exist", HttpStatus.NOT_FOUND),
-    USERNAME_INVALID(1102, "Username can only contain letters, numbers, dots, underscores, and hyphens", HttpStatus.BAD_REQUEST),
-    USERNAME_TOO_SHORT(1103, "Username must be at least 5 characters", HttpStatus.BAD_REQUEST),
+    USERNAME_INVALID(1102, "Username can only contain lowercase letters and numbers", HttpStatus.BAD_REQUEST),
+    USERNAME_TOO_SHORT(1103, "Username must be at least 6 characters", HttpStatus.BAD_REQUEST),
     PASSWORD_INVALID(1104, "Password must contain at least one digit, one lowercase, one uppercase, and one special character", HttpStatus.BAD_REQUEST),
     PASSWORD_TOO_SHORT(1105, "Password must be at least 8 characters", HttpStatus.BAD_REQUEST),
     EMAIL_INVALID(1106, "Invalid email format", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(1107, "Email already exists", HttpStatus.BAD_REQUEST),
     DISPLAYNAME_EXISTED(1108, "Display name already exists", HttpStatus.BAD_REQUEST),
+    DISPLAYNAME_TOO_SHORT(1111, "Display name must be at least 6 characters", HttpStatus.BAD_REQUEST),
+    DISPLAYNAME_TOO_LONG(1112, "Display name must be at most 16 characters", HttpStatus.BAD_REQUEST),
     ROLE_NOT_FOUND(1109, "Role not found", HttpStatus.NOT_FOUND),
     INVALID_ROLE_ASSIGNMENT(1110, "Invalid role assignment", HttpStatus.BAD_REQUEST),
 
@@ -68,6 +70,10 @@ public enum ErrorCode {
     REFRESH_TOKEN_REVOKED(1251, "Refresh token has been revoked", HttpStatus.UNAUTHORIZED),
     REFRESH_TOKEN_EXPIRED(1252, "Refresh token has expired", HttpStatus.UNAUTHORIZED),
     REFRESH_TOKEN_NOT_FOUND(1253, "Refresh token not found", HttpStatus.UNAUTHORIZED),
+
+    // Password reset related errors (1280-1299)
+    INVALID_RESET_CODE(1280, "Mã xác nhận không hợp lệ hoặc đã hết hạn", HttpStatus.BAD_REQUEST),
+    ACCOUNT_NOT_LOCAL(1281, "Tài khoản này không phải tài khoản local", HttpStatus.BAD_REQUEST),
 
     // Profile related errors (1300-1399)
     PROFILE_NOT_FOUND(1300, "Profile not found", HttpStatus.NOT_FOUND),

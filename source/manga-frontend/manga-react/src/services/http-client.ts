@@ -40,7 +40,9 @@ class HttpClient {
                             url.includes('mangas') ||
                             url.includes('chapters') ||
                             url.includes('genres') ||
-                            url.includes('comments/latest');
+                            url.includes('comments/latest') ||
+                            url.includes('auth/forgot-password') ||
+                            url.includes('auth/reset-password');
 
                         if (!isPublicEndpoint) {
                             // Nếu làm mới thất bại và không phải endpoint ẩn danh, xóa token và chuyển hướng đến trang đăng nhập
@@ -98,10 +100,15 @@ class HttpClient {
                                 url.includes('mangas') ||
                                 url.includes('chapters') ||
                                 url.includes('genres') ||
-                                url.includes('comments/latest');
+                                url.includes('comments/latest') ||
+                                url.includes('auth/forgot-password') ||
+                                url.includes('auth/reset-password');
 
-                            if (isPublicEndpoint) {
-                                console.log('Không chuyển hướng đến trang đăng nhập cho endpoint công khai: ' + url);
+                            // Kiểm tra xem có phải là endpoint đăng nhập không
+                            const isLoginEndpoint = url.includes('/auth/tokens');
+
+                            if (isPublicEndpoint || isLoginEndpoint) {
+                                console.log('Không chuyển hướng đến trang đăng nhập cho endpoint: ' + url);
                                 break;
                             }
 
@@ -117,15 +124,23 @@ class HttpClient {
                                         localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
                                         localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
                                         localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
-                                        window.location.href = '/login';
-                                        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+
+                                        // Chỉ chuyển hướng nếu không đang ở trang đăng nhập
+                                        if (!window.location.pathname.includes('/login')) {
+                                            window.location.href = '/login';
+                                            toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                                        }
                                     }
                                 });
                             } else {
                                 // Không có refresh token, đăng xuất luôn
                                 localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
-                                window.location.href = '/login';
-                                toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+
+                                // Chỉ chuyển hướng nếu không đang ở trang đăng nhập
+                                if (!window.location.pathname.includes('/login')) {
+                                    window.location.href = '/login';
+                                    toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                                }
                             }
                             break; }
                         case 403:

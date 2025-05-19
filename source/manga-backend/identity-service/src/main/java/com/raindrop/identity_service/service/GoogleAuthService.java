@@ -216,12 +216,37 @@ public class GoogleAuthService {
 
         // Kiểm tra và tạo displayName độc nhất
         String displayName = googleUserInfo.getName();
+
+        // Đảm bảo displayName có độ dài hợp lệ (6-16 ký tự)
+        if (displayName == null || displayName.trim().isEmpty() || displayName.length() < 6) {
+            // Nếu displayName quá ngắn, sử dụng email làm căn cứ
+            String emailPrefix = googleUserInfo.getEmail().split("@")[0];
+            displayName = emailPrefix;
+
+            // Đảm bảo độ dài tối thiểu là 6
+            if (displayName.length() < 6) {
+                displayName = displayName + "User" + (int)(Math.random() * 1000);
+            }
+        }
+
+        // Nếu displayName quá dài, cắt bớt xuống 16 ký tự
+        if (displayName.length() > 16) {
+            displayName = displayName.substring(0, 16);
+        }
+
         String originalDisplayName = displayName;
         int counter = 1;
 
         // Nếu displayName đã tồn tại, thêm số vào sau
         while (userRepository.existsByDisplayName(displayName)) {
-            displayName = originalDisplayName + counter;
+            // Tạo phiên bản mới của displayName
+            if (originalDisplayName.length() + String.valueOf(counter).length() > 16) {
+                // Nếu thêm số sẽ làm displayName vượt quá 16 ký tự, cắt bớt originalDisplayName
+                int maxLength = 16 - String.valueOf(counter).length();
+                displayName = originalDisplayName.substring(0, maxLength) + counter;
+            } else {
+                displayName = originalDisplayName + counter;
+            }
             counter++;
             log.debug("Display name already exists, trying: {}", displayName);
         }

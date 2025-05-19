@@ -5,13 +5,11 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.raindrop.identity_service.dto.request.AuthenticationRequest;
-import com.raindrop.identity_service.dto.request.GoogleAuthenticationRequest;
-import com.raindrop.identity_service.dto.request.IntrospectRequest;
-import com.raindrop.identity_service.dto.request.LogoutRequest;
-import com.raindrop.identity_service.dto.request.RefreshTokenRequest;
+import com.raindrop.identity_service.dto.request.*;
 import com.raindrop.identity_service.dto.response.AuthenticationResponse;
+import com.raindrop.identity_service.dto.response.ForgotPasswordResponse;
 import com.raindrop.identity_service.dto.response.IntrospectResponse;
+import com.raindrop.identity_service.kafka.PasswordResetEventProducer;
 import com.raindrop.identity_service.entity.LinkedAccount;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.enums.AuthProvider;
@@ -34,12 +32,11 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestClient;
 
 import java.text.ParseException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -50,6 +47,8 @@ public class AuthenticationService {
     LinkedAccountRepository linkedAccountRepository;
     TokenRedisService tokenRedisService;
     RedisTemplate<String, Object> redisTemplate;
+    PasswordEncoder passwordEncoder;
+    PasswordResetEventProducer passwordResetEventProducer;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -60,6 +59,11 @@ public class AuthenticationService {
 
     // Thời gian sống của refresh token (7 ngày)
     private static final long REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60; // 7 ngày tính bằng giây
+
+    // Prefix cho key trong Redis
+    private static final String RESET_CODE_PREFIX = "password_reset_code:";
+    // Thời gian hết hạn của mã xác nhận (60 giây)
+    private static final long CODE_EXPIRY_SECONDS = 60;
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
@@ -280,6 +284,117 @@ public class AuthenticationService {
         log.info("Refresh token created successfully for user: {}", user.getUsername());
 
         return refreshTokenValue;
+    }
+
+    /**
+     * Xử lý yêu cầu quên mật khẩu
+     */
+    public ForgotPasswordResponse processForgotPassword(ForgotPasswordRequest request) {
+        String email = request.getEmail();
+        log.info("Processing forgot password request for email: {}", email);
+
+        // Tìm tất cả user có email này
+        List<User> users = userRepository.findAllByEmail(email);
+
+        if (users.isEmpty()) {
+            // Không thông báo cụ thể để tránh lộ thông tin
+            log.warn("No users found with email: {}", email);
+            return ForgotPasswordResponse.builder()
+                .success(true)
+                .message("Nếu email tồn tại, bạn sẽ nhận được mã xác nhận qua email")
+                .build();
+        }
+
+        // Tìm tài khoản LOCAL có email này
+        Optional<User> localUserOpt = users.stream()
+            .filter(u -> u.getAuthProvider() == AuthProvider.LOCAL)
+            .findFirst();
+
+        if (localUserOpt.isEmpty()) {
+            log.warn("No local account found with email: {}", email);
+            return ForgotPasswordResponse.builder()
+                .success(false)
+                .message("Không tìm thấy tài khoản local với email này. Nếu bạn đã đăng ký bằng mạng xã hội, vui lòng đăng nhập bằng tài khoản mạng xã hội đó.")
+                .build();
+        }
+
+        User localUser = localUserOpt.get();
+
+        // Tạo mã xác nhận 6 số
+        String resetCode = generateRandomCode();
+
+        // Lưu mã vào Redis với thời gian hết hạn
+        // Sử dụng email và username của tài khoản local làm key để đảm bảo tính nhất quán
+        String redisKey = RESET_CODE_PREFIX + email + ":" + localUser.getUsername();
+        redisTemplate.opsForValue().set(redisKey, resetCode, Duration.ofSeconds(CODE_EXPIRY_SECONDS));
+
+        // Gửi sự kiện để notification service gửi email
+        passwordResetEventProducer.sendPasswordResetEvent(email, localUser.getDisplayName(), resetCode);
+
+        log.info("Reset code sent to email: {} for local user: {}", email, localUser.getUsername());
+        return ForgotPasswordResponse.builder()
+            .success(true)
+            .message("Mã xác nhận đã được gửi đến email của bạn")
+            .build();
+    }
+
+    /**
+     * Xác thực mã và đặt lại mật khẩu
+     */
+    @Transactional
+    public void verifyCodeAndResetPassword(ResetPasswordRequest request) {
+        String email = request.getEmail();
+        String code = request.getCode();
+        String newPassword = request.getNewPassword();
+
+        log.info("Verifying reset code for email: {}", email);
+
+        // Tìm tất cả user có email này
+        List<User> users = userRepository.findAllByEmail(email);
+
+        if (users.isEmpty()) {
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
+
+        // Tìm tài khoản LOCAL có email này
+        Optional<User> localUserOpt = users.stream()
+            .filter(u -> u.getAuthProvider() == AuthProvider.LOCAL)
+            .findFirst();
+
+        if (localUserOpt.isEmpty()) {
+            log.warn("No local account found with email: {}", email);
+            throw new AppException(ErrorCode.ACCOUNT_NOT_LOCAL);
+        }
+
+        User localUser = localUserOpt.get();
+
+        // Lấy mã từ Redis - sử dụng cả email và username để đảm bảo tính nhất quán
+        String redisKey = RESET_CODE_PREFIX + email + ":" + localUser.getUsername();
+        Object storedCode = redisTemplate.opsForValue().get(redisKey);
+
+        // Kiểm tra mã có tồn tại và khớp không
+        if (storedCode == null || !storedCode.toString().equals(code)) {
+            log.warn("Invalid or expired reset code for email: {}", email);
+            throw new AppException(ErrorCode.INVALID_RESET_CODE);
+        }
+
+        // Cập nhật mật khẩu mới
+        localUser.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(localUser);
+
+        // Xóa mã khỏi Redis
+        redisTemplate.delete(redisKey);
+
+        log.info("Password reset successful for user: {}", localUser.getUsername());
+    }
+
+    /**
+     * Tạo mã xác nhận ngẫu nhiên 6 số
+     */
+    private String generateRandomCode() {
+        Random random = new Random();
+        int code = 100000 + random.nextInt(900000); // Tạo số ngẫu nhiên từ 100000 đến 999999
+        return String.valueOf(code);
     }
 
     /**

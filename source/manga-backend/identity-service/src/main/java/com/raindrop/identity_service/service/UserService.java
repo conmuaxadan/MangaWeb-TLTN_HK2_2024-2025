@@ -75,8 +75,26 @@ public class UserService {
             throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
 
-        // Kiểm tra displayName đã tồn tại chưa (nếu có)
+        // Xử lý displayName
         String displayName = request.getDisplayName() != null ? request.getDisplayName() : request.getUsername();
+
+        // Validate displayName length
+        if (displayName.trim().isEmpty()) {
+            log.warn("User creation failed: Display name is empty for username: {}", request.getUsername());
+            throw new AppException(ErrorCode.VALIDATION_ERROR);
+        }
+
+        if (displayName.length() < 6) {
+            log.warn("User creation failed: Display name too short for username: {}", request.getUsername());
+            throw new AppException(ErrorCode.DISPLAYNAME_TOO_SHORT);
+        }
+
+        if (displayName.length() > 16) {
+            log.warn("User creation failed: Display name too long for username: {}", request.getUsername());
+            throw new AppException(ErrorCode.DISPLAYNAME_TOO_LONG);
+        }
+
+        // Kiểm tra displayName đã tồn tại chưa
         if (userRepository.existsByDisplayName(displayName)) {
             log.warn("User creation failed: Display name already exists - {}", displayName);
             throw new AppException(ErrorCode.DISPLAYNAME_EXISTED);
@@ -166,16 +184,34 @@ public class UserService {
 
         // Cập nhật displayName nếu có
         if (request.getDisplayName() != null) {
+            String newDisplayName = request.getDisplayName();
+
+            // Validate displayName length
+            if (newDisplayName.trim().isEmpty()) {
+                log.warn("Update failed: Display name is empty for user: {}", request.getUsername());
+                throw new AppException(ErrorCode.VALIDATION_ERROR);
+            }
+
+            if (newDisplayName.length() < 6) {
+                log.warn("Update failed: Display name too short for user: {}", request.getUsername());
+                throw new AppException(ErrorCode.DISPLAYNAME_TOO_SHORT);
+            }
+
+            if (newDisplayName.length() > 16) {
+                log.warn("Update failed: Display name too long for user: {}", request.getUsername());
+                throw new AppException(ErrorCode.DISPLAYNAME_TOO_LONG);
+            }
+
             // Kiểm tra nếu displayName mới khác với displayName hiện tại
-            if (!request.getDisplayName().equals(user.getDisplayName())) {
+            if (!newDisplayName.equals(user.getDisplayName())) {
                 // Kiểm tra xem displayName mới đã tồn tại chưa
-                if (userRepository.existsByDisplayName(request.getDisplayName())) {
-                    log.warn("Update failed: Display name already exists - {}", request.getDisplayName());
+                if (userRepository.existsByDisplayName(newDisplayName)) {
+                    log.warn("Update failed: Display name already exists - {}", newDisplayName);
                     throw new AppException(ErrorCode.DISPLAYNAME_EXISTED);
                 }
 
-                log.debug("Updating display name for user: {} to {}", request.getUsername(), request.getDisplayName());
-                user.setDisplayName(request.getDisplayName());
+                log.debug("Updating display name for user: {} to {}", request.getUsername(), newDisplayName);
+                user.setDisplayName(newDisplayName);
             }
         }
 
@@ -276,17 +312,43 @@ public class UserService {
     }
 
     public void updateDisplayName(String userId, ChangeDisplayNameRequest request) {
-        User user = userRepository.findById(userId).orElseThrow(() ->
-                new AppException(ErrorCode.USER_NOT_EXISTED));
+        log.info("Updating display name for user ID: {}", userId);
+
+        // Validate displayName length
+        String newDisplayName = request.getDisplayName();
+        if (newDisplayName == null || newDisplayName.trim().isEmpty()) {
+            log.warn("Display name update failed: Display name is empty for user ID: {}", userId);
+            throw new AppException(ErrorCode.VALIDATION_ERROR);
+        }
+
+        if (newDisplayName.length() < 6) {
+            log.warn("Display name update failed: Display name too short for user ID: {}", userId);
+            throw new AppException(ErrorCode.DISPLAYNAME_TOO_SHORT);
+        }
+
+        if (newDisplayName.length() > 16) {
+            log.warn("Display name update failed: Display name too long for user ID: {}", userId);
+            throw new AppException(ErrorCode.DISPLAYNAME_TOO_LONG);
+        }
+
+        User user = userRepository.findById(userId).orElseThrow(() -> {
+            log.warn("Display name update failed: User not found - ID: {}", userId);
+            return new AppException(ErrorCode.USER_NOT_EXISTED);
+        });
+
         // Kiểm tra nếu displayName mới khác với displayName hiện tại
-        if (!request.getDisplayName().equals(user.getDisplayName())) {
+        if (!newDisplayName.equals(user.getDisplayName())) {
             // Kiểm tra xem displayName mới đã tồn tại chưa
-            if (userRepository.existsByDisplayName(request.getDisplayName())) {
+            if (userRepository.existsByDisplayName(newDisplayName)) {
+                log.warn("Display name update failed: Display name already exists - {}", newDisplayName);
                 throw new AppException(ErrorCode.DISPLAYNAME_EXISTED);
             }
 
-            user.setDisplayName(request.getDisplayName());
+            user.setDisplayName(newDisplayName);
             userRepository.save(user);
+            log.info("Display name updated successfully for user ID: {}", userId);
+        } else {
+            log.info("No changes to display name for user ID: {}", userId);
         }
     }
 

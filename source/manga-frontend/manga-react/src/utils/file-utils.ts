@@ -21,7 +21,7 @@ export const getFileUrl = (fileName: string): string | null => {
  * @param fileName Tên file ảnh manga
  * @returns URL đầy đủ của ảnh manga
  */
-export const getMangaImageUrl = (fileName: string): string => {
+export const getMangaImageUrl = (fileName: string | undefined): string => {
     if (!fileName) return '/images/default-manga-cover.jpg';
     return <string>getFileUrl(fileName);
 };

@@ -63,7 +63,7 @@ const RecommendedManga = () => {
 
     return (
         <div className="flex flex-col gap-5">
-            <h2 className="flex items-center gap-3 text-xl font-semibold text-white border-l-4 border-purple-600 pl-3 mb-4">
+            <h2 className="flex items-center gap-3 text-xl font-semibold text-gray-900 border-l-4 border-purple-600 pl-3 mb-4">
                 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" className="text-purple-500 text-2xl" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                     <path d="M256,8C119,8,8,119,8,256S119,504,256,504,504,393,504,256,393,8,256,8Zm92.49,313h0l-20,25a16,16,0,0,1-22.49,2.5h0l-67-49.72a40,40,0,0,1-15-31.23V112a16,16,0,0,1,16-16h32a16,16,0,0,1,16,16V256l58,42.5A16,16,0,0,1,348.49,321Z"></path>
                 </svg>
@@ -98,14 +98,14 @@ const RecommendedManga = () => {
                 >
                     {recommendedManga.map((manga) => (
                         <SwiperSlide key={manga.id}>
-                            <div className="group bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                            <div className="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
                                 <figure className="clearfix">
                                     <div className="relative mb-1">
                                         <a title={manga.title} href={`/mangas/${manga.id}`} className="block">
                                             <div className="relative pb-[150%]">
                                                 <div className="absolute inset-0 w-full h-full overflow-hidden">
                                                     <div className="relative h-full w-full">
-                                                        <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
+                                                        <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900/80 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
                                                         <img
                                                             src={getMangaImageUrl(manga.coverUrl)}
                                                             className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
@@ -118,12 +118,12 @@ const RecommendedManga = () => {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="absolute bottom-0 left-0 z-[2] w-full px-2 py-1">
-                                                <h3 className="mb-1 line-clamp-1 text-xs font-semibold leading-tight text-white transition group-hover:line-clamp-2">
+                                            <div className="absolute bottom-0 left-0 z-[2] w-full px-3 py-2">
+                                                <h3 className="mb-1 line-clamp-2 text-sm font-semibold leading-tight text-white transition group-hover:line-clamp-3">
                                                     {manga.title}
                                                 </h3>
-                                                <p className="mb-1 text-[10px] text-gray-400 line-clamp-1">{manga.author || 'Không rõ'}</p>
-                                                <span className="flex items-center justify-between gap-1 text-[10px] text-gray-300">
+                                                <p className="mb-1 text-xs text-gray-300 line-clamp-1">{manga.author || 'Không rõ'}</p>
+                                                <span className="flex items-center justify-between gap-1 text-xs text-gray-300">
                                                     <span className="flex items-center gap-1">
                                                         <i className="fa fa-eye text-yellow-500"></i>{manga.views || 0}
                                                     </span>

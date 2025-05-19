@@ -7,7 +7,7 @@ import PersonalRecommendations from "../components/PersonalRecommendations.tsx";
 
 const Home = () => {
     return (
-        <main className="main bg-gray-900 text-white min-h-screen">
+        <main className="main bg-gray-100 text-gray-900 min-h-screen">
             <div className="container mx-auto px-4 py-6">
                 <div className="flex flex-col gap-[40px]">
                     {/* Thanh công cụ điều hướng - chỉ hiển thị trên PC */}

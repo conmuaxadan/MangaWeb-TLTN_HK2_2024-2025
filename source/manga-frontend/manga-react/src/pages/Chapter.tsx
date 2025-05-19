@@ -40,8 +40,11 @@ const Chapter: React.FC = () => {
   const [lastScrollY, setLastScrollY] = useState<number>(0);
   const navbarRef = useRef<HTMLDivElement>(null);
 
-  // Lấy session ID khi component mount
+  // Lấy session ID khi component mount và cuộn lên đầu trang
   useEffect(() => {
+    // Tự động cuộn lên đầu trang khi vào trang chapter
+    window.scrollTo(0, 0);
+
     // Đảm bảo sessionId được tạo và lưu trước khi sử dụng
     const storedSessionId = sessionService.getSessionId();
     console.log('SessionId from service:', storedSessionId);
@@ -118,6 +121,50 @@ const Chapter: React.FC = () => {
 
   // Đã loại bỏ việc gọi API tăng lượt xem khi người dùng cuộn trang
   // Vì chúng ta sẽ chỉ gọi API tăng lượt xem một lần khi mở chapter
+
+  // Cuộn lên đầu trang khi chuyển giữa các chapter
+  useEffect(() => {
+    // Tự động cuộn lên đầu trang khi chapterId thay đổi
+    window.scrollTo(0, 0);
+  }, [chapterId]);
+
+  // Xử lý điều hướng bằng phím mũi tên
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Kiểm tra xem người dùng có đang nhập vào input, textarea hay không
+      const activeElement = document.activeElement;
+      const isInputActive = activeElement instanceof HTMLInputElement ||
+                           activeElement instanceof HTMLTextAreaElement;
+
+      // Nếu đang nhập vào input/textarea, không xử lý phím
+      if (isInputActive) return;
+
+      switch (event.key) {
+        case 'ArrowLeft':
+          // Lùi chapter nếu có
+          if (prevChapter) {
+            event.preventDefault();
+            window.location.href = `/mangas/${manga.id}/chapters/${prevChapter.id}`;
+          }
+          break;
+        case 'ArrowRight':
+          // Tiến chapter nếu có
+          if (nextChapter) {
+            event.preventDefault();
+            window.location.href = `/mangas/${manga.id}/chapters/${nextChapter.id}`;
+          }
+          break;
+      }
+    };
+
+    // Thêm event listener
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [manga?.id, prevChapter, nextChapter]);
 
   useEffect(() => {
     const fetchChapterData = async () => {
@@ -259,7 +306,7 @@ const Chapter: React.FC = () => {
 
   if (error || !manga || !chapter) {
     return (
-      <div className="container mx-auto px-4 py-8 bg-gray-900 min-h-screen">
+      <div className="container mx-auto px-4 py-8 bg-gray-800 min-h-screen">
         <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded-lg shadow-lg mt-10">
           <p className="font-medium">{error || 'Không tìm thấy thông tin chapter'}</p>
           <div className="mt-4">
@@ -273,11 +320,11 @@ const Chapter: React.FC = () => {
   }
 
   return (
-    <main className="flex-grow transition origin-top w-full overflow-hidden min-h-screen bg-gray-900">
+    <main className="flex-grow transition origin-top w-full overflow-hidden min-h-screen bg-gray-800">
       {/* Fixed Navigation Bar at Bottom */}
       <div
         ref={navbarRef}
-        className={`fixed bottom-0 left-0 right-0 bg-gray-900 bg-opacity-95 backdrop-blur-sm border-t border-gray-800 z-50 py-2 px-4 flex justify-between items-center shadow-lg transition-all duration-300 ${navbarVisible ? '' : 'translate-y-full opacity-0'}`}
+        className={`fixed bottom-0 left-0 right-0 bg-gray-800 bg-opacity-95 backdrop-blur-sm border-t border-gray-700 z-50 py-2 px-4 flex justify-between items-center shadow-lg transition-all duration-300 ${navbarVisible ? '' : 'translate-y-full opacity-0'}`}
       >
         <div className="text-white font-medium truncate mr-4">
           {chapter.title}
@@ -286,7 +333,7 @@ const Chapter: React.FC = () => {
           {prevChapter && (
             <Link
               to={`/mangas/${manga.id}/chapters/${prevChapter.id}`}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-blue-600 text-white transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-blue-600 text-white transition-colors"
               title="Chương trước"
             >
               <FontAwesomeIcon icon={faChevronLeft} />
@@ -295,7 +342,7 @@ const Chapter: React.FC = () => {
 
           <Link
             to={`/mangas/${manga.id}`}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-blue-600 text-white transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-blue-600 text-white transition-colors"
             title="Quay về trang chi tiết manga"
           >
             <FontAwesomeIcon icon={faList} />
@@ -303,7 +350,7 @@ const Chapter: React.FC = () => {
 
           <button
             onClick={scrollToTop}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-blue-600 text-white transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-blue-600 text-white transition-colors"
             title="Lên đầu trang"
           >
             <FontAwesomeIcon icon={faAngleUp} />
@@ -312,7 +359,7 @@ const Chapter: React.FC = () => {
           {nextChapter && (
             <Link
               to={`/mangas/${manga.id}/chapters/${nextChapter.id}`}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-blue-600 text-white transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-blue-600 text-white transition-colors"
               title="Chương sau"
             >
               <FontAwesomeIcon icon={faChevronRight} />
@@ -354,7 +401,7 @@ const Chapter: React.FC = () => {
                 ) : (
                   <button
                     disabled
-                    className="h-12 rounded-lg bg-gray-800 text-gray-600 cursor-not-allowed flex items-center justify-center w-full"
+                    className="h-12 rounded-lg bg-gray-700 text-gray-500 cursor-not-allowed flex items-center justify-center w-full"
                   >
                     <FontAwesomeIcon icon={faChevronLeft} className="mr-2" />
                     Chương trước
@@ -373,7 +420,7 @@ const Chapter: React.FC = () => {
                 ) : (
                   <button
                     disabled
-                    className="h-12 rounded-lg bg-gray-800 text-gray-600 cursor-not-allowed flex items-center justify-center w-full"
+                    className="h-12 rounded-lg bg-gray-700 text-gray-500 cursor-not-allowed flex items-center justify-center w-full"
                   >
                     Chương sau
                     <FontAwesomeIcon icon={faChevronRight} className="ml-2" />
@@ -420,7 +467,7 @@ const Chapter: React.FC = () => {
             <div className="text-sm mt-1 text-blue-200">{nextChapter.title}</div>
           </Link>
         ) : (
-          <div className="w-full max-w-screen-sm py-4 px-4 text-center bg-gray-800 text-gray-300 rounded-lg shadow-lg">
+          <div className="w-full max-w-screen-sm py-4 px-4 text-center bg-gray-700 text-gray-300 rounded-lg shadow-lg">
             <div className="uppercase font-bold text-lg">Đã hết chapter</div>
             <div className="text-sm mt-1 text-gray-400">Vui lòng đợi chapter mới</div>
           </div>

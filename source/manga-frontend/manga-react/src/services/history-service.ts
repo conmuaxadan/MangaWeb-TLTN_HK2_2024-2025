@@ -6,7 +6,7 @@ import {
     ReadingHistoryPageResponse,
     AnonymousReadingHistoryRequest,
     AnonymousReadingHistoryResponse
-} from "../interfaces/models/profile";
+} from "../interfaces/models/reading-history";
 import HttpClient from "./http-client";
 import { API_CONFIG } from "../configurations/api-config";
 
@@ -123,7 +123,7 @@ class HistoryService {
             console.log('Sending reading history request:', request);
 
             const apiResponse = await historyHttpClient.post<ApiResponse<ReadingHistoryResponse>>(
-                '/reading-histories', 
+                '/reading-histories',
                 request
             );
 
@@ -194,7 +194,7 @@ class HistoryService {
             console.log('Sending anonymous reading history request:', request);
 
             const apiResponse = await historyHttpClient.post<ApiResponse<AnonymousReadingHistoryResponse>>(
-                '/anonymous-reading-histories', 
+                '/anonymous-reading-histories',
                 request
             );
 

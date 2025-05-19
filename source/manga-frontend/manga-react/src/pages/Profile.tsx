@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { UserProfileResponse } from '../interfaces/models/profile';
+import { UserProfileResponse } from '../interfaces/models/user';
 import profileService from '../services/profile-service';
 import commentService from '../services/comment-service';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

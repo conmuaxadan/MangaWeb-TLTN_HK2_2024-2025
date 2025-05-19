@@ -94,16 +94,26 @@ const ProfileSettings: React.FC = () => {
 
     if (!user) return;
 
+    // Kiểm tra độ dài của displayName
+    if (!displayName || displayName.trim().length < 6) {
+      toast.error('Tên hiển thị phải có ít nhất 6 ký tự', { position: 'top-right' });
+      return;
+    }
+
+    if (displayName.length > 16) {
+      toast.error('Tên hiển thị không được vượt quá 16 ký tự', { position: 'top-right' });
+      return;
+    }
+
     setLoading(true);
     try {
-      await profileService.updateProfile(displayName);
-      toast.success('Cập nhật tên hiển thị thành công', { position: 'top-right' });
-
-      // Reload trang để cập nhật thông tin
-      window.location.reload();
+      const success = await profileService.updateProfile(displayName);
+      if (success) {
+        // Reload trang để cập nhật thông tin
+        window.location.reload();
+      }
     } catch (error) {
       console.error('Lỗi khi cập nhật tên hiển thị:', error);
-      toast.error('Không thể cập nhật tên hiển thị', { position: 'top-right' });
     } finally {
       setLoading(false);
     }
@@ -144,7 +154,7 @@ const ProfileSettings: React.FC = () => {
       <div className="grid grid-cols-1 gap-[30px]">
         <div>
         {/* Đổi mật khẩu */}
-        <div className="rounded-md bg-gray-800 p-6 shadow">
+        <div className="rounded-md bg-white p-6 shadow border border-gray-200">
           <h6 className="mb-4 text-lg font-semibold">Đổi mật khẩu</h6>
           <form onSubmit={handleUpdatePassword}>
             <div>
@@ -152,7 +162,7 @@ const ProfileSettings: React.FC = () => {
               <div className="form-icon relative my-2">
                 <FontAwesomeIcon icon={faKey} className="absolute left-4 top-3 h-4 w-4" />
                 <input
-                  className="form-input h-10 w-full rounded border border-gray-700 bg-transparent px-3 py-2 pl-12 outline-none focus:border-blue-600 focus:ring-0"
+                  className="form-input h-10 w-full rounded border border-gray-300 bg-white px-3 py-2 pl-12 outline-none focus:border-blue-600 focus:ring-0"
                   placeholder="Mật khẩu cũ"
                   id="old-password"
                   type="password"
@@ -166,21 +176,33 @@ const ProfileSettings: React.FC = () => {
               <div className="form-icon relative my-2">
                 <FontAwesomeIcon icon={faKey} className="absolute left-4 top-3 h-4 w-4" />
                 <input
-                  className="form-input h-10 w-full rounded border border-gray-700 bg-transparent px-3 py-2 pl-12 outline-none focus:border-blue-600 focus:ring-0"
+                  className="form-input h-10 w-full rounded border border-gray-300 bg-white px-3 py-2 pl-12 outline-none focus:border-blue-600 focus:ring-0"
                   placeholder="Mật khẩu mới"
                   id="new-password"
                   type="password"
                   name="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  minLength={8}
                 />
+              </div>
+
+              <div className="mt-2 text-sm text-gray-600">
+                <p>Mật khẩu mới phải đáp ứng các yêu cầu sau:</p>
+                <ul className="list-disc pl-5 mt-1">
+                  <li>Ít nhất 8 ký tự</li>
+                  <li>Ít nhất 1 chữ số (0-9)</li>
+                  <li>Ít nhất 1 chữ thường (a-z)</li>
+                  <li>Ít nhất 1 chữ hoa (A-Z)</li>
+                  <li>Ít nhất 1 ký tự đặc biệt (@#$%^&+=)</li>
+                </ul>
               </div>
 
               <label className="form-label mt-4 font-medium">Xác nhận mật khẩu mới : <span className="text-red-600">*</span></label>
               <div className="form-icon relative my-2">
                 <FontAwesomeIcon icon={faKey} className="absolute left-4 top-3 h-4 w-4" />
                 <input
-                  className="form-input h-10 w-full rounded border border-gray-700 bg-transparent px-3 py-2 pl-12 outline-none focus:border-blue-600 focus:ring-0"
+                  className="form-input h-10 w-full rounded border border-gray-300 bg-white px-3 py-2 pl-12 outline-none focus:border-blue-600 focus:ring-0"
                   placeholder="Xác nhận mật khẩu mới"
                   id="confirm-password"
                   type="password"
@@ -192,7 +214,7 @@ const ProfileSettings: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !oldPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword || newPassword.length < 8 || !/(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])/.test(newPassword)}
                 className="mt-5 inline-block rounded-md border border-blue-600 bg-blue-600 px-5 py-2 text-center align-middle text-base font-semibold tracking-wide text-white duration-500 hover:border-blue-700 hover:bg-blue-700 disabled:opacity-50"
               >
                 {loading ? 'Đang lưu...' : 'Lưu'}
@@ -202,7 +224,7 @@ const ProfileSettings: React.FC = () => {
         </div>
 
         {/* Đổi tên người dùng */}
-        <div className="mt-5 rounded-md bg-gray-800 p-6 shadow">
+        <div className="mt-5 rounded-md bg-white p-6 shadow border border-gray-200">
           <h6 className="mb-4 text-lg font-semibold">Đổi tên người dùng</h6>
           <form onSubmit={handleUpdateDisplayName}>
             <div>
@@ -210,19 +232,25 @@ const ProfileSettings: React.FC = () => {
               <div className="form-icon relative my-2">
                 <FontAwesomeIcon icon={faUser} className="absolute left-4 top-3 h-4 w-4" />
                 <input
-                  className="form-input h-10 w-full rounded border border-gray-700 bg-transparent px-3 py-2 pl-12 outline-none focus:border-blue-600 focus:ring-0"
+                  className="form-input h-10 w-full rounded border border-gray-300 bg-white px-3 py-2 pl-12 outline-none focus:border-blue-600 focus:ring-0"
                   placeholder="Tên mới"
                   id="name"
                   type="text"
                   name="name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
+                  minLength={6}
+                  maxLength={16}
                 />
+              </div>
+
+              <div className="mt-2 text-sm text-gray-600">
+                <p>Tên hiển thị phải có độ dài từ 6 đến 16 ký tự</p>
               </div>
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !displayName || displayName.trim().length < 6 || displayName.length > 16}
                 className="mt-5 inline-block rounded-md border border-blue-600 bg-blue-600 px-5 py-2 text-center align-middle text-base font-semibold tracking-wide text-white duration-500 hover:border-blue-700 hover:bg-blue-700 disabled:opacity-50"
               >
                 {loading ? 'Đang lưu...' : 'Lưu'}
@@ -232,14 +260,14 @@ const ProfileSettings: React.FC = () => {
         </div>
 
         {/* Đổi ảnh đại diện */}
-        <div className="mt-5 rounded-md bg-gray-800 p-6 shadow">
+        <div className="mt-5 rounded-md bg-white p-6 shadow border border-gray-200">
           <h6 className="mb-4 text-lg font-semibold">Đổi ảnh đại diện</h6>
           <form onSubmit={handleUpdateAvatar}>
             <div>
               <label className="form-label font-medium" htmlFor="avatar_url">Tải ảnh : <span className="text-red-600">*</span></label>
               <input
                 accept="image/*"
-                className="w-full rounded border border-gray-700 bg-gray-800 p-2"
+                className="w-full rounded border border-gray-300 bg-white p-2"
                 type="file"
                 onChange={handleAvatarChange}
               />

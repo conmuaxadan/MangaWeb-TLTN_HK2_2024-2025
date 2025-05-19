@@ -5,7 +5,7 @@ import {
     CommentRequest,
     CommentResponse,
     CommentPageResponse
-} from "../interfaces/models/profile";
+} from "../interfaces/models/comment";
 import { logApiCall } from "../utils/api-logger";
 
 class CommentService {

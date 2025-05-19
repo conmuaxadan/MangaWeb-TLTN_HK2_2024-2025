@@ -13,8 +13,6 @@ const Register = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [passwordStrength, setPasswordStrength] = useState(0);
-    const [passwordMessage, setPasswordMessage] = useState("");
 
     // Error states
     const [usernameError, setUsernameError] = useState("");
@@ -49,15 +47,15 @@ const Register = () => {
             return false;
         }
 
-        if (value.length < 5) {
-            setUsernameError("Tên đăng nhập phải có ít nhất 5 ký tự");
+        if (value.length < 6) {
+            setUsernameError("Tên đăng nhập phải có ít nhất 6 ký tự");
             setIsUsernameValid(false);
             return false;
         }
 
-        const usernameRegex = /^[a-zA-Z0-9._-]+$/;
+        const usernameRegex = /^[a-z0-9]+$/;
         if (!usernameRegex.test(value)) {
-            setUsernameError("Tên đăng nhập chỉ được chứa chữ cái, số, dấu chấm, gạch dưới và gạch ngang");
+            setUsernameError("Tên đăng nhập chỉ được chứa chữ thường và số");
             setIsUsernameValid(false);
             return false;
         }
@@ -190,39 +188,7 @@ const Register = () => {
         validateConfirmPassword(confirmPassword);
     };
 
-    // Check password strength
-    useEffect(() => {
-        if (!password) {
-            setPasswordStrength(0);
-            setPasswordMessage("");
-            return;
-        }
 
-        let strength = 0;
-        let message = "Mật khẩu yếu";
-
-        // Length check
-        if (password.length >= 8) strength += 1;
-
-        // Contains number
-        if (/\d/.test(password)) strength += 1;
-
-        // Contains lowercase
-        if (/[a-z]/.test(password)) strength += 1;
-
-        // Contains uppercase
-        if (/[A-Z]/.test(password)) strength += 1;
-
-        // Contains special char
-        if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-
-        if (strength === 3) message = "Mật khẩu trung bình";
-        if (strength === 4) message = "Mật khẩu mạnh";
-        if (strength === 5) message = "Mật khẩu rất mạnh";
-
-        setPasswordStrength(strength);
-        setPasswordMessage(message);
-    }, [password]);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -261,7 +227,7 @@ const Register = () => {
     };
 
     return (
-        <div className="flex-grow min-h-screen bg-gradient-to-br from-zinc-900 to-zinc-800 p-4">
+        <div className="flex-grow min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
             <style>{`
                 @keyframes fadeIn {
                     from { opacity: 0; transform: translateY(20px); }
@@ -277,10 +243,7 @@ const Register = () => {
                     border-color: #8b5cf6;
                     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
                 }
-                .password-strength-bar {
-                    height: 4px;
-                    transition: all 0.3s ease;
-                }
+
                 .error-message {
                     animation: fadeIn 0.3s ease-out;
                 }
@@ -297,24 +260,24 @@ const Register = () => {
             `}</style>
 
             <div className="min-h-screen w-full flex justify-center items-center">
-                <div className="register-container w-full max-w-md bg-zinc-800/50 rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm">
+                <div className="register-container w-full max-w-md bg-white rounded-xl overflow-hidden shadow-lg backdrop-blur-sm">
                     {/* Register form */}
                     <div className="p-6 sm:p-10 flex flex-col justify-center">
                         <div className="mb-8 text-center">
-                            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
                                 Đăng ký tài khoản
                             </h1>
-                            <p className="text-gray-400">Tạo tài khoản mới để trải nghiệm đầy đủ tính năng</p>
+                            <p className="text-gray-500">Tạo tài khoản mới để trải nghiệm đầy đủ tính năng</p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {/* Tên đăng nhập */}
                             <div>
-                                <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                                     Tên đăng nhập
                                 </label>
-                                <div className="relative input-icon-container flex items-center overflow-hidden border border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-purple-500 bg-zinc-700/50 transition-all duration-200">
-                                    <span className="pl-4 text-gray-400">
+                                <div className="relative input-icon-container flex items-center overflow-hidden border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-purple-500 bg-white transition-all duration-200">
+                                    <span className="pl-4 text-gray-500">
                                         <FontAwesomeIcon icon={faUser} />
                                     </span>
                                     <input
@@ -324,24 +287,24 @@ const Register = () => {
                                         value={username}
                                         onChange={handleUsernameChange}
                                         onBlur={handleUsernameBlur}
-                                        className={`w-full p-3 bg-transparent text-white focus:outline-none ${usernameTouched && usernameError ? 'border-red-500 input-error' : ''}`}
+                                        className={`w-full p-3 bg-transparent text-gray-800 focus:outline-none ${usernameTouched && usernameError ? 'border-red-500 input-error' : ''}`}
                                         required
                                     />
                                 </div>
                                 {usernameTouched && usernameError ? (
                                     <p className="text-xs text-red-400 mt-1 error-message">{usernameError}</p>
                                 ) : (
-                                    <p className="text-xs text-gray-400 mt-1">Tên đăng nhập phải có ít nhất 5 ký tự</p>
+                                    <p className="text-xs text-gray-500 mt-1">Tên đăng nhập phải có ít nhất 6 ký tự, chỉ chứa chữ thường và số</p>
                                 )}
                             </div>
 
                             {/* Email */}
                             <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                                     Email
                                 </label>
-                                <div className="relative input-icon-container flex items-center overflow-hidden border border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-purple-500 bg-zinc-700/50 transition-all duration-200">
-                                    <span className="pl-4 text-gray-400">
+                                <div className="relative input-icon-container flex items-center overflow-hidden border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-purple-500 bg-white transition-all duration-200">
+                                    <span className="pl-4 text-gray-500">
                                         <FontAwesomeIcon icon={faEnvelope} />
                                     </span>
                                     <input
@@ -351,24 +314,24 @@ const Register = () => {
                                         value={email}
                                         onChange={handleEmailChange}
                                         onBlur={handleEmailBlur}
-                                        className={`w-full p-3 bg-transparent text-white focus:outline-none ${emailTouched && emailError ? 'border-red-500 input-error' : ''}`}
+                                        className={`w-full p-3 bg-transparent text-gray-800 focus:outline-none ${emailTouched && emailError ? 'border-red-500 input-error' : ''}`}
                                         required
                                     />
                                 </div>
                                 {emailTouched && emailError ? (
                                     <p className="text-xs text-red-400 mt-1 error-message">{emailError}</p>
                                 ) : (
-                                    <p className="text-xs text-gray-400 mt-1">Chúng tôi sẽ không chia sẻ email của bạn với bất kỳ ai</p>
+                                    <p className="text-xs text-gray-500 mt-1">Chúng tôi sẽ không chia sẻ email của bạn với bất kỳ ai</p>
                                 )}
                             </div>
 
                             {/* Mật khẩu */}
                             <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                                     Mật khẩu
                                 </label>
-                                <div className="relative input-icon-container flex items-center overflow-hidden border border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-purple-500 bg-zinc-700/50 transition-all duration-200">
-                                    <span className="pl-4 text-gray-400">
+                                <div className="relative input-icon-container flex items-center overflow-hidden border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-purple-500 bg-white transition-all duration-200">
+                                    <span className="pl-4 text-gray-500">
                                         <FontAwesomeIcon icon={faLock} />
                                     </span>
                                     <input
@@ -378,48 +341,34 @@ const Register = () => {
                                         value={password}
                                         onChange={handlePasswordChange}
                                         onBlur={handlePasswordBlur}
-                                        className={`w-full p-3 bg-transparent text-white focus:outline-none ${passwordTouched && passwordError ? 'border-red-500 input-error' : ''}`}
+                                        className={`w-full p-3 bg-transparent text-gray-800 focus:outline-none ${passwordTouched && passwordError ? 'border-red-500 input-error' : ''}`}
                                         required
                                         minLength={8}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="pr-4 text-gray-400 hover:text-gray-300 focus:outline-none"
+                                        className="pr-4 text-gray-500 hover:text-gray-700 focus:outline-none"
                                     >
                                         <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
                                     </button>
                                 </div>
 
-                                {/* Password strength indicator */}
-                                {password && (
-                                    <div className="mt-2">
-                                        <div className="flex w-full h-1 bg-gray-700 rounded-full overflow-hidden">
-                                            <div
-                                                className={`password-strength-bar ${passwordStrength === 0 ? 'bg-red-500' :
-                                                    passwordStrength <= 2 ? 'bg-orange-500' :
-                                                    passwordStrength <= 3 ? 'bg-yellow-500' :
-                                                    passwordStrength <= 4 ? 'bg-green-500' : 'bg-emerald-500'}`}
-                                                style={{ width: `${(passwordStrength / 5) * 100}%` }}
-                                            ></div>
-                                        </div>
-                                        <p className="text-xs mt-1 text-gray-400">{passwordMessage}</p>
-                                    </div>
-                                )}
+
                                 {passwordTouched && passwordError ? (
                                     <p className="text-xs text-red-400 mt-1 error-message">{passwordError}</p>
                                 ) : (
-                                    <p className="text-xs text-gray-400 mt-1">Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt</p>
+                                    <p className="text-xs text-gray-500 mt-1">Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt</p>
                                 )}
                             </div>
 
                             {/* Nhập lại mật khẩu */}
                             <div>
-                                <label htmlFor="re-password" className="block text-sm font-medium text-gray-300 mb-2">
+                                <label htmlFor="re-password" className="block text-sm font-medium text-gray-700 mb-2">
                                     Nhập lại mật khẩu
                                 </label>
-                                <div className="relative input-icon-container flex items-center overflow-hidden border border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-purple-500 bg-zinc-700/50 transition-all duration-200">
-                                    <span className="pl-4 text-gray-400">
+                                <div className="relative input-icon-container flex items-center overflow-hidden border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-purple-500 bg-white transition-all duration-200">
+                                    <span className="pl-4 text-gray-500">
                                         <FontAwesomeIcon icon={faLock} />
                                     </span>
                                     <input
@@ -429,13 +378,13 @@ const Register = () => {
                                         value={confirmPassword}
                                         onChange={handleConfirmPasswordChange}
                                         onBlur={handleConfirmPasswordBlur}
-                                        className={`w-full p-3 bg-transparent text-white focus:outline-none ${confirmPasswordTouched && confirmPasswordError ? 'border-red-500 input-error' : ''}`}
+                                        className={`w-full p-3 bg-transparent text-gray-800 focus:outline-none ${confirmPasswordTouched && confirmPasswordError ? 'border-red-500 input-error' : ''}`}
                                         required
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="pr-4 text-gray-400 hover:text-gray-300 focus:outline-none"
+                                        className="pr-4 text-gray-500 hover:text-gray-700 focus:outline-none"
                                     >
                                         <FontAwesomeIcon icon={showConfirmPassword ? faEyeSlash : faEye} />
                                     </button>
@@ -451,7 +400,7 @@ const Register = () => {
                             <div className="pt-2">
                                 <button
                                     type="submit"
-                                    className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-zinc-800 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg"
+                                    className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-100 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg"
                                     disabled={isLoading || !isUsernameValid || !isEmailValid || !isPasswordValid || !isConfirmPasswordValid}
                                 >
                                     {isLoading ? (
@@ -468,9 +417,9 @@ const Register = () => {
 
                             {/* Login link */}
                             <div className="text-center mt-6">
-                                <p className="text-gray-400">
+                                <p className="text-gray-500">
                                     Đã có tài khoản?{" "}
-                                    <Link to="/login" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
+                                    <Link to="/login" className="text-purple-600 hover:text-purple-500 font-medium transition-colors">
                                         Đăng nhập ngay
                                     </Link>
                                 </p>
