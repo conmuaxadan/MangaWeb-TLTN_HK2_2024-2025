@@ -3,9 +3,11 @@ package com.raindrop.history_service.service;
 import com.raindrop.history_service.repository.httpclient.MangaClient;
 import com.raindrop.history_service.dto.request.ReadingHistoryRequest;
 import com.raindrop.history_service.dto.response.ReadingHistoryResponse;
+import com.raindrop.history_service.dto.response.ViewStatisticsResponse;
 import com.raindrop.history_service.entity.ReadingHistory;
 import com.raindrop.history_service.kafka.ChapterViewEventProducer;
 import com.raindrop.history_service.mapper.ReadingHistoryMapper;
+import com.raindrop.history_service.repository.AnonymousReadingHistoryRepository;
 import com.raindrop.history_service.repository.ReadingHistoryRepository;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -28,6 +30,8 @@ public class ReadingHistoryService {
     ReadingHistoryMapper readingHistoryMapper;
     ChapterViewEventProducer chapterViewEventProducer;
     MangaClient mangaClient;
+    AnonymousReadingHistoryRepository anonymousReadingHistoryRepository;
+    AnonymousReadingHistoryService anonymousReadingHistoryService;
 
     /**
      * Đánh dấu đã đọc chapter
@@ -77,15 +81,15 @@ public class ReadingHistoryService {
             // Xử lý dữ liệu từ response và bổ sung vào response
             if (mangaResponse != null && mangaResponse.getResult() != null) {
                 var mangaInfo = mangaResponse.getResult();
-                response.setMangaTitle(mangaInfo.getTitle());
-                response.setMangaCoverUrl(mangaInfo.getCoverUrl());
-                response.setAuthor(mangaInfo.getAuthor());
+                response.setMangaTitle((String) ((Map<String, Object>) mangaInfo).get("title"));
+                response.setMangaCoverUrl((String) ((Map<String, Object>) mangaInfo).get("coverUrl"));
+                response.setAuthor((String) ((Map<String, Object>) mangaInfo).get("author"));
             }
 
             if (chapterResponse != null && chapterResponse.getResult() != null) {
                 var chapterInfo = chapterResponse.getResult();
-                response.setChapterTitle(chapterInfo.getTitle());
-                response.setChapterNumber(chapterInfo.getChapterNumber());
+                response.setChapterTitle((String) ((Map<String, Object>) chapterInfo).get("title"));
+                response.setChapterNumber((Double) ((Map<String, Object>) chapterInfo).get("chapterNumber"));
             }
 
         } catch (Exception e) {
@@ -119,15 +123,15 @@ public class ReadingHistoryService {
                 // Xử lý dữ liệu từ response và bổ sung vào response
                 if (mangaResponse != null && mangaResponse.getResult() != null) {
                     var mangaInfo = mangaResponse.getResult();
-                    response.setMangaTitle(mangaInfo.getTitle());
-                    response.setMangaCoverUrl(mangaInfo.getCoverUrl());
-                    response.setAuthor(mangaInfo.getAuthor());
+                    response.setMangaTitle((String) ((Map<String, Object>) mangaInfo).get("title"));
+                    response.setMangaCoverUrl((String) ((Map<String, Object>) mangaInfo).get("coverUrl"));
+                    response.setAuthor((String) ((Map<String, Object>) mangaInfo).get("author"));
                 }
 
                 if (chapterResponse != null && chapterResponse.getResult() != null) {
                     var chapterInfo = chapterResponse.getResult();
-                    response.setChapterTitle(chapterInfo.getTitle());
-                    response.setChapterNumber(chapterInfo.getChapterNumber());
+                    response.setChapterTitle((String) ((Map<String, Object>) chapterInfo).get("title"));
+                    response.setChapterNumber((Double) ((Map<String, Object>) chapterInfo).get("chapterNumber"));
                 }
 
             } catch (Exception e) {
@@ -162,15 +166,15 @@ public class ReadingHistoryService {
             // Xử lý dữ liệu từ response và bổ sung vào response
             if (mangaResponse != null && mangaResponse.getResult() != null) {
                 var mangaInfo = mangaResponse.getResult();
-                response.setMangaTitle(mangaInfo.getTitle());
-                response.setMangaCoverUrl(mangaInfo.getCoverUrl());
-                response.setAuthor(mangaInfo.getAuthor());
+                response.setMangaTitle((String) ((Map<String, Object>) mangaInfo).get("title"));
+                response.setMangaCoverUrl((String) ((Map<String, Object>) mangaInfo).get("coverUrl"));
+                response.setAuthor((String) ((Map<String, Object>) mangaInfo).get("author"));
             }
 
             if (chapterResponse != null && chapterResponse.getResult() != null) {
                 var chapterInfo = chapterResponse.getResult();
-                response.setChapterTitle(chapterInfo.getTitle());
-                response.setChapterNumber(chapterInfo.getChapterNumber());
+                response.setChapterTitle((String) ((Map<String, Object>) chapterInfo).get("title"));
+                response.setChapterNumber((Double) ((Map<String, Object>) chapterInfo).get("chapterNumber"));
             }
 
         } catch (Exception e) {
@@ -194,7 +198,7 @@ public class ReadingHistoryService {
 
         // Lọc để mỗi manga chỉ lấy 1 lần (chapter mới nhất)
         Map<String, ReadingHistory> uniqueMangaMap = new LinkedHashMap<>(); // Sử dụng LinkedHashMap để giữ thứ tự
-
+        
         for (ReadingHistory history : allHistory) {
             String mangaId = history.getMangaId();
             if (!uniqueMangaMap.containsKey(mangaId)) {
@@ -220,15 +224,15 @@ public class ReadingHistoryService {
                 // Xử lý dữ liệu từ response và bổ sung vào response
                 if (mangaResponse != null && mangaResponse.getResult() != null) {
                     var mangaInfo = mangaResponse.getResult();
-                    response.setMangaTitle(mangaInfo.getTitle());
-                    response.setMangaCoverUrl(mangaInfo.getCoverUrl());
-                    response.setAuthor(mangaInfo.getAuthor());
+                    response.setMangaTitle((String) ((Map<String, Object>) mangaInfo).get("title"));
+                    response.setMangaCoverUrl((String) ((Map<String, Object>) mangaInfo).get("coverUrl"));
+                    response.setAuthor((String) ((Map<String, Object>) mangaInfo).get("author"));
                 }
 
                 if (chapterResponse != null && chapterResponse.getResult() != null) {
                     var chapterInfo = chapterResponse.getResult();
-                    response.setChapterTitle(chapterInfo.getTitle());
-                    response.setChapterNumber(chapterInfo.getChapterNumber());
+                    response.setChapterTitle((String) ((Map<String, Object>) chapterInfo).get("title"));
+                    response.setChapterNumber((Double) ((Map<String, Object>) chapterInfo).get("chapterNumber"));
                 }
 
             } catch (Exception e) {
@@ -239,6 +243,53 @@ public class ReadingHistoryService {
         }
 
         return result;
+    }
+    
+    /**
+     * Lấy thống kê về lượt xem
+     * @return Thống kê về lượt xem
+     */
+    public ViewStatisticsResponse getViewStatistics() {
+        log.info("Getting view statistics");
+        
+        // Đếm lượt xem của người dùng đã đăng nhập
+        Long registeredUserViews = readingHistoryRepository.countTotalViews();
+        Long registeredUserTodayViews = readingHistoryRepository.countTodayViews();
+        Long distinctUsers = readingHistoryRepository.countDistinctUsers();
+        
+        // Đếm lượt xem của người dùng không đăng nhập
+        Long anonymousViews = anonymousReadingHistoryRepository.countTotalViews();
+        Long anonymousTodayViews = anonymousReadingHistoryRepository.countTodayViews();
+        Long distinctSessions = anonymousReadingHistoryRepository.countDistinctSessions();
+        
+        // Tổng hợp thống kê
+        Long totalViews = registeredUserViews + anonymousViews;
+        Long todayViews = registeredUserTodayViews + anonymousTodayViews;
+        
+        return ViewStatisticsResponse.builder()
+                .totalViews(totalViews)
+                .todayViews(todayViews)
+                .distinctSessions(distinctSessions)
+                .distinctUsers(distinctUsers)
+                .registeredUserViews(registeredUserViews)
+                .anonymousViews(anonymousViews)
+                .build();
+    }
+    
+    /**
+     * Đếm tổng số lượt xem của người dùng đã đăng nhập
+     * @return Tổng số lượt xem
+     */
+    public Long countTotalViews() {
+        return readingHistoryRepository.countTotalViews();
+    }
+    
+    /**
+     * Đếm số lượt xem trong ngày hôm nay của người dùng đã đăng nhập
+     * @return Số lượt xem trong ngày
+     */
+    public Long countTodayViews() {
+        return readingHistoryRepository.countTodayViews();
     }
 
     /**

@@ -174,9 +174,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({chapterId, mangaId}) => 
                     </div>
                 ) : (
                     <>
-                        <div className="text-sm text-gray-400 mb-4">
-                            Hiển thị {safeComments.length} / {totalElements} bình luận
-                        </div>
+
                         {safeComments.map((comment) => (
                             <div key={comment.id} className="bg-gray-700 rounded-lg p-4">
                                 <div className="flex items-start">

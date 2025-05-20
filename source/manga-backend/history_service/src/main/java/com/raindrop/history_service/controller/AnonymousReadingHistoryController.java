@@ -109,6 +109,36 @@ public class AnonymousReadingHistoryController {
     }
 
     /**
+     * Đếm tổng số lượt xem (mỗi bản ghi là 1 lượt xem chapter)
+     * @return Tổng số lượt xem
+     */
+    @GetMapping("/views/count")
+    public ApiResponse<Long> countTotalViews() {
+        Long count = anonymousReadingHistoryService.countTotalViews();
+
+        return ApiResponse.<Long>builder()
+                .code(1000)
+                .message("Total views counted successfully")
+                .result(count)
+                .build();
+    }
+
+    /**
+     * Đếm số lượt xem trong ngày hôm nay
+     * @return Số lượt xem trong ngày
+     */
+    @GetMapping("/views/today/count")
+    public ApiResponse<Long> countTodayViews() {
+        Long count = anonymousReadingHistoryService.countTodayViews();
+
+        return ApiResponse.<Long>builder()
+                .code(1000)
+                .message("Today views counted successfully")
+                .result(count)
+                .build();
+    }
+
+    /**
      * Đếm số lượng phiên duy nhất đã đọc một manga cụ thể
      * @param mangaId ID của manga
      * @return Số lượng phiên duy nhất

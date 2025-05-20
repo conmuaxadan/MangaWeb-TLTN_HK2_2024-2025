@@ -168,6 +168,26 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  // Xử lý khóa/mở khóa tài khoản
+  const handleToggleUserStatus = async (username: string, enabled: boolean) => {
+    // Tìm user để lấy userId
+    const user = users.find(u => u.username === username);
+    if (!user) return;
+
+    const action = enabled ? "mở khóa" : "khóa";
+    if (window.confirm(`Bạn có chắc chắn muốn ${action} tài khoản ${username}?`)) {
+      try {
+        const updatedUser = await userService.toggleUserStatus(user.id, enabled);
+        if (updatedUser) {
+          // Cập nhật danh sách người dùng
+          setUsers(users.map(u => u.id === user.id ? updatedUser : u));
+        }
+      } catch (error) {
+        console.error(`Lỗi khi ${action} tài khoản ${username}:`, error);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -257,6 +277,7 @@ const UserManagement: React.FC = () => {
         users={currentUsers}
         onEdit={handleEditUser}
         onDelete={handleDeleteUser}
+        onToggleStatus={handleToggleUserStatus}
         loading={isLoading}
       />
 

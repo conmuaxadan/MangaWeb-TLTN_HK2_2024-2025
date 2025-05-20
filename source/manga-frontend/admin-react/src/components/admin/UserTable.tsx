@@ -1,16 +1,17 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
 import { UserResponse } from '../../interfaces/models/auth';
 
 interface UserTableProps {
   users: UserResponse[];
   onEdit: (user: UserResponse) => void;
   onDelete: (userId: string, username: string) => void;
+  onToggleStatus?: (username: string, enabled: boolean) => void;
   loading?: boolean;
 }
 
-const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete, loading = false }) => {
+const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete, onToggleStatus, loading = false }) => {
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex justify-center items-center h-64">
@@ -56,6 +57,9 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete, loading 
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Nhà cung cấp
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Trạng thái
               </th>
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Thao tác
@@ -121,7 +125,27 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete, loading 
                     {user.authProvider || 'LOCAL'}
                   </span>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      user.enabled !== false
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    }`}
+                  >
+                    {user.enabled !== false ? 'Hoạt động' : 'Bị khóa'}
+                  </span>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  {onToggleStatus && (
+                    <button
+                      className={`${user.enabled !== false ? 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300' : 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300'} mr-3`}
+                      onClick={() => onToggleStatus(user.username, !user.enabled)}
+                      title={user.enabled !== false ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
+                    >
+                      <FontAwesomeIcon icon={user.enabled !== false ? faLock : faLockOpen} />
+                    </button>
+                  )}
                   <button
                     className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3"
                     onClick={() => onEdit(user)}

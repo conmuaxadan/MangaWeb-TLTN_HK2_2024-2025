@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUsers,
@@ -7,26 +7,43 @@ import {
   faComment,
   faHeart,
   faChartLine,
-  faCalendarAlt
+  faCalendarAlt,
+  faSpinner,
+  faTrash,
+  faCheckCircle
 } from '@fortawesome/free-solid-svg-icons';
+import statisticsService from '../../services/statistics-service';
+import mangaService from '../../services/manga-service';
 
 const Statistics: React.FC = () => {
   // State cho tab thống kê
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'mangas' | 'views'>('overview');
 
-  // Dữ liệu mẫu cho thống kê
-  const stats = {
+  // State cho trạng thái loading
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // State cho dữ liệu thống kê
+  const [stats, setStats] = useState({
+    // State cho thống kê chi tiết về truyện
+    mangaStats: {
+      totalMangas: 0,
+      activeMangas: 0,
+      deletedMangas: 0,
+      newMangasToday: 0,
+      mangasByGenre: {} as Record<string, number>,
+      mangasByStatus: {} as Record<string, number>
+    },
     overview: {
-      totalUsers: 1250,
-      totalMangas: 450,
-      totalViews: 1250000,
-      totalComments: 8750,
-      totalFavorites: 15600,
-      newUsersToday: 25,
-      newMangasToday: 5,
-      viewsToday: 12500,
-      commentsToday: 120,
-      favoritesToday: 230
+      totalUsers: 0,
+      totalMangas: 0,
+      totalViews: 0,
+      totalComments: 0,
+      totalFavorites: 0,
+      newUsersToday: 0,
+      newMangasToday: 0,
+      viewsToday: 0,
+      commentsToday: 0,
+      favoritesToday: 0
     },
     users: {
       totalUsers: 1250,
@@ -83,10 +100,10 @@ const Statistics: React.FC = () => {
       ]
     },
     views: {
-      totalViews: 1250000,
-      viewsToday: 12500,
-      viewsThisWeek: 87500,
-      viewsThisMonth: 350000,
+      totalViews: 0,
+      viewsToday: 0,
+      viewsThisWeek: 0,
+      viewsThisMonth: 0,
       viewsByDay: [
         { date: '2023-05-01', views: 10000 },
         { date: '2023-05-02', views: 12500 },
@@ -97,7 +114,61 @@ const Statistics: React.FC = () => {
         { date: '2023-05-07', views: 12500 }
       ]
     }
-  };
+  });
+
+  // Lấy dữ liệu thống kê khi component được mount
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      setLoading(true);
+      try {
+        // Lấy thống kê tổng quan
+        const overviewStats = await statisticsService.getOverviewStatistics();
+        if (overviewStats) {
+          setStats(prevStats => ({
+            ...prevStats,
+            overview: {
+              ...prevStats.overview,
+              totalUsers: overviewStats.totalUsers,
+              totalMangas: overviewStats.totalMangas,
+              totalViews: overviewStats.totalViews,
+              totalComments: overviewStats.totalComments,
+              totalFavorites: overviewStats.totalFavorites,
+              newUsersToday: overviewStats.newUsersToday,
+              newMangasToday: overviewStats.newMangasToday,
+              viewsToday: overviewStats.viewsToday,
+              commentsToday: overviewStats.commentsToday,
+              favoritesToday: overviewStats.favoritesToday
+            },
+            views: {
+              ...prevStats.views,
+              totalViews: overviewStats.totalViews,
+              viewsToday: overviewStats.viewsToday
+            }
+          }));
+        }
+
+        // Lấy thống kê chi tiết về truyện
+        const mangaStatistics = await mangaService.getMangaStatistics();
+        if (mangaStatistics) {
+          setStats(prevStats => ({
+            ...prevStats,
+            mangaStats: mangaStatistics,
+            mangas: {
+              ...prevStats.mangas,
+              totalMangas: mangaStatistics.activeMangas,
+              newMangasToday: mangaStatistics.newMangasToday
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy thống kê:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStatistics();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -163,247 +234,337 @@ const Statistics: React.FC = () => {
 
       {/* Tab Content */}
       <div className="mt-4">
-        {/* Overview Tab */}
-        {activeTab === 'overview' && (
-          <div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-6">
-              <StatsCard
-                title="Tổng người dùng"
-                value={stats.overview.totalUsers}
-                increase={stats.overview.newUsersToday}
-                icon={faUsers}
-                color="bg-blue-500"
-              />
-              <StatsCard
-                title="Tổng truyện"
-                value={stats.overview.totalMangas}
-                increase={stats.overview.newMangasToday}
-                icon={faBook}
-                color="bg-purple-500"
-              />
-              <StatsCard
-                title="Tổng lượt xem"
-                value={stats.overview.totalViews}
-                increase={stats.overview.viewsToday}
-                icon={faEye}
-                color="bg-green-500"
-              />
-              <StatsCard
-                title="Tổng bình luận"
-                value={stats.overview.totalComments}
-                increase={stats.overview.commentsToday}
-                icon={faComment}
-                color="bg-yellow-500"
-              />
-              <StatsCard
-                title="Tổng yêu thích"
-                value={stats.overview.totalFavorites}
-                increase={stats.overview.favoritesToday}
-                icon={faHeart}
-                color="bg-red-500"
-              />
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Biểu đồ hoạt động</h2>
-              <div className="h-80 flex items-center justify-center">
-                <div className="text-center text-gray-500 dark:text-gray-400">
-                  <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
-                  <p>Biểu đồ hoạt động sẽ được hiển thị ở đây</p>
-                </div>
-              </div>
-            </div>
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
+            Đang tải thông tin thống kê...
           </div>
-        )}
+        ) : (
+          <>
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+              <div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-6">
+                  <StatsCard
+                    title="Tổng người dùng"
+                    value={stats.overview.totalUsers}
+                    increase={stats.overview.newUsersToday}
+                    icon={faUsers}
+                    color="bg-blue-500"
+                  />
+                  <StatsCard
+                    title="Tổng truyện"
+                    value={stats.overview.totalMangas}
+                    increase={stats.overview.newMangasToday}
+                    icon={faBook}
+                    color="bg-purple-500"
+                  />
+                  <StatsCard
+                    title="Tổng lượt xem"
+                    value={stats.overview.totalViews}
+                    increase={stats.overview.viewsToday}
+                    icon={faEye}
+                    color="bg-green-500"
+                  />
+                  <StatsCard
+                    title="Tổng bình luận"
+                    value={stats.overview.totalComments}
+                    increase={stats.overview.commentsToday}
+                    icon={faComment}
+                    color="bg-yellow-500"
+                  />
+                  <StatsCard
+                    title="Tổng yêu thích"
+                    value={stats.overview.totalFavorites}
+                    increase={stats.overview.favoritesToday}
+                    icon={faHeart}
+                    color="bg-red-500"
+                  />
+                </div>
 
-        {/* Users Tab */}
-        {activeTab === 'users' && (
-          <div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-              <StatsCard
-                title="Tổng người dùng"
-                value={stats.users.totalUsers}
-                icon={faUsers}
-                color="bg-blue-500"
-              />
-              <StatsCard
-                title="Người dùng mới hôm nay"
-                value={stats.users.newUsersToday}
-                icon={faUsers}
-                color="bg-green-500"
-              />
-              <StatsCard
-                title="Người dùng mới tuần này"
-                value={stats.users.newUsersThisWeek}
-                icon={faUsers}
-                color="bg-purple-500"
-              />
-              <StatsCard
-                title="Người dùng mới tháng này"
-                value={stats.users.newUsersThisMonth}
-                icon={faUsers}
-                color="bg-yellow-500"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Người dùng mới theo ngày</h2>
-                <div className="h-80 flex items-center justify-center">
-                  <div className="text-center text-gray-500 dark:text-gray-400">
-                    <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
-                    <p>Biểu đồ người dùng mới theo ngày sẽ được hiển thị ở đây</p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Biểu đồ hoạt động</h2>
+                  <div className="h-80 flex items-center justify-center">
+                    <div className="text-center text-gray-500 dark:text-gray-400">
+                      <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
+                      <p>Biểu đồ hoạt động sẽ được hiển thị ở đây</p>
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
 
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Người dùng theo nhà cung cấp</h2>
-                <div className="h-80 flex items-center justify-center">
-                  <div className="text-center text-gray-500 dark:text-gray-400">
-                    <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
-                    <p>Biểu đồ người dùng theo nhà cung cấp sẽ được hiển thị ở đây</p>
+            {/* Users Tab */}
+            {activeTab === 'users' && (
+              <div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+                  <StatsCard
+                    title="Tổng người dùng"
+                    value={stats.users.totalUsers}
+                    icon={faUsers}
+                    color="bg-blue-500"
+                  />
+                  <StatsCard
+                    title="Người dùng mới hôm nay"
+                    value={stats.users.newUsersToday}
+                    icon={faUsers}
+                    color="bg-green-500"
+                  />
+                  <StatsCard
+                    title="Người dùng mới tuần này"
+                    value={stats.users.newUsersThisWeek}
+                    icon={faUsers}
+                    color="bg-purple-500"
+                  />
+                  <StatsCard
+                    title="Người dùng mới tháng này"
+                    value={stats.users.newUsersThisMonth}
+                    icon={faUsers}
+                    color="bg-yellow-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Người dùng mới theo ngày</h2>
+                    <div className="h-80 flex items-center justify-center">
+                      <div className="text-center text-gray-500 dark:text-gray-400">
+                        <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
+                        <p>Biểu đồ người dùng mới theo ngày sẽ được hiển thị ở đây</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Người dùng theo phương thức đăng nhập</h2>
+                    <div className="h-80 flex items-center justify-center">
+                      <div className="text-center text-gray-500 dark:text-gray-400">
+                        <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
+                        <p>Biểu đồ người dùng theo phương thức đăng nhập sẽ được hiển thị ở đây</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* Mangas Tab */}
-        {activeTab === 'mangas' && (
-          <div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-              <StatsCard
-                title="Tổng truyện"
-                value={stats.mangas.totalMangas}
-                icon={faBook}
-                color="bg-purple-500"
-              />
-              <StatsCard
-                title="Truyện mới hôm nay"
-                value={stats.mangas.newMangasToday}
-                icon={faBook}
-                color="bg-green-500"
-              />
-              <StatsCard
-                title="Truyện mới tuần này"
-                value={stats.mangas.newMangasThisWeek}
-                icon={faBook}
-                color="bg-blue-500"
-              />
-              <StatsCard
-                title="Truyện mới tháng này"
-                value={stats.mangas.newMangasThisMonth}
-                icon={faBook}
-                color="bg-yellow-500"
-              />
-            </div>
+            {/* Mangas Tab */}
+            {activeTab === 'mangas' && (
+              <div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-6">
+                  <StatsCard
+                    title="Tổng truyện"
+                    value={stats.mangaStats.totalMangas}
+                    icon={faBook}
+                    color="bg-purple-500"
+                  />
+                  <StatsCard
+                    title="Truyện hoạt động"
+                    value={stats.mangaStats.activeMangas}
+                    icon={faCheckCircle}
+                    color="bg-green-500"
+                  />
+                  <StatsCard
+                    title="Truyện đã xóa"
+                    value={stats.mangaStats.deletedMangas}
+                    icon={faTrash}
+                    color="bg-red-500"
+                  />
+                  <StatsCard
+                    title="Truyện mới hôm nay"
+                    value={stats.mangaStats.newMangasToday}
+                    icon={faBook}
+                    color="bg-blue-500"
+                  />
+                  <StatsCard
+                    title="Truyện đang tiến hành"
+                    value={stats.mangaStats.mangasByStatus['ONGOING'] || 0}
+                    icon={faBook}
+                    color="bg-yellow-500"
+                  />
+                  <StatsCard
+                    title="Truyện hoàn thành"
+                    value={stats.mangaStats.mangasByStatus['COMPLETED'] || 0}
+                    icon={faBook}
+                    color="bg-teal-500"
+                  />
+                </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Truyện theo thể loại</h2>
-                <div className="h-80 flex items-center justify-center">
-                  <div className="text-center text-gray-500 dark:text-gray-400">
-                    <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
-                    <p>Biểu đồ truyện theo thể loại sẽ được hiển thị ở đây</p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Truyện theo thể loại</h2>
+                    {Object.keys(stats.mangaStats.mangasByGenre).length > 0 ? (
+                      <div className="overflow-auto max-h-80">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                          <thead className="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Thể loại
+                              </th>
+                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Số lượng truyện
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {Object.entries(stats.mangaStats.mangasByGenre)
+                              .sort(([, countA], [, countB]) => (countB as number) - (countA as number))
+                              .map(([genre, count]) => (
+                                <tr key={genre} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                    {genre}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                    {count}
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="h-80 flex items-center justify-center">
+                        <div className="text-center text-gray-500 dark:text-gray-400">
+                          <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
+                          <p>Không có dữ liệu về thể loại</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Truyện theo trạng thái</h2>
+                    {Object.keys(stats.mangaStats.mangasByStatus).length > 0 ? (
+                      <div className="overflow-auto max-h-80">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                          <thead className="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Trạng thái
+                              </th>
+                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Số lượng truyện
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {Object.entries(stats.mangaStats.mangasByStatus).map(([status, count]) => {
+                              // Chuyển đổi trạng thái sang tên hiển thị
+                              const statusDisplayName = {
+                                'ONGOING': 'Đang tiến hành',
+                                'COMPLETED': 'Hoàn thành',
+                                'PAUSED': 'Tạm ngưng'
+                              }[status] || status;
+
+                              return (
+                                <tr key={status} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                    {statusDisplayName}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                    {count}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="h-80 flex items-center justify-center">
+                        <div className="text-center text-gray-500 dark:text-gray-400">
+                          <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
+                          <p>Không có dữ liệu về trạng thái</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Truyện được xem nhiều nhất</h2>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                      <thead className="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Tên truyện
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Lượt xem
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {stats.mangas.mostViewedMangas.map((manga) => (
+                          <tr key={manga.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                              {manga.title}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                              {manga.views.toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
+            )}
 
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Truyện theo trạng thái</h2>
-                <div className="h-80 flex items-center justify-center">
-                  <div className="text-center text-gray-500 dark:text-gray-400">
-                    <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
-                    <p>Biểu đồ truyện theo trạng thái sẽ được hiển thị ở đây</p>
+            {/* Views Tab */}
+            {activeTab === 'views' && (
+              <div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+                  <StatsCard
+                    title="Tổng lượt xem"
+                    value={stats.views.totalViews}
+                    icon={faEye}
+                    color="bg-green-500"
+                  />
+                  <StatsCard
+                    title="Lượt xem hôm nay"
+                    value={stats.views.viewsToday}
+                    icon={faEye}
+                    color="bg-blue-500"
+                  />
+                  <StatsCard
+                    title="Lượt xem tuần này"
+                    value={stats.views.viewsThisWeek}
+                    icon={faEye}
+                    color="bg-purple-500"
+                  />
+                  <StatsCard
+                    title="Lượt xem tháng này"
+                    value={stats.views.viewsThisMonth}
+                    icon={faEye}
+                    color="bg-yellow-500"
+                  />
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Lượt xem theo ngày</h2>
+                    <div className="flex items-center space-x-2">
+                      <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-500 dark:text-gray-400" />
+                      <select className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                        <option value="7">7 ngày qua</option>
+                        <option value="30">30 ngày qua</option>
+                        <option value="90">90 ngày qua</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="h-80 flex items-center justify-center">
+                    <div className="text-center text-gray-500 dark:text-gray-400">
+                      <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
+                      <p>Biểu đồ lượt xem theo ngày sẽ được hiển thị ở đây</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Truyện được xem nhiều nhất</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Tên truyện
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Lượt xem
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {stats.mangas.mostViewedMangas.map((manga) => (
-                      <tr key={manga.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                          {manga.title}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                          {manga.views.toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Views Tab */}
-        {activeTab === 'views' && (
-          <div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-              <StatsCard
-                title="Tổng lượt xem"
-                value={stats.views.totalViews}
-                icon={faEye}
-                color="bg-green-500"
-              />
-              <StatsCard
-                title="Lượt xem hôm nay"
-                value={stats.views.viewsToday}
-                icon={faEye}
-                color="bg-blue-500"
-              />
-              <StatsCard
-                title="Lượt xem tuần này"
-                value={stats.views.viewsThisWeek}
-                icon={faEye}
-                color="bg-purple-500"
-              />
-              <StatsCard
-                title="Lượt xem tháng này"
-                value={stats.views.viewsThisMonth}
-                icon={faEye}
-                color="bg-yellow-500"
-              />
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Lượt xem theo ngày</h2>
-                <div className="flex items-center space-x-2">
-                  <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-500 dark:text-gray-400" />
-                  <select className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
-                    <option value="7">7 ngày qua</option>
-                    <option value="30">30 ngày qua</option>
-                    <option value="90">90 ngày qua</option>
-                  </select>
-                </div>
-              </div>
-              <div className="h-80 flex items-center justify-center">
-                <div className="text-center text-gray-500 dark:text-gray-400">
-                  <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
-                  <p>Biểu đồ lượt xem theo ngày sẽ được hiển thị ở đây</p>
-                </div>
-              </div>
-            </div>
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>

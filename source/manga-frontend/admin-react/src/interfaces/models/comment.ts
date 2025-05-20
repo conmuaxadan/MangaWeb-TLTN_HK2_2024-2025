@@ -4,12 +4,14 @@ export interface CommentResponse {
   content: string;
   userId: string;
   username: string;
+  displayName?: string; // Thêm trường displayName
   chapterId: string;
   mangaId: string;
   mangaTitle: string;
   chapterTitle: string;
   chapterNumber: string;
   userAvatarUrl?: string;
+  userEnabled?: boolean; // Trạng thái tài khoản của người dùng
   createdAt: string;
   updatedAt: string;
 }

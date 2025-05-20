@@ -6,6 +6,7 @@ import {
     ChapterResponse,
     PageResponse,
     MangaSummaryResponse,
+    MangaStatisticsResponse,
     AdvancedSearchRequest
 } from "../interfaces/models/manga";
 import { logApiCall } from "../utils/api-logger";
@@ -784,6 +785,51 @@ class MangaService {
         } catch (error) {
             console.error(`Lỗi lấy số chapter cao nhất của truyện ${mangaId}:`, error);
             return 0;
+        }
+    }
+
+    /**
+     * Đếm tổng số truyện trong hệ thống
+     * @param includeDeleted Có bao gồm truyện đã xóa hay không (mặc định là false)
+     * @returns Tổng số truyện hoặc 0 nếu thất bại
+     */
+    async countMangas(includeDeleted: boolean = false): Promise<number> {
+        logApiCall('countMangas');
+        try {
+            const apiResponse = await mangaHttpClient.get<ApiResponse<number>>(`/mangas/count?includeDeleted=${includeDeleted}`);
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể đếm tổng số truyện", { position: "top-right" });
+                return 0;
+            }
+
+            console.log(`Tổng số truyện (includeDeleted=${includeDeleted}):`, apiResponse.result);
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi đếm tổng số truyện:`, error);
+            return 0;
+        }
+    }
+
+    /**
+     * Lấy thống kê tổng hợp về truyện
+     * @returns Thống kê tổng hợp về truyện hoặc null nếu thất bại
+     */
+    async getMangaStatistics(): Promise<MangaStatisticsResponse | null> {
+        logApiCall('getMangaStatistics');
+        try {
+            const apiResponse = await mangaHttpClient.get<ApiResponse<MangaStatisticsResponse>>('/mangas/statistics');
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể lấy thống kê truyện", { position: "top-right" });
+                return null;
+            }
+
+            console.log(`Thống kê truyện:`, apiResponse.result);
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi lấy thống kê truyện:`, error);
+            return null;
         }
     }
 }

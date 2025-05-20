@@ -3,6 +3,7 @@ package com.raindrop.manga_service.service;
 import com.raindrop.manga_service.dto.request.AdvancedSearchRequest;
 import com.raindrop.manga_service.dto.request.MangaRequest;
 import com.raindrop.manga_service.dto.response.MangaResponse;
+import com.raindrop.manga_service.dto.response.MangaStatisticsResponse;
 import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
 import com.raindrop.manga_service.entity.Chapter;
 import com.raindrop.manga_service.entity.Genre;
@@ -29,6 +30,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.Comparator;
@@ -531,6 +533,86 @@ public class MangaService {
                 .orElse(0);
 
         log.info("Highest chapter number for manga {} is {}", mangaId, highestChapterNumber);
+
         return highestChapterNumber;
+    }
+
+    /**
+     * Đếm tổng số truyện trong hệ thống
+     * @param includeDeleted Có bao gồm truyện đã xóa hay không
+     * @return Tổng số truyện
+     */
+    public Long countMangas(boolean includeDeleted) {
+        log.info("Counting mangas with includeDeleted={}", includeDeleted);
+
+        if (includeDeleted) {
+            // Đếm tất cả truyện (bao gồm cả đã xóa)
+            return mangaRepository.count();
+        } else {
+            // Đếm chỉ truyện chưa xóa
+            return (long) mangaRepository.findByDeletedFalse().size();
+        }
+    }
+
+    /**
+     * Lấy thống kê tổng hợp về truyện
+     * @return Thống kê tổng hợp về truyện
+     */
+    public MangaStatisticsResponse getMangaStatistics() {
+        log.info("Getting manga statistics");
+
+        // Đếm tổng số truyện
+        long totalMangas = mangaRepository.count();
+
+        // Đếm số truyện chưa bị xóa
+        long activeMangas = mangaRepository.findByDeletedFalse().size();
+
+        // Đếm số truyện đã bị xóa
+        long deletedMangas = mangaRepository.findByDeletedTrue().size();
+
+        // Đếm số truyện mới thêm trong ngày hôm nay
+        LocalDate today = LocalDate.now();
+        long newMangasToday = mangaRepository.findByDeletedFalse().stream()
+                .filter(manga -> {
+                    if (manga.getCreatedAt() == null) return false;
+                    // Lấy LocalDate trực tiếp từ LocalDateTime
+                    LocalDate createdDate = manga.getCreatedAt().toLocalDate();
+                    return createdDate.isEqual(today);
+                })
+                .count();
+
+        // Đếm số truyện theo thể loại
+        Map<String, Long> mangasByGenre = new HashMap<>();
+        List<String> genreNames = mangaRepository.findAllGenreNames();
+        for (String genreName : genreNames) {
+            // Đếm số truyện có thể loại này
+            long count = mangaRepository.findByDeletedFalse().stream()
+                    .filter(manga -> manga.getGenres().stream()
+                            .anyMatch(genre -> genre.getName().equals(genreName)))
+                    .count();
+            mangasByGenre.put(genreName, count);
+        }
+
+        // Đếm số truyện theo trạng thái
+        Map<String, Long> mangasByStatus = new HashMap<>();
+        mangasByStatus.put("ONGOING", mangaRepository.findByDeletedFalse().stream()
+                .filter(manga -> "ONGOING".equals(manga.getStatus()))
+                .count());
+        mangasByStatus.put("COMPLETED", mangaRepository.findByDeletedFalse().stream()
+                .filter(manga -> "COMPLETED".equals(manga.getStatus()))
+                .count());
+        mangasByStatus.put("PAUSED", mangaRepository.findByDeletedFalse().stream()
+                .filter(manga -> "PAUSED".equals(manga.getStatus()))
+                .count());
+
+        // Tạo response
+        return MangaStatisticsResponse.builder()
+                .totalMangas(totalMangas)
+                .activeMangas(activeMangas)
+                .deletedMangas(deletedMangas)
+                .newMangasToday(newMangasToday)
+                .mangasByGenre(mangasByGenre)
+                .mangasByStatus(mangasByStatus)
+                .build();
     }
 }

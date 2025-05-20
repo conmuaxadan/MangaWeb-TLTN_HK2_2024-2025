@@ -192,19 +192,28 @@ class HistoryService {
             };
 
             console.log('Sending anonymous reading history request:', request);
+            console.log('API endpoint:', `${API_CONFIG.BASE_URL}/history/anonymous-reading-histories`);
 
-            const apiResponse = await historyHttpClient.post<ApiResponse<AnonymousReadingHistoryResponse>>(
-                '/anonymous-reading-histories',
-                request
-            );
+            let apiResponse;
+            try {
+                apiResponse = await historyHttpClient.post<ApiResponse<AnonymousReadingHistoryResponse>>(
+                    '/anonymous-reading-histories',
+                    request
+                );
 
-            if (apiResponse.code !== 1000) {
-                console.error(apiResponse.message || "Không thể đánh dấu đã đọc chapter cho người dùng không đăng nhập");
+                console.log('Anonymous reading history API response:', apiResponse);
+
+                if (apiResponse.code !== 1000) {
+                    console.error(apiResponse.message || "Không thể đánh dấu đã đọc chapter cho người dùng không đăng nhập");
+                    return null;
+                }
+
+                console.log('Lưu lịch sử đọc ẩn danh thành công:', apiResponse.result);
+                return apiResponse.result;
+            } catch (apiError) {
+                console.error('API error when sending anonymous reading history:', apiError);
                 return null;
             }
-
-            console.log('Lưu lịch sử đọc ẩn danh thành công:', apiResponse.result);
-            return apiResponse.result;
         } catch (error) {
             console.error(`Lỗi đánh dấu đã đọc chapter ${chapterId} của manga ${mangaId} cho phiên ${sessionId}:`, error);
             return null;

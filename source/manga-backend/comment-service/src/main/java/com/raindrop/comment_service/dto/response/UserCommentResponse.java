@@ -15,4 +15,5 @@ import lombok.experimental.FieldDefaults;
 public class UserCommentResponse {
     String displayName;
     String avatarUrl;
+    Boolean enabled; // Thêm trường enabled để biết trạng thái tài khoản
 }

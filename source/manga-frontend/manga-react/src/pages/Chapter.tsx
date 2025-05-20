@@ -59,6 +59,9 @@ const Chapter: React.FC = () => {
     console.log('Using session ID:', storedSessionId);
   }, []);
 
+  // State để theo dõi việc đã gửi lịch sử đọc hay chưa
+  const [hasRecordedHistory, setHasRecordedHistory] = useState<boolean>(false);
+
   // Xử lý ẩn/hiện thanh điều hướng khi cuộn và theo dõi tiến trình đọc
   useEffect(() => {
     const handleScroll = () => {
@@ -70,6 +73,43 @@ const Chapter: React.FC = () => {
       const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
       const scrollPercent = Math.round((window.scrollY / docHeight) * 100);
       setScrollPercentage(scrollPercent);
+
+      // Gửi lịch sử đọc khi người dùng đã cuộn qua hơn 50% và chưa gửi trước đó
+      if (scrollPercent > 50 && !hasRecordedHistory && id && chapter) {
+        console.log('Người dùng đã cuộn qua 50% của chapter, gửi lịch sử đọc');
+
+        // Đánh dấu đã gửi để không gửi lại
+        setHasRecordedHistory(true);
+
+        // Đảm bảo có sessionId bằng cách lấy từ nhiều nguồn
+        let currentSessionId = sessionId || localStorage.getItem('manga_session_id') || sessionService.getSessionId();
+
+        console.log('Using sessionId for anonymous reading history:', {
+          'sessionId from state': sessionId,
+          'sessionId from localStorage': localStorage.getItem('manga_session_id'),
+          'sessionId from service': sessionService.getSessionId(),
+          'final sessionId used': currentSessionId
+        });
+
+        // Xử lý lưu lịch sử đọc
+        if (isLogin) {
+          // Người dùng đã đăng nhập
+          historyService.markAsRead(id, chapter.id)
+            .then(() => console.log('Lưu lịch sử đọc thành công sau khi cuộn qua 50%'))
+            .catch(err => console.error('Lỗi khi lưu lịch sử đọc:', err));
+        } else if (currentSessionId) {
+          // Người dùng không đăng nhập, sử dụng sessionId
+          historyService.markAnonymousRead(id, chapter.id, currentSessionId)
+            .then(result => {
+              if (result) {
+                console.log('Lưu lịch sử đọc ẩn danh thành công sau khi cuộn qua 50%');
+              } else {
+                console.error('Lưu lịch sử đọc ẩn danh thất bại: API trả về null');
+              }
+            })
+            .catch(err => console.error('Lỗi khi lưu lịch sử đọc ẩn danh:', err));
+        }
+      }
 
       if (scrollingDown && !nearBottom && currentScrollY > 100) {
         // Cuộn xuống và không gần cuối trang -> ẩn navbar
@@ -114,7 +154,7 @@ const Chapter: React.FC = () => {
       window.removeEventListener('scroll', handleScroll);
       document.body.classList.remove('reading-mode');
     };
-  }, [lastScrollY, pages, currentPage, isLogin, id, chapterId]);
+  }, [lastScrollY, pages, currentPage, isLogin, id, chapterId, chapter, hasRecordedHistory, sessionId]);
 
   // Lưu trữ tất cả các chapter để sử dụng cho nút "Chương đầu tiên"
   const [chapters, setChapters] = useState<ChapterResponse[]>([]);
@@ -122,10 +162,13 @@ const Chapter: React.FC = () => {
   // Đã loại bỏ việc gọi API tăng lượt xem khi người dùng cuộn trang
   // Vì chúng ta sẽ chỉ gọi API tăng lượt xem một lần khi mở chapter
 
-  // Cuộn lên đầu trang khi chuyển giữa các chapter
+  // Cuộn lên đầu trang và reset trạng thái khi chuyển giữa các chapter
   useEffect(() => {
     // Tự động cuộn lên đầu trang khi chapterId thay đổi
     window.scrollTo(0, 0);
+
+    // Reset trạng thái đã ghi lịch sử đọc khi chuyển chapter
+    setHasRecordedHistory(false);
   }, [chapterId]);
 
   // Xử lý điều hướng bằng phím mũi tên
@@ -253,31 +296,8 @@ const Chapter: React.FC = () => {
             'Kiểm tra sessionId': !!currentSessionId
           });
 
-          // Xử lý lưu lịch sử đọc
-          if (isLogin && id) {
-            // Người dùng đã đăng nhập
-            try {
-              await historyService.markAsRead(id, currentChapter.id);
-              console.log('Lưu lịch sử đọc và tăng lượt xem thành công cho chapter ID:', currentChapter.id);
-            } catch (readErr) {
-              console.error('Lỗi khi lưu lịch sử đọc:', readErr);
-            }
-          } else if (id && currentSessionId) {
-            // Người dùng không đăng nhập, sử dụng sessionId
-            try {
-              console.log('Gọi API markAnonymousRead với sessionId:', currentSessionId);
-              const result = await historyService.markAnonymousRead(id, currentChapter.id, currentSessionId);
-              if (result) {
-                console.log('Lưu lịch sử đọc ẩn danh thành công:', result);
-              } else {
-                console.error('Lưu lịch sử đọc ẩn danh thất bại: API trả về null');
-              }
-            } catch (readErr) {
-              console.error('Lỗi khi lưu lịch sử đọc ẩn danh:', readErr);
-            }
-          } else {
-            console.log('Không có sessionId hoặc mangaId, không thể lưu lịch sử đọc');
-          }
+          // Lưu lịch sử đọc đã được chuyển sang xử lý khi người dùng cuộn qua 50% của chapter
+          console.log('Chapter đã được tải, lịch sử đọc sẽ được lưu khi người dùng cuộn qua 50%');
         }
 
         setError(null);

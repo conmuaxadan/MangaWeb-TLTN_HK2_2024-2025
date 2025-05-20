@@ -145,7 +145,22 @@ class HttpClient {
                             break; }
                         case 403:
                             // Forbidden
-                            toast.error('Bạn không có quyền thực hiện hành động này.');
+                            // Kiểm tra xem có phải lỗi tài khoản bị khóa không
+                            if (data && data.code === 1007) {
+                                toast.error('Tài khoản của bạn đã bị khóa');
+
+                                // Đăng xuất người dùng
+                                localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
+                                localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
+                                localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
+
+                                // Chuyển hướng đến trang đăng nhập
+                                if (!window.location.pathname.includes('/login')) {
+                                    window.location.href = '/login';
+                                }
+                            } else {
+                                toast.error('Bạn không có quyền thực hiện hành động này.');
+                            }
                             break;
                         case 404:
                             // Not found

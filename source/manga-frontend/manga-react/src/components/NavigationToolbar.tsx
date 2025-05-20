@@ -38,7 +38,7 @@ const NavigationToolbar: React.FC = () => {
     };
   }, []);
   return (
-    <div className="hidden md:block bg-gray-100 rounded-lg shadow-md mb-6">
+    <div className="hidden md:block bg-white rounded-lg shadow-md mb-6 border border-gray-200">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center space-x-6">
           <Link

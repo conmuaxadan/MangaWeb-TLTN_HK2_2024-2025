@@ -72,16 +72,19 @@ public class CommentService {
             var userComment = userClient.getUserProfile(comment.getUserId());
             if (userComment != null && userComment.getResult() != null) {
                 UserCommentResponse userProfile = userComment.getResult();
-                response.setUsername(userProfile.getDisplayName());
+                response.setDisplayName(userProfile.getDisplayName());
                 response.setUserAvatarUrl(userProfile.getAvatarUrl());
+                response.setUserEnabled(userProfile.getEnabled()); // Thêm trạng thái tài khoản
             } else {
                 // Nếu không tìm thấy profile, sử dụng userId làm username
-                response.setUsername("User_" + comment.getUserId().substring(0, Math.min(8, comment.getUserId().length())));
+                response.setDisplayName("User_" + comment.getUserId().substring(0, Math.min(8, comment.getUserId().length())));
+                response.setUserEnabled(true); // Mặc định là true nếu không có thông tin
             }
         } catch (Exception e) {
             log.error("Error getting user profile for user {}: {}", comment.getUserId(), e.getMessage());
             // Nếu có lỗi, sử dụng userId làm username
-            response.setUsername("User_" + comment.getUserId().substring(0, Math.min(8, comment.getUserId().length())));
+            response.setDisplayName("User_" + comment.getUserId().substring(0, Math.min(8, comment.getUserId().length())));
+            response.setUserEnabled(true); // Mặc định là true nếu không có thông tin
         }
 
         // Lấy thông tin chapter từ manga-service

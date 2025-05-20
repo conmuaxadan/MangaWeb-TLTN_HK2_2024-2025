@@ -62,46 +62,53 @@ const statisticsService = {
                 console.error('Lỗi khi lấy thông tin người dùng:', error);
             }
 
-            // Lấy tổng số truyện và số truyện mới trong ngày
+            // Lấy thống kê về truyện
             try {
-                // Lấy tổng số truyện
-                const mangasResponse = await mangaService.searchManga('', 0, 1);
-                console.log('Kết quả lấy tổng số truyện:', mangasResponse);
-                if (mangasResponse && mangasResponse.totalElements !== undefined) {
-                    stats.totalMangas = mangasResponse.totalElements;
-                }
+                // Sử dụng API mới để lấy thống kê tổng hợp về truyện
+                const mangaStats = await mangaService.getMangaStatistics();
+                console.log('Kết quả lấy thống kê truyện:', mangaStats);
 
-                // Lấy danh sách truyện mới nhất để đếm số truyện mới trong ngày
-                const recentMangas = await mangaService.searchManga('', 0, 20);
-                if (recentMangas && recentMangas.content) {
-                    // Lấy ngày hiện tại (không bao gồm giờ, phút, giây)
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
+                if (mangaStats) {
+                    // Cập nhật thống kê tổng số truyện và số truyện mới trong ngày
+                    stats.totalMangas = mangaStats.activeMangas; // Chỉ đếm truyện chưa bị xóa
+                    stats.newMangasToday = mangaStats.newMangasToday;
 
-                    // Đếm số truyện có ngày tạo là ngày hôm nay
-                    const newMangasToday = recentMangas.content.filter(manga => {
-                        if (!manga.createdAt) return false;
-                        const createdDate = new Date(manga.createdAt);
-                        return createdDate >= today;
-                    }).length;
-
-                    stats.newMangasToday = newMangasToday;
-                    console.log('Số truyện mới trong ngày:', newMangasToday);
+                    console.log('Tổng số truyện (chưa bị xóa):', mangaStats.activeMangas);
+                    console.log('Số truyện mới trong ngày:', mangaStats.newMangasToday);
+                    console.log('Số truyện đã bị xóa:', mangaStats.deletedMangas);
                 }
             } catch (error) {
-                console.error('Lỗi khi lấy thông tin truyện:', error);
+                console.error('Lỗi khi lấy thống kê truyện:', error);
+
+                // Nếu không lấy được thống kê, thử sử dụng cách cũ để đếm tổng số truyện
+                try {
+                    const mangasResponse = await mangaService.searchManga('', 0, 1);
+                    console.log('Kết quả lấy tổng số truyện (cách cũ):', mangasResponse);
+                    if (mangasResponse && mangasResponse.totalElements !== undefined) {
+                        stats.totalMangas = mangasResponse.totalElements;
+                    }
+                } catch (innerError) {
+                    console.error('Lỗi khi lấy tổng số truyện (cách cũ):', innerError);
+                }
             }
 
-            // Thử lấy tổng lượt xem từ history service
+            // Lấy tổng lượt xem từ history service
             try {
-                // Thử gọi API để lấy tổng lượt xem
-                const viewsResponse = await historyHttpClient.get<ApiResponse<number>>('/anonymous-reading-histories/sessions/count');
+                // Gọi API mới để lấy tổng lượt xem chính xác
+                const viewsResponse = await historyHttpClient.get<ApiResponse<number>>('/view-statistics/total');
                 console.log('Kết quả lấy tổng lượt xem:', viewsResponse);
                 if (viewsResponse && viewsResponse.result !== undefined) {
                     stats.totalViews = viewsResponse.result;
                 }
+
+                // Lấy số lượt xem trong ngày
+                const todayViewsResponse = await historyHttpClient.get<ApiResponse<number>>('/view-statistics/today');
+                console.log('Kết quả lấy lượt xem trong ngày:', todayViewsResponse);
+                if (todayViewsResponse && todayViewsResponse.result !== undefined) {
+                    stats.viewsToday = todayViewsResponse.result;
+                }
             } catch (error) {
-                console.error('Lỗi khi lấy tổng lượt xem:', error);
+                console.error('Lỗi khi lấy thống kê lượt xem:', error);
                 // Giữ nguyên giá trị mặc định nếu gặp lỗi
             }
 

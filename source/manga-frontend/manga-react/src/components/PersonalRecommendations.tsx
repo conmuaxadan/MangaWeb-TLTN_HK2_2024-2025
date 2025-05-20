@@ -6,14 +6,14 @@ import { getMangaImageUrl } from '../utils/file-utils';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { MangaResponse } from '../interfaces/models/manga';
+import { MangaResponse, MangaSummaryResponse } from '../interfaces/models/manga';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import mangaService from '../services/manga-service';
 
 const PersonalRecommendations = () => {
     const { isLogin, user } = useAuth();
-    const [recommendedMangas, setRecommendedMangas] = useState<MangaResponse[]>([]);
+    const [recommendedMangas, setRecommendedMangas] = useState<MangaSummaryResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showSection, setShowSection] = useState(false);
     const [noRecommendations, setNoRecommendations] = useState(false);
@@ -100,9 +100,9 @@ const PersonalRecommendations = () => {
                 >
                     {recommendedMangas.map((manga) => (
                         <SwiperSlide key={manga.id}>
-                            <div className="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                            <div className="group bg-white rounded-lg overflow-hidden transition-all duration-300">
                                 <figure className="clearfix">
-                                    <div className="relative mb-1">
+                                    <div className="relative mb-2">
                                         <a title={manga.title} href={`/mangas/${manga.id}`} className="block">
                                             <div className="relative pb-[150%]">
                                                 <div className="absolute inset-0 w-full h-full overflow-hidden">
@@ -121,7 +121,7 @@ const PersonalRecommendations = () => {
                                                 </div>
                                             </div>
                                             <div className="absolute bottom-0 left-0 z-[2] w-full px-3 py-2">
-                                                <h3 className="mb-1 line-clamp-2 text-sm font-semibold leading-tight text-white transition group-hover:line-clamp-3">
+                                                <h3 className="mb-1 line-clamp-2 text-sm font-semibold leading-tight text-white transition group-hover:line-clamp-4">
                                                     {manga.title}
                                                 </h3>
                                                 <p className="mb-1 text-xs text-gray-300 line-clamp-1">{manga.author || 'Không rõ'}</p>
@@ -139,9 +139,9 @@ const PersonalRecommendations = () => {
                                             </div>
                                         </a>
                                     </div>
-                                    <figcaption className="px-2 pb-2">
-                                        <ul className="flex flex-col gap-0">
-                                            <li className="flex items-center justify-between gap-x-1 text-[10px]">
+                                    <figcaption className="px-3 pb-3 relative z-10 bg-white">
+                                        <ul className="flex flex-col gap-1">
+                                            <li className="flex items-center justify-between gap-x-2 text-xs">
                                                 <a
                                                     title={manga.lastChapterNumber ? `C. ${manga.lastChapterNumber}` : 'Chưa có chapter'}
                                                     className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition visited:text-gray-500 hover:text-purple-600 text-gray-700"
@@ -151,7 +151,7 @@ const PersonalRecommendations = () => {
                                                 >
                                                     {manga.lastChapterNumber ? `C. ${manga.lastChapterNumber}` : 'Chưa có chapter'}
                                                 </a>
-                                                <span className="whitespace-nowrap leading-tight text-gray-400">
+                                                <span className="whitespace-nowrap leading-tight text-gray-500">
                                                     {manga.lastChapterAddedAt
                                                         ? formatDistanceToNow(new Date(manga.lastChapterAddedAt), { locale: vi }).replace('trước', '')
                                                         : 'Chưa cập nhật'}

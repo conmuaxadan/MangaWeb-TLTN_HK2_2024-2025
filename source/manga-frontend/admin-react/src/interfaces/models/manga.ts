@@ -52,6 +52,31 @@ export interface MangaSummaryResponse {
     coverUrl?: string;
     lastChapterId?: string;
     lastChapterAddedAt?: string;
+}
+
+// Manga Statistics Response
+export interface MangaStatisticsResponse {
+    // Tổng số truyện (bao gồm cả đã xóa và chưa xóa)
+    totalMangas: number;
+
+    // Số truyện chưa bị xóa
+    activeMangas: number;
+
+    // Số truyện đã bị xóa
+    deletedMangas: number;
+
+    // Số truyện mới thêm trong ngày hôm nay
+    newMangasToday: number;
+
+    // Số truyện theo thể loại
+    mangasByGenre: Record<string, number>;
+
+    // Số truyện theo trạng thái
+    mangasByStatus: Record<string, number>;
+}
+
+// Thêm các trường cho MangaSummaryResponse
+export interface MangaSummaryResponseExtended extends MangaSummaryResponse {
     lastChapterNumber?: number;
     yearOfRelease?: number;
     status?: MangaStatus;

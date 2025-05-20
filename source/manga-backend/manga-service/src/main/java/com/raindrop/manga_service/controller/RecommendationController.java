@@ -2,6 +2,7 @@ package com.raindrop.manga_service.controller;
 
 import com.raindrop.manga_service.dto.response.ApiResponse;
 import com.raindrop.manga_service.dto.response.MangaResponse;
+import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
 import com.raindrop.manga_service.service.RecommendationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,18 +28,18 @@ public class RecommendationController {
      * @return Danh sách manga được gợi ý
      */
     @GetMapping("/by-genre")
-    public ApiResponse<List<MangaResponse>> getRecommendationsByGenre(
+    public ApiResponse<List<MangaSummaryResponse>> getRecommendationsByGenre(
             @RequestParam String userId,
             @RequestParam(required = false) Integer limit
     ) {
         log.info("Getting recommendations by genre for user: {}, limit: {}", userId, limit);
 
         log.info("Calling recommendationService.getRecommendationsByGenre for user: {}, limit: {}", userId, limit);
-        List<MangaResponse> recommendations = recommendationService.getRecommendationsByGenre(userId, limit);
+        List<MangaSummaryResponse> recommendations = recommendationService.getRecommendationsByGenreSummary(userId, limit);
 
         if (recommendations.isEmpty()) {
             log.info("No recommendations found for user {}", userId);
-            return ApiResponse.<List<MangaResponse>>builder()
+            return ApiResponse.<List<MangaSummaryResponse>>builder()
                     .code(1000)
                     .message("No recommendations found")
                     .result(recommendations)
@@ -48,7 +49,7 @@ public class RecommendationController {
         log.info("Found {} recommendations for user {}", recommendations.size(), userId);
 
         log.info("Returning {} recommendations for user {}", recommendations.size(), userId);
-        return ApiResponse.<List<MangaResponse>>builder()
+        return ApiResponse.<List<MangaSummaryResponse>>builder()
                 .code(1000)
                 .message("Recommendations retrieved successfully")
                 .result(recommendations)

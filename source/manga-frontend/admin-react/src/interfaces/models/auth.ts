@@ -38,6 +38,7 @@ export interface UserResponse {
     authProvider?: string; // LOCAL, GOOGLE, etc.
     createdAt?: string;
     updatedAt?: string;
+    enabled?: boolean; // Trạng thái tài khoản: true = đang hoạt động, false = bị khóa
 }
 
 // User Request (for create/update)
@@ -108,4 +109,10 @@ export interface LinkedAccountResponse {
     email?: string;
     providerUserId?: string;
     linkedAt: string | Date; // Hỗ trợ cả string và Date để tương thích với backend
+}
+
+// Toggle User Status Request
+export interface ToggleUserStatusRequest {
+    userId: string;
+    enabled: boolean;
 }

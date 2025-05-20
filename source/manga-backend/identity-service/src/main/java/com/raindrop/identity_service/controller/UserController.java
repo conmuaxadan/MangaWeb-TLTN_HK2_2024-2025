@@ -2,6 +2,7 @@ package com.raindrop.identity_service.controller;
 
 import com.raindrop.identity_service.dto.request.ChangeDisplayNameRequest;
 import com.raindrop.identity_service.dto.request.ChangePasswordRequest;
+import com.raindrop.identity_service.dto.request.ToggleUserStatusRequest;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.ApiResponse;
 import com.raindrop.identity_service.dto.response.UserCommentResponse;
@@ -194,6 +195,21 @@ public class UserController {
         return ApiResponse.<Void>builder()
                 .code(1000)
                 .message("User updated successfully")
+                .build();
+    }
+
+    /**
+     * Khóa hoặc mở khóa tài khoản người dùng
+     * @param request Yêu cầu thay đổi trạng thái
+     * @return Thông tin người dùng đã cập nhật
+     */
+    @PostMapping("/status")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    ApiResponse<UserResponse> toggleUserStatus(@RequestBody @Valid ToggleUserStatusRequest request) {
+        log.info("Received request to {} user with ID: {}", request.isEnabled() ? "enable" : "disable", request.getUserId());
+        return ApiResponse.<UserResponse>builder()
+                .message("User status updated successfully")
+                .result(userService.toggleUserStatus(request))
                 .build();
     }
 }

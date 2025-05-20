@@ -22,7 +22,12 @@ class AuthService {
             const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/tokens', request);
 
             if (apiResponse.code !== 1000) {
-                toast.error("Thông tin đăng nhập không chính xác", {position: "top-right"});
+                // Xử lý các mã lỗi cụ thể
+                if (apiResponse.code === 1007) {
+                    toast.error("Tài khoản của bạn đã bị khóa", {position: "top-right"});
+                } else {
+                    toast.error("Thông tin đăng nhập không chính xác", {position: "top-right"});
+                }
                 return false;
             }
 
@@ -43,6 +48,16 @@ class AuthService {
             return apiResponse.result;
         } catch (error) {
             console.error("Lỗi đăng nhập:", error);
+
+            // Kiểm tra xem có phải lỗi từ API không
+            if (error.response && error.response.data) {
+                const apiError = error.response.data;
+                if (apiError.code === 1007) {
+                    toast.error("Tài khoản của bạn đã bị khóa", {position: "top-right"});
+                    return false;
+                }
+            }
+
             toast.error("Thông tin đăng nhập không chính xác", {position: "top-right"});
             return false;
         }
@@ -63,7 +78,12 @@ class AuthService {
             const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/google/tokens', request);
 
             if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Đăng nhập Google thất bại", { position: "top-right" });
+                // Xử lý các mã lỗi cụ thể
+                if (apiResponse.code === 1007) {
+                    toast.error("Tài khoản của bạn đã bị khóa", { position: "top-right" });
+                } else {
+                    toast.error(apiResponse.message || "Đăng nhập Google thất bại", { position: "top-right" });
+                }
                 return false;
             }
 
@@ -84,6 +104,17 @@ class AuthService {
             return apiResponse.result;
         } catch (error) {
             console.error("Lỗi đăng nhập Google:", error);
+
+            // Kiểm tra xem có phải lỗi từ API không
+            if (error.response && error.response.data) {
+                const apiError = error.response.data;
+                if (apiError.code === 1007) {
+                    toast.error("Tài khoản của bạn đã bị khóa", {position: "top-right"});
+                    return false;
+                }
+            }
+
+            toast.error("Đăng nhập Google thất bại", {position: "top-right"});
             return false;
         }
     }
@@ -154,6 +185,21 @@ class AuthService {
     async logout(): Promise<boolean> {
         logApiCall('logout');
         try {
+            // Lấy token hiện tại
+            const token = localStorage.getItem(TOKEN_STORAGE.ACCESS_TOKEN);
+
+            // Gọi API logout nếu có token
+            if (token) {
+                try {
+                    console.log('AuthService: Gọi API đăng xuất');
+                    await identityHttpClient.post<ApiResponse<void>>('/auth/tokens/revoke', { token });
+                    console.log('AuthService: Đăng xuất thành công trên server');
+                } catch (apiError) {
+                    console.error('AuthService: Lỗi khi gọi API đăng xuất:', apiError);
+                    // Tiếp tục xử lý ngay cả khi API thất bại
+                }
+            }
+
             // Xóa tất cả các token khỏi localStorage
             localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
             localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
@@ -161,7 +207,11 @@ class AuthService {
             return true;
         } catch (error) {
             console.error("Lỗi đăng xuất:", error);
-            return false;
+            // Vẫn xóa token khỏi localStorage ngay cả khi có lỗi
+            localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
+            localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
+            localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
+            return true; // Vẫn trả về true vì người dùng đã đăng xuất khỏi client
         }
     }
 

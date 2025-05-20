@@ -110,7 +110,13 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                     if (introspectResponseApiResponse.getResult().isValid()) {
                         return chain.filter(exchange);
                     } else {
-                        return unauthenticated(exchange.getResponse());
+                        // Kiểm tra xem có phải lỗi tài khoản bị khóa không
+                        String errorCode = introspectResponseApiResponse.getResult().getErrorCode();
+                        if (errorCode != null && errorCode.equals("1007")) {
+                            return accountLocked(exchange.getResponse());
+                        } else {
+                            return unauthenticated(exchange.getResponse());
+                        }
                     }
                 }).onErrorResume(throwable -> unauthenticated(exchange.getResponse()));
     }
@@ -125,8 +131,13 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         log.info("Checking path: {}", path);
 
         return Arrays.stream(publicEndpoints).anyMatch(endpoint -> {
+            // Nếu endpoint kết thúc bằng "/**", kiểm tra xem path có bắt đầu bằng phần trước "/**" không
+            if (endpoint.endsWith("/**")) {
+                String baseEndpoint = endpoint.substring(0, endpoint.length() - 3);
+                return path.startsWith(apiPrefix + baseEndpoint);
+            }
             // Nếu endpoint kết thúc bằng "/", kiểm tra xem path có bắt đầu bằng endpoint không
-            if (endpoint.endsWith("/")) {
+            else if (endpoint.endsWith("/")) {
                 return path.startsWith(apiPrefix + endpoint);
             }
             // Nếu endpoint là "/upload/files", kiểm tra xem path có bắt đầu bằng "/upload/files/" không
@@ -158,6 +169,22 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             throw new RuntimeException(e);
         }
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
+        response.getHeaders().add(HttpHeaders.CONTENT_TYPE, "application/json");
+        return response.writeWith(Mono.just(response.bufferFactory().wrap(body.getBytes())));
+    }
+
+    Mono<Void> accountLocked(ServerHttpResponse response) {
+        ApiResponse<?> apiResponse = ApiResponse.builder()
+                .code(1007)
+                .message("Tài khoản của bạn đã bị khóa")
+                .build();
+        String body = null;
+        try {
+            body = objectMapper.writeValueAsString(apiResponse);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        response.setStatusCode(HttpStatus.FORBIDDEN);
         response.getHeaders().add(HttpHeaders.CONTENT_TYPE, "application/json");
         return response.writeWith(Mono.just(response.bufferFactory().wrap(body.getBytes())));
     }

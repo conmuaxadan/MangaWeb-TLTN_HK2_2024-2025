@@ -429,7 +429,7 @@ class MangaService {
      * @param limit Số lượng manga gợi ý (mặc định là 6)
      * @returns Danh sách manga được gợi ý hoặc null nếu thất bại
      */
-    async getPersonalRecommendations(limit: number = 6): Promise<MangaResponse[] | null> {
+    async getPersonalRecommendations(limit: number = 6): Promise<MangaSummaryResponse[] | null> {
         logApiCall('getPersonalRecommendations');
         try {
             // Lấy thông tin người dùng hiện tại từ token
@@ -440,7 +440,7 @@ class MangaService {
             }
 
             const url = `/recommendations/by-genre?userId=${currentUser.userId}&limit=${limit}`;
-            const apiResponse = await mangaHttpClient.get<ApiResponse<MangaResponse[]>>(url);
+            const apiResponse = await mangaHttpClient.get<ApiResponse<MangaSummaryResponse[]>>(url);
 
             if (apiResponse.code !== 1000) {
                 console.log(`Lỗi API (${apiResponse.code}): ${apiResponse.message || "Không thể lấy gợi ý manga"}`);

@@ -69,16 +69,19 @@ public class AuthenticationService {
         var token = request.getToken();
         log.debug("Introspecting token");
         boolean valid;
+        String errorCode = null;
         try {
             verifyToken(token);
             valid = true;
             log.debug("Token is valid");
         } catch (AppException e) {
             valid = false;
-            log.debug("Token is invalid: {}", e.getMessage());
+            errorCode = String.valueOf(e.getErrorCode().getCode());
+            log.debug("Token is invalid: {}, error code: {}", e.getMessage(), errorCode);
         }
         return IntrospectResponse.builder()
                 .valid(valid)
+                .errorCode(errorCode)
                 .build();
     }
 
@@ -94,6 +97,12 @@ public class AuthenticationService {
         if (userByUsername.isPresent()) {
             user = userByUsername.get();
 
+            // Kiểm tra trạng thái tài khoản
+            if (!user.isEnabled()) {
+                log.warn("Authentication failed: Account is locked for user {}", usernameOrEmail);
+                throw new AppException(ErrorCode.ACCOUNT_LOCKED);
+            }
+
             // Kiểm tra mật khẩu
             PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
             boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
@@ -107,6 +116,12 @@ public class AuthenticationService {
             if (userByEmail.isPresent()) {
                 user = userByEmail.get();
 
+                // Kiểm tra trạng thái tài khoản
+                if (!user.isEnabled()) {
+                    log.warn("Authentication failed: Account is locked for user {}", usernameOrEmail);
+                    throw new AppException(ErrorCode.ACCOUNT_LOCKED);
+                }
+
                 // Kiểm tra mật khẩu
                 PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
                 boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
@@ -118,6 +133,12 @@ public class AuthenticationService {
             } else {
                 // Tìm trong LinkedAccount
                 user = findUserByLinkedAccount(usernameOrEmail, request.getPassword());
+
+                // Kiểm tra trạng thái tài khoản
+                if (!user.isEnabled()) {
+                    log.warn("Authentication failed: Account is locked for user {}", user.getUsername());
+                    throw new AppException(ErrorCode.ACCOUNT_LOCKED);
+                }
             }
         }
 
@@ -142,6 +163,13 @@ public class AuthenticationService {
             log.warn("Google authentication failed: User not found - {}", request.getUsername());
             return new AppException(ErrorCode.USER_NOT_EXISTED);
         });
+
+        // Kiểm tra trạng thái tài khoản
+        if (!user.isEnabled()) {
+            log.warn("Google authentication failed: Account is locked for user {}", request.getUsername());
+            throw new AppException(ErrorCode.ACCOUNT_LOCKED);
+        }
+
         log.info("Google user authenticated successfully: {}", request.getUsername());
         // Tạo access token
         var accessToken = generateToken(user);
@@ -209,8 +237,28 @@ public class AuthenticationService {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
+        // Kiểm tra trạng thái tài khoản
+        checkAccountStatus(subject);
+
         log.debug("Token verified successfully for user: {}", subject);
         return signedJWT;
+    }
+
+    /**
+     * Kiểm tra trạng thái tài khoản
+     * @param userId ID của người dùng
+     * @throws AppException nếu tài khoản bị khóa
+     */
+    private void checkAccountStatus(String userId) {
+        // Tìm user trong database
+        userRepository.findById(userId).ifPresent(user -> {
+            if (!user.isEnabled()) {
+                log.warn("Token rejected: Account is locked for user {}", user.getUsername());
+                // Thu hồi tất cả refresh token của người dùng
+                tokenRedisService.revokeAllUserRefreshTokens(userId);
+                throw new AppException(ErrorCode.ACCOUNT_LOCKED);
+            }
+        });
     }
 
     private String generateToken(User user) {
@@ -427,6 +475,14 @@ public class AuthenticationService {
                     log.warn("User not found with ID: {}", userId);
                     return new AppException(ErrorCode.USER_NOT_EXISTED);
                 });
+
+        // Kiểm tra trạng thái tài khoản
+        if (!user.isEnabled()) {
+            log.warn("Refresh token rejected: Account is locked for user {}", user.getUsername());
+            // Thu hồi tất cả refresh token của người dùng
+            tokenRedisService.revokeAllUserRefreshTokens(userId);
+            throw new AppException(ErrorCode.ACCOUNT_LOCKED);
+        }
 
         // Tạo access token mới
         String accessToken = generateToken(user);

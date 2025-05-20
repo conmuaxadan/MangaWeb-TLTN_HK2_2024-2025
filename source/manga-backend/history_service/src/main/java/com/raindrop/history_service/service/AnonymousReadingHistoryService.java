@@ -201,4 +201,20 @@ public class AnonymousReadingHistoryService {
     public Long countDistinctSessionsByChapterId(String chapterId) {
         return anonymousReadingHistoryRepository.countDistinctSessionsByChapterId(chapterId);
     }
+
+    /**
+     * Đếm tổng số lượt xem (mỗi bản ghi là 1 lượt xem chapter)
+     * @return Tổng số lượt xem
+     */
+    public Long countTotalViews() {
+        return anonymousReadingHistoryRepository.countTotalViews();
+    }
+
+    /**
+     * Đếm số lượt xem trong ngày hôm nay
+     * @return Số lượt xem trong ngày
+     */
+    public Long countTodayViews() {
+        return anonymousReadingHistoryRepository.countTodayViews();
+    }
 }

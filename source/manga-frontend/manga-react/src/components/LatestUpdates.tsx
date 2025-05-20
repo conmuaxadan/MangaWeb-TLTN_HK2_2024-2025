@@ -103,7 +103,7 @@ const LatestUpdates: React.FC = () => {
             ) : (
                 <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
                     {mangaList.map((manga) => (
-                        <div key={manga.id} className="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                        <div key={manga.id} className="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300" style={{ isolation: 'isolate' }}>
                             <figure className="clearfix">
                                 <div className="relative mb-2">
                                     <a title={manga.title} href={manga.link} className="block">
@@ -142,7 +142,7 @@ const LatestUpdates: React.FC = () => {
                                         </div>
                                     </a>
                                 </div>
-                                <figcaption className="px-3 pb-3">
+                                <figcaption className="px-3 pb-3 relative z-10 bg-white">
                                     <ul className="flex flex-col gap-1">
                                         <li className="flex items-center justify-between gap-x-2 text-xs">
                                             <a

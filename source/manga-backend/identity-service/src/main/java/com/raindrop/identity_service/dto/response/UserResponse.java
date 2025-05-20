@@ -26,4 +26,5 @@ public class UserResponse {
     String authProvider;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
+    boolean enabled;
 }

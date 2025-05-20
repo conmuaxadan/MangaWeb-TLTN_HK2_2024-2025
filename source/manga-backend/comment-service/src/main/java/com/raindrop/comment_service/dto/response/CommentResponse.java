@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class CommentResponse {
     String id;
     String userId;
-    String username; // Đây là displayName của người dùng
+    String displayName; // Đây là displayName của người dùng
     String chapterId;
     String mangaId;
     String content;
@@ -22,6 +22,7 @@ public class CommentResponse {
 
     // Thông tin bổ sung
     String userAvatarUrl;
+    Boolean userEnabled; // Trạng thái tài khoản của người dùng
 
     // Thông tin về manga và chapter
     String mangaTitle;

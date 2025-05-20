@@ -82,11 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const logout = () => {
-        // Xóa tất cả các token khỏi localStorage
-        localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
-        localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
-        localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
-
+        authService.logout();
         setIsLogin(false);
         setUser(null);
     };

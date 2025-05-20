@@ -1,13 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import {useParams, Link} from 'react-router-dom';
 import mangaService from '../services/manga-service.ts';
-import profileService from '../services/profile-service.ts';
 import favoriteService from '../services/favorite-service';
 import {MangaResponse, ChapterResponse, MangaStatusDisplayNames} from '../interfaces/models/manga.ts';
 import {formatDistanceToNow} from 'date-fns';
 import {vi} from 'date-fns/locale';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import { getMangaImageUrl } from '../utils/file-utils';
+import {getMangaImageUrl} from '../utils/file-utils';
 import {
     faStar,
     faHeart as faHeartSolid,
@@ -28,7 +27,6 @@ const MangaDetail: React.FC = () => {
     const {isLogin} = useAuth();
     const [manga, setManga] = useState<MangaResponse | null>(null);
     const [chapters, setChapters] = useState<ChapterResponse[]>([]);
-    const [totalComments, setTotalComments] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -62,11 +60,6 @@ const MangaDetail: React.FC = () => {
                     );
                     setChapters(sortedChapters);
                 }
-
-                // Lấy tổng số bình luận
-                const commentsCount = await profileService.countCommentsByMangaId(id);
-                setTotalComments(commentsCount);
-
                 setError(null);
             } catch (err) {
                 console.error('Lỗi khi tải thông tin manga:', err);
@@ -192,17 +185,17 @@ const MangaDetail: React.FC = () => {
                     <div className="flex flex-wrap justify-center md:justify-between items-center gap-4 text-gray-500">
                         <div className="flex gap-6">
                             <span className="flex items-center">
-                                <FontAwesomeIcon icon={faHeartSolid} className="mr-2 text-red-500"/>
-                                <span className="text-gray-900">{manga.loves || 0}</span>
-                            </span>
-                            <span className="flex items-center">
                   <FontAwesomeIcon icon={faEye} className="mr-2 text-blue-500"/>
                   <span className="text-gray-900">{manga.views || 0}</span>
                 </span>
                             <span className="flex items-center">
                   <FontAwesomeIcon icon={faComment} className="mr-2 text-yellow-500"/>
-                  <span className="text-gray-900">{totalComments || 0}</span>
+                  <span className="text-gray-900">{manga.comments || 0}</span>
                 </span>
+                            <span className="flex items-center">
+                                <FontAwesomeIcon icon={faHeartSolid} className="mr-2 text-red-500"/>
+                                <span className="text-gray-900">{manga.loves || 0}</span>
+                            </span>
                         </div>
                         <span className="flex items-center">
                 <FontAwesomeIcon icon={faClock} className="mr-2 text-green-500"/>

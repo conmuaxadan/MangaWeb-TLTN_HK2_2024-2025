@@ -36,6 +36,7 @@ public interface UserMapper {
     @Mapping(target = "displayName", source = "displayName")
     @Mapping(target = "avatarUrl", source = "avatarUrl")
     @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "enabled", source = "enabled")
     UserResponse toUserResponse(User user);
 
     /**

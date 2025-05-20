@@ -4,6 +4,7 @@ import com.raindrop.manga_service.dto.request.AdvancedSearchRequest;
 import com.raindrop.manga_service.dto.request.MangaRequest;
 import com.raindrop.manga_service.dto.response.ApiResponse;
 import com.raindrop.manga_service.dto.response.MangaResponse;
+import com.raindrop.manga_service.dto.response.MangaStatisticsResponse;
 import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
 import com.raindrop.manga_service.enums.MangaStatus;
 import com.raindrop.manga_service.service.MangaService;
@@ -262,6 +263,31 @@ public class MangaController {
         return ApiResponse.<Double>builder()
                 .message("Highest chapter number retrieved successfully")
                 .result(mangaService.getHighestChapterNumber(id))
+                .build();
+    }
+
+    /**
+     * Đếm tổng số truyện trong hệ thống
+     * @param includeDeleted Có bao gồm truyện đã xóa hay không (mặc định là false)
+     * @return Tổng số truyện
+     */
+    @GetMapping("/count")
+    ApiResponse<Long> countMangas(@RequestParam(required = false, defaultValue = "false") boolean includeDeleted) {
+        return ApiResponse.<Long>builder()
+                .message("Manga count retrieved successfully")
+                .result(mangaService.countMangas(includeDeleted))
+                .build();
+    }
+
+    /**
+     * Lấy thống kê tổng hợp về truyện
+     * @return Thống kê tổng hợp về truyện
+     */
+    @GetMapping("/statistics")
+    ApiResponse<MangaStatisticsResponse> getMangaStatistics() {
+        return ApiResponse.<MangaStatisticsResponse>builder()
+                .message("Manga statistics retrieved successfully")
+                .result(mangaService.getMangaStatistics())
                 .build();
     }
 }

@@ -42,4 +42,25 @@ public interface ReadingHistoryRepository extends JpaRepository<ReadingHistory, 
             "WHERE rh.user_id = :userId " +
             "ORDER BY MAX(rh.updated_at) DESC LIMIT :limit", nativeQuery = true)
     List<String> findRecentMangaIdsByUserId(@Param("userId") String userId, @Param("limit") int limit);
+
+    /**
+     * Đếm tổng số lượt xem của người dùng đã đăng nhập (mỗi bản ghi là 1 lượt xem chapter)
+     * @return Tổng số lượt xem
+     */
+    @Query("SELECT COUNT(rh) FROM ReadingHistory rh")
+    Long countTotalViews();
+
+    /**
+     * Đếm số lượt xem trong ngày hôm nay của người dùng đã đăng nhập
+     * @return Số lượt xem trong ngày
+     */
+    @Query("SELECT COUNT(rh) FROM ReadingHistory rh WHERE DATE(rh.createdAt) = CURRENT_DATE")
+    Long countTodayViews();
+
+    /**
+     * Đếm số lượng người dùng duy nhất đã đọc truyện
+     * @return Số lượng người dùng duy nhất
+     */
+    @Query("SELECT COUNT(DISTINCT rh.userId) FROM ReadingHistory rh")
+    Long countDistinctUsers();
 }

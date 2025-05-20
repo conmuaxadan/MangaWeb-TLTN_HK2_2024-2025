@@ -4,6 +4,7 @@ import com.raindrop.common.event.UserEvent;
 import com.raindrop.identity_service.dto.request.ChangeDisplayNameRequest;
 import com.raindrop.identity_service.dto.request.ChangePasswordRequest;
 import com.raindrop.identity_service.dto.request.LinkLocalAccountRequest;
+import com.raindrop.identity_service.dto.request.ToggleUserStatusRequest;
 import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.LinkedAccountResponse;
 import com.raindrop.identity_service.dto.response.UserCommentResponse;
@@ -249,6 +250,7 @@ public class UserService {
         return UserCommentResponse.builder()
                 .displayName(user.getDisplayName())
                 .avatarUrl(user.getAvatarUrl())
+                .enabled(user.isEnabled()) // Thêm trạng thái tài khoản
                 .build();
     }
 
@@ -266,6 +268,28 @@ public class UserService {
 
         userRepository.delete(user);
         log.info("User deleted successfully: {}", username);
+    }
+
+    /**
+     * Thay đổi trạng thái tài khoản (khóa/mở khóa)
+     * @param request Yêu cầu thay đổi trạng thái
+     * @return Thông tin người dùng đã cập nhật
+     */
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @Transactional
+    public UserResponse toggleUserStatus(ToggleUserStatusRequest request) {
+        log.info("Admin attempting to {} user with ID: {}", request.isEnabled() ? "enable" : "disable", request.getUserId());
+        User user = userRepository.findById(request.getUserId()).orElseThrow(() -> {
+            log.warn("Toggle status failed: User not found with ID - {}", request.getUserId());
+            return new AppException(ErrorCode.USER_NOT_EXISTED);
+        });
+
+        // Cập nhật trạng thái
+        user.setEnabled(request.isEnabled());
+        user = userRepository.save(user);
+
+        log.info("User status updated successfully: {} is now {}", user.getUsername(), request.isEnabled() ? "enabled" : "disabled");
+        return userMapper.toUserResponse(user);
     }
 
     /**

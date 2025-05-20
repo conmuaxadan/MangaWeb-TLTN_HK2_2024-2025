@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 import { identityHttpClient } from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
-import { UserRequest, UserResponse } from "../interfaces/models/auth";
+import { ToggleUserStatusRequest, UserRequest, UserResponse } from "../interfaces/models/auth";
 import { logApiCall } from "../utils/api-logger";
 
 class UserService {
@@ -157,7 +157,7 @@ class UserService {
     async getProfileByUserId(userId: string): Promise<UserResponse | null> {
         logApiCall('getProfileByUserId');
         try {
-            const apiResponse = await identityHttpClient.get<ApiResponse<UserResponse>>(`/users/byUserId/${userId}`);
+            const apiResponse = await identityHttpClient.get<ApiResponse<UserResponse>>(`/users/id/${userId}`);
 
             if (apiResponse.code !== 1000) {
                 console.error(`Lỗi lấy thông tin profile của người dùng ID ${userId}:`, apiResponse.message);
@@ -233,6 +233,32 @@ class UserService {
         } catch (error) {
             console.error("Lỗi xóa avatar:", error);
             toast.error("Lỗi khi xóa ảnh đại diện", { position: "top-right" });
+            return null;
+        }
+    }
+
+    /**
+     * Khóa hoặc mở khóa tài khoản người dùng
+     * @param userId ID của người dùng cần thay đổi trạng thái
+     * @param enabled true để mở khóa, false để khóa tài khoản
+     * @returns Thông tin người dùng đã cập nhật hoặc null nếu thất bại
+     */
+    async toggleUserStatus(userId: string, enabled: boolean): Promise<UserResponse | null> {
+        logApiCall('toggleUserStatus');
+        try {
+            const request: ToggleUserStatusRequest = { userId, enabled };
+            const apiResponse = await identityHttpClient.post<ApiResponse<UserResponse>>('/users/status', request);
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể thay đổi trạng thái tài khoản", { position: "top-right" });
+                return null;
+            }
+
+            toast.success(enabled ? "Mở khóa tài khoản thành công" : "Khóa tài khoản thành công", { position: "top-right" });
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi thay đổi trạng thái tài khoản ${userId}:`, error);
+            toast.error("Đã xảy ra lỗi khi thay đổi trạng thái tài khoản", { position: "top-right" });
             return null;
         }
     }

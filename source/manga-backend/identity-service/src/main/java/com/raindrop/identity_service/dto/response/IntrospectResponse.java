@@ -12,4 +12,5 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class IntrospectResponse {
     boolean valid;
+    String errorCode; // Mã lỗi nếu token không hợp lệ
 }

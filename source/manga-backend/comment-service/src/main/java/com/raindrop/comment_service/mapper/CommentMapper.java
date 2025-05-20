@@ -17,7 +17,8 @@ public interface CommentMapper {
     @Mapping(target = "mangaTitle", ignore = true)
     @Mapping(target = "chapterTitle", ignore = true)
     @Mapping(target = "chapterNumber", ignore = true)
-    @Mapping(target = "username", ignore = true)
+//    @Mapping(target = "username", ignore = true)
     @Mapping(target = "userAvatarUrl", ignore = true)
+    @Mapping(target = "userEnabled", ignore = true)
     CommentResponse toCommentResponse(Comment comment);
 }

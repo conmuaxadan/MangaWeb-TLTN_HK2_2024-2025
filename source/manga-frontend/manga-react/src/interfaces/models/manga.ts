@@ -29,6 +29,8 @@ export interface MangaResponse {
     status?: MangaStatus;
     updatedAt: string;
     lastChapterAddedAt?: string;
+    lastChapterNumber?: number;
+    lastChapterId?: string;
 }
 
 // Advanced Search Request

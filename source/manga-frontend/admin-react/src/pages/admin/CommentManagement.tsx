@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faSpinner, faTrash, faEye, faFilter, faSync } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faSpinner, faTrash, faLock, faLockOpen, faFilter, faSync } from '@fortawesome/free-solid-svg-icons';
 import { CommentResponse, CommentPageResponse } from '../../interfaces/models/comment';
 import commentService from '../../services/comment-service';
+import userService from '../../services/user-service';
 import { formatDate } from '../../utils/date-utils';
 import { toast } from 'react-toastify';
 import Pagination from '../../components/common/Pagination';
@@ -56,6 +57,8 @@ const CommentManagement: React.FC = () => {
     fetchComments();
   }, [searchTerm, pageSize]);
 
+
+
   // Handle search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +98,40 @@ const CommentManagement: React.FC = () => {
     // Implement filter logic here
     // For now, just refresh the comments
     fetchComments();
+  };
+
+  // Xử lý khóa/mở khóa tài khoản người dùng
+  const handleToggleUserStatus = async (username: string, userId: string) => {
+    // Tìm comment của người dùng để lấy trạng thái hiện tại
+    const comment = comments.find(c => c.userId === userId);
+    if (!comment) return;
+
+    // Kiểm tra trạng thái hiện tại của người dùng
+    const isEnabled = comment.userEnabled !== false;
+    const action = isEnabled ? "khóa" : "mở khóa";
+
+    if (window.confirm(`Bạn có chắc chắn muốn ${action} tài khoản ${username}?`)) {
+      try {
+        // Gọi API để thay đổi trạng thái
+        const updatedUser = await userService.toggleUserStatus(userId, !isEnabled);
+
+        if (updatedUser) {
+          // Cập nhật trạng thái trong tất cả các comment của người dùng này
+          setComments(prevComments =>
+            prevComments.map(c =>
+              c.userId === userId
+                ? {...c, userEnabled: !isEnabled}
+                : c
+            )
+          );
+
+          toast.success(`${action.charAt(0).toUpperCase() + action.slice(1)} tài khoản thành công`, { position: 'top-right' });
+        }
+      } catch (error) {
+        console.error(`Lỗi khi ${action} tài khoản ${username}:`, error);
+        toast.error(`Đã xảy ra lỗi khi ${action} tài khoản`, { position: 'top-right' });
+      }
+    }
   };
 
   // Reset filter
@@ -221,7 +258,18 @@ const CommentManagement: React.FC = () => {
                         />
                       )}
                       <div>
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">{comment.username}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white flex items-center">
+                          {comment.displayName || comment.username}
+                          <span
+                            className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
+                              comment.userEnabled !== false
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            }`}
+                          >
+                            {comment.userEnabled !== false ? 'Hoạt động' : 'Bị khóa'}
+                          </span>
+                        </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">{comment.userId}</div>
                       </div>
                     </div>
@@ -264,13 +312,13 @@ const CommentManagement: React.FC = () => {
                     >
                       <FontAwesomeIcon icon={faTrash} />
                     </button>
-                    <Link
-                      to={`/admin/comments/${comment.id}`}
-                      className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                      title="Xem chi tiết"
+                    <button
+                      onClick={() => handleToggleUserStatus(comment.username, comment.userId)}
+                      className={`${comment.userEnabled !== false ? 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300' : 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300'}`}
+                      title={comment.userEnabled !== false ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
                     >
-                      <FontAwesomeIcon icon={faEye} />
-                    </Link>
+                      <FontAwesomeIcon icon={comment.userEnabled !== false ? faLock : faLockOpen} />
+                    </button>
                   </td>
                 </tr>
               ))
