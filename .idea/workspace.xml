@@ -4,160 +4,126 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5b247fcf-41ad-41e1-87d7-1973e3c5faf7" name="Changes" comment="feat: update ui for manga react">
-      <change afterPath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/controller/ViewStatisticsController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/dto/response/ViewStatisticsResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/dto/request/ToggleUserStatusRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/dto/response/MangaStatisticsResponse.java" afterDir="false" />
+    <list default="true" id="0751fe69-cb2c-4b14-9a28-3b0ede98af3d" name="Changes" comment="--fix: rename history service">
+      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/controller/StatisticController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/dto/response/MangaViewsResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/dto/response/ViewsByDayResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/mapper/HistoryMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/repository/AnonymousHistoryRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/repository/HistoryRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/service/HistoryService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/controller/UserStatisticsController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/dto/response/UserStatisticsResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/repository/UserStatisticsRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/service/UserStatisticsService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/dto/response/MostViewedMangaResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/favorite-service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/manga-statistics-service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/user-statistics-service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/AugmentWebviewStateStore.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/AugmentWebviewStateStore.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/api-gateway/src/main/java/com/raindrop/api_gateway/configuration/AuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/api-gateway/src/main/java/com/raindrop/api_gateway/configuration/AuthenticationFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/api-gateway/src/main/java/com/raindrop/api_gateway/dto/response/IntrospectResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/api-gateway/src/main/java/com/raindrop/api_gateway/dto/response/IntrospectResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/comment-service/src/main/java/com/raindrop/comment_service/dto/response/CommentResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/comment-service/src/main/java/com/raindrop/comment_service/dto/response/CommentResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/comment-service/src/main/java/com/raindrop/comment_service/dto/response/UserCommentResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/comment-service/src/main/java/com/raindrop/comment_service/dto/response/UserCommentResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/comment-service/src/main/java/com/raindrop/comment_service/mapper/CommentMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/comment-service/src/main/java/com/raindrop/comment_service/mapper/CommentMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/comment-service/src/main/java/com/raindrop/comment_service/controller/CommentController.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/comment-service/src/main/java/com/raindrop/comment_service/controller/CommentController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/comment-service/src/main/java/com/raindrop/comment_service/repository/CommentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/comment-service/src/main/java/com/raindrop/comment_service/repository/CommentRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/comment-service/src/main/java/com/raindrop/comment_service/service/CommentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/comment-service/src/main/java/com/raindrop/comment_service/service/CommentService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/controller/AnonymousReadingHistoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/controller/AnonymousReadingHistoryController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/repository/AnonymousReadingHistoryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/repository/AnonymousReadingHistoryRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/repository/ReadingHistoryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/repository/ReadingHistoryRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/service/AnonymousReadingHistoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/service/AnonymousReadingHistoryService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/service/ReadingHistoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/service/ReadingHistoryService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/dto/response/IntrospectResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/dto/response/IntrospectResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/dto/response/UserCommentResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/dto/response/UserCommentResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/dto/response/UserResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/dto/response/UserResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/entity/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/mapper/UserMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/mapper/UserMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/service/AuthenticationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/service/AuthenticationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/favorite-service/src/main/java/com/raindrop/favorite_service/controller/FavoriteController.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/favorite-service/src/main/java/com/raindrop/favorite_service/controller/FavoriteController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/favorite-service/src/main/java/com/raindrop/favorite_service/repository/FavoriteRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/favorite-service/src/main/java/com/raindrop/favorite_service/repository/FavoriteRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/favorite-service/src/main/java/com/raindrop/favorite_service/service/FavoriteService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/favorite-service/src/main/java/com/raindrop/favorite_service/service/FavoriteService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/.gitattributes" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/.gitattributes" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/mvnw" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/mvnw" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/mvnw.cmd" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/mvnw.cmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/HistoryServiceApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/HistoryServiceApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/config/CustomJwtDecoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/config/CustomJwtDecoder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/config/JwtAuthenticationEntryPoint.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/config/JwtAuthenticationEntryPoint.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/controller/AnonymousReadingHistoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/controller/AnonymousHistoryController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/controller/ReadingHistoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/controller/HistoryController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/controller/ViewStatisticsController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/dto/request/AnonymousReadingHistoryRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/dto/request/AnonymousHistoryRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/dto/request/ReadingHistoryRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/dto/request/HistoryRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/dto/response/AnonymousReadingHistoryResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/dto/response/AnonymousHistoryResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/dto/response/ApiResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/dto/response/ApiResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/dto/response/ChapterInfoResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/dto/response/ChapterInfoResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/dto/response/MangaInfoResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/dto/response/MangaInfoResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/dto/response/ReadingHistoryResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/dto/response/HistoryResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/dto/response/ViewStatisticsResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/dto/response/ViewStatisticsResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/entity/AnonymousReadingHistory.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/entity/AnonymousHistory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/entity/ReadingHistory.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/entity/History.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/kafka/ChapterViewEventProducer.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/kafka/ChapterViewEventProducer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/mapper/AnonymousReadingHistoryMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/mapper/AnonymousHistoryMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/mapper/ReadingHistoryMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/repository/AnonymousReadingHistoryRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/repository/ReadingHistoryRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/repository/httpclient/MangaClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/repository/httpclient/MangaClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/service/AnonymousReadingHistoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/service/AnonymousHistoryService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/java/com/raindrop/history_service/service/ReadingHistoryService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-backend/history_service/src/test/java/com/raindrop/history_service/HistoryServiceApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/test/java/com/raindrop/history_service/HistoryServiceApplicationTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/resources/application.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/controller/MangaController.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/controller/MangaController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/controller/RecommendationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/controller/RecommendationController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/dto/response/MangaResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/dto/response/MangaResponse.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/service/MangaService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/service/MangaService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/service/RecommendationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/service/RecommendationService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/notification-service/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/notification-service/src/main/resources/application.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/admin/UserTable.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/admin/UserTable.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/interfaces/models/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/interfaces/models/auth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/interfaces/models/comment.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/interfaces/models/comment.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/interfaces/models/manga.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/interfaces/models/manga.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/admin/CommentManagement.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/admin/CommentManagement.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/admin/Statistics.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/admin/Statistics.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/admin/UserManagement.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/admin/UserManagement.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/auth-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/auth-service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/manga-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/manga-service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/comment-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/comment-service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/statistics-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/statistics-service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/user-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/user-service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/CommentSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/CommentSection.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/Footer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/Footer.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/LatestUpdates.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/LatestUpdates.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/NavigationToolbar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/NavigationToolbar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/PersonalRecommendations.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/PersonalRecommendations.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/RecommendedManga.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/RecommendedManga.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/contexts/AuthContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/contexts/AuthContext.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/interfaces/models/manga.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/interfaces/models/manga.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/pages/Chapter.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/pages/Chapter.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/pages/MangaDetail.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/pages/MangaDetail.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/auth-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/auth-service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/history-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/history-service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/http-client.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/http-client.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/manga-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/manga-service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Interface" />
-        <option value="Class" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;conmuaxadan&quot;
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "conmuaxadan"
   }
-}</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/conmuaxadan/MangaWeb-TLTN_HK2_2024-2025&quot;,
-    &quot;accountId&quot;: &quot;985191e0-9f19-4f97-b31b-7f1e321cacc3&quot;
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/conmuaxadan/MangaWeb-TLTN_HK2_2024-2025",
+    "accountId": "985191e0-9f19-4f97-b31b-7f1e321cacc3"
   }
-}</component>
-  <component name="KubernetesApiPersistence">{}</component>
-  <component name="KubernetesApiProvider">{
-  &quot;isMigrated&quot;: true
-}</component>
-  <component name="ProjectColorInfo">{
-  &quot;customColor&quot;: &quot;&quot;,
-  &quot;associatedIndex&quot;: 0
-}</component>
-  <component name="ProjectId" id="2wxguGwnirU3S1g4HeyBMQSyMG1" />
-  <component name="ProjectLevelVcsManager">
-    <ConfirmationsSetting value="2" id="Add" />
-  </component>
+}]]></component>
+  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
+  <component name="KubernetesApiProvider"><![CDATA[{
+  "isMigrated": true
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 0
+}]]></component>
+  <component name="ProjectId" id="2xSY8rd6Cu1LQfzegYwZ7Dusk0r" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Maven.favorite-service [clean].executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;Spring Boot.ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.CommentServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.FavoriteServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.HistoryServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.IdentityServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.MangaServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.NotificationServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.ProfileServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.UploadServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Ra1ndr0p/Desktop/MangaWeb-TLTN_HK2_2024-2025/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/repository/httpclient&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;npm.admin-react.executor&quot;: &quot;Run&quot;,
-    &quot;npm.manga-react.executor&quot;: &quot;Run&quot;,
-    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.augmentcode.intellij.settings&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\Ra1ndr0p\\Desktop\\MangaWeb-TLTN_HK2_2024-2025\\source\\manga-frontend\\admin-react\\node_modules\\typescript\\lib&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "run.configurations.included.in.services": "true",
+    "settings.editor.selected.configurable": "reference.projectsettings.compiler.annotationProcessors",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
-  <component name="ReactorSettings">
-    <option name="notificationShown" value="true" />
-  </component>
-  <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\Ra1ndr0p\Desktop\MangaWeb-TLTN_HK2_2024-2025\source\manga-backend\identity-service\src\main\java\com\raindrop\identity_service\repository\httpclient" />
-      <recent name="C:\Users\Ra1ndr0p\Desktop\MangaWeb-TLTN_HK2_2024-2025\source\manga-backend\identity-service\src\main\java\com\raindrop\identity_service\repository" />
-      <recent name="C:\Users\Ra1ndr0p\Desktop\MangaWeb-TLTN_HK2_2024-2025\source\manga-backend\history_service\src\main\java\com\raindrop\history_service" />
-      <recent name="C:\Users\Ra1ndr0p\Desktop\MangaWeb-TLTN_HK2_2024-2025\source\manga-backend\history_service\src\main\java\com\raindrop\history_service\config" />
-      <recent name="C:\Users\Ra1ndr0p\Desktop\MangaWeb-TLTN_HK2_2024-2025\source\manga-backend\favorite-service\src\main\java\com\raindrop\favorite_service" />
-    </key>
-    <key name="CopyClassDialog.RECENTS_KEY">
-      <recent name="com.raindrop.identity_service.dto.response" />
-      <recent name="com.raindrop.comment_service.config" />
-    </key>
-  </component>
+}]]></component>
   <component name="RunDashboard">
     <option name="configurationTypes">
       <set>
@@ -165,19 +131,18 @@
         <option value="MicronautRunConfigurationType" />
         <option value="QuarkusRunConfigurationType" />
         <option value="SpringBootApplicationConfigurationType" />
-        <option value="js.build_tools.npm" />
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="Spring Boot.HistoryServiceApplication">
-    <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+  <component name="RunManager" selected="Spring Boot.IdentityServiceApplication">
+    <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="api-gateway" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.raindrop.api_gateway.ApiGatewayApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="CommentServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <configuration name="CommentServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="comment-service" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.raindrop.comment_service.CommentServiceApplication" />
       <method v="2">
@@ -192,20 +157,20 @@
       </method>
     </configuration>
     <configuration name="HistoryServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
-      <module name="history_service" />
+      <module name="history-service" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.raindrop.history_service.HistoryServiceApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="IdentityServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <configuration name="IdentityServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="identity-service" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.raindrop.identity_service.IdentityServiceApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="MangaServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <configuration name="MangaServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="manga-service" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.raindrop.manga_service.MangaServiceApplication" />
       <method v="2">
@@ -226,38 +191,6 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="admin-react" type="js.build_tools.npm">
-      <package-json value="$PROJECT_DIR$/source/manga-frontend/admin-react/package.json" />
-      <command value="run" />
-      <scripts>
-        <script value="dev" />
-      </scripts>
-      <node-interpreter value="project" />
-      <envs />
-      <method v="2" />
-    </configuration>
-    <configuration name="manga-react" type="js.build_tools.npm">
-      <package-json value="$PROJECT_DIR$/source/manga-frontend/manga-react/package.json" />
-      <command value="run" />
-      <scripts>
-        <script value="dev" />
-      </scripts>
-      <node-interpreter value="project" />
-      <envs />
-      <method v="2" />
-    </configuration>
-    <list>
-      <item itemvalue="npm.admin-react" />
-      <item itemvalue="npm.manga-react" />
-      <item itemvalue="Spring Boot.IdentityServiceApplication" />
-      <item itemvalue="Spring Boot.MangaServiceApplication" />
-      <item itemvalue="Spring Boot.CommentServiceApplication" />
-      <item itemvalue="Spring Boot.ApiGatewayApplication" />
-      <item itemvalue="Spring Boot.FavoriteServiceApplication" />
-      <item itemvalue="Spring Boot.HistoryServiceApplication" />
-      <item itemvalue="Spring Boot.NotificationServiceApplication" />
-      <item itemvalue="Spring Boot.UploadServiceApplication" />
-    </list>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -267,77 +200,24 @@
       </set>
     </attachedChunks>
   </component>
-  <component name="StructureViewState">
-    <option name="selectedTab" value="Logical" />
-  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="5b247fcf-41ad-41e1-87d7-1973e3c5faf7" name="Changes" comment="" />
+      <changelist id="0751fe69-cb2c-4b14-9a28-3b0ede98af3d" name="Changes" comment="" />
       <created>1744777320622</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744777320622</updated>
-      <workItem from="1746988862587" duration="1176000" />
-      <workItem from="1747012263139" duration="12131000" />
-      <workItem from="1747055081894" duration="8626000" />
-      <workItem from="1747063886059" duration="4815000" />
-      <workItem from="1747069614953" duration="927000" />
-      <workItem from="1747095369233" duration="27262000" />
-      <workItem from="1747210056631" duration="1186000" />
-      <workItem from="1747211361083" duration="733000" />
-      <workItem from="1747413885392" duration="9787000" />
-      <workItem from="1747448215858" duration="4946000" />
-      <workItem from="1747455497086" duration="24078000" />
-      <workItem from="1747488538366" duration="15222000" />
-      <workItem from="1747536010740" duration="7222000" />
-      <workItem from="1747557759794" duration="22363000" />
-      <workItem from="1747622511486" duration="7030000" />
-      <workItem from="1747646535196" duration="361000" />
-      <workItem from="1747658510441" duration="11763000" />
-      <workItem from="1747702775418" duration="582000" />
-      <workItem from="1747703438817" duration="14206000" />
+      <workItem from="1747932789406" duration="1930000" />
     </task>
-    <task id="LOCAL-00001" summary="feat: add comment service, favorite service and history service">
+    <task id="LOCAL-00001" summary="-- rename history service">
       <option name="closed" value="true" />
-      <created>1747060675100</created>
+      <created>1747933667235</created>
       <option name="number" value="00001" />
       <option name="presentableId" value="LOCAL-00001" />
       <option name="project" value="LOCAL" />
-      <updated>1747060675100</updated>
+      <updated>1747933667235</updated>
     </task>
-    <task id="LOCAL-00002" summary="feat: implement admin react">
-      <option name="closed" value="true" />
-      <created>1747122506496</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1747122506496</updated>
-    </task>
-    <task id="LOCAL-00003" summary="feat: remove profile service">
-      <option name="closed" value="true" />
-      <created>1747536508442</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1747536508442</updated>
-    </task>
-    <task id="LOCAL-00004" summary="feat: update manga react">
-      <option name="closed" value="true" />
-      <created>1747573488336</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1747573488336</updated>
-    </task>
-    <task id="LOCAL-00005" summary="feat: update ui for manga react">
-      <option name="closed" value="true" />
-      <created>1747670716473</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1747670716473</updated>
-    </task>
-    <option name="localTasksCounter" value="6" />
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -355,15 +235,8 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="feat: add comment service, favorite service and history service" />
-    <MESSAGE value="feat: implement admin react" />
-    <MESSAGE value="feat: remove profile service" />
-    <MESSAGE value="feat: update manga react" />
-    <MESSAGE value="feat: update ui for manga react" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: update ui for manga react" />
-  </component>
-  <component name="XSLT-Support.FileAssociations.UIState">
-    <expand />
-    <select />
+    <MESSAGE value="-- rename history service" />
+    <MESSAGE value="--fix: rename history service" />
+    <option name="LAST_COMMIT_MESSAGE" value="--fix: rename history service" />
   </component>
 </project>

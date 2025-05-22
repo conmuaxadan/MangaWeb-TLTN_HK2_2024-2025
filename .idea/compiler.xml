@@ -10,7 +10,7 @@
         <module name="common" />
         <module name="api-gateway" />
       </profile>
-      <profile name="Annotation profile for upload-service" enabled="true">
+      <profile name="Annotation profile for history_service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -20,16 +20,13 @@
         </processorPath>
         <module name="favorite-service" />
         <module name="comment-service" />
-        <module name="history_service" />
+        <module name="history-service" />
         <module name="upload-service" />
         <module name="manga-service" />
         <module name="identity-service" />
         <module name="notification-service" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="profile-service" target="21" />
-    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
@@ -37,11 +34,10 @@
       <module name="comment-service" options="-parameters" />
       <module name="common" options="-parameters" />
       <module name="favorite-service" options="-parameters" />
-      <module name="history_service" options="-parameters" />
+      <module name="history-service" options="-parameters" />
       <module name="identity-service" options="-parameters" />
       <module name="manga-service" options="-parameters" />
       <module name="notification-service" options="-parameters" />
-      <module name="profile-service" options="-parameters" />
       <module name="upload-service" options="-parameters" />
     </option>
   </component>

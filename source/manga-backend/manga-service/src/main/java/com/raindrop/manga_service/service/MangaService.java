@@ -5,6 +5,7 @@ import com.raindrop.manga_service.dto.request.MangaRequest;
 import com.raindrop.manga_service.dto.response.MangaResponse;
 import com.raindrop.manga_service.dto.response.MangaStatisticsResponse;
 import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
+import com.raindrop.manga_service.dto.response.MostViewedMangaResponse;
 import com.raindrop.manga_service.entity.Chapter;
 import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.entity.Manga;
@@ -23,6 +24,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -552,6 +554,36 @@ public class MangaService {
             // Đếm chỉ truyện chưa xóa
             return (long) mangaRepository.findByDeletedFalse().size();
         }
+    }
+
+    /**
+     * Lấy danh sách truyện được xem nhiều nhất
+     * @param limit Số lượng truyện cần lấy
+     * @return Danh sách truyện được xem nhiều nhất
+     */
+    public List<MostViewedMangaResponse> getMostViewedMangas(int limit) {
+        log.info("Getting {} most viewed mangas", limit);
+
+        // Lấy danh sách truyện được xem nhiều nhất
+        Pageable pageable = PageRequest.of(0, limit);
+        List<Manga> mostViewedMangas = mangaRepository.findByOrderByViewsDesc(pageable);
+
+        // Chuyển đổi sang response
+        return mostViewedMangas.stream()
+                .map(manga -> {
+                    // Lấy thể loại chính của truyện (nếu có)
+                    String mainGenre = manga.getGenres().isEmpty() ? "" :
+                            manga.getGenres().iterator().next().getName();
+
+                    return MostViewedMangaResponse.builder()
+                            .id(manga.getId())
+                            .title(manga.getTitle())
+                            .views(manga.getViews())
+                            .author(manga.getAuthor())
+                            .mainGenre(mainGenre)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 
     /**

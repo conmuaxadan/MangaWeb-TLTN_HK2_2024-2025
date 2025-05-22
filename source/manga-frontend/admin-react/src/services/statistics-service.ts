@@ -2,6 +2,25 @@ import { ApiResponse } from '../interfaces/api/api-response';
 import { identityHttpClient, mangaHttpClient, historyHttpClient, commentHttpClient, favoriteHttpClient } from './http-client';
 import mangaService from './manga-service';
 import userService from './user-service';
+import commentService from './comment-service';
+import favoriteService from './favorite-service';
+
+// Interface cho dữ liệu lượt xem theo ngày
+export interface ViewsByDayResponse {
+    date: string;
+    views: number;
+    registeredUserViews: number;
+    anonymousViews: number;
+}
+
+// Interface cho dữ liệu lượt xem theo truyện
+export interface MangaViewsResponse {
+    mangaId: string;
+    title: string;
+    totalViews: number;
+    registeredUserViews: number;
+    anonymousViews: number;
+}
 
 /**
  * Service để lấy thông tin thống kê
@@ -107,8 +126,54 @@ const statisticsService = {
                 if (todayViewsResponse && todayViewsResponse.result !== undefined) {
                     stats.viewsToday = todayViewsResponse.result;
                 }
+
+                // Lấy số lượt xem trong tuần này
+                const thisWeekViewsResponse = await historyHttpClient.get<ApiResponse<number>>('/view-statistics/this-week');
+                console.log('Kết quả lấy lượt xem trong tuần:', thisWeekViewsResponse);
+                if (thisWeekViewsResponse && thisWeekViewsResponse.result !== undefined) {
+                    stats.viewsThisWeek = thisWeekViewsResponse.result;
+                }
+
+                // Lấy số lượt xem trong tháng này
+                const thisMonthViewsResponse = await historyHttpClient.get<ApiResponse<number>>('/view-statistics/this-month');
+                console.log('Kết quả lấy lượt xem trong tháng:', thisMonthViewsResponse);
+                if (thisMonthViewsResponse && thisMonthViewsResponse.result !== undefined) {
+                    stats.viewsThisMonth = thisMonthViewsResponse.result;
+                }
             } catch (error) {
                 console.error('Lỗi khi lấy thống kê lượt xem:', error);
+                // Giữ nguyên giá trị mặc định nếu gặp lỗi
+            }
+
+            // Lấy thống kê về bình luận
+            try {
+                // Lấy tổng số bình luận
+                const totalCommentsResponse = await commentService.countTotalComments();
+                console.log('Kết quả lấy tổng số bình luận:', totalCommentsResponse);
+                stats.totalComments = totalCommentsResponse;
+
+                // Lấy số bình luận mới trong ngày
+                const todayCommentsResponse = await commentService.countTodayComments();
+                console.log('Kết quả lấy số bình luận mới trong ngày:', todayCommentsResponse);
+                stats.commentsToday = todayCommentsResponse;
+            } catch (error) {
+                console.error('Lỗi khi lấy thống kê bình luận:', error);
+                // Giữ nguyên giá trị mặc định nếu gặp lỗi
+            }
+
+            // Lấy thống kê về yêu thích
+            try {
+                // Lấy tổng số yêu thích
+                const totalFavoritesResponse = await favoriteService.countTotalFavorites();
+                console.log('Kết quả lấy tổng số yêu thích:', totalFavoritesResponse);
+                stats.totalFavorites = totalFavoritesResponse;
+
+                // Lấy số yêu thích mới trong ngày
+                const todayFavoritesResponse = await favoriteService.countTodayFavorites();
+                console.log('Kết quả lấy số yêu thích mới trong ngày:', todayFavoritesResponse);
+                stats.favoritesToday = todayFavoritesResponse;
+            } catch (error) {
+                console.error('Lỗi khi lấy thống kê yêu thích:', error);
                 // Giữ nguyên giá trị mặc định nếu gặp lỗi
             }
 
@@ -117,6 +182,53 @@ const statisticsService = {
         } catch (error) {
             console.error('Lỗi khi lấy thông tin thống kê tổng hợp:', error);
             return null;
+        }
+    },
+
+    /**
+     * Lấy thống kê lượt xem theo ngày
+     * @param days Số ngày cần lấy (mặc định là 7)
+     * @returns Danh sách thống kê lượt xem theo ngày
+     */
+    async getViewsByDay(days: number = 7) {
+        try {
+            console.log(`Bắt đầu lấy thống kê lượt xem theo ngày (${days} ngày)`);
+
+            const response = await historyHttpClient.get<ApiResponse<ViewsByDayResponse[]>>(`/view-statistics/by-day?days=${days}`);
+            console.log('Kết quả lấy lượt xem theo ngày:', response);
+
+            if (response && response.code === 1000 && response.result) {
+                return response.result;
+            }
+
+            return [];
+        } catch (error) {
+            console.error('Lỗi khi lấy thống kê lượt xem theo ngày:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Lấy thống kê lượt xem theo truyện
+     * @param days Số ngày cần lấy (mặc định là 0, lấy tất cả)
+     * @param limit Số lượng truyện cần lấy (mặc định là 10)
+     * @returns Danh sách thống kê lượt xem theo truyện
+     */
+    async getViewsByManga(days: number = 0, limit: number = 10) {
+        try {
+            console.log(`Bắt đầu lấy thống kê lượt xem theo truyện (${days > 0 ? days + ' ngày, ' : ''}${limit} truyện)`);
+
+            const response = await historyHttpClient.get<ApiResponse<MangaViewsResponse[]>>(`/view-statistics/by-manga?days=${days}&limit=${limit}`);
+            console.log('Kết quả lấy lượt xem theo truyện:', response);
+
+            if (response && response.code === 1000 && response.result) {
+                return response.result;
+            }
+
+            return [];
+        } catch (error) {
+            console.error('Lỗi khi lấy thống kê lượt xem theo truyện:', error);
+            return [];
         }
     }
 };

@@ -25,4 +25,18 @@ public interface FavoriteRepository extends JpaRepository<Favorite, String> {
      */
     @Query("SELECT f.userId FROM Favorite f WHERE f.mangaId = :mangaId")
     List<String> findUserIdsByMangaId(@Param("mangaId") String mangaId);
+
+    /**
+     * Đếm tổng số yêu thích trong hệ thống
+     * @return Tổng số yêu thích
+     */
+    @Query("SELECT COUNT(f) FROM Favorite f")
+    long countTotalFavorites();
+
+    /**
+     * Đếm số yêu thích mới trong ngày hôm nay
+     * @return Số yêu thích mới trong ngày
+     */
+    @Query("SELECT COUNT(f) FROM Favorite f WHERE DATE(f.createdAt) = CURRENT_DATE")
+    long countTodayFavorites();
 }

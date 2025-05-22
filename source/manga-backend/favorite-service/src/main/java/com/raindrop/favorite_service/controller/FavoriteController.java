@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class FavoriteController {
     FavoriteService favoriteService;
-    
+
     /**
      * Thêm manga vào danh sách yêu thích
      * @param jwt JWT token của người dùng
@@ -39,14 +39,14 @@ public class FavoriteController {
     ) {
         String userId = jwt.getSubject();
         FavoriteResponse response = favoriteService.addFavorite(userId, request);
-        
+
         return ResponseEntity.ok(ApiResponse.<FavoriteResponse>builder()
                 .code(1000)
                 .message("Manga added to favorites successfully")
                 .result(response)
                 .build());
     }
-    
+
     /**
      * Xóa manga khỏi danh sách yêu thích
      * @param jwt JWT token của người dùng
@@ -61,15 +61,15 @@ public class FavoriteController {
     ) {
         String userId = jwt.getSubject();
         log.info("Removing manga {} from favorites for user {}", mangaId, userId);
-        
+
         favoriteService.removeFavorite(userId, mangaId);
-        
+
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .code(1000)
                 .message("Manga removed from favorites successfully")
                 .build());
     }
-    
+
     /**
      * Kiểm tra xem manga có trong danh sách yêu thích của người dùng không
      * @param jwt JWT token của người dùng
@@ -84,16 +84,16 @@ public class FavoriteController {
     ) {
         String userId = jwt.getSubject();
         log.info("Checking if manga {} is in favorites for user {}", mangaId, userId);
-        
+
         boolean isFavorite = favoriteService.isFavorite(userId, mangaId);
-        
+
         return ResponseEntity.ok(ApiResponse.<Boolean>builder()
                 .code(1000)
                 .message("Favorite status checked successfully")
                 .result(isFavorite)
                 .build());
     }
-    
+
     /**
      * Lấy danh sách manga yêu thích của người dùng
      * @param jwt JWT token của người dùng
@@ -108,16 +108,16 @@ public class FavoriteController {
     ) {
         String userId = jwt.getSubject();
         log.info("Getting favorites for user {}", userId);
-        
+
         Page<FavoriteResponse> favorites = favoriteService.getFavorites(userId, pageable);
-        
+
         return ResponseEntity.ok(ApiResponse.<Page<FavoriteResponse>>builder()
                 .code(1000)
                 .message("Favorites retrieved successfully")
                 .result(favorites)
                 .build());
     }
-    
+
     /**
      * Đếm số lượng yêu thích của một manga
      * @param mangaId ID của manga
@@ -126,12 +126,46 @@ public class FavoriteController {
     @GetMapping("/{mangaId}/count")
     public ResponseEntity<ApiResponse<Long>> countFavorites(@PathVariable String mangaId) {
         log.info("Counting favorites for manga {}", mangaId);
-        
+
         long count = favoriteService.countFavoritesByMangaId(mangaId);
-        
+
         return ResponseEntity.ok(ApiResponse.<Long>builder()
                 .code(1000)
                 .message("Favorites counted successfully")
+                .result(count)
+                .build());
+    }
+
+    /**
+     * Đếm tổng số yêu thích trong hệ thống
+     * @return Tổng số yêu thích
+     */
+    @GetMapping("/count")
+    public ResponseEntity<ApiResponse<Long>> countTotalFavorites() {
+        log.info("Counting total favorites");
+
+        long count = favoriteService.countTotalFavorites();
+
+        return ResponseEntity.ok(ApiResponse.<Long>builder()
+                .code(1000)
+                .message("Total favorites counted successfully")
+                .result(count)
+                .build());
+    }
+
+    /**
+     * Đếm số yêu thích mới trong ngày hôm nay
+     * @return Số yêu thích mới trong ngày
+     */
+    @GetMapping("/count/today")
+    public ResponseEntity<ApiResponse<Long>> countTodayFavorites() {
+        log.info("Counting today's favorites");
+
+        long count = favoriteService.countTodayFavorites();
+
+        return ResponseEntity.ok(ApiResponse.<Long>builder()
+                .code(1000)
+                .message("Today's favorites counted successfully")
                 .result(count)
                 .build());
     }

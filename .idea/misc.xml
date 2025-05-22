@@ -10,10 +10,10 @@
         <option value="$PROJECT_DIR$/source/manga-backend/upload-service/pom.xml" />
         <option value="$PROJECT_DIR$/source/manga-backend/comment-service/pom.xml" />
         <option value="$PROJECT_DIR$/source/manga-backend/history_service/pom.xml" />
-        <option value="$PROJECT_DIR$/source/manga-backend/profile-service/pom.xml" />
         <option value="$PROJECT_DIR$/source/manga-backend/favorite-service/pom.xml" />
         <option value="$PROJECT_DIR$/source/manga-backend/identity-service/pom.xml" />
         <option value="$PROJECT_DIR$/source/manga-backend/notification-service/pom.xml" />
+        <option value="$PROJECT_DIR$/source/manga-backend/history-service/pom.xml" />
       </list>
     </option>
   </component>

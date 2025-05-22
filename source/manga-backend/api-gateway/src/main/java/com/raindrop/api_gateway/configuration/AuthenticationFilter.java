@@ -64,10 +64,10 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/manga/mangas/genre/{genreName}",
 
             // History Service
-            "/history/anonymous-reading-histories/**",
-            "/history/reading-histories/user/**",
-            "/history/reading-histories/manga/**",
-            "/history/reading-histories",
+            "/history/anonymous-histories/**",
+            "/history/histories/user/**",
+            "/history/histories/manga/**",
+            "/history/histories",
 
             // Comment Service
             "/comment/comments/chapters/**",

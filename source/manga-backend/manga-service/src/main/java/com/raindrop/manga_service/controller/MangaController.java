@@ -6,6 +6,7 @@ import com.raindrop.manga_service.dto.response.ApiResponse;
 import com.raindrop.manga_service.dto.response.MangaResponse;
 import com.raindrop.manga_service.dto.response.MangaStatisticsResponse;
 import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
+import com.raindrop.manga_service.dto.response.MostViewedMangaResponse;
 import com.raindrop.manga_service.enums.MangaStatus;
 import com.raindrop.manga_service.service.MangaService;
 import lombok.AccessLevel;
@@ -18,6 +19,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
@@ -288,6 +291,21 @@ public class MangaController {
         return ApiResponse.<MangaStatisticsResponse>builder()
                 .message("Manga statistics retrieved successfully")
                 .result(mangaService.getMangaStatistics())
+                .build();
+    }
+
+    /**
+     * Lấy danh sách truyện được xem nhiều nhất
+     * @param limit Số lượng truyện cần lấy (mặc định là 10)
+     * @return Danh sách truyện được xem nhiều nhất
+     */
+    @GetMapping("/most-viewed")
+    ApiResponse<List<MostViewedMangaResponse>> getMostViewedMangas(
+            @RequestParam(required = false, defaultValue = "10") int limit
+    ) {
+        return ApiResponse.<List<MostViewedMangaResponse>>builder()
+                .message("Most viewed mangas retrieved successfully")
+                .result(mangaService.getMostViewedMangas(limit))
                 .build();
     }
 }

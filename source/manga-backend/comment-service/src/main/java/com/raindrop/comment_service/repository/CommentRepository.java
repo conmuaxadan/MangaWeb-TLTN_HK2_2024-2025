@@ -38,4 +38,12 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
     // Tìm kiếm bình luận theo chapterId
     @Query("SELECT c FROM Comment c WHERE c.chapterId = :chapterId")
     Page<Comment> searchByChapterId(@Param("chapterId") String chapterId, Pageable pageable);
+
+    // Đếm tổng số bình luận trong hệ thống
+    @Query("SELECT COUNT(c) FROM Comment c")
+    long countTotalComments();
+
+    // Đếm số bình luận mới trong ngày hôm nay
+    @Query("SELECT COUNT(c) FROM Comment c WHERE DATE(c.createdAt) = CURRENT_DATE")
+    long countTodayComments();
 }

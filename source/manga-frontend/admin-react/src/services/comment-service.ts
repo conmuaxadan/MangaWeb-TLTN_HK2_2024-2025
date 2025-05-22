@@ -131,6 +131,48 @@ class CommentService {
             return null;
         }
     }
+
+    /**
+     * Đếm tổng số bình luận trong hệ thống
+     * @returns Tổng số bình luận hoặc 0 nếu thất bại
+     */
+    async countTotalComments(): Promise<number> {
+        logApiCall('countTotalComments');
+        try {
+            const apiResponse = await commentHttpClient.get<ApiResponse<number>>('/comments/count');
+
+            if (apiResponse.code !== 1000) {
+                console.error(apiResponse.message || "Không thể đếm tổng số bình luận");
+                return 0;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error('Lỗi đếm tổng số bình luận:', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Đếm số bình luận mới trong ngày hôm nay
+     * @returns Số bình luận mới trong ngày hoặc 0 nếu thất bại
+     */
+    async countTodayComments(): Promise<number> {
+        logApiCall('countTodayComments');
+        try {
+            const apiResponse = await commentHttpClient.get<ApiResponse<number>>('/comments/count/today');
+
+            if (apiResponse.code !== 1000) {
+                console.error(apiResponse.message || "Không thể đếm số bình luận mới trong ngày");
+                return 0;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error('Lỗi đếm số bình luận mới trong ngày:', error);
+            return 0;
+        }
+    }
 }
 
 // Tạo một instance của CommentService

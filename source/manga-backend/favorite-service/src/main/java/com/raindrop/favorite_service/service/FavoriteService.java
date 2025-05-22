@@ -154,4 +154,22 @@ public class FavoriteService {
         log.info("Counting favorites for manga {}", mangaId);
         return favoriteMangaRepository.countByMangaId(mangaId);
     }
+
+    /**
+     * Đếm tổng số yêu thích trong hệ thống
+     * @return Tổng số yêu thích
+     */
+    public long countTotalFavorites() {
+        log.info("Counting total favorites");
+        return favoriteMangaRepository.countTotalFavorites();
+    }
+
+    /**
+     * Đếm số yêu thích mới trong ngày hôm nay
+     * @return Số yêu thích mới trong ngày
+     */
+    public long countTodayFavorites() {
+        log.info("Counting today's favorites");
+        return favoriteMangaRepository.countTodayFavorites();
+    }
 }

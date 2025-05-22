@@ -10,14 +10,19 @@ import {
   faCalendarAlt,
   faSpinner,
   faTrash,
-  faCheckCircle
+  faCheckCircle,
+  faUser as faUserAlt
 } from '@fortawesome/free-solid-svg-icons';
+import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import statisticsService from '../../services/statistics-service';
 import mangaService from '../../services/manga-service';
+import userStatisticsService from '../../services/user-statistics-service';
+import mangaStatisticsService from '../../services/manga-statistics-service';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 
 const Statistics: React.FC = () => {
   // State cho tab thống kê
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'mangas' | 'views'>('overview');
+  const [activeTab, setActiveTab] = useState<'users' | 'mangas' | 'views'>('users');
 
   // State cho trạng thái loading
   const [loading, setLoading] = useState<boolean>(true);
@@ -46,75 +51,35 @@ const Statistics: React.FC = () => {
       favoritesToday: 0
     },
     users: {
-      totalUsers: 1250,
-      newUsersToday: 25,
-      newUsersThisWeek: 120,
-      newUsersThisMonth: 480,
-      usersByDay: [
-        { date: '2023-05-01', newUsers: 20 },
-        { date: '2023-05-02', newUsers: 25 },
-        { date: '2023-05-03', newUsers: 18 },
-        { date: '2023-05-04', newUsers: 22 },
-        { date: '2023-05-05', newUsers: 30 },
-        { date: '2023-05-06', newUsers: 28 },
-        { date: '2023-05-07', newUsers: 25 }
-      ],
-      usersByAuthProvider: [
-        { provider: 'LOCAL', count: 850 },
-        { provider: 'GOOGLE', count: 400 }
-      ]
+      totalUsers: 0,
+      newUsersToday: 0,
+      newUsersThisWeek: 0,
+      newUsersThisMonth: 0,
+      usersByDay: [],
+      usersByAuthProvider: []
     },
     mangas: {
-      totalMangas: 450,
-      newMangasToday: 5,
-      newMangasThisWeek: 20,
-      newMangasThisMonth: 80,
-      mangasByDay: [
-        { date: '2023-05-01', newMangas: 3 },
-        { date: '2023-05-02', newMangas: 5 },
-        { date: '2023-05-03', newMangas: 2 },
-        { date: '2023-05-04', newMangas: 4 },
-        { date: '2023-05-05', newMangas: 6 },
-        { date: '2023-05-06', newMangas: 3 },
-        { date: '2023-05-07', newMangas: 5 }
-      ],
-      mangasByGenre: [
-        { genre: 'Action', count: 120 },
-        { genre: 'Adventure', count: 100 },
-        { genre: 'Comedy', count: 80 },
-        { genre: 'Drama', count: 70 },
-        { genre: 'Fantasy', count: 90 },
-        { genre: 'Romance', count: 60 }
-      ],
-      mangasByStatus: [
-        { status: 'ONGOING', count: 250 },
-        { status: 'COMPLETED', count: 180 },
-        { status: 'PAUSED', count: 20 }
-      ],
-      mostViewedMangas: [
-        { id: '1', title: 'One Piece', views: 50000 },
-        { id: '2', title: 'Naruto', views: 45000 },
-        { id: '3', title: 'Bleach', views: 40000 },
-        { id: '4', title: 'Dragon Ball', views: 38000 },
-        { id: '5', title: 'Attack on Titan', views: 35000 }
-      ]
+      totalMangas: 0,
+      newMangasToday: 0,
+      ongoingMangas: 0,
+      completedMangas: 0,
+      mostViewedMangas: []
     },
     views: {
       totalViews: 0,
       viewsToday: 0,
       viewsThisWeek: 0,
       viewsThisMonth: 0,
-      viewsByDay: [
-        { date: '2023-05-01', views: 10000 },
-        { date: '2023-05-02', views: 12500 },
-        { date: '2023-05-03', views: 11000 },
-        { date: '2023-05-04', views: 13000 },
-        { date: '2023-05-05', views: 15000 },
-        { date: '2023-05-06', views: 14000 },
-        { date: '2023-05-07', views: 12500 }
-      ]
+      viewsByDay: [],
+      viewsByManga: []
     }
   });
+
+  // State cho khoảng thời gian hiển thị lượt xem
+  const [viewsTimeRange, setViewsTimeRange] = useState<7 | 30 | 90>(7);
+
+  // State cho số lượng truyện hiển thị trong biểu đồ lượt xem theo truyện
+  const [mangaViewsLimit, setMangaViewsLimit] = useState<5 | 10 | 20>(10);
 
   // Lấy dữ liệu thống kê khi component được mount
   useEffect(() => {
@@ -142,7 +107,9 @@ const Statistics: React.FC = () => {
             views: {
               ...prevStats.views,
               totalViews: overviewStats.totalViews,
-              viewsToday: overviewStats.viewsToday
+              viewsToday: overviewStats.viewsToday,
+              viewsThisWeek: overviewStats.viewsThisWeek || 0,
+              viewsThisMonth: overviewStats.viewsThisMonth || 0
             }
           }));
         }
@@ -150,16 +117,78 @@ const Statistics: React.FC = () => {
         // Lấy thống kê chi tiết về truyện
         const mangaStatistics = await mangaService.getMangaStatistics();
         if (mangaStatistics) {
+          console.log('MangaStatistics:', mangaStatistics);
+          console.log('MangasByStatus:', mangaStatistics.mangasByStatus);
+
+          // Tính toán số truyện theo trạng thái
+          const ongoingMangas = mangaStatistics.mangasByStatus['ONGOING'] || 0;
+          const completedMangas = mangaStatistics.mangasByStatus['COMPLETED'] || 0;
+
+          console.log('OngoingMangas:', ongoingMangas);
+          console.log('CompletedMangas:', completedMangas);
+
           setStats(prevStats => ({
             ...prevStats,
             mangaStats: mangaStatistics,
             mangas: {
               ...prevStats.mangas,
               totalMangas: mangaStatistics.activeMangas,
-              newMangasToday: mangaStatistics.newMangasToday
+              newMangasToday: mangaStatistics.newMangasToday,
+              ongoingMangas,
+              completedMangas
             }
           }));
         }
+
+        // Lấy danh sách truyện được xem nhiều nhất
+        const mostViewedMangas = await mangaStatisticsService.getMostViewedMangas(5);
+        if (mostViewedMangas) {
+          setStats(prevStats => ({
+            ...prevStats,
+            mangas: {
+              ...prevStats.mangas,
+              mostViewedMangas
+            }
+          }));
+        }
+
+        // Lấy thống kê chi tiết về người dùng
+        const userStatistics = await userStatisticsService.getUserStatistics();
+        if (userStatistics) {
+          // Chuyển đổi usersByAuthProvider từ Record<string, number> sang mảng đối tượng
+          const usersByAuthProviderArray = Object.entries(userStatistics.usersByAuthProvider).map(([provider, count]) => ({
+            provider,
+            count
+          }));
+
+          // Chuyển đổi usersByDay từ Record<string, number> sang mảng đối tượng
+          const usersByDayArray = Object.entries(userStatistics.usersByDay).map(([date, newUsers]) => ({
+            date,
+            newUsers
+          }));
+
+          // Sắp xếp usersByDay theo ngày
+          usersByDayArray.sort((a, b) => a.date.localeCompare(b.date));
+
+          setStats(prevStats => ({
+            ...prevStats,
+            users: {
+              ...prevStats.users,
+              totalUsers: userStatistics.totalUsers,
+              newUsersToday: userStatistics.newUsersToday,
+              newUsersThisWeek: userStatistics.newUsersThisWeek,
+              newUsersThisMonth: userStatistics.newUsersThisMonth,
+              usersByDay: usersByDayArray,
+              usersByAuthProvider: usersByAuthProviderArray
+            }
+          }));
+        }
+
+        // Lấy dữ liệu lượt xem theo ngày
+        await fetchViewsByDay(viewsTimeRange);
+
+        // Lấy dữ liệu lượt xem theo truyện
+        await fetchViewsByManga(viewsTimeRange, mangaViewsLimit);
       } catch (error) {
         console.error('Lỗi khi lấy thống kê:', error);
       } finally {
@@ -167,8 +196,88 @@ const Statistics: React.FC = () => {
       }
     };
 
+    // Hàm lấy dữ liệu lượt xem theo ngày
+    const fetchViewsByDay = async (days: number) => {
+      try {
+        const viewsByDay = await statisticsService.getViewsByDay(days);
+        if (viewsByDay && viewsByDay.length > 0) {
+          setStats(prevStats => ({
+            ...prevStats,
+            views: {
+              ...prevStats.views,
+              viewsByDay
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu lượt xem theo ngày:', error);
+      }
+    };
+
+    // Hàm lấy dữ liệu lượt xem theo truyện
+    const fetchViewsByManga = async (days: number, limit: number) => {
+      try {
+        const viewsByManga = await statisticsService.getViewsByManga(days, limit);
+        if (viewsByManga && viewsByManga.length > 0) {
+          setStats(prevStats => ({
+            ...prevStats,
+            views: {
+              ...prevStats.views,
+              viewsByManga
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu lượt xem theo truyện:', error);
+      }
+    };
+
     fetchStatistics();
   }, []);
+
+  // Cập nhật dữ liệu lượt xem theo ngày khi thay đổi khoảng thời gian
+  useEffect(() => {
+    const fetchViewsByDay = async () => {
+      try {
+        const viewsByDay = await statisticsService.getViewsByDay(viewsTimeRange);
+        if (viewsByDay && viewsByDay.length > 0) {
+          setStats(prevStats => ({
+            ...prevStats,
+            views: {
+              ...prevStats.views,
+              viewsByDay
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu lượt xem theo ngày:', error);
+      }
+    };
+
+    fetchViewsByDay();
+  }, [viewsTimeRange]);
+
+  // Cập nhật dữ liệu lượt xem theo truyện khi thay đổi giới hạn hoặc khoảng thời gian
+  useEffect(() => {
+    const fetchViewsByManga = async () => {
+      try {
+        const viewsByManga = await statisticsService.getViewsByManga(viewsTimeRange, mangaViewsLimit);
+        if (viewsByManga && viewsByManga.length > 0) {
+          setStats(prevStats => ({
+            ...prevStats,
+            views: {
+              ...prevStats.views,
+              viewsByManga
+            }
+          }));
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu lượt xem theo truyện:', error);
+      }
+    };
+
+    fetchViewsByManga();
+  }, [mangaViewsLimit, viewsTimeRange]);
 
   return (
     <div className="space-y-6">
@@ -177,19 +286,6 @@ const Statistics: React.FC = () => {
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <ul className="flex flex-wrap -mb-px">
-          <li className="mr-2">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-t-lg ${
-                activeTab === 'overview'
-                  ? 'text-blue-600 border-b-2 border-blue-600 active dark:text-blue-500 dark:border-blue-500'
-                  : 'text-gray-500 hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
-            >
-              <FontAwesomeIcon icon={faChartLine} className="mr-2" />
-              Tổng quan
-            </button>
-          </li>
           <li className="mr-2">
             <button
               onClick={() => setActiveTab('users')}
@@ -241,59 +337,6 @@ const Statistics: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Overview Tab */}
-            {activeTab === 'overview' && (
-              <div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-6">
-                  <StatsCard
-                    title="Tổng người dùng"
-                    value={stats.overview.totalUsers}
-                    increase={stats.overview.newUsersToday}
-                    icon={faUsers}
-                    color="bg-blue-500"
-                  />
-                  <StatsCard
-                    title="Tổng truyện"
-                    value={stats.overview.totalMangas}
-                    increase={stats.overview.newMangasToday}
-                    icon={faBook}
-                    color="bg-purple-500"
-                  />
-                  <StatsCard
-                    title="Tổng lượt xem"
-                    value={stats.overview.totalViews}
-                    increase={stats.overview.viewsToday}
-                    icon={faEye}
-                    color="bg-green-500"
-                  />
-                  <StatsCard
-                    title="Tổng bình luận"
-                    value={stats.overview.totalComments}
-                    increase={stats.overview.commentsToday}
-                    icon={faComment}
-                    color="bg-yellow-500"
-                  />
-                  <StatsCard
-                    title="Tổng yêu thích"
-                    value={stats.overview.totalFavorites}
-                    increase={stats.overview.favoritesToday}
-                    icon={faHeart}
-                    color="bg-red-500"
-                  />
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Biểu đồ hoạt động</h2>
-                  <div className="h-80 flex items-center justify-center">
-                    <div className="text-center text-gray-500 dark:text-gray-400">
-                      <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
-                      <p>Biểu đồ hoạt động sẽ được hiển thị ở đây</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Users Tab */}
             {activeTab === 'users' && (
               <div>
@@ -327,22 +370,96 @@ const Statistics: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Người dùng mới theo ngày</h2>
-                    <div className="h-80 flex items-center justify-center">
-                      <div className="text-center text-gray-500 dark:text-gray-400">
-                        <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
-                        <p>Biểu đồ người dùng mới theo ngày sẽ được hiển thị ở đây</p>
+                    {stats.users.usersByDay && stats.users.usersByDay.length > 0 ? (
+                      <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={stats.users.usersByDay}
+                            margin={{
+                              top: 5,
+                              right: 30,
+                              left: 20,
+                              bottom: 5,
+                            }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis
+                              dataKey="date"
+                              tickFormatter={(value) => new Date(value).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
+                            />
+                            <YAxis />
+                            <Tooltip
+                              labelFormatter={(value) => `Ngày: ${new Date(value).toLocaleDateString('vi-VN')}`}
+                              formatter={(value) => [`${value} người dùng`, 'Người dùng mới']}
+                            />
+                            <Legend />
+                            <Bar dataKey="newUsers" name="Người dùng mới" fill="#3b82f6" />
+                          </BarChart>
+                        </ResponsiveContainer>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="text-center text-gray-500 dark:text-gray-400 h-80 flex items-center justify-center">
+                        <div>
+                          <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
+                          <p>Không có dữ liệu về người dùng mới theo ngày</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Người dùng theo phương thức đăng nhập</h2>
-                    <div className="h-80 flex items-center justify-center">
-                      <div className="text-center text-gray-500 dark:text-gray-400">
-                        <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
-                        <p>Biểu đồ người dùng theo phương thức đăng nhập sẽ được hiển thị ở đây</p>
+                    {stats.users.usersByAuthProvider && stats.users.usersByAuthProvider.length > 0 ? (
+                      <div className="h-80 flex flex-col items-center justify-center">
+                        <ResponsiveContainer width="100%" height="80%">
+                          <PieChart>
+                            <Pie
+                              data={stats.users.usersByAuthProvider}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={true}
+                              outerRadius={80}
+                              fill="#8884d8"
+                              dataKey="count"
+                              nameKey="provider"
+                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            >
+                              {stats.users.usersByAuthProvider.map((entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={entry.provider === 'GOOGLE' ? '#ef4444' : '#3b82f6'}
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              formatter={(value) => [`${value.toLocaleString()} người dùng`, '']}
+                            />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 w-full">
+                          {stats.users.usersByAuthProvider.map((item, index) => (
+                            <div key={index} className="bg-white dark:bg-gray-700 rounded-lg shadow p-4 flex items-center">
+                              <div className={`p-3 rounded-full ${item.provider === 'GOOGLE' ? 'bg-red-500' : 'bg-blue-500'} text-white mr-4`}>
+                                <FontAwesomeIcon icon={item.provider === 'GOOGLE' ? faGoogle : faUserAlt} className="h-5 w-5" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{item.provider}</p>
+                                <p className="text-xl font-bold text-gray-900 dark:text-white">{item.count.toLocaleString()} người dùng</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="text-center text-gray-500 dark:text-gray-400 h-80 flex items-center justify-center">
+                        <div>
+                          <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
+                          <p>Không có dữ liệu về phương thức đăng nhập</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -373,54 +490,46 @@ const Statistics: React.FC = () => {
                   <StatsCard
                     title="Truyện mới hôm nay"
                     value={stats.mangaStats.newMangasToday}
-                    icon={faBook}
+                    icon={faCalendarAlt}
                     color="bg-blue-500"
                   />
                   <StatsCard
                     title="Truyện đang tiến hành"
-                    value={stats.mangaStats.mangasByStatus['ONGOING'] || 0}
-                    icon={faBook}
+                    value={stats.mangaStats.mangasByStatus && stats.mangaStats.mangasByStatus['ONGOING'] ? stats.mangaStats.mangasByStatus['ONGOING'] : 0}
+                    icon={faSpinner}
                     color="bg-yellow-500"
                   />
                   <StatsCard
                     title="Truyện hoàn thành"
-                    value={stats.mangaStats.mangasByStatus['COMPLETED'] || 0}
-                    icon={faBook}
+                    value={stats.mangaStats.mangasByStatus && stats.mangaStats.mangasByStatus['COMPLETED'] ? stats.mangaStats.mangasByStatus['COMPLETED'] : 0}
+                    icon={faCheckCircle}
                     color="bg-teal-500"
                   />
                 </div>
+
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Truyện theo thể loại</h2>
                     {Object.keys(stats.mangaStats.mangasByGenre).length > 0 ? (
-                      <div className="overflow-auto max-h-80">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                          <thead className="bg-gray-50 dark:bg-gray-700">
-                            <tr>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Thể loại
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Số lượng truyện
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            {Object.entries(stats.mangaStats.mangasByGenre)
-                              .sort(([, countA], [, countB]) => (countB as number) - (countA as number))
-                              .map(([genre, count]) => (
-                                <tr key={genre} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                    {genre}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                    {count}
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
+                      <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RadarChart outerRadius={90} data={Object.entries(stats.mangaStats.mangasByGenre)
+                            .sort(([, countA], [, countB]) => (countB as number) - (countA as number))
+                            .slice(0, 8) // Lấy 8 thể loại phổ biến nhất
+                            .map(([genre, count]) => ({
+                              genre,
+                              count
+                            }))}
+                          >
+                            <PolarGrid />
+                            <PolarAngleAxis dataKey="genre" />
+                            <PolarRadiusAxis />
+                            <Radar name="Số lượng truyện" dataKey="count" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                            <Tooltip formatter={(value) => [`${value} truyện`, '']}/>
+                            <Legend />
+                          </RadarChart>
+                        </ResponsiveContainer>
                       </div>
                     ) : (
                       <div className="h-80 flex items-center justify-center">
@@ -435,40 +544,49 @@ const Statistics: React.FC = () => {
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Truyện theo trạng thái</h2>
                     {Object.keys(stats.mangaStats.mangasByStatus).length > 0 ? (
-                      <div className="overflow-auto max-h-80">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                          <thead className="bg-gray-50 dark:bg-gray-700">
-                            <tr>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Trạng thái
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Số lượng truyện
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            {Object.entries(stats.mangaStats.mangasByStatus).map(([status, count]) => {
-                              // Chuyển đổi trạng thái sang tên hiển thị
-                              const statusDisplayName = {
-                                'ONGOING': 'Đang tiến hành',
-                                'COMPLETED': 'Hoàn thành',
-                                'PAUSED': 'Tạm ngưng'
-                              }[status] || status;
+                      <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={Object.entries(stats.mangaStats.mangasByStatus).map(([status, count]) => {
+                                // Chuyển đổi trạng thái sang tên hiển thị
+                                const statusDisplayName = {
+                                  'ONGOING': 'Đang tiến hành',
+                                  'COMPLETED': 'Hoàn thành',
+                                  'PAUSED': 'Tạm ngưng'
+                                }[status] || status;
 
-                              return (
-                                <tr key={status} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                    {statusDisplayName}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                    {count}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                                return {
+                                  name: statusDisplayName,
+                                  value: count
+                                };
+                              })}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={true}
+                              outerRadius={80}
+                              fill="#8884d8"
+                              dataKey="value"
+                              nameKey="name"
+                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            >
+                              {[
+                                { status: 'ONGOING', color: '#eab308' },  // yellow-500
+                                { status: 'COMPLETED', color: '#14b8a6' }, // teal-500
+                                { status: 'PAUSED', color: '#ef4444' }     // red-500
+                              ].map((entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={entry.color}
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              formatter={(value) => [`${value.toLocaleString()} truyện`, '']}
+                            />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
                       </div>
                     ) : (
                       <div className="h-80 flex items-center justify-center">
@@ -483,31 +601,42 @@ const Statistics: React.FC = () => {
 
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Truyện được xem nhiều nhất</h2>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                      <thead className="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Tên truyện
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Lượt xem
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        {stats.mangas.mostViewedMangas.map((manga) => (
-                          <tr key={manga.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                              {manga.title}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                              {manga.views.toLocaleString()}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="h-80">
+                    {stats.mangas.mostViewedMangas && stats.mangas.mostViewedMangas.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={stats.mangas.mostViewedMangas}
+                          layout="vertical"
+                          margin={{
+                            top: 5,
+                            right: 30,
+                            left: 100,
+                            bottom: 5,
+                          }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis type="number" />
+                          <YAxis
+                            type="category"
+                            dataKey="title"
+                            width={100}
+                            tick={{ fontSize: 12 }}
+                          />
+                          <Tooltip
+                            formatter={(value) => [`${value.toLocaleString()} lượt xem`, '']}
+                          />
+                          <Legend />
+                          <Bar dataKey="views" name="Lượt xem" fill="#10b981" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <div className="text-center text-gray-500 dark:text-gray-400">
+                          <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
+                          <p>Chưa có dữ liệu về truyện được xem nhiều nhất</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -543,22 +672,167 @@ const Statistics: React.FC = () => {
                   />
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Lượt xem theo ngày</h2>
-                    <div className="flex items-center space-x-2">
-                      <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-500 dark:text-gray-400" />
-                      <select className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
-                        <option value="7">7 ngày qua</option>
-                        <option value="30">30 ngày qua</option>
-                        <option value="90">90 ngày qua</option>
-                      </select>
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Lượt xem theo ngày</h2>
+                      <div className="flex items-center space-x-2">
+                        <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-500 dark:text-gray-400" />
+                        <select
+                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                          value={viewsTimeRange}
+                          onChange={(e) => setViewsTimeRange(Number(e.target.value) as 7 | 30 | 90)}
+                        >
+                          <option value="7">7 ngày qua</option>
+                          <option value="30">30 ngày qua</option>
+                          <option value="90">90 ngày qua</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="h-80">
+                      {stats.views.viewsByDay && stats.views.viewsByDay.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={stats.views.viewsByDay}
+                            margin={{
+                              top: 5,
+                              right: 30,
+                              left: 20,
+                              bottom: 5,
+                            }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis
+                              dataKey="date"
+                              tickFormatter={(value) => {
+                                const date = new Date(value);
+                                return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                              }}
+                            />
+                            <YAxis />
+                            <Tooltip
+                              labelFormatter={(value) => `Ngày: ${new Date(value).toLocaleDateString('vi-VN')}`}
+                              formatter={(value, name, entry) => {
+                                const formattedValue = value.toLocaleString();
+                                let displayName;
+
+                                // Xác định tên hiển thị dựa trên dataKey
+                                if (entry && entry.dataKey) {
+                                  switch(entry.dataKey) {
+                                    case 'views':
+                                      displayName = 'Tổng lượt xem';
+                                      break;
+                                    case 'registeredUserViews':
+                                      displayName = 'Người dùng đăng nhập';
+                                      break;
+                                    case 'anonymousViews':
+                                      displayName = 'Người dùng không đăng nhập';
+                                      break;
+                                    default:
+                                      displayName = name;
+                                  }
+                                } else {
+                                  displayName = name;
+                                }
+
+                                return [`${formattedValue} lượt xem`, displayName];
+                              }}
+                            />
+                            <Legend />
+                            <Bar dataKey="views" name="Tổng lượt xem" fill="#10b981" />
+                            <Bar dataKey="registeredUserViews" name="Người dùng đăng nhập" fill="#3b82f6" />
+                            <Bar dataKey="anonymousViews" name="Người dùng không đăng nhập" fill="#f59e0b" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full flex items-center justify-center">
+                          <div className="text-center text-gray-500 dark:text-gray-400">
+                            <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
+                            <p>Không có dữ liệu lượt xem theo ngày</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="h-80 flex items-center justify-center">
-                    <div className="text-center text-gray-500 dark:text-gray-400">
-                      <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
-                      <p>Biểu đồ lượt xem theo ngày sẽ được hiển thị ở đây</p>
+
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Lượt xem theo truyện</h2>
+                      <div className="flex items-center space-x-2">
+                        <FontAwesomeIcon icon={faBook} className="text-gray-500 dark:text-gray-400" />
+                        <select
+                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                          value={mangaViewsLimit}
+                          onChange={(e) => setMangaViewsLimit(Number(e.target.value) as 5 | 10 | 20)}
+                        >
+                          <option value="5">5 truyện</option>
+                          <option value="10">10 truyện</option>
+                          <option value="20">20 truyện</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="h-96">
+                      {stats.views.viewsByManga && stats.views.viewsByManga.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={stats.views.viewsByManga}
+                            layout="vertical"
+                            margin={{
+                              top: 5,
+                              right: 30,
+                              left: 150, // Thêm khoảng trống cho tiêu đề truyện
+                              bottom: 5,
+                            }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis type="number" />
+                            <YAxis
+                              type="category"
+                              dataKey="title"
+                              width={140}
+                              tick={{ fontSize: 12 }}
+                            />
+                            <Tooltip
+                              formatter={(value, name, entry) => {
+                                const formattedValue = value.toLocaleString();
+                                let displayName;
+
+                                // Xác định tên hiển thị dựa trên dataKey
+                                if (entry && entry.dataKey) {
+                                  switch(entry.dataKey) {
+                                    case 'totalViews':
+                                      displayName = 'Tổng lượt xem';
+                                      break;
+                                    case 'registeredUserViews':
+                                      displayName = 'Người dùng đăng nhập';
+                                      break;
+                                    case 'anonymousViews':
+                                      displayName = 'Người dùng không đăng nhập';
+                                      break;
+                                    default:
+                                      displayName = name;
+                                  }
+                                } else {
+                                  displayName = name;
+                                }
+
+                                return [`${formattedValue} lượt xem`, displayName];
+                              }}
+                            />
+                            <Legend />
+                            <Bar dataKey="totalViews" name="Tổng lượt xem" stackId="a" fill="#10b981" />
+                            <Bar dataKey="registeredUserViews" name="Người dùng đăng nhập" stackId="b" fill="#3b82f6" />
+                            <Bar dataKey="anonymousViews" name="Người dùng không đăng nhập" stackId="b" fill="#f59e0b" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full flex items-center justify-center">
+                          <div className="text-center text-gray-500 dark:text-gray-400">
+                            <FontAwesomeIcon icon={faChartLine} className="text-5xl mb-4" />
+                            <p>Không có dữ liệu lượt xem theo truyện</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

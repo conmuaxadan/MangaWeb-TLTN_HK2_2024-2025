@@ -209,4 +209,32 @@ public class CommentController {
                 .result(commentService.searchComments(keyword, pageable))
                 .build();
     }
+
+    /**
+     * Đếm tổng số bình luận trong hệ thống
+     * @return Tổng số bình luận
+     */
+    @GetMapping("/count")
+    public ApiResponse<Long> countTotalComments() {
+        log.info("Counting total comments");
+        return ApiResponse.<Long>builder()
+                .code(1000)
+                .message("Total comments counted successfully")
+                .result(commentService.countTotalComments())
+                .build();
+    }
+
+    /**
+     * Đếm số bình luận mới trong ngày hôm nay
+     * @return Số bình luận mới trong ngày
+     */
+    @GetMapping("/count/today")
+    public ApiResponse<Long> countTodayComments() {
+        log.info("Counting today's comments");
+        return ApiResponse.<Long>builder()
+                .code(1000)
+                .message("Today's comments counted successfully")
+                .result(commentService.countTodayComments())
+                .build();
+    }
 }

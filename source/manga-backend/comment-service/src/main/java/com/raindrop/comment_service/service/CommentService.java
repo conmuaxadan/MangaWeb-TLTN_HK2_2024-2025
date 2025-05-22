@@ -270,4 +270,22 @@ public class CommentService {
 
         return comments.map(this::enrichCommentResponse);
     }
+
+    /**
+     * Đếm tổng số bình luận trong hệ thống
+     * @return Tổng số bình luận
+     */
+    public long countTotalComments() {
+        log.info("Counting total comments");
+        return commentRepository.countTotalComments();
+    }
+
+    /**
+     * Đếm số bình luận mới trong ngày hôm nay
+     * @return Số bình luận mới trong ngày
+     */
+    public long countTodayComments() {
+        log.info("Counting today's comments");
+        return commentRepository.countTodayComments();
+    }
 }
