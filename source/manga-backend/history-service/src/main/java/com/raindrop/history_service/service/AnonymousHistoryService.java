@@ -44,13 +44,7 @@ public class AnonymousHistoryService {
                 .findBySessionIdAndMangaIdAndChapterId(request.getSessionId(), request.getMangaId(), request.getChapterId());
 
         AnonymousHistory readingHistory;
-        if (existingHistory.isPresent()) {
-            // Sử dụng lịch sử đọc hiện có (chỉ cập nhật thời gian)
-            readingHistory = existingHistory.get();
-        } else {
-            // Tạo lịch sử đọc mới
-            readingHistory = anonymousHistoryMapper.toAnonymousReadingHistory(request, ipAddress);
-        }
+        readingHistory = existingHistory.orElseGet(() -> anonymousHistoryMapper.toAnonymousReadingHistory(request, ipAddress));
 
         // Lưu lịch sử đọc
         readingHistory = anonymousHistoryRepository.save(readingHistory);
@@ -59,7 +53,7 @@ public class AnonymousHistoryService {
         chapterViewEventProducer.sendChapterViewEvent(
                 request.getChapterId(),
                 request.getMangaId(),
-                null // userId null vì người dùng không đăng nhập
+                null
         );
         log.info("Sent chapter view event for anonymous user, chapter {} of manga {}",
                 request.getChapterId(), request.getMangaId());
@@ -68,27 +62,7 @@ public class AnonymousHistoryService {
         AnonymousHistoryResponse response = anonymousHistoryMapper.toAnonymousReadingHistoryResponse(readingHistory);
 
         // Bổ sung thông tin từ Manga Service
-        try {
-            var mangaResponse = mangaClient.getMangaById(request.getMangaId());
-            var chapterResponse = mangaClient.getChapterById(request.getChapterId());
-
-            // Xử lý dữ liệu từ response và bổ sung vào response
-            if (mangaResponse != null && mangaResponse.getResult() != null) {
-                var mangaInfo = mangaResponse.getResult();
-                response.setMangaTitle(mangaInfo.getTitle());
-                response.setMangaCoverUrl(mangaInfo.getCoverUrl());
-                response.setAuthor(mangaInfo.getAuthor());
-            }
-
-            if (chapterResponse != null && chapterResponse.getResult() != null) {
-                var chapterInfo = chapterResponse.getResult();
-                response.setChapterTitle(chapterInfo.getTitle());
-                response.setChapterNumber(chapterInfo.getChapterNumber());
-            }
-
-        } catch (Exception e) {
-            log.error("Error getting manga/chapter info", e);
-        }
+        enrichAnonymousHistoryResponse(response, request.getMangaId(), request.getChapterId());
 
         return response;
     }
@@ -110,27 +84,7 @@ public class AnonymousHistoryService {
             AnonymousHistoryResponse response = anonymousHistoryMapper.toAnonymousReadingHistoryResponse(history);
 
             // Bổ sung thông tin từ Manga Service
-            try {
-                var mangaResponse = mangaClient.getMangaById(history.getMangaId());
-                var chapterResponse = mangaClient.getChapterById(history.getChapterId());
-
-                // Xử lý dữ liệu từ response và bổ sung vào response
-                if (mangaResponse != null && mangaResponse.getResult() != null) {
-                    var mangaInfo = mangaResponse.getResult();
-                    response.setMangaTitle(mangaInfo.getTitle());
-                    response.setMangaCoverUrl(mangaInfo.getCoverUrl());
-                    response.setAuthor(mangaInfo.getAuthor());
-                }
-
-                if (chapterResponse != null && chapterResponse.getResult() != null) {
-                    var chapterInfo = chapterResponse.getResult();
-                    response.setChapterTitle(chapterInfo.getTitle());
-                    response.setChapterNumber(chapterInfo.getChapterNumber());
-                }
-
-            } catch (Exception e) {
-                log.error("Error getting manga/chapter info", e);
-            }
+            enrichAnonymousHistoryResponse(response, history.getMangaId(), history.getChapterId());
 
             return response;
         });
@@ -153,27 +107,7 @@ public class AnonymousHistoryService {
         AnonymousHistoryResponse response = anonymousHistoryMapper.toAnonymousReadingHistoryResponse(readingHistory);
 
         // Bổ sung thông tin từ Manga Service
-        try {
-            var mangaResponse = mangaClient.getMangaById(mangaId);
-            var chapterResponse = mangaClient.getChapterById(readingHistory.getChapterId());
-
-            // Xử lý dữ liệu từ response và bổ sung vào response
-            if (mangaResponse != null && mangaResponse.getResult() != null) {
-                var mangaInfo = mangaResponse.getResult();
-                response.setMangaTitle(mangaInfo.getTitle());
-                response.setMangaCoverUrl(mangaInfo.getCoverUrl());
-                response.setAuthor(mangaInfo.getAuthor());
-            }
-
-            if (chapterResponse != null && chapterResponse.getResult() != null) {
-                var chapterInfo = chapterResponse.getResult();
-                response.setChapterTitle(chapterInfo.getTitle());
-                response.setChapterNumber(chapterInfo.getChapterNumber());
-            }
-
-        } catch (Exception e) {
-            log.error("Error getting manga/chapter info", e);
-        }
+        enrichAnonymousHistoryResponse(response, mangaId, readingHistory.getChapterId());
 
         return response;
     }
@@ -218,5 +152,36 @@ public class AnonymousHistoryService {
      */
     public Long countTodayViews() {
         return anonymousHistoryRepository.countTodayViews();
+    }
+
+    /**
+     * Bổ sung thông tin truyện và chapter từ Manga Service vào AnonymousHistoryResponse
+     * @param response Đối tượng AnonymousHistoryResponse cần bổ sung thông tin
+     * @param mangaId ID của manga
+     * @param chapterId ID của chapter
+     */
+    private void enrichAnonymousHistoryResponse(AnonymousHistoryResponse response, String mangaId, String chapterId) {
+        try {
+            var mangaResponse = mangaClient.getMangaById(mangaId);
+            var chapterResponse = mangaClient.getChapterById(chapterId);
+
+            // Xử lý dữ liệu từ manga response
+            if (mangaResponse != null && mangaResponse.getResult() != null) {
+                var mangaInfo = mangaResponse.getResult();
+                response.setMangaTitle(mangaInfo.getTitle());
+                response.setMangaCoverUrl(mangaInfo.getCoverUrl());
+                response.setAuthor(mangaInfo.getAuthor());
+            }
+
+            // Xử lý dữ liệu từ chapter response
+            if (chapterResponse != null && chapterResponse.getResult() != null) {
+                var chapterInfo = chapterResponse.getResult();
+                response.setChapterTitle(chapterInfo.getTitle());
+                response.setChapterNumber(chapterInfo.getChapterNumber());
+            }
+
+        } catch (Exception e) {
+            log.error("Error getting manga/chapter info", e);
+        }
     }
 }

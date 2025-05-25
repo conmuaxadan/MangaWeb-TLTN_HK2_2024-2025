@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,7 +8,7 @@ import { faUser, faSignOutAlt, faBell, faCog } from '@fortawesome/free-solid-svg
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { isLogin, logout, user, userProfile } = useAuth();
+  const {logout, user, userProfile } = useAuth();
   const navigate = useNavigate();
 
   // Xử lý click bên ngoài menu để đóng menu

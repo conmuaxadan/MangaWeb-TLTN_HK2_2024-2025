@@ -2,11 +2,7 @@ package com.raindrop.manga_service.controller;
 
 import com.raindrop.manga_service.dto.request.AdvancedSearchRequest;
 import com.raindrop.manga_service.dto.request.MangaRequest;
-import com.raindrop.manga_service.dto.response.ApiResponse;
-import com.raindrop.manga_service.dto.response.MangaResponse;
-import com.raindrop.manga_service.dto.response.MangaStatisticsResponse;
-import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
-import com.raindrop.manga_service.dto.response.MostViewedMangaResponse;
+import com.raindrop.manga_service.dto.response.*;
 import com.raindrop.manga_service.enums.MangaStatus;
 import com.raindrop.manga_service.service.MangaService;
 import lombok.AccessLevel;
@@ -87,25 +83,50 @@ public class MangaController {
     }
 
     @GetMapping()
-    ApiResponse<List<MangaResponse>> getAllMangas() {
-        return ApiResponse.<List<MangaResponse>>builder()
+    ApiResponse<Page<MangaManagementResponse>> getAllMangas(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "genreName", required = false) String genreName,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "yearOfRelease", required = false) Integer yearOfRelease,
+            @PageableDefault(size = 10) Pageable pageable
+    ) {
+        // Nếu có bất kỳ filter nào, sử dụng search and filter
+        if (keyword != null || genreName != null || status != null || yearOfRelease != null) {
+            return ApiResponse.<Page<MangaManagementResponse>>builder()
+                    .message("Filtered mangas retrieved successfully")
+                    .result(mangaService.searchAndFilterActiveMangas(keyword, genreName, status, yearOfRelease, pageable))
+                    .build();
+        }
+
+        // Nếu không có filter, sử dụng method cũ
+        return ApiResponse.<Page<MangaManagementResponse>>builder()
                 .message("Mangas retrieved successfully")
-                .result(mangaService.getAllMangas())
+                .result(mangaService.getAllMangas(pageable))
+                .build();
+    }
+    @GetMapping("/management/deleted")
+    ApiResponse<Page<MangaManagementResponse>> getAllDeletedMangas(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "genreName", required = false) String genreName,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "yearOfRelease", required = false) Integer yearOfRelease,
+            @PageableDefault(size = 10) Pageable pageable
+    ) {
+        // Nếu có bất kỳ filter nào, sử dụng search and filter
+        if (keyword != null || genreName != null || status != null || yearOfRelease != null) {
+            return ApiResponse.<Page<MangaManagementResponse>>builder()
+                    .message("Filtered deleted mangas retrieved successfully")
+                    .result(mangaService.searchAndFilterDeletedMangas(keyword, genreName, status, yearOfRelease, pageable))
+                    .build();
+        }
+
+        // Nếu không có filter, sử dụng method cũ
+        return ApiResponse.<Page<MangaManagementResponse>>builder()
+                .message("Deleted mangas retrieved successfully")
+                .result(mangaService.getAllDeletedMangas(pageable))
                 .build();
     }
 
-    /**
-     * Lấy danh sách manga có phân trang
-     * @param pageable Thông tin phân trang
-     * @return Danh sách manga có phân trang
-     */
-    @GetMapping("/paginated")
-    ApiResponse<Page<MangaResponse>> getAllMangasPaginated(Pageable pageable) {
-        return ApiResponse.<Page<MangaResponse>>builder()
-                .message("Paginated mangas retrieved successfully")
-                .result(mangaService.getAllMangasPaginated(pageable))
-                .build();
-    }
 
     /**
      * Lấy danh sách tóm tắt manga có phân trang
@@ -236,6 +257,24 @@ public class MangaController {
         return ApiResponse.<Page<MangaResponse>>builder()
                 .message("Search results retrieved successfully")
                 .result(mangaService.searchByKeyword(keyword, pageable))
+                .build();
+    }
+
+    /**
+     * Endpoint dành riêng cho việc tìm kiếm truyện khi thêm chapter
+     * Trả về danh sách truyện ngắn gọn với các thông tin cần thiết
+     * @param keyword Từ khóa tìm kiếm (tên truyện)
+     * @return Danh sách truyện phù hợp với từ khóa
+     */
+    @GetMapping("/search/quick")
+    ApiResponse<List<MangaQuickSearchResponse>> quickSearchManga(
+            @RequestParam String keyword,
+            @RequestParam(required = false, defaultValue = "10") int limit
+    ) {
+        log.info("Quick searching manga with keyword: {}, limit: {}", keyword, limit);
+        return ApiResponse.<List<MangaQuickSearchResponse>>builder()
+                .message("Quick search results retrieved successfully")
+                .result(mangaService.quickSearchManga(keyword, limit))
                 .build();
     }
 

@@ -1,180 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faPlus, faSearch, faFilter, faEye, faHeart, faComment, faUndo } from '@fortawesome/free-solid-svg-icons';
-import { MangaResponse, MangaStatus, MangaStatusDisplayNames } from '../../interfaces/models/manga';
+import { faEdit, faTrash, faPlus, faSearch, faEye, faHeart, faComment, faUndo, faTimes, faSync } from '@fortawesome/free-solid-svg-icons';
+import {MangaManagementResponse, MangaResponse, MangaStatusDisplayNames} from '../../interfaces/models/manga';
 import { getMangaImageUrl } from '../../utils/file-utils';
-import mangaService from '../../services/manga-service';
 import MangaForm from '../../components/admin/MangaForm';
 import Modal from '../../components/common/Modal';
+import Pagination from '../../components/common/Pagination';
+import { debounce, throttle } from '../../utils/performance';
+import useMangaManagement from '../../hooks/useMangaManagement';
 
 const MangaManagement: React.FC = () => {
-  // State cho danh sách manga
-  const [mangas, setMangas] = useState<MangaResponse[]>([]);
-  const [deletedMangas, setDeletedMangas] = useState<MangaResponse[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showDeleted, setShowDeleted] = useState<boolean>(false);
+  const {
+    // Data
+    mangas,
 
-  // State cho modal và form
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [currentManga, setCurrentManga] = useState<MangaResponse | undefined>(undefined);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    // Pagination
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    totalItems,
+    pageSize,
+    handlePageSizeChange,
 
-  // Dữ liệu mẫu tạm thời (sẽ bỏ đi sau khi kết nối API)
-  const sampleMangas = [{
-      id: '1',
-      title: 'One Piece',
-      author: 'Eiichiro Oda',
-      description: 'Cuộc phiêu lưu của Luffy và băng hải tặc Mũ Rơm',
-      genres: ['Action', 'Adventure', 'Comedy', 'Fantasy'],
-      loves: 5000,
-      views: 100000,
-      coverUrl: '/images/covers/one-piece.jpg',
-      chapters: ['1', '2', '3'],
-      yearOfRelease: 1999,
-      status: MangaStatus.ONGOING,
-      updatedAt: '2023-05-01T10:00:00Z',
-      lastChapterAddedAt: '2023-05-01T10:00:00Z'
-    },
-    {
-      id: '2',
-      title: 'Naruto',
-      author: 'Masashi Kishimoto',
-      description: 'Hành trình trở thành Hokage của Naruto',
-      genres: ['Action', 'Adventure', 'Fantasy'],
-      loves: 4500,
-      views: 95000,
-      coverUrl: '/images/covers/naruto.jpg',
-      chapters: ['1', '2'],
-      yearOfRelease: 1999,
-      status: MangaStatus.COMPLETED,
-      updatedAt: '2023-04-15T10:00:00Z',
-      lastChapterAddedAt: '2023-04-15T10:00:00Z'
-    },
-    {
-      id: '3',
-      title: 'Bleach',
-      author: 'Tite Kubo',
-      description: 'Cuộc chiến của Ichigo với các hollow',
-      genres: ['Action', 'Adventure', 'Supernatural'],
-      loves: 4000,
-      views: 90000,
-      coverUrl: '/images/covers/bleach.jpg',
-      chapters: ['1'],
-      yearOfRelease: 2001,
-      status: MangaStatus.COMPLETED,
-      updatedAt: '2023-03-20T10:00:00Z',
-      lastChapterAddedAt: '2023-03-20T10:00:00Z'
-    },
-    {
-      id: '4',
-      title: 'Dragon Ball',
-      author: 'Akira Toriyama',
-      description: 'Cuộc phiêu lưu của Son Goku',
-      genres: ['Action', 'Adventure', 'Comedy', 'Martial Arts'],
-      loves: 4800,
-      views: 98000,
-      coverUrl: '/images/covers/dragon-ball.jpg',
-      chapters: ['1', '2', '3', '4'],
-      yearOfRelease: 1984,
-      status: MangaStatus.COMPLETED,
-      updatedAt: '2023-02-10T10:00:00Z',
-      lastChapterAddedAt: '2023-02-10T10:00:00Z'
-    },
-    {
-      id: '5',
-      title: 'Attack on Titan',
-      author: 'Hajime Isayama',
-      description: 'Cuộc chiến của nhân loại chống lại Titan',
-      genres: ['Action', 'Drama', 'Fantasy', 'Horror'],
-      loves: 4200,
-      views: 92000,
-      coverUrl: '/images/covers/attack-on-titan.jpg',
-      chapters: ['1', '2'],
-      yearOfRelease: 2009,
-      status: MangaStatus.COMPLETED,
-      updatedAt: '2023-01-05T10:00:00Z',
-      lastChapterAddedAt: '2023-01-05T10:00:00Z'
-    },
-  ];
+    // Filters
+    searchTerm,
+    setSearchTerm,
+    filterGenre,
+    setFilterGenre,
+    filterStatus,
+    setFilterStatus,
+    filterYear,
+    setFilterYear,
+    resetFilters,
+    allGenres,
 
+    // Tab selection
+    showDeleted,
+    setShowDeleted,
 
+    // Loading states
+    isLoading,
+    isSubmitting,
 
-  // State cho tìm kiếm và lọc
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterGenre, setFilterGenre] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
+    // CRUD operations
+    createManga,
+    updateManga,
+    deleteManga,
+    restoreManga
+  } = useMangaManagement(10); // 10 items per page
 
-  // State cho phân trang
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  // State cho modal
+  const [isModalOpen, setIsModalOpen] = React.useState<boolean>(false);
+  const [currentManga, setCurrentManga] = React.useState<MangaResponse | undefined>(undefined);
 
-  // Danh sách tất cả các thể loại từ dữ liệu manga
-  const allGenres = Array.from(
-    new Set(mangas.flatMap(manga => manga.genres || []))
-  ).sort();
-
-  // Load danh sách manga và thể loại khi component mount
-  useEffect(() => {
-    fetchMangas();
-    // fetchGenres();
-  }, []);
-
-  // Hàm lấy danh sách manga
-  const fetchMangas = async () => {
-    setIsLoading(true);
-    try {
-      // Lấy danh sách manga chưa bị xóa
-      const activeResponse = await mangaService.getAllMangas();
-      if (activeResponse) {
-        setMangas(activeResponse);
-      } else {
-        // Nếu không có dữ liệu từ API, sử dụng dữ liệu mẫu
-        setMangas(sampleMangas);
-      }
-
-      // Lấy danh sách manga đã bị xóa
-      const deletedResponse = await mangaService.getDeletedMangas();
-      if (deletedResponse) {
-        setDeletedMangas(deletedResponse.content);
-      }
-    } catch (error) {
-      console.error('Lỗi khi lấy danh sách manga:', error);
-      setMangas(sampleMangas);
-    } finally {
-      setIsLoading(false);
-    }
+  // Xử lý tìm kiếm trực tiếp (không debounce)
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
   };
 
-  // // Hàm lấy danh sách thể loại
-  // const fetchGenres = async () => {
-  //   try {
-  //     const response = await genreService.getAllGenres();
-  //     if (response) {
-  //       setAvailableGenres(response);
-  //     }
-  //   } catch (error) {
-  //     console.error('Lỗi khi lấy danh sách thể loại:', error);
-  //   }
-  // };
-
-  // Xử lý tìm kiếm và lọc
-  const filteredMangas = (showDeleted ? deletedMangas : mangas).filter(manga => {
-    const matchesSearch = manga.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         manga.author.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesGenre = filterGenre ? manga.genres?.includes(filterGenre) || false : true;
-    const matchesStatus = filterStatus ? manga.status === filterStatus : true;
-
-    return matchesSearch && matchesGenre && matchesStatus;
-  });
-
-  // Tính toán phân trang
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentMangas = filteredMangas.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredMangas.length / itemsPerPage);
-
-  // Xử lý chuyển trang
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  // Xử lý chuyển trang với throttle
+  const handlePageChange = useCallback(
+    throttle((page: number) => {
+      setCurrentPage(page);
+    }, 300),
+    [setCurrentPage]
+  );
 
   // Xử lý mở modal thêm manga mới
   const handleAddManga = () => {
@@ -183,7 +73,7 @@ const MangaManagement: React.FC = () => {
   };
 
   // Xử lý mở modal chỉnh sửa manga
-  const handleEditManga = (manga: MangaResponse) => {
+  const handleEditManga = (manga: MangaManagementResponse) => {
     setCurrentManga(manga);
     setIsModalOpen(true);
   };
@@ -196,59 +86,36 @@ const MangaManagement: React.FC = () => {
 
   // Xử lý submit form
   const handleSubmitForm = async (formData: FormData) => {
-    setIsSubmitting(true);
-    try {
-      if (currentManga) {
-        // Cập nhật manga
-        const updatedManga = await mangaService.updateManga(currentManga.id, formData);
-        if (updatedManga) {
-          setMangas(mangas.map(manga => manga.id === updatedManga.id ? updatedManga : manga));
-          setIsModalOpen(false);
-        }
-      } else {
-        // Tạo manga mới
-        const newManga = await mangaService.createManga(formData);
-        if (newManga) {
-          setMangas([...mangas, newManga]);
-          setIsModalOpen(false);
-        }
-      }
-    } catch (error) {
-      console.error('Lỗi khi lưu manga:', error);
-    } finally {
-      setIsSubmitting(false);
+    let result;
+    if (currentManga) {
+      // Cập nhật manga
+      result = await updateManga(currentManga.id, formData);
+    } else {
+      // Tạo manga mới
+      result = await createManga(formData);
+    }
+
+    if (result) {
+      setIsModalOpen(false);
     }
   };
 
   // Xử lý xóa manga
   const handleDeleteManga = async (mangaId: string) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa manga này?')) {
-      try {
-        const success = await mangaService.deleteManga(mangaId);
-        if (success) {
-          // Refresh danh sách manga
-          fetchMangas();
-        }
-      } catch (error) {
-        console.error(`Lỗi khi xóa manga ID ${mangaId}:`, error);
-      }
+      await deleteManga(mangaId);
     }
   };
 
   // Xử lý khôi phục manga
   const handleRestoreManga = async (mangaId: string) => {
     if (window.confirm('Bạn có chắc chắn muốn khôi phục manga này?')) {
-      try {
-        const restoredManga = await mangaService.restoreManga(mangaId);
-        if (restoredManga) {
-          // Refresh danh sách manga
-          fetchMangas();
-        }
-      } catch (error) {
-        console.error(`Lỗi khi khôi phục manga ID ${mangaId}:`, error);
-      }
+      await restoreManga(mangaId);
     }
   };
+
+  // Check if any filters are active
+  const hasActiveFilters = searchTerm || filterGenre || filterStatus || filterYear;
 
   return (
     <div className="space-y-6">
@@ -269,19 +136,13 @@ const MangaManagement: React.FC = () => {
       <div className="flex space-x-2">
         <button
           className={`px-4 py-2 rounded-md ${!showDeleted ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-          onClick={() => {
-            setShowDeleted(false);
-            setCurrentPage(1);
-          }}
+          onClick={() => setShowDeleted(false)}
         >
           Truyện đang hoạt động
         </button>
         <button
           className={`px-4 py-2 rounded-md ${showDeleted ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-          onClick={() => {
-            setShowDeleted(true);
-            setCurrentPage(1);
-          }}
+          onClick={() => setShowDeleted(true)}
         >
           Truyện đã xóa
         </button>
@@ -302,11 +163,11 @@ const MangaManagement: React.FC = () => {
         />
       </Modal>
 
-      {/* Tìm kiếm và lọc */}
+      {/* Tìm kiếm và Lọc */}
       <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           {/* Tìm kiếm */}
-          <div className="relative">
+          <div className="relative flex-1 min-w-[200px]">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <FontAwesomeIcon icon={faSearch} className="text-gray-500" />
             </div>
@@ -315,17 +176,14 @@ const MangaManagement: React.FC = () => {
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
               placeholder="Tìm kiếm theo tên hoặc tác giả"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
             />
           </div>
 
           {/* Lọc theo thể loại */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FontAwesomeIcon icon={faFilter} className="text-gray-500" />
-            </div>
+          <div className="w-auto min-w-[160px]">
             <select
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               value={filterGenre}
               onChange={(e) => setFilterGenre(e.target.value)}
             >
@@ -339,22 +197,41 @@ const MangaManagement: React.FC = () => {
           </div>
 
           {/* Lọc theo trạng thái */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FontAwesomeIcon icon={faFilter} className="text-gray-500" />
-            </div>
+          <div className="w-auto min-w-[160px]">
             <select
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
               <option value="">Tất cả trạng thái</option>
-              {Object.entries(MangaStatusDisplayNames).map(([key, value]) => (
-                <option key={key} value={key}>
-                  {value}
-                </option>
-              ))}
+              <option value="ONGOING">Đang tiến hành</option>
+              <option value="COMPLETED">Hoàn thành</option>
+              <option value="PAUSED">Tạm ngưng</option>
             </select>
+          </div>
+
+          {/* Lọc theo năm */}
+          <div className="w-auto min-w-[140px]">
+            <input
+              type="number"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              placeholder="Năm phát hành"
+              value={filterYear || ''}
+              onChange={(e) => setFilterYear(e.target.value ? parseInt(e.target.value) : undefined)}
+              min="1900"
+              max={new Date().getFullYear()}
+            />
+          </div>
+
+          {/* Nút đặt lại filters */}
+          <div className="flex items-center">
+            <button
+              onClick={resetFilters}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              <FontAwesomeIcon icon={faSync} className="mr-2" />
+              Đặt lại
+            </button>
           </div>
         </div>
       </div>
@@ -399,14 +276,14 @@ const MangaManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {currentMangas.length === 0 ? (
+                {mangas.length === 0 ? (
                   <tr>
                     <td colSpan={showDeleted ? 8 : 7} className="px-6 py-4 text-center text-gray-500">
                       {showDeleted ? 'Không có truyện nào đã xóa' : 'Không có truyện nào'}
                     </td>
                   </tr>
                 ) : (
-                  currentMangas.map((manga) => (
+                  mangas.map((manga) => (
                     <tr key={manga.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -423,7 +300,7 @@ const MangaManagement: React.FC = () => {
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900 dark:text-white">{manga.title}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">{manga.chapters?.length || 0} chapters</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{manga.chapters || 0} chương</div>
                           </div>
                         </div>
                       </td>
@@ -450,9 +327,9 @@ const MangaManagement: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                         <span
                           className={`px-2 py-1 text-xs rounded-full ${
-                            manga.status === MangaStatus.ONGOING
+                            manga.status === 'ONGOING'
                               ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                              : manga.status === MangaStatus.COMPLETED
+                              : manga.status === 'COMPLETED'
                               ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                               : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
                           }`}
@@ -464,20 +341,20 @@ const MangaManagement: React.FC = () => {
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center">
                             <FontAwesomeIcon icon={faEye} className="text-gray-400 mr-1" />
-                            <span>{manga.views.toLocaleString()}</span>
+                            <span>{manga.views?.toLocaleString() || 0}</span>
                           </div>
                           <div className="flex items-center">
                             <FontAwesomeIcon icon={faHeart} className="text-red-400 mr-1" />
-                            <span>{manga.loves.toLocaleString()}</span>
+                            <span>{manga.loves?.toLocaleString() || 0}</span>
                           </div>
                           <div className="flex items-center">
                             <FontAwesomeIcon icon={faComment} className="text-blue-400 mr-1" />
-                            <span>0</span>
+                            <span>{manga.comments?.toLocaleString() || 0}</span>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                        {new Date(manga.updatedAt).toLocaleDateString('vi-VN')}
+                        {manga.updatedAt ? new Date(manga.updatedAt).toLocaleDateString('vi-VN') : '-'}
                       </td>
                       {showDeleted && (
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
@@ -523,88 +400,20 @@ const MangaManagement: React.FC = () => {
               </tbody>
             </table>
           </div>
-
-          {/* Phân trang */}
-          {totalPages > 1 && (
-            <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
-              <div>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  Hiển thị <span className="font-medium">{indexOfFirstItem + 1}</span> đến{' '}
-                  <span className="font-medium">
-                    {indexOfLastItem > filteredMangas.length ? filteredMangas.length : indexOfLastItem}
-                  </span>{' '}
-                  trong <span className="font-medium">{filteredMangas.length}</span> kết quả
-                </p>
-              </div>
-              <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                  <button
-                    onClick={() => paginate(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium ${
-                      currentPage === 1
-                        ? 'text-gray-300 dark:text-gray-600'
-                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <span className="sr-only">Previous</span>
-                    <svg
-                      className="h-5 w-5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                  {Array.from({ length: totalPages }).map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => paginate(index + 1)}
-                      className={`relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium ${
-                        currentPage === index + 1
-                          ? 'z-10 bg-indigo-50 dark:bg-indigo-900 border-indigo-500 dark:border-indigo-500 text-indigo-600 dark:text-indigo-200'
-                          : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                      }`}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => paginate(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium ${
-                      currentPage === totalPages
-                        ? 'text-gray-300 dark:text-gray-600'
-                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <span className="sr-only">Next</span>
-                    <svg
-                      className="h-5 w-5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </nav>
-              </div>
-            </div>
-          )}
         </div>
       )}
+
+      {/* Phân trang */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        totalItems={totalItems}
+        showingFrom={(currentPage - 1) * pageSize + 1}
+        showingTo={Math.min(currentPage * pageSize, totalItems)}
+        pageSize={pageSize}
+        onPageSizeChange={handlePageSizeChange}
+      />
     </div>
   );
 };

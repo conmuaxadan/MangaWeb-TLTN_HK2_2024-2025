@@ -1,4 +1,3 @@
-import { toast } from "react-toastify";
 import { favoriteHttpClient } from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
 import { logApiCall } from "../utils/api-logger";

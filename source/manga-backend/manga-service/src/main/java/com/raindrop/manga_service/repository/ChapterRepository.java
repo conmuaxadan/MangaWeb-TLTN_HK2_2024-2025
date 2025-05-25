@@ -2,6 +2,8 @@ package com.raindrop.manga_service.repository;
 
 import com.raindrop.manga_service.entity.Chapter;
 import com.raindrop.manga_service.entity.Manga;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +19,22 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
     Optional<Chapter> findByMangaAndChapterNumber(Manga manga, double chapterNumber);
     Set<Chapter> findByManga(Manga manga);
     List<Chapter> findByMangaId(String mangaId);
+    Page<Chapter> findAll(Pageable pageable);
+
+    int countByMangaId(String mangaId);
+
+    /**
+     * Tìm kiếm và lọc chapter theo manga
+     * @param mangaId ID của manga (nếu có)
+     * @param pageable Thông tin phân trang
+     * @return Danh sách chapter đã được lọc
+     */
+    @Query("SELECT c FROM Chapter c " +
+           "WHERE (:mangaId IS NULL OR c.manga.id = :mangaId) " +
+           "ORDER BY c.manga.title ASC, c.chapterNumber ASC")
+    Page<Chapter> searchAndFilterChapters(
+            @Param("mangaId") String mangaId,
+            Pageable pageable);
 
     /**
      * Tăng lượt xem của chapter mà không cập nhật thời gian updatedAt
@@ -57,7 +75,7 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
     Integer sumViewsByMangaId(@Param("mangaId") String mangaId);
 
     /**
-     * Tính tổng số comment của tất cả các chapter của một manga
+     * Tính t���ng số comment của tất cả các chapter của một manga
      * @param mangaId ID của manga
      * @return Tổng số comment
      */

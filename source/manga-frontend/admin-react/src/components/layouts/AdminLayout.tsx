@@ -30,12 +30,12 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   const menuItems = [
-    { path: '/admin', icon: faChartLine, label: 'Dashboard' },
+    { path: '/admin', icon: faChartLine, label: 'Tổng quan' },
     { path: '/admin/users', icon: faUsers, label: 'Quản lý người dùng' },
     { path: '/admin/roles', icon: faUserShield, label: 'Quản lý vai trò' },
     { path: '/admin/permissions', icon: faKey, label: 'Quản lý quyền hạn' },
     { path: '/admin/mangas', icon: faBook, label: 'Quản lý truyện' },
-    { path: '/admin/chapters', icon: faBookOpen, label: 'Quản lý chapter' },
+    { path: '/admin/chapters', icon: faBookOpen, label: 'Quản lý chương' },
     { path: '/admin/genres', icon: faTags, label: 'Quản lý thể loại' },
     { path: '/admin/comments', icon: faComments, label: 'Quản lý bình luận' },
     { path: '/admin/statistics', icon: faChartBar, label: 'Thống kê chi tiết' },

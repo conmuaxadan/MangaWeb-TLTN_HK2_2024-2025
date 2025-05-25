@@ -4,63 +4,32 @@ import com.raindrop.history_service.dto.response.ApiResponse;
 import com.raindrop.history_service.dto.response.MangaViewsResponse;
 import com.raindrop.history_service.dto.response.ViewStatisticsResponse;
 import com.raindrop.history_service.dto.response.ViewsByDayResponse;
-import com.raindrop.history_service.repository.AnonymousHistoryRepository;
-import com.raindrop.history_service.repository.HistoryRepository;
-import com.raindrop.history_service.service.HistoryService;
+import com.raindrop.history_service.service.StatisticService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Controller xử lý các API liên quan đến thống kê lượt xem
- */
 @RestController
 @RequestMapping("/statistics")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class StatisticController {
-    HistoryRepository historyRepository;
-    AnonymousHistoryRepository anonymousHistoryRepository;
-    HistoryService historyService;
+    StatisticService statisticService;
 
     /**
      * Lấy thống kê tổng hợp về lượt xem
+     *
      * @return Thống kê tổng hợp về lượt xem
      */
     @GetMapping
     public ApiResponse<ViewStatisticsResponse> getViewStatistics() {
         log.info("Getting view statistics");
-
-        // Đếm lượt xem của người dùng đã đăng nhập
-        Long registeredUserViews = historyRepository.countTotalViews();
-        Long registeredUserTodayViews = historyRepository.countTodayViews();
-        Long distinctUsers = historyRepository.countDistinctUsers();
-
-        // Đếm lượt xem của người dùng không đăng nhập
-        Long anonymousViews = anonymousHistoryRepository.countTotalViews();
-        Long anonymousTodayViews = anonymousHistoryRepository.countTodayViews();
-        Long distinctSessions = anonymousHistoryRepository.countDistinctSessions();
-
-        // Tổng hợp thống kê
-        Long totalViews = registeredUserViews + anonymousViews;
-        Long todayViews = registeredUserTodayViews + anonymousTodayViews;
-
-        ViewStatisticsResponse response = ViewStatisticsResponse.builder()
-                .totalViews(totalViews)
-                .todayViews(todayViews)
-                .distinctSessions(distinctSessions)
-                .distinctUsers(distinctUsers)
-                .registeredUserViews(registeredUserViews)
-                .anonymousViews(anonymousViews)
-                .build();
+        ViewStatisticsResponse response = statisticService.getViewStatistics();
 
         return ApiResponse.<ViewStatisticsResponse>builder()
                 .code(1000)
@@ -70,104 +39,64 @@ public class StatisticController {
     }
 
     /**
-     * Lấy tổng số lượt xem
-     * @return Tổng số lượt xem
+     * Lấy số lượt xem theo loại thống kê
+     *
+     * @param type Loại thống kê: total, today, week, month
+     * @return Số lượt xem theo loại thống kê
      */
-    @GetMapping("/total")
-    public ApiResponse<Long> getTotalViews() {
-        log.info("Getting total views");
+    @GetMapping("/{type}")
+    public ApiResponse<Long> getViewsByType(@PathVariable String type) {
+        log.info("Getting views by type: {}", type);
+        String message;
 
-        // Đếm lượt xem của người dùng đã đăng nhập
-        Long registeredUserViews = historyRepository.countTotalViews();
+        switch (type) {
+            case "total" -> message = "Total views retrieved successfully";
+            case "today" -> message = "Today views retrieved successfully";
+            case "week" -> message = "This week views retrieved successfully";
+            case "month" -> message = "This month views retrieved successfully";
+            default -> throw new IllegalArgumentException("Invalid view type: " + type);
+        }
 
-        // Đếm lượt xem của người dùng không đăng nhập
-        Long anonymousViews = anonymousHistoryRepository.countTotalViews();
-
-        // Tổng hợp thống kê
-        Long totalViews = registeredUserViews + anonymousViews;
+        Long views = statisticService.getViewsByType(type);
 
         return ApiResponse.<Long>builder()
                 .code(1000)
-                .message("Total views retrieved successfully")
-                .result(totalViews)
-                .build();
-    }
-
-    /**
-     * Lấy số lượt xem trong ngày hôm nay
-     * @return Số lượt xem trong ngày hôm nay
-     */
-    @GetMapping("/today")
-    public ApiResponse<Long> getTodayViews() {
-        log.info("Getting today views");
-
-        // Đếm lượt xem của người dùng đã đăng nhập
-        Long registeredUserTodayViews = historyRepository.countTodayViews();
-
-        // Đếm lượt xem của người dùng không đăng nhập
-        Long anonymousTodayViews = anonymousHistoryRepository.countTodayViews();
-
-        // Tổng hợp thống kê
-        Long todayViews = registeredUserTodayViews + anonymousTodayViews;
-
-        return ApiResponse.<Long>builder()
-                .code(1000)
-                .message("Today views retrieved successfully")
-                .result(todayViews)
-                .build();
-    }
-
-    /**
-     * Lấy số lượt xem trong tuần này
-     * @return Số lượt xem trong tuần này
-     */
-    @GetMapping("/this-week")
-    public ApiResponse<Long> getThisWeekViews() {
-        log.info("Getting this week views");
-
-        Long thisWeekViews = historyService.countThisWeekViews();
-
-        return ApiResponse.<Long>builder()
-                .code(1000)
-                .message("This week views retrieved successfully")
-                .result(thisWeekViews)
-                .build();
-    }
-
-    /**
-     * Lấy số lượt xem trong tháng này
-     * @return Số lượt xem trong tháng này
-     */
-    @GetMapping("/this-month")
-    public ApiResponse<Long> getThisMonthViews() {
-        log.info("Getting this month views");
-
-        Long thisMonthViews = historyService.countThisMonthViews();
-
-        return ApiResponse.<Long>builder()
-                .code(1000)
-                .message("This month views retrieved successfully")
-                .result(thisMonthViews)
+                .message(message)
+                .result(views)
                 .build();
     }
 
     /**
      * Lấy thống kê lượt xem theo ngày trong khoảng thời gian
-     * @param days Số ngày cần lấy (mặc định là 7)
+     *
+     * @param days      Số ngày cần lấy (mặc định là 7) - deprecated, sử dụng startDate và endDate
+     * @param startDate Ngày bắt đầu (format: yyyy-MM-dd)
+     * @param endDate   Ngày kết thúc (format: yyyy-MM-dd)
      * @return Danh sách thống kê lượt xem theo ngày
      */
     @GetMapping("/by-day")
     public ApiResponse<List<ViewsByDayResponse>> getViewsByDay(
-            @RequestParam(defaultValue = "7") int days
+            @RequestParam(required = false) Integer days,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
     ) {
-        log.info("Getting views by day for the last {} days", days);
+        List<ViewsByDayResponse> viewsByDay;
 
-        // Giới hạn số ngày tối đa là 90
-        if (days > 90) {
-            days = 90;
+        if (startDate != null && endDate != null) {
+            log.info("Getting views by day from {} to {}", startDate, endDate);
+            viewsByDay = statisticService.getViewsByDateRange(startDate, endDate);
+        } else {
+            // Fallback to old logic for backward compatibility
+            int daysToUse = days != null ? days : 7;
+            log.info("Getting views by day for the last {} days", daysToUse);
+
+            // Giới hạn số ngày tối đa là 90
+            if (daysToUse > 90) {
+                daysToUse = 90;
+            }
+
+            viewsByDay = statisticService.getViewsByDay(daysToUse);
         }
-
-        List<ViewsByDayResponse> viewsByDay = historyService.getViewsByDay(days);
 
         return ApiResponse.<List<ViewsByDayResponse>>builder()
                 .code(1000)
@@ -178,32 +107,23 @@ public class StatisticController {
 
     /**
      * Lấy thống kê lượt xem theo truyện
-     * @param days Số ngày cần lấy (mặc định là 0, lấy tất cả)
-     * @param limit Số lượng truyện cần lấy (mặc định là 10)
+     *
+     * @param days      Số ngày cần lấy (mặc định là 0, lấy tất cả) - deprecated, sử dụng startDate và endDate
+     * @param startDate Ngày bắt đầu (format: yyyy-MM-dd)
+     * @param endDate   Ngày kết thúc (format: yyyy-MM-dd)
+     * @param limit     Số lượng truyện cần lấy (mặc định là 10)
      * @return Danh sách thống kê lượt xem theo truyện
      */
     @GetMapping("/by-manga")
     public ApiResponse<List<MangaViewsResponse>> getViewsByManga(
-            @RequestParam(defaultValue = "0") int days,
+            @RequestParam(required = false) Integer days,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        log.info("Getting views by manga, days: {}, limit: {}", days, limit);
-
-        // Giới hạn số lượng truyện tối đa là 50
-        if (limit > 50) {
-            limit = 50;
-        }
-
         List<MangaViewsResponse> viewsByManga;
-
-        // Nếu days > 0, lấy dữ liệu trong khoảng thời gian
-        if (days > 0) {
-            viewsByManga = historyService.getViewsByMangaInPeriod(days, limit);
-        } else {
-            // Nếu days = 0, lấy tất cả dữ liệu
-            viewsByManga = historyService.getViewsByManga(limit);
-        }
-
+        log.info("Getting views by manga from {} to {}, limit: {}", startDate, endDate, limit);
+        viewsByManga = statisticService.getViewsByMangaDateRange(startDate, endDate, limit);
         return ApiResponse.<List<MangaViewsResponse>>builder()
                 .code(1000)
                 .message("Views by manga retrieved successfully")

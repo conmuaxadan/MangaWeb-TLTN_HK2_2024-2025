@@ -22,6 +22,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -127,47 +130,75 @@ public class ChapterService {
         return chapterMapper.toChapterResponse(chapter);
     }
 
-    /**
-     * Tăng lượt xem của chapter và cập nhật tổng lượt xem của manga
-     *
-     * @param id ID của chapter
-     * @return Thông tin chapter sau khi cập nhật lượt xem
-     */
-    public ChapterResponse incrementChapterViews(String id) {
-        log.info("Incrementing views for chapter: {}", id);
-
-        // Kiểm tra chapter có tồn tại không
-        Chapter chapter = chapterRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
-
-        // Tăng lượt xem của chapter mà không cập nhật thời gian updatedAt
-        chapterRepository.incrementViews(id);
-
-        // Cập nhật tổng lượt xem của manga mà không cập nhật thời gian updatedAt
-        mangaRepository.incrementViews(chapter.getManga().getId());
-
-        // Cập nhật tổng số lượt xem của manga bằng tổng số lượt xem của tất cả các chapter
-        mangaStatsService.updateMangaTotalViews(chapter.getManga().getId());
-
-        // Lấy lại chapter đã cập nhật lượt xem
-        chapter = chapterRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
-
-        log.info("Views updated for chapter: {}, new views: {}", id, chapter.getViews());
-        log.info("Total views updated for manga: {}, new total views: {}", chapter.getManga().getId(), chapter.getManga().getViews());
-
-        return chapterMapper.toChapterResponse(chapter);
-    }
 
     /**
      * Lấy tất cả chapter
      *
      * @return Danh sách tất cả chapter
      */
-    public List<ChapterResponse> getAllChapters() {
-        log.info("Getting all chapters");
-        List<Chapter> chapters = chapterRepository.findAll();
-        log.info("Retrieved {} chapters", chapters.size());
-        return chapters.stream().map(chapterMapper::toChapterResponse).toList();
+    public org.springframework.data.domain.Page<ChapterResponse> getAllChapters(Pageable pageable) {
+        log.info("Getting all chapters with pagination");
+        org.springframework.data.domain.Page<Chapter> pages = chapterRepository.findAll(pageable);
+
+        return pages.map(chapter -> {
+            return ChapterResponse.builder()
+                    .id(chapter.getId())
+                    .chapterNumber(chapter.getChapterNumber())
+                    .title(chapter.getTitle())
+                    .mangaTitle(chapter.getManga().getTitle())
+                    .pages(chapter.getPages().stream()
+                            .sorted(Comparator.comparingInt(Page::getIndex))
+                            .map(page -> PageResponse.builder()
+                                    .index(page.getIndex())
+                                    .pageUrl(page.getPageUrl())
+                                    .build())
+                            .toList())
+                    .views(chapter.getViews())
+                    .comments(chapter.getComments())
+                    .mangaId(chapter.getManga().getId())
+                    .updatedAt(chapter.getUpdatedAt())
+                    .build();
+        });
+
+    }
+
+    /**
+     * Tìm kiếm và lọc chapter theo manga
+     *
+     * @param mangaId ID của manga cần lọc (null nếu không lọc theo manga)
+     * @param pageable Thông tin phân trang
+     * @return Danh sách chapter đã được lọc
+     */
+    public org.springframework.data.domain.Page<ChapterResponse> searchAndFilterChapters(String mangaId, Pageable pageable) {
+        log.info("Searching and filtering chapters with criteria - mangaId: {}", mangaId);
+
+        // Xử lý trường hợp mangaId rỗng
+        mangaId = (mangaId != null && !mangaId.trim().isEmpty()) ? mangaId.trim() : null;
+
+        org.springframework.data.domain.Page<Chapter> chapters = chapterRepository.searchAndFilterChapters(mangaId, pageable);
+
+        org.springframework.data.domain.Page<ChapterResponse> chapterResponsePage = chapters.map(chapter -> {
+            return ChapterResponse.builder()
+                    .id(chapter.getId())
+                    .chapterNumber(chapter.getChapterNumber())
+                    .title(chapter.getTitle())
+                    .mangaTitle(chapter.getManga().getTitle())
+                    .pages(chapter.getPages().stream()
+                            .sorted(Comparator.comparingInt(Page::getIndex))
+                            .map(page -> PageResponse.builder()
+                                    .index(page.getIndex())
+                                    .pageUrl(page.getPageUrl())
+                                    .build())
+                            .toList())
+                    .views(chapter.getViews())
+                    .comments(chapter.getComments())
+                    .mangaId(chapter.getManga().getId())
+                    .updatedAt(chapter.getUpdatedAt())
+                    .build();
+        });
+
+        log.info("Found {} chapters matching the criteria", chapterResponsePage.getTotalElements());
+        return chapterResponsePage;
     }
 
     /**
@@ -396,5 +427,36 @@ public class ChapterService {
         chapter = chapterRepository.save(chapter);
 
         return chapterMapper.toChapterResponse(chapter);
+    }
+
+    /**
+     * Xóa một chapter
+     * @param id ID của chapter cần xóa
+     */
+    @Transactional
+    public void deleteChapter(String id) {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var header = attributes.getRequest().getHeader("Authorization");
+        Chapter chapter = chapterRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
+
+        // Lấy mangaId để cập nhật lại thông tin sau khi xóa chapter
+        String mangaId = chapter.getManga().getId();
+
+        // Xóa tất cả các trang của chapter
+        for (Page page : chapter.getPages()) {
+            try {
+                // Xóa file từ upload service
+                if (page.getPageUrl() != null && !page.getPageUrl().isEmpty()) {
+                    uploadClient.deleteMedia(header,page.getPageUrl());
+                }
+            } catch (Exception e) {
+                log.error("Error deleting page file: {}", e.getMessage(), e);
+                // Tiếp tục xóa chapter ngay cả khi không xóa được file
+            }
+        }
+        // Xóa chapter từ database
+        chapterRepository.delete(chapter);
+        log.info("Chapter deleted successfully: {}", id);
     }
 }

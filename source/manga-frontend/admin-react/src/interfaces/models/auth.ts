@@ -18,8 +18,6 @@ export interface GoogleLoginRequest {
     redirectUri: string;
 }
 
-
-
 // User Registration Request
 export interface UserRegistrationRequest {
     username: string;
@@ -39,6 +37,36 @@ export interface UserResponse {
     createdAt?: string;
     updatedAt?: string;
     enabled?: boolean; // Trạng thái tài khoản: true = đang hoạt động, false = bị khóa
+}
+
+// User Page Response (for server-side pagination)
+export interface UserPageResponse {
+    content: UserResponse[];
+    pageable: {
+        pageNumber: number;
+        pageSize: number;
+        sort: {
+            sorted: boolean;
+            unsorted: boolean;
+            empty: boolean;
+        };
+        offset: number;
+        paged: boolean;
+        unpaged: boolean;
+    };
+    last: boolean;
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    sort: {
+        sorted: boolean;
+        unsorted: boolean;
+        empty: boolean;
+    };
+    first: boolean;
+    numberOfElements?: number;
+    empty?: boolean;
 }
 
 // User Request (for create/update)
@@ -91,8 +119,6 @@ export interface GoogleLinkRequest {
     code: string;
     redirectUri: string;
 }
-
-
 
 // Link Local Account Request
 export interface LinkLocalAccountRequest {

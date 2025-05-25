@@ -5,128 +5,50 @@ import {
     MangaResponse,
     ChapterResponse,
     PageResponse,
-    MangaSummaryResponse,
-    MangaStatisticsResponse,
-    AdvancedSearchRequest
+    MangaStatisticsResponse, MangaManagementResponse,
+    MangaQuickSearchResponse,
 } from "../interfaces/models/manga";
 import { logApiCall } from "../utils/api-logger";
-import { GenreResponse } from "../interfaces/models/genre";
 
 class MangaService {
     /**
-     * Lấy danh sách tất cả manga
-     * @returns Danh sách manga hoặc null nếu thất bại
+     * Lấy danh sách tất cả manga có phân trang
+     * @param page Số trang (mặc định là 0)
+     * @param size Số lượng item trên mỗi trang (mặc định là 10)
+     * @returns Danh sách manga có phân trang hoặc null nếu thất bại
      */
-    async getAllMangas(): Promise<MangaResponse[] | null> {
+    async getAllMangas(
+        page: number = 0,
+        size: number = 10,
+        keyword?: string,
+        genreName?: string,
+        status?: string,
+        yearOfRelease?: number
+    ): Promise<PageResponse<MangaManagementResponse> | null> {
         logApiCall('getAllMangas');
         try {
-            const apiResponse = await mangaHttpClient.get<ApiResponse<MangaResponse[]>>('/mangas');
+            // Xây dựng URL với các tham số filter
+            const params = new URLSearchParams();
+            params.append('page', page.toString());
+            params.append('size', size.toString());
+
+            if (keyword && keyword.trim()) {
+                params.append('keyword', keyword.trim());
+            }
+            if (genreName && genreName.trim()) {
+                params.append('genreName', genreName.trim());
+            }
+            if (status && status.trim()) {
+                params.append('status', status.trim());
+            }
+            if (yearOfRelease) {
+                params.append('yearOfRelease', yearOfRelease.toString());
+            }
+
+            const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaManagementResponse>>>(`/mangas?${params.toString()}`);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách manga", { position: "top-right" });
-                return null;
-            }
-
-            // Thêm ảnh mặc định cho các manga không có coverUrl
-            apiResponse.result.forEach(manga => {
-                if (!manga.coverUrl) {
-                    manga.coverUrl = '/images/default-manga-cover.jpg';
-                }
-            });
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error("Lỗi lấy danh sách manga:", error);
-            return null;
-        }
-    }
-
-    /**
-     * Lấy thông tin chi tiết của một manga
-     * @param id ID của manga
-     * @returns Thông tin chi tiết manga hoặc null nếu thất bại
-     */
-    async getMangaById(id: string): Promise<MangaResponse | null> {
-        logApiCall('getMangaById');
-        try {
-            const apiResponse = await mangaHttpClient.get<ApiResponse<MangaResponse>>(`/mangas/${id}`);
-
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể lấy thông tin manga", { position: "top-right" });
-                return null;
-            }
-
-            // Thêm ảnh mặc định nếu manga không có coverUrl
-            if (!apiResponse.result.coverUrl) {
-                apiResponse.result.coverUrl = '/images/default-manga-cover.jpg';
-            }
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error(`Lỗi lấy thông tin manga ID ${id}:`, error);
-            return null;
-        }
-    }
-
-    /**
-     * Lấy danh sách tất cả thể loại
-     * @returns Danh sách thể loại hoặc null nếu thất bại
-     */
-    async getAllGenres(): Promise<GenreResponse[] | null> {
-        logApiCall('getAllGenres');
-        try {
-            const apiResponse = await mangaHttpClient.get<ApiResponse<GenreResponse[]>>('/genres');
-
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể lấy danh sách thể loại", { position: "top-right" });
-                return null;
-            }
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error("Lỗi lấy danh sách thể loại:", error);
-            return null;
-        }
-    }
-
-    /**
-     * Lấy thông tin chi tiết của một thể loại
-     * @param name Tên của thể loại
-     * @returns Thông tin chi tiết thể loại hoặc null nếu thất bại
-     */
-    async getGenreByName(name: string): Promise<GenreResponse | null> {
-        logApiCall('getGenreByName');
-        try {
-            const apiResponse = await mangaHttpClient.get<ApiResponse<GenreResponse>>(`/genres/${name}`);
-
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể lấy thông tin thể loại", { position: "top-right" });
-                return null;
-            }
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error(`Lỗi lấy thông tin thể loại ${name}:`, error);
-            return null;
-        }
-    }
-
-    /**
-     * Lấy danh sách manga theo thể loại
-     * @param genreName Tên thể loại
-     * @param page Số trang
-     * @param size Số lượng item trên mỗi trang
-     * @returns Danh sách manga thuộc thể loại hoặc null nếu thất bại
-     */
-    async getMangasByGenre(genreName: string, page: number = 0, size: number = 10): Promise<PageResponse<MangaResponse> | null> {
-        logApiCall('getMangasByGenre');
-        try {
-            const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaResponse>>>(
-                `/mangas/genre/${genreName}?page=${page}&size=${size}`
-            );
-
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể lấy danh sách manga theo thể loại", { position: "top-right" });
                 return null;
             }
 
@@ -139,30 +61,56 @@ class MangaService {
 
             return apiResponse.result;
         } catch (error) {
-            console.error(`Lỗi lấy danh sách manga theo thể loại ${genreName}:`, error);
+            console.error("Lỗi lấy danh sách manga:", error);
             return null;
         }
     }
 
-
-    /**
-     * Lấy thông tin chi tiết của một chapter
-     * @param chapterId ID của chapter
-     * @returns Thông tin chi tiết chapter hoặc null nếu thất bại
-     */
-    async getChapterById(chapterId: string): Promise<ChapterResponse | null> {
-        logApiCall('getChapterById');
+    async getAllDeletedMangas(
+        page: number = 0,
+        size: number = 10,
+        keyword?: string,
+        genreName?: string,
+        status?: string,
+        yearOfRelease?: number
+    ): Promise<PageResponse<MangaManagementResponse> | null> {
+        logApiCall('getAllDeletedMangas');
         try {
-            const apiResponse = await mangaHttpClient.get<ApiResponse<ChapterResponse>>(`/chapters/${chapterId}`);
+            // Xây dựng URL với các tham số filter
+            const params = new URLSearchParams();
+            params.append('page', page.toString());
+            params.append('size', size.toString());
+
+            if (keyword && keyword.trim()) {
+                params.append('keyword', keyword.trim());
+            }
+            if (genreName && genreName.trim()) {
+                params.append('genreName', genreName.trim());
+            }
+            if (status && status.trim()) {
+                params.append('status', status.trim());
+            }
+            if (yearOfRelease) {
+                params.append('yearOfRelease', yearOfRelease.toString());
+            }
+
+            const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaManagementResponse>>>(`/mangas/management/deleted?${params.toString()}`);
 
             if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể lấy thông tin chapter", { position: "top-right" });
+                toast.error(apiResponse.message || "Không thể lấy danh sách manga", { position: "top-right" });
                 return null;
             }
 
+            // Thêm ảnh mặc định cho các manga không có coverUrl
+            apiResponse.result.content.forEach(manga => {
+                if (!manga.coverUrl) {
+                    manga.coverUrl = '/images/default-manga-cover.jpg';
+                }
+            });
+
             return apiResponse.result;
         } catch (error) {
-            console.error(`Lỗi lấy thông tin chapter ID ${chapterId}:`, error);
+            console.error("Lỗi lấy danh sách manga:", error);
             return null;
         }
     }
@@ -196,149 +144,6 @@ class MangaService {
         } catch (error) {
             console.error("Lỗi tìm kiếm manga:", error);
             return null;
-        }
-    }
-
-    /**
-     * Tìm kiếm nâng cao manga
-     * @param searchRequest Các tham số tìm kiếm nâng cao
-     * @param page Số trang
-     * @param size Số lượng item trên mỗi trang
-     * @returns Danh sách manga phù hợp với điều kiện tìm kiếm hoặc null nếu thất bại
-     */
-    async advancedSearch(
-        searchRequest: AdvancedSearchRequest,
-        page: number = 0,
-        size: number = 10
-    ): Promise<PageResponse<MangaResponse> | null> {
-        logApiCall('advancedSearch');
-        try {
-            console.log('Advanced search request:', JSON.stringify(searchRequest, null, 2));
-            const apiResponse = await mangaHttpClient.post<ApiResponse<PageResponse<MangaResponse>>>(
-                `/mangas/search/advanced?page=${page}&size=${size}`,
-                searchRequest
-            );
-
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể tìm kiếm manga", { position: "top-right" });
-                return null;
-            }
-
-            // Thêm ảnh mặc định cho các manga không có coverUrl
-            apiResponse.result.content.forEach(manga => {
-                if (!manga.coverUrl) {
-                    manga.coverUrl = '/images/default-manga-cover.jpg';
-                }
-            });
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error("Lỗi tìm kiếm nâng cao manga:", error);
-            return null;
-        }
-    }
-
-    /**
-     * Lấy danh sách manga được đề xuất
-     * @param limit Số lượng manga muốn lấy
-     * @returns Danh sách manga được đề xuất hoặc null nếu thất bại
-     */
-    async getRecommendedMangas(limit: number = 10): Promise<MangaSummaryResponse[] | null> {
-        logApiCall('getRecommendedMangas');
-        try {
-            const apiResponse = await mangaHttpClient.get<ApiResponse<MangaSummaryResponse[]>>(`/recommendations?limit=${limit}`);
-
-            if (apiResponse.code !== 1000) {
-                console.error("Không thể lấy danh sách manga được đề xuất:", apiResponse.message);
-                return null;
-            }
-
-            // Thêm ảnh mặc định cho các manga không có coverUrl
-            apiResponse.result.forEach(manga => {
-                if (!manga.coverUrl) {
-                    manga.coverUrl = '/images/default-manga-cover.jpg';
-                }
-            });
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error("Lỗi lấy danh sách manga được đề xuất:", error);
-            return null;
-        }
-    }
-
-    /**
-     * Lấy danh sách manga mới cập nhật
-     * @param limit Số lượng manga muốn lấy
-     * @returns Danh sách manga mới cập nhật hoặc null nếu thất bại
-     */
-    async getLatestUpdatedMangas(limit: number = 10): Promise<MangaSummaryResponse[] | null> {
-        logApiCall('getLatestUpdatedMangas');
-        try {
-            const apiResponse = await mangaHttpClient.get<ApiResponse<MangaSummaryResponse[]>>(`/mangas/latest?limit=${limit}`);
-
-            if (apiResponse.code !== 1000) {
-                console.error("Không thể lấy danh sách manga mới cập nhật:", apiResponse.message);
-                return null;
-            }
-
-            // Thêm ảnh mặc định cho các manga không có coverUrl
-            apiResponse.result.forEach(manga => {
-                if (!manga.coverUrl) {
-                    manga.coverUrl = '/images/default-manga-cover.jpg';
-                }
-            });
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error("Lỗi lấy danh sách manga mới cập nhật:", error);
-            return null;
-        }
-    }
-
-    /**
-     * Lấy danh sách manga phổ biến
-     * @param limit Số lượng manga muốn lấy
-     * @returns Danh sách manga phổ biến hoặc null nếu thất bại
-     */
-    async getPopularMangas(limit: number = 10): Promise<MangaSummaryResponse[] | null> {
-        logApiCall('getPopularMangas');
-        try {
-            const apiResponse = await mangaHttpClient.get<ApiResponse<MangaSummaryResponse[]>>(`/mangas/popular?limit=${limit}`);
-
-            if (apiResponse.code !== 1000) {
-                console.error("Không thể lấy danh sách manga phổ biến:", apiResponse.message);
-                return null;
-            }
-
-            // Thêm ảnh mặc định cho các manga không có coverUrl
-            apiResponse.result.forEach(manga => {
-                if (!manga.coverUrl) {
-                    manga.coverUrl = '/images/default-manga-cover.jpg';
-                }
-            });
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error("Lỗi lấy danh sách manga phổ biến:", error);
-            return null;
-        }
-    }
-
-    /**
-     * Tăng lượt xem cho chapter
-     * @param chapterId ID của chapter
-     * @returns true nếu thành công, false nếu thất bại
-     */
-    async incrementChapterView(chapterId: string): Promise<boolean> {
-        logApiCall('incrementChapterView');
-        try {
-            const apiResponse = await mangaHttpClient.post<ApiResponse<void>>(`/chapters/${chapterId}/views/increment`);
-
-            return apiResponse.code === 1000;
-        } catch (error) {
-            console.error(`Lỗi tăng lượt xem cho chapter ID ${chapterId}:`, error);
-            return false;
         }
     }
 
@@ -613,7 +418,7 @@ class MangaService {
         } catch (error:any) {
             console.error(`Lỗi cập nhật trang ${pageIndex} của chapter ID ${chapterId}:`, error);
 
-            // Hiển thị thông báo lỗi chi tiết hơn
+            // Hiển thị thông báo lỗi chi ti���t hơn
             let errorMessage = "Đã xảy ra lỗi khi cập nhật trang";
             if (error.response) {
                 // Nếu có response từ server
@@ -681,63 +486,44 @@ class MangaService {
     }
 
     /**
-     * Lấy danh sách tất cả chapter
-     * @returns Danh sách chapter hoặc null nếu thất bại
+     * Lấy danh sách tất cả chapter có phân trang với khả năng lọc
+     * @param page Số trang (bắt đầu từ 0, mặc định là 0)
+     * @param size Số lượng item trên mỗi trang (mặc định là 10)
+     * @param mangaId ID của manga để lọc (optional)
+     * @returns Danh sách chapter có phân trang hoặc null nếu thất bại
      */
-    async getAllChapters(): Promise<ChapterResponse[] | null> {
+    async getAllChapters(
+        page: number = 0,
+        size: number = 10,
+        mangaId?: string
+    ): Promise<PageResponse<ChapterResponse> | null> {
         logApiCall('getAllChapters');
         try {
-            console.log('Gọi API: GET /chapters');
-            const apiResponse = await mangaHttpClient.get<ApiResponse<ChapterResponse[]>>('/chapters');
+            // Xây dựng URL với các tham số filter
+            const params = new URLSearchParams();
+            params.append('page', page.toString());
+            params.append('size', size.toString());
+
+            if (mangaId && mangaId.trim()) {
+                params.append('mangaId', mangaId.trim());
+            }
+
+            const url = `/chapters?${params.toString()}`;
+            console.log('Gọi API: GET', url);
+            console.log('Params object:', { page, size, mangaId });
+
+            const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<ChapterResponse>>>(url);
             console.log('Kết quả API getAllChapters:', apiResponse);
 
             if (apiResponse.code !== 1000) {
                 console.error("Không thể lấy danh sách chapter:", apiResponse.message);
-                return [];
+                return null;
             }
 
-            console.log('Số lượng chapter nhận được:', apiResponse.result ? apiResponse.result.length : 0);
-            return apiResponse.result || [];
+            console.log('Dữ liệu phân trang chapter:', apiResponse.result);
+            return apiResponse.result;
         } catch (error) {
             console.error("Lỗi lấy danh sách chapter:", error);
-            return [];
-        }
-    }
-
-    /**
-     * Lấy danh sách tất cả chapter (phương pháp thay thế)
-     * @returns Danh sách chapter hoặc null nếu thất bại
-     */
-    async getAllChaptersAlternative(): Promise<ChapterResponse[] | null> {
-        logApiCall('getAllChaptersAlternative');
-        try {
-            console.log('Bắt đầu lấy danh sách tất cả manga');
-            // Lấy danh sách tất cả manga trước
-            const mangasResponse = await this.getAllMangas();
-            if (!mangasResponse) {
-                console.error("Không thể lấy danh sách manga");
-                return [];
-            }
-
-            console.log(`Lấy được ${mangasResponse.length} manga, bắt đầu lấy chapter cho từng manga`);
-
-            // Lấy danh sách chapter cho từng manga và gộp lại
-            const allChaptersPromises = mangasResponse.map(manga =>
-                this.getChaptersByMangaId(manga.id)
-            );
-
-            const chaptersResults = await Promise.all(allChaptersPromises);
-
-            // Lọc bỏ các kết quả null và gộp tất cả chapter lại
-            // Mỗi kết quả là một mảng (có thể rỗng nếu manga chưa có chapter)
-            const allChapters = chaptersResults
-                .filter(chapters => chapters !== null)
-                .flat() as ChapterResponse[];
-
-            console.log(`Tổng số chapter đã lấy được: ${allChapters.length}`);
-            return allChapters;
-        } catch (error) {
-            console.error("Lỗi lấy danh sách chapter (phương pháp thay thế):", error);
             return null;
         }
     }
@@ -830,6 +616,37 @@ class MangaService {
         } catch (error) {
             console.error(`Lỗi lấy thống kê truyện:`, error);
             return null;
+        }
+    }
+
+    /**
+     * Tìm kiếm nhanh manga cho việc thêm chapter
+     * @param keyword Từ khóa tìm kiếm (tên truyện)
+     * @param limit Giới hạn số lượng kết quả trả về (mặc định: 10)
+     * @returns Danh sách truyện phù hợp với từ khóa hoặc mảng rỗng nếu thất bại
+     */
+    async quickSearchManga(keyword: string, limit: number = 10): Promise<MangaQuickSearchResponse[]> {
+        logApiCall('quickSearchManga');
+        try {
+            const url = `/mangas/search/quick?keyword=${encodeURIComponent(keyword)}&limit=${limit}`;
+            const apiResponse = await mangaHttpClient.get<ApiResponse<MangaQuickSearchResponse[]>>(url);
+
+            if (apiResponse.code !== 1000) {
+                console.error("Không thể tìm kiếm nhanh manga:", apiResponse.message);
+                return [];
+            }
+
+            // Thêm ảnh mặc định cho các manga không có coverUrl
+            apiResponse.result.forEach(manga => {
+                if (!manga.coverUrl) {
+                    manga.coverUrl = '/images/default-manga-cover.jpg';
+                }
+            });
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error("Lỗi tìm kiếm nhanh manga:", error);
+            return [];
         }
     }
 }

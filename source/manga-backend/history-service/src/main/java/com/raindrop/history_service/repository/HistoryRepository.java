@@ -69,9 +69,10 @@ public interface HistoryRepository extends JpaRepository<History, String> {
      * Đếm số lượt xem theo ngày trong khoảng thời gian
      * @param startDate Ngày bắt đầu
      * @param endDate Ngày kết thúc
-     * @return Map với key là ngày và value là số lượt xem
+     * @return Danh sách thống kê lượt xem theo ngày
      */
-    @Query("SELECT DATE(rh.createdAt) as date, COUNT(rh) as views FROM History rh " +
+    @Query("SELECT (DATE(rh.createdAt), COUNT(rh)) " +
+            "FROM History rh " +
             "WHERE DATE(rh.createdAt) BETWEEN :startDate AND :endDate " +
             "GROUP BY DATE(rh.createdAt) ORDER BY DATE(rh.createdAt)")
     List<Object[]> countViewsByDayBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
@@ -94,7 +95,8 @@ public interface HistoryRepository extends JpaRepository<History, String> {
      * Đếm số lượt xem theo truyện
      * @return Danh sách số lượt xem theo truyện
      */
-    @Query("SELECT rh.mangaId, COUNT(rh) as views FROM History rh GROUP BY rh.mangaId ORDER BY views DESC")
+    @Query("SELECT (rh.mangaId, COUNT(rh)) " +
+            "FROM History rh GROUP BY rh.mangaId ORDER BY COUNT(rh) DESC")
     List<Object[]> countViewsByManga();
 
     /**
@@ -102,7 +104,8 @@ public interface HistoryRepository extends JpaRepository<History, String> {
      * @param mangaIds Danh sách ID của truyện
      * @return Số lượt xem của mỗi truyện
      */
-    @Query("SELECT rh.mangaId, COUNT(rh) as views FROM History rh WHERE rh.mangaId IN :mangaIds GROUP BY rh.mangaId")
+    @Query("SELECT (rh.mangaId, COUNT(rh)) " +
+            "FROM History rh WHERE rh.mangaId IN :mangaIds GROUP BY rh.mangaId")
     List<Object[]> countViewsByMangaIds(@Param("mangaIds") List<String> mangaIds);
 
     /**
@@ -111,8 +114,9 @@ public interface HistoryRepository extends JpaRepository<History, String> {
      * @param endDate Ngày kết thúc
      * @return Danh sách số lượt xem theo truyện
      */
-    @Query("SELECT rh.mangaId, COUNT(rh) as views FROM History rh " +
+    @Query("SELECT (rh.mangaId, COUNT(rh)) " +
+            "FROM History rh " +
             "WHERE DATE(rh.createdAt) BETWEEN :startDate AND :endDate " +
-            "GROUP BY rh.mangaId ORDER BY views DESC")
+            "GROUP BY rh.mangaId ORDER BY COUNT(rh) DESC")
     List<Object[]> countViewsByMangaBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }

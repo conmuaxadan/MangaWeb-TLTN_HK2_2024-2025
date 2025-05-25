@@ -5,16 +5,15 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
 import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class MangaResponse {
+public class MangaManagementResponse {
     String id;
     String title;
     String author;
@@ -29,10 +28,9 @@ public class MangaResponse {
     String lastChapterId;
     double lastChapterNumber;
     LocalDateTime lastChapterAddedAt;
+    int chapters;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
-
-    List<String> chapters;
 
     // Thông tin xóa mềm
     boolean deleted;

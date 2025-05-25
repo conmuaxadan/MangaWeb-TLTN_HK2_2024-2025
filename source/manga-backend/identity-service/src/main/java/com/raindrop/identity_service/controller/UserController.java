@@ -7,6 +7,7 @@ import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.ApiResponse;
 import com.raindrop.identity_service.dto.response.UserCommentResponse;
 import com.raindrop.identity_service.dto.response.UserResponse;
+import com.raindrop.identity_service.dto.response.UserStatisticsResponse;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.mapper.UserMapper;
 import com.raindrop.identity_service.service.UserService;
@@ -58,6 +59,31 @@ public class UserController {
         return ApiResponse.<Page<UserResponse>>builder()
                 .message("Paginated users retrieved successfully")
                 .result(userService.getAllUsersPaginated(pageable))
+                .build();
+    }
+
+    /**
+     * Tìm kiếm người dùng theo từ khóa và phân trang (được nâng cấp để hỗ trợ bộ lọc nâng cao)
+     * @param keyword Từ khóa tìm kiếm
+     * @param roleId ID của vai trò (tùy chọn)
+     * @param provider Nhà cung cấp xác thực (tùy chọn)
+     * @param enabled Trạng thái tài khoản (tùy chọn)
+     * @param pageable Thông tin phân trang
+     * @return Danh sách người dùng phân trang phù hợp với các tiêu chí tìm kiếm và lọc
+     */
+    @GetMapping("/search")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    ApiResponse<Page<UserResponse>> searchUsers(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "roleId", required = false) Integer roleId,
+            @RequestParam(value = "provider", required = false) String provider,
+            @RequestParam(value = "enabled", required = false) Boolean enabled,
+            @PageableDefault(size = 10, sort = "username") Pageable pageable) {
+        log.info("Searching users with advanced filters - keyword: {}, roleId: {}, provider: {}, enabled: {}",
+                keyword, roleId, provider, enabled);
+        return ApiResponse.<Page<UserResponse>>builder()
+                .message("User search results retrieved successfully")
+                .result(userService.searchAndFilterUsers(keyword, roleId, provider, enabled, pageable))
                 .build();
     }
 
@@ -210,6 +236,49 @@ public class UserController {
         return ApiResponse.<UserResponse>builder()
                 .message("User status updated successfully")
                 .result(userService.toggleUserStatus(request))
+                .build();
+    }
+
+    /**
+     * Lấy thống kê tổng hợp về người dùng
+     * @return Thống kê tổng hợp về người dùng
+     */
+    @GetMapping("/statistics")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ApiResponse<UserStatisticsResponse> getUserStatistics() {
+        log.info("Getting user statistics");
+        return ApiResponse.<UserStatisticsResponse>builder()
+                .code(1000)
+                .message("User statistics retrieved successfully")
+                .result(userService.getUserStatistics())
+                .build();
+    }
+
+    /**
+     * Lấy tổng số người dùng
+     * @return Tổng số người dùng
+     */
+    @GetMapping("/statistics/total")
+    public ApiResponse<Long> getTotalUsers() {
+        log.info("Getting total users");
+        return ApiResponse.<Long>builder()
+                .code(1000)
+                .message("Total users retrieved successfully")
+                .result(userService.getUserStatistics().getTotalUsers())
+                .build();
+    }
+
+    /**
+     * Lấy số người dùng mới trong ngày
+     * @return Số người dùng mới trong ngày
+     */
+    @GetMapping("/statistics/today")
+    public ApiResponse<Long> getNewUsersToday() {
+        log.info("Getting new users today");
+        return ApiResponse.<Long>builder()
+                .code(1000)
+                .message("New users today retrieved successfully")
+                .result(userService.getUserStatistics().getNewUsersToday())
                 .build();
     }
 }

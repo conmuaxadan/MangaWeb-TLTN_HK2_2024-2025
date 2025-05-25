@@ -48,9 +48,10 @@ public interface AnonymousHistoryRepository extends JpaRepository<AnonymousHisto
      * Đếm số lượt xem theo ngày trong khoảng thời gian
      * @param startDate Ngày bắt đầu
      * @param endDate Ngày kết thúc
-     * @return Map với key là ngày và value là số lượt xem
+     * @return Danh sách thống kê lượt xem theo ngày
      */
-    @Query("SELECT DATE(a.createdAt) as date, COUNT(a) as views FROM AnonymousHistory a " +
+    @Query("SELECT (DATE(a.createdAt), COUNT(a)) " +
+            "FROM AnonymousHistory a " +
             "WHERE DATE(a.createdAt) BETWEEN :startDate AND :endDate " +
             "GROUP BY DATE(a.createdAt) ORDER BY DATE(a.createdAt)")
     List<Object[]> countViewsByDayBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
@@ -73,7 +74,8 @@ public interface AnonymousHistoryRepository extends JpaRepository<AnonymousHisto
      * Đếm số lượt xem theo truyện của người dùng không đăng nhập
      * @return Danh sách số lượt xem theo truyện
      */
-    @Query("SELECT a.mangaId, COUNT(a) as views FROM AnonymousHistory a GROUP BY a.mangaId ORDER BY views DESC")
+    @Query("SELECT (a.mangaId, COUNT(a)) " +
+            "FROM AnonymousHistory a GROUP BY a.mangaId ORDER BY COUNT(a) DESC")
     List<Object[]> countViewsByManga();
 
     /**
@@ -81,7 +83,8 @@ public interface AnonymousHistoryRepository extends JpaRepository<AnonymousHisto
      * @param mangaIds Danh sách ID của truyện
      * @return Số lượt xem của mỗi truyện
      */
-    @Query("SELECT a.mangaId, COUNT(a) as views FROM AnonymousHistory a WHERE a.mangaId IN :mangaIds GROUP BY a.mangaId")
+    @Query("SELECT (a.mangaId, COUNT(a)) " +
+            "FROM AnonymousHistory a WHERE a.mangaId IN :mangaIds GROUP BY a.mangaId")
     List<Object[]> countViewsByMangaIds(@Param("mangaIds") List<String> mangaIds);
 
     /**
@@ -90,8 +93,9 @@ public interface AnonymousHistoryRepository extends JpaRepository<AnonymousHisto
      * @param endDate Ngày kết thúc
      * @return Danh sách số lượt xem theo truyện
      */
-    @Query("SELECT a.mangaId, COUNT(a) as views FROM AnonymousHistory a " +
+    @Query("SELECT (a.mangaId, COUNT(a)) " +
+            "FROM AnonymousHistory a " +
             "WHERE DATE(a.createdAt) BETWEEN :startDate AND :endDate " +
-            "GROUP BY a.mangaId ORDER BY views DESC")
+            "GROUP BY a.mangaId ORDER BY COUNT(a) DESC")
     List<Object[]> countViewsByMangaBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }

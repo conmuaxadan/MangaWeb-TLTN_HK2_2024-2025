@@ -9,6 +9,7 @@ import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.LinkedAccountResponse;
 import com.raindrop.identity_service.dto.response.UserCommentResponse;
 import com.raindrop.identity_service.dto.response.UserResponse;
+import com.raindrop.identity_service.dto.response.UserStatisticsResponse;
 import com.raindrop.identity_service.entity.LinkedAccount;
 import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
@@ -41,10 +42,16 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -411,7 +418,7 @@ public class UserService {
      */
     @Transactional
     public void linkGoogleAccount(String code, String redirectUri) {
-        // Lấy user hiện tại
+        // L���y user hiện tại
         User currentUser = getCurrentAuthenticatedUser();
 
         // Lấy thông tin từ Google
@@ -659,5 +666,103 @@ public class UserService {
             log.error("Error deleting avatar for user ID: {}", userId, e);
             throw new AppException(ErrorCode.SERVER_ERROR);
         }
+    }
+
+    /**
+     * Lấy thống kê tổng hợp về người dùng
+     * @return Thống kê tổng hợp về người dùng
+     */
+    public UserStatisticsResponse getUserStatistics() {
+        log.info("Getting user statistics");
+
+        // Lấy thời điểm bắt đầu của ngày, tuần, tháng hiện tại
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1).atStartOfDay();
+        LocalDateTime startOfMonth = today.withDayOfMonth(1).atStartOfDay();
+
+        // Lấy thời điểm bắt đầu và kết thúc cho 7 ngày gần nhất
+        LocalDateTime startDate = today.minusDays(6).atStartOfDay();
+        LocalDateTime endDate = today.atTime(LocalTime.MAX);
+
+        // Đếm tổng số người dùng và người dùng mới
+        Long totalUsers = userRepository.count();
+        Long newUsersToday = userRepository.countNewUsersToday(startOfDay);
+        Long newUsersThisWeek = userRepository.countNewUsersThisWeek(startOfWeek);
+        Long newUsersThisMonth = userRepository.countNewUsersThisMonth(startOfMonth);
+
+        // Đếm số người dùng theo phương thức đăng nhập
+        Map<String, Long> usersByAuthProvider = userRepository.countUsersByAuthProvider().stream()
+                .collect(Collectors.toMap(
+                        row -> row[0].toString(),
+                        row -> ((Number) row[1]).longValue()
+                ));
+
+        // Tạo map cho 7 ngày gần nhất, giá trị mặc định là 0
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        Map<String, Long> usersByDay = Stream.iterate(0, i -> i <= 6, i -> i + 1)
+                .map(i -> today.minusDays(6 - i))
+                .collect(Collectors.toMap(
+                        date -> date.format(formatter),
+                        date -> 0L
+                ));
+
+        // Cập nhật số lượng người dùng mới theo ngày
+        userRepository.countNewUsersByDay(startDate, endDate)
+                .forEach(row -> usersByDay.put(row[0].toString(), ((Number) row[1]).longValue()));
+
+        // Tạo response
+        return UserStatisticsResponse.builder()
+                .totalUsers(totalUsers)
+                .newUsersToday(newUsersToday)
+                .newUsersThisWeek(newUsersThisWeek)
+                .newUsersThisMonth(newUsersThisMonth)
+                .usersByAuthProvider(usersByAuthProvider)
+                .usersByDay(usersByDay)
+                .build();
+    }
+
+    /**
+     * Tìm kiếm và lọc người dùng theo nhiều tiêu chí
+     *
+     * @param keyword Từ khóa tìm kiếm (tên đăng nhập, email hoặc tên hiển thị)
+     * @param roleId ID của vai trò cần lọc (null nếu không lọc theo vai trò)
+     * @param provider Nhà cung cấp xác thực cần lọc (null nếu không lọc theo nhà cung cấp)
+     * @param enabled Trạng thái tài khoản cần lọc (null nếu không lọc theo trạng thái)
+     * @param pageable Thông tin phân trang
+     * @return Danh sách người dùng phân trang đã được lọc
+     */
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public Page<UserResponse> searchAndFilterUsers(
+            String keyword,
+            Integer roleId,
+            String provider,
+            Boolean enabled,
+            Pageable pageable) {
+
+        log.info("Searching and filtering users with criteria - keyword: {}, roleId: {}, provider: {}, enabled: {}",
+                keyword, roleId, provider, enabled);
+
+        // Xử lý trường hợp chuỗi tìm kiếm rỗng
+        keyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
+
+        // Convert String provider to AuthProvider enum
+        AuthProvider authProvider = null;
+        if (provider != null && !provider.trim().isEmpty()) {
+            try {
+                authProvider = AuthProvider.valueOf(provider.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid provider value: {}", provider);
+                // Nếu provider không hợp lệ, set về null để không lọc theo provider
+                authProvider = null;
+            }
+        }
+
+        Page<User> users = userRepository.searchAndFilterUsers(keyword, roleId, authProvider, enabled, pageable);
+        Page<UserResponse> userResponsePage = users.map(userMapper::toUserResponse);
+
+        log.info("Found {} users matching the criteria", userResponsePage.getTotalElements());
+        return userResponsePage;
     }
 }

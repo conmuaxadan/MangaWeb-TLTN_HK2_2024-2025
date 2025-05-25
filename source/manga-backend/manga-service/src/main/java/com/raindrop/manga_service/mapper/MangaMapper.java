@@ -1,14 +1,13 @@
 package com.raindrop.manga_service.mapper;
 
 import com.raindrop.manga_service.dto.request.MangaRequest;
+import com.raindrop.manga_service.dto.response.MangaManagementResponse;
 import com.raindrop.manga_service.dto.response.MangaResponse;
 import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
-import com.raindrop.manga_service.entity.Chapter;
 import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.entity.Manga;
 import org.mapstruct.*;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -20,8 +19,8 @@ public interface MangaMapper {
     @Mapping(target = "views", ignore = true)
     @Mapping(target = "loves", ignore = true)
     @Mapping(target = "comments", ignore = true)
-    @Mapping(target = "coverUrl", ignore = true) // Xử lý riêng trong service
-    @Mapping(target = "genres", ignore = true) // Xử lý riêng trong service
+    @Mapping(target = "coverUrl", ignore = true)
+    @Mapping(target = "genres", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "lastChapterAddedAt", ignore = true)
@@ -75,5 +74,12 @@ public interface MangaMapper {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Chuyển đổi Manga thành MangaManagementResponse
+     * @param manga Entity Manga
+     * @return MangaManagementResponse
+     */
+    @Mapping(target = "genres", source = "genres", qualifiedByName = "genresToStringList")
+    @Mapping(target = "chapters", ignore = true) // Số lượng chapter sẽ được đặt sau bằng code
+    MangaManagementResponse toMangaManagementResponse(Manga manga);
 }

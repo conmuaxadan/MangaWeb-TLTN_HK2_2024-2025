@@ -9,6 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -32,11 +33,9 @@ public class Manga {
     String coverUrl;
     @Column(columnDefinition = "TEXT")
     String description;
-    @ManyToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    List<Genre> genres;
-    // Năm phát hành
+    @ManyToMany(cascade = CascadeType.PERSIST,fetch = FetchType.LAZY)
+    List<Genre> genres = new ArrayList<>();
     int yearOfRelease;
-    // Tình trạng (đang tiến hành, đã hoàn thành, tạm ngưng)
     @Enumerated(EnumType.STRING)
     MangaStatus status;
     @Column(updatable = false)
@@ -53,10 +52,8 @@ public class Manga {
     // Các trường cho xóa mềm
     @Column(nullable = false)
     boolean deleted = false;
-
     @Column(name = "deleted_at")
     LocalDateTime deletedAt;
-
     @Column(name = "deleted_by")
     String deletedBy;
 }

@@ -34,6 +34,31 @@ export interface MangaResponse {
     deletedBy?: string;
 }
 
+// Manga Response
+export interface MangaManagementResponse {
+    id: string;
+    title: string;
+    anotherTitle?: string;
+    author: string;
+    loves: number;
+    views: number;
+    comments: number;
+    coverUrl?: string;
+    description: string;
+    genres: string[];
+    chapters: number;
+    yearOfRelease?: number;
+    status?: MangaStatus;
+    updatedAt: string;
+    lastChapterAddedAt?: string;
+    // Trường cho xóa mềm
+    deleted: boolean;
+    deletedAt?: string;
+    deletedBy?: string;
+}
+
+
+
 // Advanced Search Request
 export interface AdvancedSearchRequest {
     title?: string;
@@ -50,6 +75,10 @@ export interface MangaSummaryResponse {
     title: string;
     author?: string;
     coverUrl?: string;
+    views?:number;
+    loves?:number;
+    comments?: number;
+    createdAt?: string;
     lastChapterId?: string;
     lastChapterAddedAt?: string;
 }
@@ -101,7 +130,9 @@ export interface ChapterResponse {
     id?: string;
     chapterNumber: number;
     title: string;
+    mangaTitle?: string;  // Thêm field này
     views: number;
+    comments?: number;    // Thêm field này
     pages: ChapterPageResponse[];
     mangaId: string;
     updatedAt: string;
@@ -151,3 +182,16 @@ export interface PageResponse<T> {
     numberOfElements: number;
     empty: boolean;
 }
+
+/**
+ * Interface đơn giản cho kết quả tìm kiếm nhanh manga khi thêm chapter
+ */
+export interface MangaQuickSearchResponse {
+    id: string;
+    title: string;
+    author: string;
+    coverUrl?: string;
+    highestChapterNumber: number;
+    chapterCount: number;
+}
+

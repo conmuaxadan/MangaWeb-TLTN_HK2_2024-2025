@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 import { identityHttpClient } from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
-import { ToggleUserStatusRequest, UserRequest, UserResponse } from "../interfaces/models/auth";
+import { ToggleUserStatusRequest, UserPageResponse, UserRequest, UserResponse } from "../interfaces/models/auth";
 import { logApiCall } from "../utils/api-logger";
 
 class UserService {
@@ -29,17 +29,23 @@ class UserService {
 
     /**
      * Lấy danh sách người dùng có phân trang
-     * @param page Số trang
+     * @param page Số trang (bắt đầu từ 0)
      * @param size Số lượng item trên mỗi trang
      * @param sort Trường sắp xếp
+     * @param search Từ khóa tìm kiếm (tùy chọn)
      * @returns Danh sách người dùng có phân trang hoặc null nếu thất bại
      */
-    async getUsersPaginated(page: number = 0, size: number = 10, sort: string = 'username'): Promise<any | null> {
+    async getUsersPaginated(page: number = 0, size: number = 10, sort: string = 'username', search?: string): Promise<UserPageResponse | null> {
         logApiCall('getUsersPaginated');
         try {
-            const apiResponse = await identityHttpClient.get<ApiResponse<any>>(
-                `/users/paginated?page=${page}&size=${size}&sort=${sort}`
-            );
+            let url = `/users/paginated?page=${page}&size=${size}&sort=${sort}`;
+
+            // Thêm tham số tìm kiếm nếu có
+            if (search && search.trim() !== '') {
+                url += `&search=${encodeURIComponent(search)}`;
+            }
+
+            const apiResponse = await identityHttpClient.get<ApiResponse<UserPageResponse>>(url);
 
             if (apiResponse.code !== 1000) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách người dùng", { position: "top-right" });
@@ -80,7 +86,7 @@ class UserService {
     /**
      * Tạo người dùng mới
      * @param request Thông tin người dùng mới
-     * @returns Thông tin người dùng đã tạo hoặc null nếu thất bại
+     * @returns Thông tin người dùng ��ã tạo hoặc null nếu thất bại
      */
     async createUser(request: UserRequest): Promise<UserResponse | null> {
         logApiCall('createUser');
@@ -200,68 +206,167 @@ class UserService {
             );
 
             if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể cập nhật ảnh đại diện", { position: "top-right" });
+                toast.error(apiResponse.message || "Không thể tải lên avatar", { position: "top-right" });
                 return null;
             }
 
-            toast.success("Cập nhật ảnh đại diện thành công", { position: "top-right" });
+            toast.success("Tải lên avatar thành công", { position: "top-right" });
             return apiResponse.result;
         } catch (error) {
-            console.error("Lỗi upload avatar:", error);
-            toast.error("Lỗi khi cập nhật ảnh đại diện", { position: "top-right" });
-            return null;
-        }
-    }
-
-    /**
-     * Xóa avatar của người dùng
-     * @param userId ID của người dùng
-     * @returns Thông tin người dùng đã cập nhật hoặc null nếu thất bại
-     */
-    async deleteAvatar(userId: string): Promise<UserResponse | null> {
-        logApiCall('deleteAvatar');
-        try {
-            const apiResponse = await identityHttpClient.delete<ApiResponse<UserResponse>>(`/users/${userId}/avatar`);
-
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể xóa ảnh đại diện", { position: "top-right" });
-                return null;
-            }
-
-            toast.success("Xóa ảnh đại diện thành công", { position: "top-right" });
-            return apiResponse.result;
-        } catch (error) {
-            console.error("Lỗi xóa avatar:", error);
-            toast.error("Lỗi khi xóa ảnh đại diện", { position: "top-right" });
+            console.error("Lỗi tải lên avatar:", error);
+            toast.error("Đã xảy ra lỗi khi tải lên avatar", { position: "top-right" });
             return null;
         }
     }
 
     /**
      * Khóa hoặc mở khóa tài khoản người dùng
-     * @param userId ID của người dùng cần thay đổi trạng thái
-     * @param enabled true để mở khóa, false để khóa tài khoản
+     * @param userId ID của người dùng
+     * @param enabled true để mở khóa, false để khóa
      * @returns Thông tin người dùng đã cập nhật hoặc null nếu thất bại
      */
     async toggleUserStatus(userId: string, enabled: boolean): Promise<UserResponse | null> {
         logApiCall('toggleUserStatus');
         try {
-            const request: ToggleUserStatusRequest = { userId, enabled };
-            const apiResponse = await identityHttpClient.post<ApiResponse<UserResponse>>('/users/status', request);
+            const request: ToggleUserStatusRequest = {
+                userId,
+                enabled
+            };
+
+            // Sửa lại từ PUT thành POST và thay đổi endpoint từ /users/toggle-status thành /users/status
+            const apiResponse = await identityHttpClient.post<ApiResponse<UserResponse>>(
+                '/users/status',
+                request
+            );
 
             if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể thay đổi trạng thái tài khoản", { position: "top-right" });
+                toast.error(apiResponse.message || `Không thể ${enabled ? 'mở khóa' : 'khóa'} tài khoản`, { position: "top-right" });
                 return null;
             }
 
-            toast.success(enabled ? "Mở khóa tài khoản thành công" : "Khóa tài khoản thành công", { position: "top-right" });
+            toast.success(`${enabled ? 'Mở khóa' : 'Khóa'} tài khoản thành công`, { position: "top-right" });
             return apiResponse.result;
         } catch (error) {
-            console.error(`Lỗi thay đổi trạng thái tài khoản ${userId}:`, error);
-            toast.error("Đã xảy ra lỗi khi thay đổi trạng thái tài khoản", { position: "top-right" });
+            console.error(`Lỗi ${enabled ? 'mở khóa' : 'khóa'} tài khoản:`, error);
+            toast.error(`Đã xảy ra lỗi khi ${enabled ? 'mở khóa' : 'khóa'} tài khoản`, { position: "top-right" });
+            return null;
+        }
+    }
+
+    /**
+     * Tìm kiếm người dùng có phân trang với bộ lọc nâng cao
+     * @param keyword Từ khóa tìm kiếm (tên người dùng, email hoặc tên hiển thị)
+     * @param roleId ID của vai trò cần lọc (tùy chọn)
+     * @param provider Nhà cung cấp xác thực cần lọc (tùy chọn)
+     * @param enabled Trạng thái tài khoản cần lọc (tùy chọn)
+     * @param page Số trang (bắt đầu từ 0)
+     * @param size Số lượng item trên mỗi trang
+     * @param sort Trường sắp xếp
+     * @returns Danh sách người dùng có phân trang hoặc null nếu thất bại
+     */
+    async searchUsers(
+        keyword: string | undefined,
+        roleId: number | undefined = undefined,
+        provider: string | undefined = undefined,
+        enabled: boolean | undefined = undefined,
+        page: number = 0,
+        size: number = 10,
+        sort: string = 'username'
+    ): Promise<UserPageResponse | null> {
+        logApiCall('searchUsers');
+        try {
+            let url = `/users/search?page=${page}&size=${size}&sort=${sort}`;
+
+            // Thêm các tham số tìm kiếm và lọc nếu có
+            if (keyword && keyword.trim() !== '') {
+                url += `&keyword=${encodeURIComponent(keyword)}`;
+            }
+
+            if (roleId !== undefined) {
+                url += `&roleId=${roleId}`;
+            }
+
+            if (provider !== undefined) {
+                url += `&provider=${provider}`;
+            }
+
+            if (enabled !== undefined) {
+                url += `&enabled=${enabled}`;
+            }
+
+            const apiResponse = await identityHttpClient.get<ApiResponse<UserPageResponse>>(url);
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể tìm kiếm người dùng", { position: "top-right" });
+                return null;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error("Lỗi tìm kiếm người dùng:", error);
+            toast.error("Đã xảy ra lỗi khi tìm kiếm người dùng", { position: "top-right" });
+            return null;
+        }
+    }
+
+    /**
+     * Tìm kiếm và lọc người dùng theo nhiều tiêu chí
+     * @param keyword Từ khóa tìm kiếm (tùy chọn)
+     * @param roleId ID của vai trò cần lọc (tùy chọn)
+     * @param provider Nhà cung cấp xác thực cần lọc (tùy chọn)
+     * @param enabled Trạng thái tài khoản cần lọc (tùy chọn)
+     * @param page Số trang (bắt đầu từ 0)
+     * @param size Số lượng item trên mỗi trang
+     * @param sort Trường sắp xếp
+     * @returns Danh sách người dùng có phân trang đã được lọc
+     */
+    async filterUsers(
+        keyword?: string,
+        roleId?: number,
+        provider?: string,
+        enabled?: boolean,
+        page: number = 0,
+        size: number = 10,
+        sort: string = 'username'
+    ): Promise<UserPageResponse | null> {
+        logApiCall('filterUsers');
+        try {
+            // Xây dựng URL cơ bản với các tham số phân trang
+            let url = `/users/filter?page=${page}&size=${size}&sort=${sort}`;
+
+            // Thêm các tham số lọc tùy chọn nếu có
+            if (keyword && keyword.trim() !== '') {
+                url += `&keyword=${encodeURIComponent(keyword)}`;
+            }
+
+            if (roleId !== undefined) {
+                url += `&roleId=${roleId}`;
+            }
+
+            if (provider) {
+                url += `&provider=${provider}`;
+            }
+
+            if (enabled !== undefined) {
+                url += `&enabled=${enabled}`;
+            }
+
+            const apiResponse = await identityHttpClient.get<ApiResponse<UserPageResponse>>(url);
+
+            if (apiResponse.code !== 1000) {
+                toast.error(apiResponse.message || "Không thể lọc danh sách người dùng", { position: "top-right" });
+                return null;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error("Lỗi lọc danh sách người dùng:", error);
+            toast.error("Đã xảy ra lỗi khi lọc danh sách người dùng", { position: "top-right" });
             return null;
         }
     }
 }
 
-export default new UserService();
+// Export singleton instance
+const userService = new UserService();
+export default userService;

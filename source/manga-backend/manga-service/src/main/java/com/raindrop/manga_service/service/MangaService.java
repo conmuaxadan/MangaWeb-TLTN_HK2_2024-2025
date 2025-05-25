@@ -2,14 +2,12 @@ package com.raindrop.manga_service.service;
 
 import com.raindrop.manga_service.dto.request.AdvancedSearchRequest;
 import com.raindrop.manga_service.dto.request.MangaRequest;
-import com.raindrop.manga_service.dto.response.MangaResponse;
-import com.raindrop.manga_service.dto.response.MangaStatisticsResponse;
-import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
-import com.raindrop.manga_service.dto.response.MostViewedMangaResponse;
+import com.raindrop.manga_service.dto.response.*;
 import com.raindrop.manga_service.entity.Chapter;
 import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.entity.Manga;
 import com.raindrop.manga_service.enums.ErrorCode;
+import com.raindrop.manga_service.enums.MangaStatus;
 import com.raindrop.manga_service.exception.AppException;
 import com.raindrop.manga_service.mapper.MangaMapper;
 import com.raindrop.manga_service.repository.ChapterRepository;
@@ -29,8 +27,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
-
 
 import java.time.LocalDate;
 import java.util.*;
@@ -87,7 +83,7 @@ public class MangaService {
         if (request.getCover() != null && !request.getCover().isEmpty()) {
             try {
                 log.info("Uploading cover image for manga: {}", request.getTitle());
-                var response = uploadClient.uploadMedia(header,request.getCover());
+                var response = uploadClient.uploadMedia(header, request.getCover());
                 manga.setCoverUrl(response.getResult().getFileName());
                 log.info("Cover image uploaded successfully: {}", response.getResult().getFileName());
             } catch (Exception e) {
@@ -124,40 +120,56 @@ public class MangaService {
         return response;
     }
 
-
-    public List<MangaResponse> getAllMangas() {
-        log.info("Getting all active mangas");
-        List<Manga> mangas = mangaRepository.findByDeletedFalse();
-        log.info("Retrieved {} active mangas", mangas.size());
-        return mangas.stream().map(mangaMapper::toMangaResponse).toList();
+    public Page<MangaManagementResponse> getAllMangas(Pageable pageable) {
+        log.info("Getting all mangas with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        Page<Manga> mangasPage = mangaRepository.findByDeletedFalse(pageable);
+        return mangasPage.map(manga -> {
+            MangaManagementResponse response = mangaMapper.toMangaManagementResponse(manga);
+            response.setChapters(chapterRepository.countByMangaId(manga.getId()));
+            return response;
+        });
     }
+
 
     /**
      * Lấy danh sách tất cả manga đã bị xóa
+     *
      * @return Danh sách manga đã bị xóa
      */
-    public List<MangaResponse> getAllDeletedMangas() {
-        log.info("Getting all deleted mangas");
-        List<Manga> mangas = mangaRepository.findByDeletedTrue();
-        log.info("Retrieved {} deleted mangas", mangas.size());
-        return mangas.stream().map(mangaMapper::toMangaResponse).toList();
+    public Page<MangaManagementResponse> getAllDeletedMangas(Pageable pageable) {
+        log.info("Getting all mangas with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        Page<Manga> mangasPage = mangaRepository.findByDeletedTrue(pageable);
+
+        return mangasPage.map(manga -> {
+            // Chuyển đổi entity Manga sang MangaManagementResponse
+            return MangaManagementResponse.builder()
+                    .id(manga.getId())
+                    .title(manga.getTitle())
+                    .author(manga.getAuthor())
+                    .loves(manga.getLoves())
+                    .views(manga.getViews())
+                    .comments(manga.getComments())
+                    .coverUrl(manga.getCoverUrl())
+                    .description(manga.getDescription())
+                    .genres(manga.getGenres().stream().map(Genre::getName).collect(Collectors.toList()))
+                    .yearOfRelease(manga.getYearOfRelease())
+                    .status(manga.getStatus())
+                    .lastChapterId(manga.getLastChapterId())
+                    .lastChapterAddedAt(manga.getLastChapterAddedAt())
+                    .chapters(chapterRepository.countByMangaId(manga.getId()))
+                    .createdAt(manga.getCreatedAt())
+                    .updatedAt(manga.getUpdatedAt())
+                    .deleted(manga.isDeleted())
+                    .deletedAt(manga.getDeletedAt())
+                    .deletedBy(manga.getDeletedBy())
+                    .build();
+        });
     }
 
-    /**
-     * Lấy danh sách manga có phân trang
-     * @param pageable Thông tin phân trang
-     * @return Danh sách manga có phân trang
-     */
-    public Page<MangaResponse> getAllMangasPaginated(Pageable pageable) {
-        log.info("Getting paginated active mangas with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        Page<Manga> mangasPage = mangaRepository.findByDeletedFalse(pageable);
-        Page<MangaResponse> mangaResponsePage = mangasPage.map(mangaMapper::toMangaResponse);
-        log.info("Retrieved {} active mangas out of {} total", mangaResponsePage.getNumberOfElements(), mangaResponsePage.getTotalElements());
-        return mangaResponsePage;
-    }
 
     /**
      * Lấy danh sách manga đã bị xóa có phân trang
+     *
      * @param pageable Thông tin phân trang
      * @return Danh sách manga đã bị xóa có phân trang
      */
@@ -171,6 +183,7 @@ public class MangaService {
 
     /**
      * Lấy danh sách tóm tắt manga có phân trang
+     *
      * @param pageable Thông tin phân trang
      * @return Danh sách tóm tắt manga có phân trang
      */
@@ -198,7 +211,8 @@ public class MangaService {
 
     /**
      * Xóa mềm manga
-     * @param id ID của manga cần xóa
+     *
+     * @param id     ID của manga cần xóa
      * @param userId ID của người dùng thực hiện xóa
      */
     @Transactional
@@ -232,6 +246,7 @@ public class MangaService {
 
     /**
      * Khôi phục manga đã xóa
+     *
      * @param id ID của manga cần khôi phục
      * @return Thông tin manga đã khôi phục
      */
@@ -268,6 +283,7 @@ public class MangaService {
 
     /**
      * Xóa cứng manga (chỉ dùng cho mục đích quản trị đặc biệt)
+     *
      * @param id ID của manga cần xóa
      */
     @Transactional
@@ -305,7 +321,8 @@ public class MangaService {
 
     /**
      * Xóa manga (sử dụng xóa mềm theo mặc định)
-     * @param id ID của manga cần xóa
+     *
+     * @param id     ID của manga cần xóa
      * @param userId ID của người dùng thực hiện xóa
      */
     @Transactional
@@ -331,9 +348,9 @@ public class MangaService {
         // Upload ảnh bìa mới nếu có
         if (request.getCover() != null && !request.getCover().isEmpty()) {
             try {
-                uploadClient.deleteMedia(header,manga.getCoverUrl());
+                uploadClient.deleteMedia(header, manga.getCoverUrl());
                 log.info("Uploading new cover image for manga: {}", manga.getTitle());
-                var response = uploadClient.uploadMedia(header,request.getCover());
+                var response = uploadClient.uploadMedia(header, request.getCover());
                 manga.setCoverUrl(response.getResult().getFileName());
                 log.info("New cover image uploaded successfully: {}", response.getResult().getFileName());
             } catch (Exception e) {
@@ -367,8 +384,9 @@ public class MangaService {
 
     /**
      * Tìm kiếm nâng cao manga
+     *
      * @param searchRequest Yêu cầu tìm kiếm nâng cao
-     * @param pageable Thông tin phân trang
+     * @param pageable      Thông tin phân trang
      * @return Danh sách manga phù hợp với điều kiện tìm kiếm
      */
     public Page<MangaResponse> advancedSearch(AdvancedSearchRequest searchRequest, Pageable pageable) {
@@ -444,7 +462,8 @@ public class MangaService {
 
     /**
      * Tìm kiếm manga theo từ khóa
-     * @param keyword Từ khóa tìm kiếm
+     *
+     * @param keyword  Từ khóa tìm kiếm
      * @param pageable Thông tin phân trang
      * @return Danh sách manga phù hợp với từ khóa
      */
@@ -473,8 +492,9 @@ public class MangaService {
 
     /**
      * Tìm kiếm manga theo thể loại
+     *
      * @param genreName Tên thể loại
-     * @param pageable Thông tin phân trang
+     * @param pageable  Thông tin phân trang
      * @return Danh sách manga thuộc thể loại
      */
     public Page<MangaResponse> findByGenre(String genreName, Pageable pageable) {
@@ -509,6 +529,7 @@ public class MangaService {
 
     /**
      * Lấy số chapter cao nhất của một truyện
+     *
      * @param mangaId ID của truyện
      * @return Số chapter cao nhất
      */
@@ -541,6 +562,7 @@ public class MangaService {
 
     /**
      * Đếm tổng số truyện trong hệ thống
+     *
      * @param includeDeleted Có bao gồm truyện đã xóa hay không
      * @return Tổng số truyện
      */
@@ -558,6 +580,7 @@ public class MangaService {
 
     /**
      * Lấy danh sách truyện được xem nhiều nhất
+     *
      * @param limit Số lượng truyện cần lấy
      * @return Danh sách truyện được xem nhiều nhất
      */
@@ -588,6 +611,7 @@ public class MangaService {
 
     /**
      * Lấy thống kê tổng hợp về truyện
+     *
      * @return Thống kê tổng hợp về truyện
      */
     public MangaStatisticsResponse getMangaStatistics() {
@@ -625,17 +649,24 @@ public class MangaService {
             mangasByGenre.put(genreName, count);
         }
 
-        // Đếm số truyện theo trạng thái
+        // Đếm số truyện theo trạng thái (hiệu quả hơn)
+        List<Manga> activeMangas2 = mangaRepository.findByDeletedFalse();
         Map<String, Long> mangasByStatus = new HashMap<>();
-        mangasByStatus.put("ONGOING", mangaRepository.findByDeletedFalse().stream()
-                .filter(manga -> "ONGOING".equals(manga.getStatus()))
-                .count());
-        mangasByStatus.put("COMPLETED", mangaRepository.findByDeletedFalse().stream()
-                .filter(manga -> "COMPLETED".equals(manga.getStatus()))
-                .count());
-        mangasByStatus.put("PAUSED", mangaRepository.findByDeletedFalse().stream()
-                .filter(manga -> "PAUSED".equals(manga.getStatus()))
-                .count());
+
+        // Khởi tạo với giá trị 0 cho tất cả status
+        mangasByStatus.put("ONGOING", 0L);
+        mangasByStatus.put("COMPLETED", 0L);
+        mangasByStatus.put("PAUSED", 0L);
+
+        // Đếm theo từng status
+        for (Manga manga : activeMangas2) {
+            if (manga.getStatus() != null) {
+                String statusKey = manga.getStatus().name();
+                mangasByStatus.put(statusKey, mangasByStatus.getOrDefault(statusKey, 0L) + 1);
+            }
+        }
+
+        log.info("Manga by status: {}", mangasByStatus);
 
         // Tạo response
         return MangaStatisticsResponse.builder()
@@ -646,5 +677,150 @@ public class MangaService {
                 .mangasByGenre(mangasByGenre)
                 .mangasByStatus(mangasByStatus)
                 .build();
+    }
+
+    /**
+     * Tìm kiếm nhanh truyện theo từ khóa, dùng cho việc thêm chapter
+     *
+     * @param keyword Từ khóa tìm kiếm
+     * @param limit   Số lượng kết quả tối đa
+     * @return Danh sách truyện đơn giản phù hợp với từ khóa
+     */
+    public List<MangaQuickSearchResponse> quickSearchManga(String keyword, int limit) {
+        log.info("Quick searching manga with keyword: {}", keyword);
+
+        // Thực hiện tìm kiếm với từ khóa
+        List<Manga> mangas = mangaRepository.searchByKeyword(keyword, PageRequest.of(0, limit)).getContent();
+        log.info("Found {} mangas matching the keyword", mangas.size());
+
+        // Chuyển đổi kết quả sang DTO đơn giản
+        return mangas.stream()
+                .map(manga -> {
+                    // Lấy số chapter cao nhất
+                    double highestChapterNumber = getHighestChapterNumber(manga.getId());
+
+                    return MangaQuickSearchResponse.builder()
+                            .id(manga.getId())
+                            .title(manga.getTitle())
+                            .author(manga.getAuthor())
+                            .coverUrl(manga.getCoverUrl())
+                            .highestChapterNumber(highestChapterNumber)
+                            .chapterCount(chapterRepository.countByMangaId(manga.getId()))
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    ;
+
+    /**
+     * Tìm kiếm và lọc manga chưa bị xóa theo nhiều tiêu chí
+     *
+     * @param keyword       Từ khóa tìm kiếm (title hoặc author)
+     * @param genreName     Tên thể loại cần lọc (null nếu không lọc theo thể loại)
+     * @param status        Trạng thái manga cần lọc (null nếu không lọc theo trạng thái)
+     * @param yearOfRelease Năm phát hành cần lọc (null nếu không lọc theo năm)
+     * @param pageable      Thông tin phân trang
+     * @return Danh sách manga chưa bị xóa đã được lọc
+     */
+    public Page<MangaManagementResponse> searchAndFilterActiveMangas(
+            String keyword,
+            String genreName,
+            String status,
+            Integer yearOfRelease,
+            Pageable pageable) {
+
+        log.info("Searching and filtering active mangas with criteria - keyword: {}, genreName: {}, status: {}, yearOfRelease: {}",
+                keyword, genreName, status, yearOfRelease);
+
+        // Xử lý trường hợp chuỗi tìm kiếm rỗng
+        keyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
+        genreName = (genreName != null && !genreName.trim().isEmpty()) ? genreName.trim() : null;
+
+        // Convert String status to MangaStatus enum
+        MangaStatus mangaStatus = null;
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                mangaStatus = MangaStatus.valueOf(status.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid status value: {}", status);
+                // Nếu status không hợp lệ, set về null để không lọc theo status
+                mangaStatus = null;
+            }
+        }
+
+        Page<Manga> mangas = mangaRepository.searchAndFilterActiveMangas(keyword, genreName, mangaStatus, yearOfRelease, pageable);
+
+        Page<MangaManagementResponse> mangaResponsePage = mangas.map(manga -> {
+            MangaManagementResponse response = mangaMapper.toMangaManagementResponse(manga);
+            response.setChapters(chapterRepository.countByMangaId(manga.getId()));
+            return response;
+        });
+
+        log.info("Found {} active mangas matching the criteria", mangaResponsePage.getTotalElements());
+        return mangaResponsePage;
+    }
+
+    /**
+     * Tìm kiếm và lọc manga đã bị xóa theo nhiều tiêu chí
+     *
+     * @param keyword       Từ khóa tìm kiếm (title hoặc author)
+     * @param genreName     Tên thể loại cần lọc (null nếu không lọc theo thể loại)
+     * @param status        Trạng thái manga cần lọc (null nếu không lọc theo trạng thái)
+     * @param yearOfRelease Năm phát hành cần lọc (null nếu không lọc theo năm)
+     * @param pageable      Thông tin phân trang
+     * @return Danh sách manga đã bị xóa đã được lọc
+     */
+    public Page<MangaManagementResponse> searchAndFilterDeletedMangas(
+            String keyword,
+            String genreName,
+            String status,
+            Integer yearOfRelease,
+            Pageable pageable) {
+
+        log.info("Searching and filtering deleted mangas with criteria - keyword: {}, genreName: {}, status: {}, yearOfRelease: {}",
+                keyword, genreName, status, yearOfRelease);
+
+        // Xử lý các tham số đầu vào
+        keyword = trimOrNull(keyword);
+        genreName = trimOrNull(genreName);
+        MangaStatus mangaStatus = parseStatusOrNull(status);
+
+        // Gọi repository để lấy dữ liệu
+        Page<Manga> mangas = mangaRepository.searchAndFilterDeletedMangas(
+                keyword, genreName, mangaStatus, yearOfRelease, pageable);
+
+        // Chuyển đổi kết quả sang MangaManagementResponse
+        Page<MangaManagementResponse> mangaResponsePage = mangas.map(manga -> {
+            MangaManagementResponse response = mangaMapper.toMangaManagementResponse(manga);
+            response.setChapters(chapterRepository.countByMangaId(manga.getId()));
+            return response;
+        });
+
+        log.info("Found {} deleted mangas matching the criteria", mangaResponsePage.getTotalElements());
+        return mangaResponsePage;
+    }
+
+    /**
+     * Chuỗi null hoặc rỗng sẽ trả về null, ngược lại trả về chuỗi đã cắt khoảng trắng
+     */
+    private String trimOrNull(String str) {
+        return (str != null && !str.trim().isEmpty()) ? str.trim() : null;
+    }
+
+    /**
+     * Chuyển đổi String thành MangaStatus hoặc null nếu không hợp lệ
+     */
+    private MangaStatus parseStatusOrNull(String status) {
+        if (status == null || status.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return MangaStatus.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid status value: {}", status);
+            return null;
+        }
     }
 }

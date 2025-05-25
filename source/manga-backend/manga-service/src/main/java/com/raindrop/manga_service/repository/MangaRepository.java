@@ -1,6 +1,7 @@
 package com.raindrop.manga_service.repository;
 
 import com.raindrop.manga_service.entity.Manga;
+import com.raindrop.manga_service.enums.MangaStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -141,4 +142,54 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
      */
     @Query("SELECT DISTINCT m FROM Manga m JOIN m.genres g WHERE g.name = :genreName ORDER BY m.lastChapterAddedAt DESC")
     Page<Manga> findByGenre(@Param("genreName") String genreName, Pageable pageable);
+
+    /**
+     * Tìm kiếm và lọc manga theo nhiều tiêu chí (chưa bị xóa)
+     * @param keyword Từ khóa tìm kiếm (title hoặc author)
+     * @param genreName Tên thể loại (nếu có)
+     * @param status Trạng thái manga (nếu có)
+     * @param yearOfRelease Năm phát hành (nếu có)
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga phù hợp với tiêu chí
+     */
+    @Query("SELECT DISTINCT m FROM Manga m " +
+           "LEFT JOIN m.genres g " +
+           "WHERE m.deleted = false " +
+           "AND (:keyword IS NULL OR " +
+           "    LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "    LOWER(m.author) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "AND (:genreName IS NULL OR g.name = :genreName) " +
+           "AND (:status IS NULL OR m.status = :status) " +
+           "AND (:yearOfRelease IS NULL OR m.yearOfRelease = :yearOfRelease)")
+    Page<Manga> searchAndFilterActiveMangas(
+            @Param("keyword") String keyword,
+            @Param("genreName") String genreName,
+            @Param("status") MangaStatus status,
+            @Param("yearOfRelease") Integer yearOfRelease,
+            Pageable pageable);
+
+    /**
+     * Tìm kiếm và lọc manga theo nhiều tiêu chí (đã bị xóa)
+     * @param keyword Từ khóa tìm kiếm (title hoặc author)
+     * @param genreName Tên thể loại (nếu có)
+     * @param status Trạng thái manga (nếu có)
+     * @param yearOfRelease Năm phát hành (nếu có)
+     * @param pageable Thông tin phân trang
+     * @return Danh sách manga đã xóa phù hợp với tiêu chí
+     */
+    @Query("SELECT DISTINCT m FROM Manga m " +
+           "LEFT JOIN m.genres g " +
+           "WHERE m.deleted = true " +
+           "AND (:keyword IS NULL OR " +
+           "    LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "    LOWER(m.author) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "AND (:genreName IS NULL OR g.name = :genreName) " +
+           "AND (:status IS NULL OR m.status = :status) " +
+           "AND (:yearOfRelease IS NULL OR m.yearOfRelease = :yearOfRelease)")
+    Page<Manga> searchAndFilterDeletedMangas(
+            @Param("keyword") String keyword,
+            @Param("genreName") String genreName,
+            @Param("status") MangaStatus status,
+            @Param("yearOfRelease") Integer yearOfRelease,
+            Pageable pageable);
 }

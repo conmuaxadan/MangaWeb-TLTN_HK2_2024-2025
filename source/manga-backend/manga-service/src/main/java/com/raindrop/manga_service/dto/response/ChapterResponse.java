@@ -16,6 +16,7 @@ public class ChapterResponse {
     String id;
     double chapterNumber;
     String title;
+    String mangaTitle;
     int views;
     int comments;
     List<PageResponse> pages;

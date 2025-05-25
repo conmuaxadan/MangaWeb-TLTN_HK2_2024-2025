@@ -1,18 +1,16 @@
 package com.raindrop.manga_service.controller;
 
 import com.raindrop.manga_service.dto.request.ChapterRequest;
-import com.raindrop.manga_service.dto.request.MangaRequest;
-import com.raindrop.manga_service.dto.request.ViewLogRequest;
 import com.raindrop.manga_service.dto.response.ApiResponse;
 import com.raindrop.manga_service.dto.response.ChapterInfoResponse;
 import com.raindrop.manga_service.dto.response.ChapterResponse;
-import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.service.ChapterService;
-import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -33,11 +31,12 @@ public class ChapterController {
     ApiResponse<ChapterResponse> createChapter(
             @RequestParam("chapterNumber") String chapterNumber,
             @RequestParam("mangaId") String mangaId,
+            @RequestParam(value = "title", required = false) String title,
             @RequestParam("pages") List<MultipartFile> pages
     ) {
         ChapterRequest request = ChapterRequest.builder()
                 .chapterNumber(Double.parseDouble(chapterNumber))
-                .title("Chương " + chapterNumber)
+                .title(title != null && !title.isEmpty() ? title : "Chương " + chapterNumber)
                 .mangaId(mangaId)
                 .pages(pages)
                 .build();
@@ -64,61 +63,32 @@ public class ChapterController {
     }
 
     /**
-     * Tăng lượt xem của chapter (phương thức cũ, giữ lại để tương thích ngược)
-     * @param id ID của chapter
-     * @param request Thông tin lượt xem
-     * @return Thông tin chapter sau khi cập nhật lượt xem
-     */
-    @PostMapping("/{id}/views")
-    ApiResponse<ChapterResponse> logChapterView(
-            @PathVariable String id,
-            @RequestBody @Valid ViewLogRequest request) {
-
-        // Kiểm tra xem chapterId trong request có khớp với id trong path không
-        if (!id.equals(request.getChapterId())) {
-            request = ViewLogRequest.builder()
-                    .chapterId(id)
-                    .userId(request.getUserId())
-                    .sessionId(request.getSessionId())
-                    .scrollPercentage(request.getScrollPercentage())
-                    .build();
-        }
-        // Lấy thông tin chapter sau khi cập nhật lượt xem
-        ChapterResponse chapterResponse = chapterService.getChapterById(id);
-
-        return ApiResponse.<ChapterResponse>builder()
-                .message("Chapter view logged successfully")
-                .result(chapterResponse)
-                .build();
-    }
-
-    /**
-     * Tăng lượt xem của chapter (phương thức đơn giản hóa)
-     * @param id ID của chapter
-     * @return Thông tin chapter sau khi cập nhật lượt xem
-     */
-    @PostMapping("/{id}/views/increment")
-    ApiResponse<ChapterResponse> incrementChapterView(@PathVariable String id) {
-        log.info("Simple view increment for chapter: {}", id);
-
-        // Tăng lượt xem và lấy thông tin chapter sau khi cập nhật
-        ChapterResponse chapterResponse = chapterService.incrementChapterViews(id);
-
-        return ApiResponse.<ChapterResponse>builder()
-                .message("Chapter view incremented successfully")
-                .result(chapterResponse)
-                .build();
-    }
-
-    /**
-     * Lấy tất cả chapter
-     * @return Danh sách tất cả chapter
+     * Lấy tất cả chapter với khả năng lọc
+     * @param mangaId ID của manga để lọc (optional)
+     * @param pageable Thông tin phân trang
+     * @return Danh sách chapter
      */
     @GetMapping()
-    ApiResponse<List<ChapterResponse>> getAllChapters() {
-        return ApiResponse.<List<ChapterResponse>>builder()
+    ApiResponse<Page<ChapterResponse>> getAllChapters(
+            @RequestParam(value = "mangaId", required = false) String mangaId,
+            Pageable pageable) {
+
+        log.info("getAllChapters called with mangaId: {}, pageable: {}", mangaId, pageable);
+
+        // Nếu có mangaId filter, sử dụng search and filter
+        if (mangaId != null && !mangaId.trim().isEmpty()) {
+            log.info("Using filtered search with mangaId: {}", mangaId);
+            return ApiResponse.<Page<ChapterResponse>>builder()
+                    .message("Filtered chapters retrieved successfully")
+                    .result(chapterService.searchAndFilterChapters(mangaId, pageable))
+                    .build();
+        }
+
+        // Nếu không có filter, sử dụng method cũ
+        log.info("Using non-filtered search");
+        return ApiResponse.<Page<ChapterResponse>>builder()
                 .message("Chapters retrieved successfully")
-                .result(chapterService.getAllChapters())
+                .result(chapterService.getAllChapters(pageable))
                 .build();
     }
 
@@ -209,6 +179,21 @@ public class ChapterController {
         return ApiResponse.<ChapterResponse>builder()
                 .message("Chapter page updated successfully")
                 .result(chapterService.updateChapterPage(id, pageIndex, page))
+                .build();
+    }
+
+    /**
+     * Xóa một chapter
+     * @param id ID của chapter cần xóa
+     * @return Thông báo xác nhận xóa thành công
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    ApiResponse<Void> deleteChapter(@PathVariable String id) {
+        log.info("Delete chapter request: id={}", id);
+        chapterService.deleteChapter(id);
+        return ApiResponse.<Void>builder()
+                .message("Chapter deleted successfully")
                 .build();
     }
 

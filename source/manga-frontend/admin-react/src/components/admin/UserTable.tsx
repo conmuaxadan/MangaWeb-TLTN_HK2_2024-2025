@@ -1,17 +1,16 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
 import { UserResponse } from '../../interfaces/models/auth';
 
 interface UserTableProps {
   users: UserResponse[];
   onEdit: (user: UserResponse) => void;
-  onDelete: (userId: string, username: string) => void;
-  onToggleStatus?: (username: string, enabled: boolean) => void;
+  onToggleStatus?: (userId: string, enabled: boolean) => void;
   loading?: boolean;
 }
 
-const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete, onToggleStatus, loading = false }) => {
+const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onToggleStatus, loading = false }) => {
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex justify-center items-center h-64">
@@ -140,23 +139,17 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete, onToggle
                   {onToggleStatus && (
                     <button
                       className={`${user.enabled !== false ? 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300' : 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300'} mr-3`}
-                      onClick={() => onToggleStatus(user.username, !user.enabled)}
+                      onClick={() => onToggleStatus(user.id, !user.enabled)}
                       title={user.enabled !== false ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
                     >
                       <FontAwesomeIcon icon={user.enabled !== false ? faLock : faLockOpen} />
                     </button>
                   )}
                   <button
-                    className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3"
+                    className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                     onClick={() => onEdit(user)}
                   >
                     <FontAwesomeIcon icon={faEdit} />
-                  </button>
-                  <button
-                    className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                    onClick={() => onDelete(user.id, user.username)}
-                  >
-                    <FontAwesomeIcon icon={faTrash} />
                   </button>
                 </td>
               </tr>

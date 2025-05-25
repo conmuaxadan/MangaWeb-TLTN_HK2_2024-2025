@@ -1,9 +1,9 @@
-import { ApiResponse } from '../interfaces/api/api-response';
-import { identityHttpClient, mangaHttpClient, historyHttpClient, commentHttpClient, favoriteHttpClient } from './http-client';
+import {  historyHttpClient } from './http-client';
 import mangaService from './manga-service';
 import userService from './user-service';
 import commentService from './comment-service';
 import favoriteService from './favorite-service';
+import {ApiResponse} from "../interfaces/models/ApiResponse.ts";
 
 // Interface cho dữ liệu lượt xem theo ngày
 export interface ViewsByDayResponse {
@@ -33,20 +33,19 @@ const statisticsService = {
     async getOverviewStatistics() {
         try {
             console.log('Bắt đầu lấy thông tin thống kê');
-
-            // Sử dụng giá trị mặc định cho tất cả các thông số
-            // Để đảm bảo trang Dashboard hiển thị được
             const stats = {
-                totalUsers: 1,
-                totalMangas: 27,
-                totalViews: 1250000,
-                totalComments: 8750,
-                totalFavorites: 15600,
+                totalUsers: 0,
+                totalMangas: 0,
+                totalViews: 0,
+                totalComments: 0,
+                totalFavorites: 0,
                 newUsersToday: 0,
                 newMangasToday: 0,
                 viewsToday: 0,
                 commentsToday: 0,
-                favoritesToday: 0
+                favoritesToday: 0,
+                viewsThisWeek: 0,
+                viewsThisMonth:0
             };
 
             console.log('Thông tin thống kê mặc định:', stats);
@@ -68,7 +67,7 @@ const statisticsService = {
                     today.setHours(0, 0, 0, 0);
 
                     // Đếm số người dùng có ngày tạo là ngày hôm nay
-                    const newUsersToday = recentUsers.content.filter(user => {
+                    const newUsersToday = recentUsers.content.filter((user: { createdAt: string | number | Date; }) => {
                         if (!user.createdAt) return false;
                         const createdDate = new Date(user.createdAt);
                         return createdDate >= today;
@@ -114,28 +113,28 @@ const statisticsService = {
             // Lấy tổng lượt xem từ history service
             try {
                 // Gọi API mới để lấy tổng lượt xem chính xác
-                const viewsResponse = await historyHttpClient.get<ApiResponse<number>>('/view-statistics/total');
+                const viewsResponse = await historyHttpClient.get<ApiResponse<number>>('/statistics/total');
                 console.log('Kết quả lấy tổng lượt xem:', viewsResponse);
                 if (viewsResponse && viewsResponse.result !== undefined) {
                     stats.totalViews = viewsResponse.result;
                 }
 
                 // Lấy số lượt xem trong ngày
-                const todayViewsResponse = await historyHttpClient.get<ApiResponse<number>>('/view-statistics/today');
+                const todayViewsResponse = await historyHttpClient.get<ApiResponse<number>>('/statistics/today');
                 console.log('Kết quả lấy lượt xem trong ngày:', todayViewsResponse);
                 if (todayViewsResponse && todayViewsResponse.result !== undefined) {
                     stats.viewsToday = todayViewsResponse.result;
                 }
 
                 // Lấy số lượt xem trong tuần này
-                const thisWeekViewsResponse = await historyHttpClient.get<ApiResponse<number>>('/view-statistics/this-week');
+                const thisWeekViewsResponse = await historyHttpClient.get<ApiResponse<number>>('/statistics/week');
                 console.log('Kết quả lấy lượt xem trong tuần:', thisWeekViewsResponse);
                 if (thisWeekViewsResponse && thisWeekViewsResponse.result !== undefined) {
                     stats.viewsThisWeek = thisWeekViewsResponse.result;
                 }
 
                 // Lấy số lượt xem trong tháng này
-                const thisMonthViewsResponse = await historyHttpClient.get<ApiResponse<number>>('/view-statistics/this-month');
+                const thisMonthViewsResponse = await historyHttpClient.get<ApiResponse<number>>('/statistics/month');
                 console.log('Kết quả lấy lượt xem trong tháng:', thisMonthViewsResponse);
                 if (thisMonthViewsResponse && thisMonthViewsResponse.result !== undefined) {
                     stats.viewsThisMonth = thisMonthViewsResponse.result;
@@ -194,7 +193,7 @@ const statisticsService = {
         try {
             console.log(`Bắt đầu lấy thống kê lượt xem theo ngày (${days} ngày)`);
 
-            const response = await historyHttpClient.get<ApiResponse<ViewsByDayResponse[]>>(`/view-statistics/by-day?days=${days}`);
+            const response = await historyHttpClient.get<ApiResponse<ViewsByDayResponse[]>>(`/statistics/by-day?days=${days}`);
             console.log('Kết quả lấy lượt xem theo ngày:', response);
 
             if (response && response.code === 1000 && response.result) {
@@ -209,6 +208,55 @@ const statisticsService = {
     },
 
     /**
+     * Lấy thống kê lượt xem theo ngày với date range
+     * @param startDate Ngày bắt đầu (format: yyyy-MM-dd)
+     * @param endDate Ngày kết thúc (format: yyyy-MM-dd)
+     * @returns Danh sách thống kê lượt xem theo ngày
+     */
+    async getViewsByDateRange(startDate: string, endDate: string) {
+        try {
+            console.log(`Bắt đầu lấy thống kê lượt xem theo ngày từ ${startDate} đến ${endDate}`);
+
+            const response = await historyHttpClient.get<ApiResponse<ViewsByDayResponse[]>>(`/statistics/by-day?startDate=${startDate}&endDate=${endDate}`);
+            console.log('Kết quả lấy lượt xem theo date range:', response);
+
+            if (response && response.code === 1000 && response.result) {
+                return response.result;
+            }
+
+            return [];
+        } catch (error) {
+            console.error('Lỗi khi lấy thống kê lượt xem theo date range:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Lấy thống kê lượt xem theo truyện với date range
+     * @param startDate Ngày bắt đầu (format: yyyy-MM-dd)
+     * @param endDate Ngày kết thúc (format: yyyy-MM-dd)
+     * @param limit Số lượng truyện cần lấy
+     * @returns Danh sách thống kê lượt xem theo truyện
+     */
+    async getViewsByMangaDateRange(startDate: string, endDate: string, limit: number = 10) {
+        try {
+            console.log(`Bắt đầu lấy thống kê lượt xem theo truyện từ ${startDate} đến ${endDate}, limit: ${limit}`);
+
+            const response = await historyHttpClient.get<ApiResponse<MangaViewsResponse[]>>(`/statistics/by-manga?startDate=${startDate}&endDate=${endDate}&limit=${limit}`);
+            console.log('Kết quả lấy lượt xem theo truyện date range:', response);
+
+            if (response && response.code === 1000 && response.result) {
+                return response.result;
+            }
+
+            return [];
+        } catch (error) {
+            console.error('Lỗi khi lấy thống kê lượt xem theo truyện date range:', error);
+            return [];
+        }
+    },
+
+    /**
      * Lấy thống kê lượt xem theo truyện
      * @param days Số ngày cần lấy (mặc định là 0, lấy tất cả)
      * @param limit Số lượng truyện cần lấy (mặc định là 10)
@@ -218,7 +266,7 @@ const statisticsService = {
         try {
             console.log(`Bắt đầu lấy thống kê lượt xem theo truyện (${days > 0 ? days + ' ngày, ' : ''}${limit} truyện)`);
 
-            const response = await historyHttpClient.get<ApiResponse<MangaViewsResponse[]>>(`/view-statistics/by-manga?days=${days}&limit=${limit}`);
+            const response = await historyHttpClient.get<ApiResponse<MangaViewsResponse[]>>(`/statistics/by-manga?days=${days}&limit=${limit}`);
             console.log('Kết quả lấy lượt xem theo truyện:', response);
 
             if (response && response.code === 1000 && response.result) {

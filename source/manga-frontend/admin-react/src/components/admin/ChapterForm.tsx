@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload, faSpinner, faTrash, faPlus, faSearch, faTimes, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
-import { ChapterResponse, MangaResponse } from '../../interfaces/models/manga';
+import { ChapterResponse, MangaResponse, MangaQuickSearchResponse } from '../../interfaces/models/manga';
 import mangaService from '../../services/manga-service';
 import { toast } from 'react-toastify';
 
@@ -30,35 +30,15 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Available mangas
-  const [availableMangas, setAvailableMangas] = useState<MangaResponse[]>([]);
-  const [loadingMangas, setLoadingMangas] = useState(false);
-
   // Search state
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [searchResults, setSearchResults] = useState<MangaResponse[]>([]);
+  const [searchResults, setSearchResults] = useState<MangaQuickSearchResponse[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [selectedManga, setSelectedManga] = useState<MangaResponse | null>(null);
+  const [selectedManga, setSelectedManga] = useState<MangaQuickSearchResponse | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Load mangas
-  useEffect(() => {
-    const fetchMangas = async () => {
-      setLoadingMangas(true);
-      try {
-        const mangas = await mangaService.getAllMangas();
-        if (mangas) {
-          setAvailableMangas(mangas);
-        }
-      } catch (error) {
-        console.error('Lỗi khi lấy danh sách truyện:', error);
-      } finally {
-        setLoadingMangas(false);
-      }
-    };
-
-    fetchMangas();
-  }, []);
+  // Loading state
+  const [loadingMangas, setLoadingMangas] = useState(false);
 
   // Initialize form with initial data if provided
   useEffect(() => {
@@ -85,15 +65,28 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
         setPagePreviews(previews);
       }
 
-      // Find the manga for display
+      // Nếu có mangaId, thực hiện tìm kiếm nhanh để lấy thông tin manga
       if (initialData.mangaId) {
-        const manga = availableMangas.find(m => m.id === initialData.mangaId);
+        fetchMangaById(initialData.mangaId);
+      }
+    }
+  }, [initialData]);
+
+  // Tìm kiếm manga theo ID
+  const fetchMangaById = async (mangaId: string) => {
+    try {
+      // Gọi API tìm kiếm nhanh với từ khóa là ID
+      const results = await mangaService.quickSearchManga(mangaId);
+      if (results && results.length > 0) {
+        const manga = results.find(m => m.id === mangaId);
         if (manga) {
           setSelectedManga(manga);
         }
       }
+    } catch (err) {
+      console.error(`Lỗi khi lấy thông tin manga ID ${mangaId}:`, err);
     }
-  }, [initialData, availableMangas]);
+  };
 
   // Hàm trích xuất số thứ tự từ tên file
   const extractPageNumber = (fileName: string): number => {
@@ -176,7 +169,7 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
     // Nếu đang chỉnh sửa chapter và có initialData (có ID chapter)
     if (initialData && initialData.id) {
       // Hiển thị hộp thoại xác nhận
-      if (!window.confirm(`Bạn có chắc chắn muốn xóa trang ${index + 1}?`)) {
+      if (!window.confirm(`Bạn có chắc chắn muốn x��a trang ${index + 1}?`)) {
         return;
       }
 
@@ -239,8 +232,7 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
       // Hiển thị thông báo đã xóa
       toast.success(`Đã xóa trang ${index + 1}`, {
         position: "top-right",
-        autoClose: 1000,
-        hideProgressBar: true
+        autoClose: 1000
       });
     }
   };
@@ -433,27 +425,31 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
   };
 
   // Handle manga search
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
 
-    if (value.trim() === '') {
+    if (!value) {
       setSearchResults([]);
       setShowSearchResults(false);
       return;
     }
 
-    // Filter mangas based on search term
-    const results = availableMangas.filter(manga =>
-      manga.title.toLowerCase().includes(value.toLowerCase())
-    );
-
-    setSearchResults(results);
-    setShowSearchResults(true);
+    try {
+      // Gọi API tìm kiếm nhanh thay vì lọc trên client
+      const results = await mangaService.quickSearchManga(value);
+      console.log('Kết quả tìm kiếm nhanh manga:', results);
+      setSearchResults(results);
+      setShowSearchResults(true);
+    } catch (err) {
+      console.error('Lỗi khi tìm kiếm nhanh manga:', err);
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
   };
 
   // Handle manga selection from search results
-  const handleSelectManga = async (manga: MangaResponse) => {
+  const handleSelectManga = async (manga: MangaQuickSearchResponse) => {
     setSelectedManga(manga);
     setMangaId(manga.id);
     setSearchTerm('');
@@ -469,21 +465,15 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
 
     // Nếu đang tạo chapter mới (không có initialData), tự động điền số chapter
     if (!initialData) {
-      try {
-        // Lấy số chapter cao nhất của truyện
-        const highestChapterNumber = await mangaService.getHighestChapterNumber(manga.id);
+      // Sử dụng thông tin số chapter cao nhất đã có trong kết quả tìm kiếm nhanh
+      const nextChapterNumber = manga.highestChapterNumber + 1;
+      setChapterNumber(nextChapterNumber);
 
-        // Điền số chapter mới = số chapter cao nhất + 1
-        setChapterNumber(highestChapterNumber + 1);
-
-        // Hiển thị thông báo
-        toast.info(`Đã tự động điền số chapter: ${highestChapterNumber + 1}`, {
-          position: "top-right",
-          autoClose: 2000
-        });
-      } catch (error) {
-        console.error('Lỗi khi lấy số chapter cao nhất:', error);
-      }
+      // Hiển thị thông báo
+      toast.info(`Đã tự động điền số chapter: ${nextChapterNumber}`, {
+        position: "top-right",
+        autoClose: 2000
+      });
     }
   };
 

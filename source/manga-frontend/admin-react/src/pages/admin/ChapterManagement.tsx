@@ -1,213 +1,73 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faPlus, faSearch, faFilter, faEye, faImages, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faPlus, faEye, faImages, faSearch, faTimes, faSync } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
-import { ChapterResponse, MangaResponse } from '../../interfaces/models/manga';
-import mangaService from '../../services/manga-service';
+import { ChapterResponse } from '../../interfaces/models/manga';
 import ChapterForm from '../../components/admin/ChapterForm';
 import Modal from '../../components/common/Modal';
+import Pagination from '../../components/common/Pagination';
+import useChapterManagement from '../../hooks/useChapterManagement';
+import { throttle } from '../../utils/performance';
 
 const ChapterManagement: React.FC = () => {
-  // State cho danh sách chapter
-  const [chapters, setChapters] = useState<ChapterResponse[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [availableMangas, setAvailableMangas] = useState<MangaResponse[]>([]);
+  // Sử dụng custom hook
+  const {
+    // Data
+    currentChapters,
+
+    // Pagination
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    showingFrom,
+    showingTo,
+    totalItems,
+    itemsPerPage,
+
+    // Filter
+    filterManga,
+    selectedFilterManga,
+    filterSearchTerm,
+    filterSearchResults,
+    showFilterResults,
+    handleFilterSearchChange,
+    handleSelectFilterManga,
+    handleClearFilterManga,
+
+    // Loading states
+    isLoading,
+    isSubmitting,
+
+    // CRUD operations
+    createChapter,
+    updateChapter,
+    deleteChapter
+  } = useChapterManagement(10); // 10 items per page
 
   // State cho modal và form
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [currentChapter, setCurrentChapter] = useState<ChapterResponse | undefined>(undefined);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [modalTitle, setModalTitle] = useState<string>('Thêm chapter mới');
 
-  // Dữ liệu mẫu cho danh sách manga
-  const mangaList = [
-    { id: '1', title: 'One Piece' },
-    { id: '2', title: 'Naruto' },
-    { id: '3', title: 'Bleach' },
-    { id: '4', title: 'Dragon Ball' },
-    { id: '5', title: 'Attack on Titan' },
-  ];
-
-  // State cho tìm kiếm và lọc
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterManga, setFilterManga] = useState('');
-
-  // State cho tìm kiếm manga
-  const [mangaSearchTerm, setMangaSearchTerm] = useState('');
-  const [mangaSearchResults, setMangaSearchResults] = useState<MangaResponse[]>([]);
-  const [showMangaResults, setShowMangaResults] = useState(false);
-  const [selectedManga, setSelectedManga] = useState<MangaResponse | null>(null);
-  const searchRef = useRef<HTMLDivElement>(null);
-
-  // State cho phân trang
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-
-  // Load danh sách chapter và manga khi component mount
-  useEffect(() => {
-    fetchChapters();
-    fetchMangas();
-  }, []);
-
-  // Hàm lấy danh sách chapter
-  const fetchChapters = async () => {
-    setIsLoading(true);
-    try {
-      console.log('Bắt đầu gọi API lấy danh sách chapter');
-
-      // Thử phương pháp 1: Gọi trực tiếp API /chapters
-      let response = await mangaService.getAllChapters();
-      console.log('Kết quả API lấy danh sách chapter (phương pháp 1):', response);
-
-      // Nếu phương pháp 1 không thành công hoặc không có chapter nào, thử phương pháp 2
-      if (!response || response.length === 0) {
-        console.log('Thử phương pháp thay thế để lấy danh sách chapter');
-        response = await mangaService.getAllChaptersAlternative();
-        console.log('Kết quả API lấy danh sách chapter (phương pháp 2):', response);
-      }
-
-      if (response && response.length > 0) {
-        console.log('Có dữ liệu từ API, số lượng chapter:', response.length);
-
-        // Sắp xếp chapter theo thời gian cập nhật mới nhất
-        const sortedChapters = [...response].sort((a, b) => {
-          const dateA = new Date(a.updatedAt).getTime();
-          const dateB = new Date(b.updatedAt).getTime();
-          return dateB - dateA; // Sắp xếp giảm dần (mới nhất trước)
-        });
-
-        setChapters(sortedChapters);
-        console.log('Chapter đã được sắp xếp theo thời gian cập nhật mới nhất');
-      } else {
-        // Nếu không có dữ liệu từ cả hai phương pháp, hiển thị danh sách rỗng
-        console.log('Không có chapter nào trong hệ thống');
-        setChapters([]);
-      }
-    } catch (error) {
-      console.error('Lỗi khi lấy danh sách chapter:', error);
-      // Hiển thị danh sách rỗng thay vì sử dụng dữ liệu mẫu
-      setChapters([]);
-      toast.error('Không thể lấy danh sách chapter. Vui lòng thử lại sau.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Hàm lấy danh sách manga
-  const fetchMangas = async () => {
-    try {
-      const response = await mangaService.getAllMangas();
-      if (response) {
-        setAvailableMangas(response);
-      }
-    } catch (error) {
-      console.error('Lỗi khi lấy danh sách manga:', error);
-    }
-  };
-
-  // Xử lý tìm kiếm manga
-  const handleMangaSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setMangaSearchTerm(value);
-
-    if (value.trim() === '') {
-      setMangaSearchResults([]);
-      setShowMangaResults(false);
-      return;
-    }
-
-    // Lọc manga dựa trên từ khóa tìm kiếm
-    const results = availableMangas.filter(manga =>
-      manga.title.toLowerCase().includes(value.toLowerCase())
-    );
-
-    setMangaSearchResults(results);
-    setShowMangaResults(true);
-  };
-
-  // Xử lý chọn manga từ kết quả tìm kiếm
-  const handleSelectManga = async (manga: MangaResponse) => {
-    setIsLoading(true);
-    setSelectedManga(manga);
-    setFilterManga(manga.id);
-    setMangaSearchTerm('');
-    setShowMangaResults(false);
-
-    try {
-      // Lấy danh sách chapter của manga đã chọn
-      const mangaChapters = await mangaService.getChaptersByMangaId(manga.id);
-
-      if (mangaChapters && mangaChapters.length > 0) {
-        // Sắp xếp chapter theo thời gian cập nhật mới nhất
-        const sortedChapters = [...mangaChapters].sort((a, b) => {
-          const dateA = new Date(a.updatedAt).getTime();
-          const dateB = new Date(b.updatedAt).getTime();
-          return dateB - dateA; // Sắp xếp giảm dần (mới nhất trước)
-        });
-
-        setChapters(sortedChapters);
-        setCurrentPage(1); // Reset về trang đầu tiên
-        toast.info(`Đã tải ${sortedChapters.length} chapter của truyện ${manga.title}`);
-      } else {
-        setChapters([]);
-        toast.info(`Truyện ${manga.title} chưa có chapter nào`);
-      }
-    } catch (error) {
-      console.error(`Lỗi khi lấy danh sách chapter của manga ${manga.id}:`, error);
-      toast.error(`Không thể lấy danh sách chapter của truyện ${manga.title}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Xử lý xóa lựa chọn manga
-  const handleClearManga = () => {
-    setSelectedManga(null);
-    setFilterManga('');
-    setMangaSearchTerm('');
-
-    // Khi xóa lựa chọn manga, lấy lại toàn bộ danh sách chapter
-    fetchChapters();
-  };
-
-  // Xử lý click bên ngoài dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowMangaResults(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // Xử lý tìm kiếm
-  const filteredChapters = chapters.filter(chapter => {
-    // Chỉ lọc theo từ khóa tìm kiếm, không cần lọc theo manga vì đã lọc khi chọn manga
-    return chapter.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           chapter.chapterNumber?.toString().includes(searchTerm);
-  });
-
-  // Tính toán phân trang
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentChapters = filteredChapters.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredChapters.length / itemsPerPage);
-
-  // Xử lý chuyển trang
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  // Xử lý phân trang với throttle
+  const handlePageChange = useCallback(
+    throttle((page: number) => {
+      setCurrentPage(page);
+    }, 300),
+    [setCurrentPage]
+  );
 
   // Xử lý mở modal thêm chapter mới
   const handleAddChapter = () => {
     setCurrentChapter(undefined);
+    setModalTitle('Thêm chapter mới');
     setIsModalOpen(true);
   };
 
   // Xử lý mở modal chỉnh sửa chapter
   const handleEditChapter = (chapter: ChapterResponse) => {
     setCurrentChapter(chapter);
+    setModalTitle(`Chỉnh sửa chapter ${chapter.chapterNumber}`);
     setIsModalOpen(true);
   };
 
@@ -219,73 +79,60 @@ const ChapterManagement: React.FC = () => {
 
   // Xử lý submit form
   const handleSubmitForm = async (formData: FormData) => {
-    setIsSubmitting(true);
     try {
-      if (currentChapter) {
+      let result;
+
+      if (currentChapter?.id) {
         // Cập nhật chapter
-        const updatedChapter = await mangaService.updateChapter(currentChapter.id!, formData);
-        if (updatedChapter) {
-          setChapters(chapters.map(chapter => chapter.id === updatedChapter.id ? updatedChapter : chapter));
-          setIsModalOpen(false);
-        }
+        result = await updateChapter(currentChapter.id, formData);
       } else {
         // Tạo chapter mới
-        const newChapter = await mangaService.createChapter(formData);
-        if (newChapter) {
-          setChapters([...chapters, newChapter]);
-          setIsModalOpen(false);
-        }
+        result = await createChapter(formData);
+      }
+
+      if (result) {
+        setIsModalOpen(false);
       }
     } catch (error) {
       console.error('Lỗi khi lưu chapter:', error);
-    } finally {
-      setIsSubmitting(false);
+      toast.error('Đã xảy ra lỗi khi lưu chapter. Vui lòng thử lại.');
     }
   };
 
   // Xử lý xóa chapter
-  const handleDeleteChapter = async (chapterId: string) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa chapter này?')) {
-      try {
-        const success = await mangaService.deleteChapter(chapterId);
-        if (success) {
-          setChapters(chapters.filter(chapter => chapter.id !== chapterId));
-        }
-      } catch (error) {
-        console.error(`Lỗi khi xóa chapter ID ${chapterId}:`, error);
-      }
+  const handleDeleteChapter = async (chapter: ChapterResponse) => {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa chapter ${chapter.title}"?`)) {
+      await deleteChapter(chapter.id);
     }
   };
 
-  // Hàm lấy tên manga từ ID
-  const getMangaTitle = (mangaId: string) => {
-    // Tìm trong danh sách manga từ API trước
-    const mangaFromApi = availableMangas.find(m => m.id === mangaId);
-    if (mangaFromApi) return mangaFromApi.title;
-
-    // Nếu không tìm thấy, tìm trong danh sách mẫu
-    const mangaFromSample = mangaList.find(m => m.id === mangaId);
-    return mangaFromSample ? mangaFromSample.title : 'Unknown Manga';
-  };
+  // Debug logs
+  console.log('ChapterManagement render:', {
+    filterManga,
+    selectedFilterManga: selectedFilterManga?.title || 'None',
+    currentChapters: currentChapters?.length || 0
+  });
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Quản lý chapter</h1>
-        <button
-          onClick={handleAddChapter}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-        >
-          <FontAwesomeIcon icon={faPlus} />
-          <span>Thêm chapter mới</span>
-        </button>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Quản lý chương</h1>
+        <div className="flex space-x-2">
+          <button
+            onClick={handleAddChapter}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          >
+            <FontAwesomeIcon icon={faPlus} />
+            <span>Thêm chapter mới</span>
+          </button>
+        </div>
       </div>
 
       {/* Modal thêm/sửa chapter */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={currentChapter ? 'Chỉnh sửa chapter' : 'Thêm chapter mới'}
+        title={modalTitle}
         size="xl"
       >
         <ChapterForm
@@ -296,64 +143,64 @@ const ChapterManagement: React.FC = () => {
         />
       </Modal>
 
-      {/* Tìm kiếm và lọc */}
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Tìm kiếm */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FontAwesomeIcon icon={faSearch} className="text-gray-500" />
+      {/* Lọc theo truyện */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+        <div className="flex items-end gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              {selectedFilterManga ? (
+                <div className="flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700">
+                  <span className="text-gray-900 dark:text-white">{selectedFilterManga.title}</span>
+                  <button
+                    type="button"
+                    onClick={handleClearFilterManga}
+                    className="text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200"
+                  >
+                    <FontAwesomeIcon icon={faTimes} />
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm truyện để lọc..."
+                    value={filterSearchTerm}
+                    onChange={(e) => handleFilterSearchChange(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              )}
+
+              {/* Search Results */}
+              {showFilterResults && filterSearchResults.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 shadow-lg rounded-md max-h-60 overflow-auto">
+                  {filterSearchResults.map(manga => (
+                    <div
+                      key={manga.id}
+                      className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+                      onClick={() => handleSelectFilterManga(manga)}
+                    >
+                      <div className="font-medium text-gray-900 dark:text-white">{manga.title}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{manga.author}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <input
-              type="text"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
-              placeholder="Tìm kiếm theo tiêu đề hoặc số chapter"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
           </div>
 
-          {/* Lọc theo manga với autocomplete */}
-          <div className="relative" ref={searchRef}>
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FontAwesomeIcon icon={faFilter} className="text-gray-500" />
-            </div>
-            {selectedManga ? (
-              <div className="flex items-center bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg pl-10 p-2.5 w-full">
-                <span className="flex-grow">{selectedManga.title}</span>
-                <button
-                  onClick={handleClearManga}
-                  className="text-gray-500 hover:text-gray-700"
-                  type="button"
-                >
-                  <FontAwesomeIcon icon={faTimes} />
-                </button>
-              </div>
-            ) : (
-              <input
-                type="text"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
-                placeholder="Tìm kiếm truyện..."
-                value={mangaSearchTerm}
-                onChange={handleMangaSearchChange}
-                onFocus={() => mangaSearchTerm.trim() !== '' && setShowMangaResults(true)}
-              />
-            )}
-
-            {/* Dropdown kết quả tìm kiếm */}
-            {showMangaResults && mangaSearchResults.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                {mangaSearchResults.map((manga) => (
-                  <div
-                    key={manga.id}
-                    className="px-4 py-2 cursor-pointer hover:bg-gray-100 text-sm"
-                    onClick={() => handleSelectManga(manga)}
-                  >
-                    {manga.title}
-                  </div>
-                ))}
-              </div>
-            )}
+          {/* Nút đặt lại filter */}
+          <div>
+            <button
+              onClick={handleClearFilterManga}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              <FontAwesomeIcon icon={faSync} className="mr-2" />
+              Đặt lại
+            </button>
           </div>
         </div>
       </div>
@@ -364,170 +211,110 @@ const ChapterManagement: React.FC = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Chương
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Truyện
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Chapter
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Số trang
                   </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tiêu đề
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Số trang
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Lượt xem
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ngày cập nhật
-                </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Thao tác
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Lượt xem
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Cập nhật
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Thao tác
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {currentChapters.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                      Không có chapter nào
+                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                      {filterManga ? "Không tìm thấy chapter nào của truyện đã chọn" : "Không có chapter nào trong hệ thống"}
                     </td>
                   </tr>
                 ) : (
                   currentChapters.map((chapter) => (
-                <tr key={chapter.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {getMangaTitle(chapter.mangaId)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    Chapter {chapter.chapterNumber}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {chapter.title}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex items-center">
-                      <FontAwesomeIcon icon={faImages} className="text-gray-400 mr-2" />
-                      <span>{chapter.pages?.length || 0}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex items-center">
-                      <FontAwesomeIcon icon={faEye} className="text-gray-400 mr-2" />
-                      <span>{chapter.views.toLocaleString()}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(chapter.updatedAt).toLocaleDateString('vi-VN')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      className="text-indigo-600 hover:text-indigo-900 mr-3"
-                      onClick={() => handleEditChapter(chapter)}
-                    >
-                      <FontAwesomeIcon icon={faEdit} />
-                    </button>
-                    <button
-                      className="text-red-600 hover:text-red-900"
-                      onClick={() => handleDeleteChapter(chapter.id || '')}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                  </td>
-                </tr>
-              ))
-                )
-            }</tbody>
-          </table>
-        </div>
-
-        {/* Phân trang */}
-        {totalPages > 1 && (
-          <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
-            <div>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                Hiển thị <span className="font-medium">{indexOfFirstItem + 1}</span> đến{' '}
-                <span className="font-medium">
-                  {indexOfLastItem > filteredChapters.length ? filteredChapters.length : indexOfLastItem}
-                </span>{' '}
-                trong <span className="font-medium">{filteredChapters.length}</span> kết quả
-              </p>
-            </div>
-            <div>
-              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                <button
-                  onClick={() => paginate(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium ${
-                    currentPage === 1
-                      ? 'text-gray-300 dark:text-gray-600'
-                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <span className="sr-only">Previous</span>
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-                {Array.from({ length: totalPages }).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => paginate(index + 1)}
-                    className={`relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium ${
-                      currentPage === index + 1
-                        ? 'z-10 bg-indigo-50 dark:bg-indigo-900 border-indigo-500 dark:border-indigo-500 text-indigo-600 dark:text-indigo-200'
-                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
-                <button
-                  onClick={() => paginate(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium ${
-                    currentPage === totalPages
-                      ? 'text-gray-300 dark:text-gray-600'
-                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <span className="sr-only">Next</span>
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-              </nav>
-            </div>
+                    <tr key={chapter.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {typeof chapter.chapterNumber === 'number' ? `Chapter ${chapter.chapterNumber}` : 'Không có số chapter'}
+                            </div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              {chapter.title || '-'}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                        {chapter.mangaTitle || 'Không xác định'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                        <div className="flex items-center">
+                          <FontAwesomeIcon icon={faImages} className="text-gray-400 mr-2" />
+                          <span>{chapter.pages?.length || 0}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                        <div className="flex items-center">
+                          <FontAwesomeIcon icon={faEye} className="text-gray-400 mr-2" />
+                          <span>{chapter.views?.toLocaleString() || 0}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                        {chapter.updatedAt ? new Date(chapter.updatedAt).toLocaleDateString('vi-VN') : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => handleEditChapter(chapter)}
+                          className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3"
+                          title="Sửa chapter"
+                        >
+                          <FontAwesomeIcon icon={faEdit} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteChapter(chapter)}
+                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                          title="Xóa chapter"
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
-      </div>
+        </div>
       )}
+
+      {/* Phân trang */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        totalItems={totalItems}
+        showingFrom={showingFrom}
+        showingTo={showingTo}
+        pageSize={itemsPerPage}
+        onPageSizeChange={(newSize) => {
+          // Note: Chapter management sử dụng fixed page size từ hook
+          console.log('Page size change not implemented for server-side pagination:', newSize);
+        }}
+      />
     </div>
   );
 };

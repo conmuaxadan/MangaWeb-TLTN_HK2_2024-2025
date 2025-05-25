@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 import { commentHttpClient } from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
-import { CommentResponse, CommentPageResponse } from "../interfaces/models/comment";
+import {CommentPageResponse } from "../interfaces/models/comment";
 import { logApiCall } from "../utils/api-logger";
 
 class CommentService {
