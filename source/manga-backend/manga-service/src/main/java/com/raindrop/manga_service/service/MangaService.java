@@ -436,13 +436,13 @@ public class MangaService {
             if (searchRequest.getStatus() != null) {
                 predicates.add(criteriaBuilder.equal(root.get("status"), searchRequest.getStatus()));
             }
+            predicates.add(criteriaBuilder.equal(root.get("deleted"), false));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
 
         // Thực hiện tìm kiếm với Specification và Pageable
         Page<Manga> mangaPage = mangaRepository.findAll(spec, pageable);
-        log.info("Found {} mangas matching the search criteria", mangaPage.getTotalElements());
 
         // Chuyển đổi kết quả sang DTO và thêm thông tin chapter
         return mangaPage.map(manga -> {

@@ -16,12 +16,14 @@ const historyHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}/history`);
 class HistoryService {
     /**
      * Lấy lịch sử đọc của người dùng hiện tại
-     * @returns Danh sách lịch sử đọc hoặc null nếu thất bại
+     * @param page Số trang
+     * @param size Số lượng item mỗi trang
+     * @returns Danh sách lịch sử đọc có phân trang hoặc null nếu thất bại
      */
-    async getMyReadingHistory(): Promise<ReadingHistoryResponse[] | null> {
+    async getMyReadingHistory(page: number = 0, size: number = 18): Promise<ReadingHistoryPageResponse | null> {
         try {
             const apiResponse = await historyHttpClient.get<ApiResponse<ReadingHistoryPageResponse>>(
-                `/histories?page=0&size=100&sort=updatedAt,desc`
+                `/histories?page=${page}&size=${size}&sort=updatedAt,desc`
             );
 
             if (apiResponse.code !== 200) {
@@ -29,10 +31,23 @@ class HistoryService {
                 return null;
             }
 
-            // API trả về dạng Page, cần lấy phần content
-            return apiResponse.result.content || [];
+            return apiResponse.result;
         } catch (error) {
             console.error(`Lỗi lấy lịch sử đọc:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Lấy lịch sử đọc của người dùng hiện tại (phương thức cũ để tương thích)
+     * @returns Danh sách lịch sử đọc hoặc null nếu thất bại
+     */
+    async getMyReadingHistoryLegacy(): Promise<ReadingHistoryResponse[] | null> {
+        try {
+            const result = await this.getMyReadingHistory(0, 100);
+            return result?.content || null;
+        } catch (error) {
+            console.error(`Lỗi lấy lịch sử đọc (legacy):`, error);
             return null;
         }
     }

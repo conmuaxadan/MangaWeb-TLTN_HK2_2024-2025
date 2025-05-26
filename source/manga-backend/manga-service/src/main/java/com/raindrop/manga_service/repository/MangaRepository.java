@@ -3,6 +3,7 @@ package com.raindrop.manga_service.repository;
 import com.raindrop.manga_service.entity.Manga;
 import com.raindrop.manga_service.enums.MangaStatus;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -16,28 +17,14 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecificationExecutor<Manga> {
-    // Tìm manga theo tiêu đề và chưa bị xóa
     Manga findByTitleAndDeletedFalse(String name);
-
-    // Tìm manga theo tiêu đề (bất kể đã xóa hay chưa)
     Manga findByTitle(String name);
-
-    // Tìm manga theo ID và chưa bị xóa
     Optional<Manga> findByIdAndDeletedFalse(String mangaId);
-
-    // Tìm manga theo ID (bất kể đã xóa hay chưa)
     Optional<Manga> findById(String mangaId);
-
-    // Tìm tất cả manga chưa bị xóa
     List<Manga> findByDeletedFalse();
-
-    // Tìm tất cả manga đã bị xóa
     List<Manga> findByDeletedTrue();
-
-    // Phân trang cho manga chưa bị xóa
     Page<Manga> findByDeletedFalse(Pageable pageable);
-
-    // Phân trang cho manga đã bị xóa
+    Page<Manga> findAllByDeletedFalse(Specification<Manga>spec, Pageable pageable);
     Page<Manga> findByDeletedTrue(Pageable pageable);
 
     /**

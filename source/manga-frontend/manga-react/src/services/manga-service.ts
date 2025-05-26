@@ -163,18 +163,20 @@ class MangaService {
      * @param searchRequest Các tham số tìm kiếm nâng cao
      * @param page Số trang
      * @param size Số lượng item trên mỗi trang
+     * @param sort Sắp xếp theo (ví dụ: "title,asc" hoặc "views,desc")
      * @returns Danh sách manga phù hợp với điều kiện tìm kiếm hoặc null nếu thất bại
      */
     async advancedSearch(
         searchRequest: AdvancedSearchRequest,
         page: number = 0,
-        size: number = 10
+        size: number = 10,
+        sort: string = 'lastChapterAddedAt,desc'
     ): Promise<PageResponse<MangaResponse> | null> {
         logApiCall('advancedSearch');
         try {
             console.log('Advanced search request:', JSON.stringify(searchRequest, null, 2));
             const apiResponse = await mangaHttpClient.post<ApiResponse<PageResponse<MangaResponse>>>(
-                `/mangas/search/advanced?page=${page}&size=${size}`,
+                `/mangas/search/advanced?page=${page}&size=${size}&sort=${encodeURIComponent(sort)}`,
                 searchRequest
             );
 

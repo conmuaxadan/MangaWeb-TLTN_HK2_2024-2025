@@ -4,34 +4,37 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0751fe69-cb2c-4b14-9a28-3b0ede98af3d" name="Changes" comment="feat: add custom hooks for top and recommended manga, update API response handling">
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/MangaListItem.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/RecommendedMangaCard.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/hooks/index.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/hooks/useRecommendedManga.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/hooks/useTopManga.ts" afterDir="false" />
+    <list default="true" id="0751fe69-cb2c-4b14-9a28-3b0ede98af3d" name="Changes" comment="feat: add new hooks for genre detail and reading history, update pagination and favorite list components">
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/FavoriteMangaCard.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/GenreMangaCard.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/LatestUpdateCard.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/Pagination.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/ReadingHistoryCard.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/SearchForm.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/SearchResultCard.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/hooks/useAdvancedSearch.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/hooks/useFavoriteList.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/hooks/useGenreDetail.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/hooks/useLatestUpdates.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/hooks/usePersonalRecommendations.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/hooks/useReadingHistory.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/AugmentWebviewStateStore.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/AugmentWebviewStateStore.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/controller/HistoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/controller/HistoryController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/service/HistoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/history-service/src/main/java/com/raindrop/history_service/service/HistoryService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/resources/application.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/controller/MangaController.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/controller/MangaController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/repository/MangaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/repository/MangaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/repository/httpclient/HistoryClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/repository/httpclient/HistoryClient.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/service/MangaService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/service/MangaService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/service/RecommendationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/service/RecommendationService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/notification-service/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/notification-service/src/main/resources/application.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/Header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/Header.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/layouts/AdminLayout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/layouts/AdminLayout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/LatestUpdates.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/LatestUpdates.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/PersonalRecommendations.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/PersonalRecommendations.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/RecommendedManga.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/RecommendedManga.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/TopManga.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/components/TopManga.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/auth-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/auth-service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/comment-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/comment-service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/hooks/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/hooks/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/pages/AdvancedSearch.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/pages/AdvancedSearch.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/pages/FavoriteList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/pages/FavoriteList.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/pages/GenreDetail.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/pages/GenreDetail.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/pages/ReadingHistoryList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/pages/ReadingHistoryList.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/favorite-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/favorite-service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/history-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/history-service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/manga-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/manga-service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/profile-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/src/services/profile-service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/manga-react/tsconfig.app.json" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/manga-react/tsconfig.app.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -94,6 +97,7 @@
     "git-widget-placeholder": "master",
     "jsx.switch.disabled": "true",
     "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "C:/Users/Ra1ndr0p/Desktop/MangaWeb-TLTN_HK2_2024-2025/source/manga-frontend/manga-react/src/components",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -108,6 +112,12 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Ra1ndr0p\Desktop\MangaWeb-TLTN_HK2_2024-2025\source\manga-frontend\manga-react\src\components" />
+      <recent name="C:\Users\Ra1ndr0p\Desktop\MangaWeb-TLTN_HK2_2024-2025\source\manga-frontend\manga-react\src\hooks" />
+    </key>
+  </component>
   <component name="RunDashboard">
     <option name="configurationTypes">
       <set>
@@ -238,7 +248,7 @@
       <workItem from="1748181943666" duration="21830000" />
       <workItem from="1748229742905" duration="264000" />
       <workItem from="1748230028593" duration="6442000" />
-      <workItem from="1748251367612" duration="14641000" />
+      <workItem from="1748251367612" duration="19917000" />
     </task>
     <task id="LOCAL-00001" summary="-- rename history service">
       <option name="closed" value="true" />
@@ -272,7 +282,15 @@
       <option name="project" value="LOCAL" />
       <updated>1748260511891</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="feat: add custom hooks for top and recommended manga, update API response handling">
+      <option name="closed" value="true" />
+      <created>1748271341488</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1748271341488</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -295,7 +313,8 @@
     <MESSAGE value="feat: enhance manga and chapter management with new response structures and search functionality" />
     <MESSAGE value="feat: update API response codes and enhance manga management" />
     <MESSAGE value="feat: add custom hooks for top and recommended manga, update API response handling" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: add custom hooks for top and recommended manga, update API response handling" />
+    <MESSAGE value="feat: add new hooks for genre detail and reading history, update pagination and favorite list components" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: add new hooks for genre detail and reading history, update pagination and favorite list components" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

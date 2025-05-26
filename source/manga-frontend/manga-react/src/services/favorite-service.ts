@@ -23,7 +23,7 @@ class FavoriteService {
 
             const apiResponse = await favoriteHttpClient.post<ApiResponse<FavoriteResponse>>('/favorites', request);
 
-            if (apiResponse.code !== 200) {
+            if (apiResponse.code !== 201) {
                 toast.error(apiResponse.message || "Không thể thêm vào danh sách yêu thích", { position: "top-right" });
                 return null;
             }
