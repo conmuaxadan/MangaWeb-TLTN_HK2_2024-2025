@@ -27,7 +27,7 @@ class CommentService {
 
             const apiResponse = await commentHttpClient.post<ApiResponse<CommentResponse>>('/comments', request);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể tạo bình luận", { position: "top-right" });
                 return null;
             }
@@ -55,7 +55,7 @@ class CommentService {
                 `/comments/chapters/${chapterId}?page=${page}&size=${size}&sort=createdAt,desc`
             );
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(apiResponse.message || "Không thể lấy danh sách bình luận");
                 return null;
             }
@@ -81,7 +81,7 @@ class CommentService {
                 `/comments/mangas/${mangaId}?page=${page}&size=${size}&sort=createdAt,desc`
             );
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(apiResponse.message || "Không thể lấy danh sách bình luận");
                 return null;
             }
@@ -106,7 +106,7 @@ class CommentService {
                 `/comments/me?page=${page}&size=${size}&sort=createdAt,desc`
             );
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(apiResponse.message || "Không thể lấy danh sách bình luận của bạn");
                 return null;
             }
@@ -130,7 +130,7 @@ class CommentService {
                 `/comments/latest?size=${limit}&sort=createdAt,desc`
             );
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(apiResponse.message || "Không thể lấy danh sách bình luận mới nhất");
                 return null;
             }
@@ -152,7 +152,7 @@ class CommentService {
         try {
             const apiResponse = await commentHttpClient.get<ApiResponse<number>>(`/comments/mangas/${mangaId}/count`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(`Lỗi đếm bình luận của manga ID ${mangaId}:`, apiResponse.message);
                 return 0;
             }

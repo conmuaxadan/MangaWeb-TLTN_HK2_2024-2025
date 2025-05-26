@@ -189,7 +189,7 @@ public class MangaService {
      */
     public Page<MangaSummaryResponse> getMangaSummariesPaginated(Pageable pageable) {
         log.info("Getting paginated manga summaries with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        Page<Manga> mangasPage = mangaRepository.findAll(pageable);
+        Page<Manga> mangasPage = mangaRepository.findByDeletedFalse(pageable);
 
         // Chuyển đổi Manga sang MangaSummaryResponse và thêm lastChapterNumber
         Page<MangaSummaryResponse> mangaSummaryResponsePage = mangasPage.map(manga -> {
@@ -497,7 +497,7 @@ public class MangaService {
      * @param pageable  Thông tin phân trang
      * @return Danh sách manga thuộc thể loại
      */
-    public Page<MangaResponse> findByGenre(String genreName, Pageable pageable) {
+    public Page<MangaSummaryResponse> findByGenre(String genreName, Pageable pageable) {
         log.info("Finding manga by genre: {}", genreName);
 
         // Kiểm tra xem thể loại có tồn tại không
@@ -513,16 +513,7 @@ public class MangaService {
 
         // Chuyển đổi kết quả sang DTO và thêm thông tin chapter
         return mangaPage.map(manga -> {
-            MangaResponse response = mangaMapper.toMangaResponse(manga);
-
-            // Lấy danh sách ID của các chapter và sắp xếp theo số chapter
-            List<String> chapterIds = chapterRepository.findByMangaId(manga.getId())
-                    .stream()
-                    .sorted(Comparator.comparing(Chapter::getChapterNumber))
-                    .map(Chapter::getId)
-                    .collect(Collectors.toList());
-            response.setChapters(chapterIds);
-
+            MangaSummaryResponse response = mangaMapper.toMangaSummaryResponse(manga);
             return response;
         });
     }

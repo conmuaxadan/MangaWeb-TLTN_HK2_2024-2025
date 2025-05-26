@@ -1,5 +1,5 @@
-import { toast } from "react-toastify";
-import { ApiResponse } from "../interfaces/models/ApiResponse";
+import {toast} from "react-toastify";
+import {ApiResponse} from "../interfaces/models/ApiResponse";
 import {
     ReadingHistoryRequest,
     ReadingHistoryResponse,
@@ -8,7 +8,7 @@ import {
     AnonymousReadingHistoryResponse
 } from "../interfaces/models/reading-history";
 import HttpClient from "./http-client";
-import { API_CONFIG } from "../configurations/api-config";
+import {API_CONFIG} from "../configurations/api-config";
 
 // Create a dedicated HTTP client for history service
 const historyHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}/history`);
@@ -21,11 +21,11 @@ class HistoryService {
     async getMyReadingHistory(): Promise<ReadingHistoryResponse[] | null> {
         try {
             const apiResponse = await historyHttpClient.get<ApiResponse<ReadingHistoryPageResponse>>(
-                `/reading-histories?page=0&size=100&sort=updatedAt,desc`
+                `/histories?page=0&size=100&sort=updatedAt,desc`
             );
 
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể lấy lịch sử đọc", { position: "top-right" });
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Không thể lấy lịch sử đọc", {position: "top-right"});
                 return null;
             }
 
@@ -33,76 +33,6 @@ class HistoryService {
             return apiResponse.result.content || [];
         } catch (error) {
             console.error(`Lỗi lấy lịch sử đọc:`, error);
-            return null;
-        }
-    }
-
-    /**
-     * Lấy lịch sử đọc của người dùng cụ thể
-     * @param userId ID của người dùng
-     * @returns Danh sách lịch sử đọc hoặc null nếu thất bại
-     */
-    async getUserReadingHistory(userId: string): Promise<ReadingHistoryResponse[] | null> {
-        try {
-            const apiResponse = await historyHttpClient.get<ApiResponse<ReadingHistoryPageResponse>>(
-                `/histories/user/${userId}?page=0&size=100&sort=updatedAt,desc`
-            );
-
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể lấy lịch sử đọc", { position: "top-right" });
-                return null;
-            }
-
-            return apiResponse.result.content || [];
-        } catch (error) {
-            console.error(`Lỗi lấy lịch sử đọc của người dùng ID ${userId}:`, error);
-            return null;
-        }
-    }
-
-    /**
-     * Lấy thông tin lịch sử đọc của một manga cụ thể cho người dùng hiện tại
-     * @param mangaId ID của manga
-     * @returns Thông tin lịch sử đọc hoặc null nếu thất bại
-     */
-    async getMyMangaReadingHistory(mangaId: string): Promise<ReadingHistoryResponse | null> {
-        try {
-            const apiResponse = await historyHttpClient.get<ApiResponse<ReadingHistoryResponse>>(
-                `/histories/manga/${mangaId}`
-            );
-
-            if (apiResponse.code !== 1000) {
-                // Không hiển thị toast vì có thể người dùng chưa đọc manga này
-                return null;
-            }
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error(`Lỗi lấy lịch sử đọc manga ID ${mangaId}:`, error);
-            return null;
-        }
-    }
-
-    /**
-     * Lấy thông tin lịch sử đọc của một manga cụ thể cho người dùng cụ thể
-     * @param userId ID của người dùng
-     * @param mangaId ID của manga
-     * @returns Thông tin lịch sử đọc hoặc null nếu thất bại
-     */
-    async getUserMangaReadingHistory(userId: string, mangaId: string): Promise<ReadingHistoryResponse | null> {
-        try {
-            const apiResponse = await historyHttpClient.get<ApiResponse<ReadingHistoryResponse>>(
-                `/histories/user/${userId}/manga/${mangaId}`
-            );
-
-            if (apiResponse.code !== 1000) {
-                // Không hiển thị toast vì có thể người dùng chưa đọc manga này
-                return null;
-            }
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error(`Lỗi lấy lịch sử đọc manga ID ${mangaId} của người dùng ID ${userId}:`, error);
             return null;
         }
     }
@@ -127,7 +57,7 @@ class HistoryService {
                 request
             );
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 201) {
                 console.error(apiResponse.message || "Không thể đánh dấu đã đọc chapter");
                 return null;
             }
@@ -172,7 +102,7 @@ class HistoryService {
 
                 console.log('Anonymous reading history API response:', apiResponse);
 
-                if (apiResponse.code !== 1000) {
+                if (apiResponse.code !== 201) {
                     console.error(apiResponse.message || "Không thể đánh dấu đã đọc chapter cho người dùng không đăng nhập");
                     return null;
                 }

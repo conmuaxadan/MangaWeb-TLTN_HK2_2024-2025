@@ -286,12 +286,11 @@ public class MangaController {
      * @return Danh sách manga thuộc thể loại
      */
     @GetMapping("/genre/{genreName}")
-    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
-    ApiResponse<Page<MangaResponse>> findByGenre(
+    ApiResponse<Page<MangaSummaryResponse>> findByGenre(
             @PathVariable String genreName,
             @PageableDefault(size = 10) Pageable pageable
     ) {
-        return ApiResponse.<Page<MangaResponse>>builder()
+        return ApiResponse.<Page<MangaSummaryResponse>>builder()
                 .message("Mangas by genre retrieved successfully")
                 .result(mangaService.findByGenre(genreName, pageable))
                 .build();

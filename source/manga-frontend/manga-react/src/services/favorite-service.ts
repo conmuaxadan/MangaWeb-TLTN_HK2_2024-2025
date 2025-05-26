@@ -1,12 +1,10 @@
 import { toast } from "react-toastify";
 import { favoriteHttpClient } from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
-import { AxiosError } from "axios";
 import {
     FavoriteRequest,
     FavoriteResponse,
-    FavoritePageResponse,
-    FavoriteMangaResponse
+    FavoritePageResponse
 } from "../interfaces/models/favorite";
 import { logApiCall } from "../utils/api-logger";
 
@@ -25,7 +23,7 @@ class FavoriteService {
 
             const apiResponse = await favoriteHttpClient.post<ApiResponse<FavoriteResponse>>('/favorites', request);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể thêm vào danh sách yêu thích", { position: "top-right" });
                 return null;
             }
@@ -49,7 +47,7 @@ class FavoriteService {
         try {
             const apiResponse = await favoriteHttpClient.delete<ApiResponse<void>>(`/favorites/${mangaId}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể xóa khỏi danh sách yêu thích", { position: "top-right" });
                 return false;
             }
@@ -73,7 +71,7 @@ class FavoriteService {
         try {
             const apiResponse = await favoriteHttpClient.get<ApiResponse<boolean>>(`/favorites/${mangaId}/check`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(apiResponse.message || "Không thể kiểm tra trạng thái yêu thích");
                 return false;
             }
@@ -98,7 +96,7 @@ class FavoriteService {
                 `/favorites?page=${page}&size=${size}&sort=createdAt,desc`
             );
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(apiResponse.message || "Không thể lấy danh sách manga yêu thích");
                 return null;
             }
@@ -120,7 +118,7 @@ class FavoriteService {
         try {
             const apiResponse = await favoriteHttpClient.get<ApiResponse<number>>(`/favorites/${mangaId}/count`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(`Lỗi đếm số lượng yêu thích của manga ID ${mangaId}:`, apiResponse.message);
                 return 0;
             }

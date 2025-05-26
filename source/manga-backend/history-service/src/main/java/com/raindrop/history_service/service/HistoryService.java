@@ -14,11 +14,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -26,7 +29,6 @@ import java.util.Map;
 public class HistoryService {
     HistoryMapper historyMapper;
     HistoryRepository historyRepository;
-    AnonymousHistoryRepository anonymousHistoryRepository;
     ChapterViewEventProducer chapterViewEventProducer;
     MangaClient mangaClient;
 
@@ -92,14 +94,22 @@ public class HistoryService {
         Page<History> readingHistories = historyRepository
                 .findLatestByUserIdGroupByManga(userId, pageable);
 
-        return readingHistories.map(history -> {
+        // Create a new page with filtered content
+        Page<HistoryResponse> result = readingHistories.map(history -> {
             HistoryResponse response = historyMapper.toReadingHistoryResponse(history);
-
             // Bổ sung thông tin từ Manga Service
             enrichHistoryResponse(response, history.getMangaId(), history.getChapterId());
-
             return response;
         });
+
+        // Create a new filtered list instead of modifying the original
+        List<HistoryResponse> filteredContent = result.getContent().stream()
+                .filter(historyResponse -> !historyResponse.getMangaTitle().equalsIgnoreCase("Truyện đã bị xóa"))
+                .collect(Collectors.toList());
+
+        // Return a new PageImpl with the filtered content
+        return new PageImpl<>(filteredContent, pageable,
+                filteredContent.size() == result.getContent().size() ? result.getTotalElements() : filteredContent.size());
     }
 
     /**
@@ -121,7 +131,6 @@ public class HistoryService {
 
         // Bổ sung thông tin từ Manga Service
         enrichHistoryResponse(response, mangaId, history.getChapterId());
-
         return response;
     }
 
@@ -157,11 +166,11 @@ public class HistoryService {
         List<HistoryResponse> result = new ArrayList<>();
         for (History history : uniqueMangaMap.values()) {
             HistoryResponse response = historyMapper.toReadingHistoryResponse(history);
-
             // Bổ sung thông tin từ Manga Service
             enrichHistoryResponse(response, history.getMangaId(), history.getChapterId());
-
-            result.add(response);
+            if (!response.getMangaTitle().equalsIgnoreCase("Truyện đã bị xóa")) {
+                result.add(response);
+            }
         }
 
         return result;
@@ -194,7 +203,7 @@ public class HistoryService {
     private void enrichHistoryResponse(HistoryResponse response, String mangaId, String chapterId) {
         try {
             var mangaResponse = mangaClient.getMangaById(mangaId);
-            var chapterResponse = mangaClient.getChapterById(chapterId);
+
 
             // Xử lý dữ liệu từ manga response
             if (mangaResponse != null && mangaResponse.getResult() != null) {
@@ -204,17 +213,26 @@ public class HistoryService {
                 response.setAuthor(mangaInfo.getAuthor());
             }
 
+
+        } catch (feign.FeignException.NotFound e) {
+            log.warn("Manga not found for ID: {}", mangaId);
+            response.setMangaTitle("Truyện đã bị xóa");
+        } catch (Exception e) {
+            log.error("Error getting manga/chapter info", e);
+        }
+
+        try {
+            var chapterResponse = mangaClient.getChapterById(chapterId);
             // Xử lý dữ liệu từ chapter response
             if (chapterResponse != null && chapterResponse.getResult() != null) {
                 var chapterInfo = chapterResponse.getResult();
                 response.setChapterTitle(chapterInfo.getTitle());
                 response.setChapterNumber(chapterInfo.getChapterNumber());
             }
-
-        } catch (feign.FeignException.NotFound e) {
-            // Xử lý riêng trường hợp truyện không tồn tại (404)
-            log.warn("Manga not found for ID: {}", mangaId);
-            response.setMangaTitle("Truyện đã bị xóa #" + mangaId);
+        }catch (feign.FeignException.NotFound e) {
+            log.warn("Chapter not found for ID: {}", mangaId);
+            response.setChapterTitle("Chương đã bị xóa");
+            response.setChapterNumber(0);
         } catch (Exception e) {
             log.error("Error getting manga/chapter info", e);
         }

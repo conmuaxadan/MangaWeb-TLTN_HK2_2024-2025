@@ -1,11 +1,21 @@
-import { toast } from "react-toastify";
-import { identityHttpClient } from "./http-client";
-import { ApiResponse } from "../interfaces/models/ApiResponse";
-import { AuthRequest, AuthResponse, GoogleLinkRequest, GoogleLoginRequest, LinkLocalAccountRequest, LinkedAccountResponse, RefreshTokenRequest, UserRegistrationRequest, UserResponse } from "../interfaces/models/auth";
-import { handleApiError } from "../utils/error-handler";
-import { OAuthConfig } from "../configurations/configuration.ts";
-import { TOKEN_STORAGE, setTokenExpiry } from "../configurations/api-config";
-import { logApiCall } from "../utils/api-logger";
+import {toast} from "react-toastify";
+import {identityHttpClient} from "./http-client";
+import {ApiResponse} from "../interfaces/models/ApiResponse";
+import {
+    AuthRequest,
+    AuthResponse,
+    GoogleLinkRequest,
+    GoogleLoginRequest,
+    LinkLocalAccountRequest,
+    LinkedAccountResponse,
+    RefreshTokenRequest,
+    UserRegistrationRequest,
+    UserResponse
+} from "../interfaces/models/auth";
+import {handleApiError} from "../utils/error-handler";
+import {OAuthConfig} from "../configurations/configuration.ts";
+import {TOKEN_STORAGE, setTokenExpiry} from "../configurations/api-config";
+import {logApiCall} from "../utils/api-logger";
 
 class AuthService {
 
@@ -18,10 +28,10 @@ class AuthService {
     async login(username: string, password: string): Promise<AuthResponse | false> {
         logApiCall('login');
         try {
-            const request: AuthRequest = { username, password };
+            const request: AuthRequest = {username, password};
             const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/tokens', request);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 // Xử lý các mã lỗi cụ thể
                 if (apiResponse.code === 1007) {
                     toast.error("Tài khoản của bạn đã bị khóa", {position: "top-right"});
@@ -46,18 +56,12 @@ class AuthService {
             }
 
             return apiResponse.result;
-        } catch (error) {
+        } catch (error:any) {
             console.error("Lỗi đăng nhập:", error);
-
-            // Kiểm tra xem có phải lỗi từ API không
-            if (error.response && error.response.data) {
-                const apiError = error.response.data;
-                if (apiError.code === 1007) {
-                    toast.error("Tài khoản của bạn đã bị khóa", {position: "top-right"});
-                    return false;
-                }
+            if (error.response.data.code === 1007) {
+                toast.error("Tài khoản của bạn đã bị khóa", {position: "top-right"});
+                return false;
             }
-
             toast.error("Thông tin đăng nhập không chính xác", {position: "top-right"});
             return false;
         }
@@ -77,18 +81,18 @@ class AuthService {
             };
             const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/google/tokens', request);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 // Xử lý các mã lỗi cụ thể
                 if (apiResponse.code === 1007) {
-                    toast.error("Tài khoản của bạn đã bị khóa", { position: "top-right" });
+                    toast.error("Tài khoản của bạn đã bị khóa", {position: "top-right"});
                 } else {
-                    toast.error(apiResponse.message || "Đăng nhập Google thất bại", { position: "top-right" });
+                    toast.error(apiResponse.message || "Đăng nhập Google thất bại", {position: "top-right"});
                 }
                 return false;
             }
 
             if (!apiResponse.result || !apiResponse.result.authenticated) {
-                toast.error("Xác thực Google thất bại", { position: "top-right" });
+                toast.error("Xác thực Google thất bại", {position: "top-right"});
                 return false;
             }
 
@@ -102,16 +106,12 @@ class AuthService {
             }
 
             return apiResponse.result;
-        } catch (error) {
+        } catch (error:any) {
             console.error("Lỗi đăng nhập Google:", error);
 
-            // Kiểm tra xem có phải lỗi từ API không
-            if (error.response && error.response.data) {
-                const apiError = error.response.data;
-                if (apiError.code === 1007) {
-                    toast.error("Tài khoản của bạn đã bị khóa", {position: "top-right"});
-                    return false;
-                }
+            if (error.response.data.code === 1007) {
+                toast.error("Tài khoản của bạn đã bị khóa", {position: "top-right"});
+                return false;
             }
 
             toast.error("Đăng nhập Google thất bại", {position: "top-right"});
@@ -129,15 +129,15 @@ class AuthService {
     async register(username: string, password: string, email: string): Promise<UserResponse | false> {
         logApiCall('register');
         try {
-            const request: UserRegistrationRequest = { username, password, email };
+            const request: UserRegistrationRequest = {username, password, email};
             const apiResponse = await identityHttpClient.post<ApiResponse<UserResponse>>('/users', request);
 
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Đăng ký thất bại", { position: "top-right" });
+            if (apiResponse.code !== 201) {
+                toast.error(apiResponse.message || "Đăng ký thất bại", {position: "top-right"});
                 return false;
             }
 
-            toast.success("Đăng ký thành công! Vui lòng đăng nhập.", { position: "top-right" });
+            toast.success("Đăng ký thành công! Vui lòng đăng nhập.", {position: "top-right"});
             return apiResponse.result;
         } catch (error) {
             console.error("Lỗi đăng ký:", error);
@@ -160,7 +160,7 @@ class AuthService {
             // Giải mã JWT token (phần payload)
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
 
@@ -192,7 +192,7 @@ class AuthService {
             if (token) {
                 try {
                     console.log('AuthService: Gọi API đăng xuất');
-                    await identityHttpClient.post<ApiResponse<void>>('/auth/tokens/revoke', { token });
+                    await identityHttpClient.post<ApiResponse<void>>('/auth/tokens/revoke', {token});
                     console.log('AuthService: Đăng xuất thành công trên server');
                 } catch (apiError) {
                     console.error('AuthService: Lỗi khi gọi API đăng xuất:', apiError);
@@ -228,10 +228,10 @@ class AuthService {
                 return false;
             }
 
-            const request: RefreshTokenRequest = { refreshToken };
+            const request: RefreshTokenRequest = {refreshToken};
             const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/tokens/refresh', request);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error("Làm mới token thất bại:", apiResponse.message);
                 return false;
             }
@@ -270,16 +270,16 @@ class AuthService {
             };
             const apiResponse = await identityHttpClient.post<ApiResponse<void>>('/users/accounts/google', request);
 
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Liên kết tài khoản Google thất bại", { position: "top-right" });
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Liên kết tài khoản Google thất bại", {position: "top-right"});
                 return false;
             }
 
-            toast.success("Liên kết tài khoản Google thành công!", { position: "top-right" });
+            toast.success("Liên kết tài khoản Google thành công!", {position: "top-right"});
             return true;
         } catch (error) {
             console.error("Lỗi liên kết tài khoản Google:", error);
-            toast.error("Đã xảy ra lỗi khi liên kết tài khoản Google", { position: "top-right" });
+            toast.error("Đã xảy ra lỗi khi liên kết tài khoản Google", {position: "top-right"});
             return false;
         }
     }
@@ -294,19 +294,19 @@ class AuthService {
     async linkLocalAccount(username: string, email: string, password: string): Promise<boolean> {
         logApiCall('linkLocalAccount');
         try {
-            const request: LinkLocalAccountRequest = { username, email, password };
+            const request: LinkLocalAccountRequest = {username, email, password};
             const apiResponse = await identityHttpClient.post<ApiResponse<void>>('/users/accounts/local', request);
 
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Liên kết tài khoản Local thất bại", { position: "top-right" });
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Liên kết tài khoản Local thất bại", {position: "top-right"});
                 return false;
             }
 
-            toast.success("Liên kết tài khoản Local thành công!", { position: "top-right" });
+            toast.success("Liên kết tài khoản Local thành công!", {position: "top-right"});
             return true;
         } catch (error) {
             console.error("Lỗi liên kết tài khoản Local:", error);
-            toast.error("Đã xảy ra lỗi khi liên kết tài khoản Local", { position: "top-right" });
+            toast.error("Đã xảy ra lỗi khi liên kết tài khoản Local", {position: "top-right"});
             return false;
         }
     }
@@ -320,7 +320,7 @@ class AuthService {
         try {
             const apiResponse = await identityHttpClient.get<ApiResponse<LinkedAccountResponse[]>>('/users/accounts');
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error("Lấy danh sách tài khoản liên kết thất bại:", apiResponse.message);
                 return null;
             }
@@ -389,12 +389,12 @@ class AuthService {
             const apiResponse = await identityHttpClient.delete<ApiResponse<void>>(`/users/accounts/${accountId}`);
             console.log('Kết quả API:', apiResponse);
 
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Hủy liên kết tài khoản thất bại", { position: "top-right" });
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Hủy liên kết tài khoản thất bại", {position: "top-right"});
                 return false;
             }
 
-            toast.success("Hủy liên kết tài khoản thành công!", { position: "top-right" });
+            toast.success("Hủy liên kết tài khoản thành công!", {position: "top-right"});
             return true;
         } catch (error: any) {
             console.error("Lỗi hủy liên kết tài khoản:", error);
@@ -402,32 +402,11 @@ class AuthService {
             // Xử lý lỗi từ backend
             if (error.response && error.response.data && error.response.data.message) {
                 // Hiển thị thông báo lỗi từ backend
-                toast.error(error.response.data.message, { position: "top-right" });
+                toast.error(error.response.data.message, {position: "top-right"});
             } else {
-                toast.error("Đã xảy ra lỗi khi hủy liên kết tài khoản", { position: "top-right" });
+                toast.error("Đã xảy ra lỗi khi hủy liên kết tài khoản", {position: "top-right"});
             }
             return false;
-        }
-    }
-
-    /**
-     * Lấy thông tin chi tiết của người dùng hiện tại
-     * @returns Thông tin người dùng hoặc null nếu thất bại
-     */
-    async getMyInfo(): Promise<UserResponse | null> {
-        logApiCall('getMyInfo');
-        try {
-            const apiResponse = await identityHttpClient.get<ApiResponse<UserResponse>>('/users/me');
-
-            if (apiResponse.code !== 1000) {
-                console.error("Lấy thông tin người dùng thất bại:", apiResponse.message);
-                return null;
-            }
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error("Lỗi lấy thông tin người dùng:", error);
-            return null;
         }
     }
 
@@ -440,12 +419,12 @@ class AuthService {
         logApiCall('forgotPassword');
         try {
             console.log('AuthService: Sending forgot password request for email:', email);
-            const apiResponse = await identityHttpClient.post<ApiResponse<any>>('/auth/forgot-password', { email });
+            const apiResponse = await identityHttpClient.post<ApiResponse<any>>('/auth/forgot-password', {email});
             console.log('AuthService: Forgot password API response:', apiResponse);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.warn('AuthService: Forgot password failed with code:', apiResponse.code, 'message:', apiResponse.message);
-                toast.error(apiResponse.message || "Không thể gửi yêu cầu đặt lại mật khẩu", { position: "top-right" });
+                toast.error(apiResponse.message || "Không thể gửi yêu cầu đặt lại mật khẩu", {position: "top-right"});
                 return false;
             }
 
@@ -474,8 +453,8 @@ class AuthService {
                 newPassword
             });
 
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể đặt lại mật khẩu", { position: "top-right" });
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Không thể đặt lại mật khẩu", {position: "top-right"});
                 return false;
             }
 

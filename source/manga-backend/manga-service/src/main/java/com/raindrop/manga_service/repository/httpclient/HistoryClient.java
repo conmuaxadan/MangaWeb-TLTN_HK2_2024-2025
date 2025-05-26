@@ -12,24 +12,15 @@ import java.util.List;
 
 @FeignClient(name = "history-service", url = "${app.services.history}")
 public interface HistoryClient {
-    /**
-     * Lấy lịch sử đọc gần đây của người dùng
-     * @param userId ID của người dùng
-     * @param limit Số lượng bản ghi cần lấy
-     * @return Danh sách lịch sử đọc gần đây
-     */
-    @GetMapping("/reading-histories/user/{userId}/recent")
+
+    @GetMapping("/histories/user/{userId}/recent")
     ApiResponse<List<ReadingHistoryResponse>> getRecentReadingHistory(
             @RequestHeader("Authorization") String token,
             @PathVariable("userId") String userId,
             @RequestParam("limit") int limit);
 
-    /**
-     * Lấy tất cả mangaId đã đọc của người dùng
-     * @param userId ID của người dùng
-     * @return Danh sách tất cả mangaId đã đọc
-     */
-    @GetMapping("/reading-histories/user/{userId}/manga-ids")
+
+    @GetMapping("/histories/user/{userId}/manga-ids")
     ApiResponse<List<String>> getAllReadMangaIds(
             @RequestHeader("Authorization") String token,
             @PathVariable("userId") String userId);

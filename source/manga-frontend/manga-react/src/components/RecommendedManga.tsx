@@ -1,58 +1,36 @@
-import { useEffect, useState } from 'react';
-import mangaService from '../services/manga-service';
+import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faStar } from '@fortawesome/free-solid-svg-icons';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
-import { getMangaImageUrl } from '../utils/file-utils';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
-
-interface MangaData {
-    id: string;
-    title: string;
-    coverUrl?: string;
-    author?: string;
-    lastChapterAddedAt?: string;
-    lastChapterNumber?: number;
-    lastChapterId?: string;
-    views?: number;
-    loves?: number;
-    comments?: number;
-}
+import useRecommendedManga from '../hooks/useRecommendedManga';
+import RecommendedMangaCard from './RecommendedMangaCard';
 
 const RecommendedManga = () => {
-    const [recommendedManga, setRecommendedManga] = useState<MangaData[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const {
+        recommendedManga,
+        loading,
+        error,
+        formatCount
+    } = useRecommendedManga(10);
 
-    useEffect(() => {
-        const fetchRecommendedManga = async () => {
-            try {
-                setLoading(true);
-                // Lấy 10 manga đề cử
-                const result = await mangaService.getMangaSummaries(0, 10, "createdAt,desc");
-
-                if (result) {
-                    // Đảm bảo có đầy đủ thông tin cho mỗi manga
-                    const mangaWithDetails = result.content.map(manga => ({
-                        ...manga,
-                        lastChapterNumber: manga.lastChapterNumber || 0,
-                        views: manga.views || 0,
-                        loves: manga.loves || 0,
-                        comments: manga.comments || 0
-                    }));
-                    setRecommendedManga(mangaWithDetails);
-                }
-            } catch (error) {
-                console.error('Lỗi khi tải truyện đề cử:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchRecommendedManga();
-    }, []);
+    // Hiển thị error nếu có
+    if (error) {
+        return (
+            <div className="text-center py-8">
+                <p className="text-red-500 mb-4">{error}</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                >
+                    Thử lại
+                </button>
+            </div>
+        );
+    }
 
     if (loading) {
         return (
@@ -62,12 +40,18 @@ const RecommendedManga = () => {
         );
     }
 
+    if (!recommendedManga || recommendedManga.length === 0) {
+        return (
+            <div className="text-center py-8">
+                <p className="text-gray-500">Không có truyện đề cử nào</p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col gap-5">
             <h2 className="flex items-center gap-3 text-xl font-semibold text-gray-900 border-l-4 border-purple-600 pl-3 mb-4">
-                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" className="text-purple-500 text-2xl" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M256,8C119,8,8,119,8,256S119,504,256,504,504,393,504,256,393,8,256,8Zm92.49,313h0l-20,25a16,16,0,0,1-22.49,2.5h0l-67-49.72a40,40,0,0,1-15-31.23V112a16,16,0,0,1,16-16h32a16,16,0,0,1,16,16V256l58,42.5A16,16,0,0,1,348.49,321Z"></path>
-                </svg>
+                <FontAwesomeIcon icon={faStar} className="text-purple-500 text-2xl" />
                 Truyện đề cử
             </h2>
             <div className="mb-5">
@@ -99,67 +83,10 @@ const RecommendedManga = () => {
                 >
                     {recommendedManga.map((manga) => (
                         <SwiperSlide key={manga.id}>
-                            <div className="group bg-white rounded-lg overflow-hidden transition-all duration-300">
-                                <figure className="clearfix">
-                                    <div className="relative mb-2">
-                                        <a title={manga.title} href={`/mangas/${manga.id}`} className="block">
-                                            <div className="relative pb-[150%]">
-                                                <div className="absolute inset-0 w-full h-full overflow-hidden">
-                                                    <div className="relative h-full w-full">
-                                                        <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900/80 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
-                                                        <img
-                                                            src={getMangaImageUrl(manga.coverUrl)}
-                                                            className="h-full w-full object-cover transition duration-500 group-hover:scale-[102%]"
-                                                            alt={manga.title}
-                                                            onError={(e) => {
-                                                                const target = e.target as HTMLImageElement;
-                                                                target.src = '/images/default-manga-cover.jpg';
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="absolute bottom-0 left-0 z-[2] w-full px-3 py-2">
-                                                <h3 className="mb-1 line-clamp-2 text-sm font-semibold leading-tight text-white transition group-hover:line-clamp-4">
-                                                    {manga.title}
-                                                </h3>
-                                                <p className="mb-1 text-xs text-gray-300 line-clamp-1">{manga.author || 'Không rõ'}</p>
-                                                <span className="flex items-center justify-between gap-1 text-xs text-gray-300">
-                                                    <span className="flex items-center gap-1">
-                                                        <i className="fa fa-eye text-yellow-500"></i>{manga.views || 0}
-                                                    </span>
-                                                    <span className="flex items-center gap-1">
-                                                        <i className="fa fa-comment text-blue-400"></i>{manga.comments || 0}
-                                                    </span>
-                                                    <span className="flex items-center gap-1">
-                                                        <i className="fa fa-heart text-red-500"></i>{manga.loves || 0}
-                                                    </span>
-                                                </span>
-                                            </div>
-                                        </a>
-                                    </div>
-                                    <figcaption className="px-3 pb-3 relative z-10 bg-white">
-                                        <ul className="flex flex-col gap-1">
-                                            <li className="flex items-center justify-between gap-x-2 text-xs">
-                                                <a
-                                                    title={manga.lastChapterNumber ? `C. ${manga.lastChapterNumber}` : 'Chưa có chapter'}
-                                                    className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap transition visited:text-gray-500 hover:text-purple-600 text-gray-700"
-                                                    href={manga.lastChapterId
-                                                        ? `/mangas/${manga.id}/chapters/${manga.lastChapterId}`
-                                                        : `/mangas/${manga.id}`}
-                                                >
-                                                    {manga.lastChapterNumber ? `C. ${manga.lastChapterNumber}` : 'Chưa có chapter'}
-                                                </a>
-                                                <span className="whitespace-nowrap leading-tight text-gray-500">
-                                                    {manga.lastChapterAddedAt
-                                                        ? formatDistanceToNow(new Date(manga.lastChapterAddedAt), { locale: vi }).replace('trước', '')
-                                                        : 'Chưa cập nhật'}
-                                                </span>
-                                            </li>
-                                        </ul>
-                                    </figcaption>
-                                </figure>
-                            </div>
+                            <RecommendedMangaCard
+                                manga={manga}
+                                formatCount={formatCount}
+                            />
                         </SwiperSlide>
                     ))}
                 </Swiper>
