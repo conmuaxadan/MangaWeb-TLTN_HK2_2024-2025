@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUpload, faSpinner, faTrash, faPlus, faSearch, faTimes, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
+import { faSpinner, faTrash, faPlus, faSearch, faTimes, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import { ChapterResponse, MangaResponse, MangaQuickSearchResponse } from '../../interfaces/models/manga';
 import mangaService from '../../services/manga-service';
 import { toast } from 'react-toastify';

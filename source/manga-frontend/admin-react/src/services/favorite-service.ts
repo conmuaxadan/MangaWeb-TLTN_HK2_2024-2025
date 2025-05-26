@@ -12,7 +12,7 @@ class FavoriteService {
         try {
             const apiResponse = await favoriteHttpClient.get<ApiResponse<number>>('/favorites/count');
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(apiResponse.message || "Không thể đếm tổng số yêu thích");
                 return 0;
             }
@@ -33,7 +33,7 @@ class FavoriteService {
         try {
             const apiResponse = await favoriteHttpClient.get<ApiResponse<number>>('/favorites/count/today');
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(apiResponse.message || "Không thể đếm số yêu thích mới trong ngày");
                 return 0;
             }
@@ -41,28 +41,6 @@ class FavoriteService {
             return apiResponse.result;
         } catch (error) {
             console.error('Lỗi đếm số yêu thích mới trong ngày:', error);
-            return 0;
-        }
-    }
-
-    /**
-     * Đếm số lượng yêu thích của một manga
-     * @param mangaId ID của manga
-     * @returns Số lượng yêu thích hoặc 0 nếu thất bại
-     */
-    async countFavorites(mangaId: string): Promise<number> {
-        logApiCall('countFavorites');
-        try {
-            const apiResponse = await favoriteHttpClient.get<ApiResponse<number>>(`/favorites/${mangaId}/count`);
-
-            if (apiResponse.code !== 1000) {
-                console.error(`Lỗi đếm số lượng yêu thích của manga ID ${mangaId}:`, apiResponse.message);
-                return 0;
-            }
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error(`Lỗi đếm số lượng yêu thích của manga ID ${mangaId}:`, error);
             return 0;
         }
     }

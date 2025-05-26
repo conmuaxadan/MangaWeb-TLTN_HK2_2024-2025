@@ -32,7 +32,6 @@ public class FavoriteController {
      * @return Thông tin manga đã thêm vào yêu thích
      */
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<FavoriteResponse>> addFavorite(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody FavoriteRequest request
@@ -41,7 +40,7 @@ public class FavoriteController {
         FavoriteResponse response = favoriteService.addFavorite(userId, request);
 
         return ResponseEntity.ok(ApiResponse.<FavoriteResponse>builder()
-                .code(1000)
+                .code(201)
                 .message("Manga added to favorites successfully")
                 .result(response)
                 .build());
@@ -54,7 +53,6 @@ public class FavoriteController {
      * @return Thông báo xóa thành công
      */
     @DeleteMapping("/{mangaId}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> removeFavorite(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable String mangaId
@@ -65,7 +63,6 @@ public class FavoriteController {
         favoriteService.removeFavorite(userId, mangaId);
 
         return ResponseEntity.ok(ApiResponse.<Void>builder()
-                .code(1000)
                 .message("Manga removed from favorites successfully")
                 .build());
     }
@@ -77,7 +74,6 @@ public class FavoriteController {
      * @return true nếu manga có trong danh sách yêu thích, false nếu không
      */
     @GetMapping("/{mangaId}/check")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Boolean>> isFavorite(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable String mangaId
@@ -88,7 +84,6 @@ public class FavoriteController {
         boolean isFavorite = favoriteService.isFavorite(userId, mangaId);
 
         return ResponseEntity.ok(ApiResponse.<Boolean>builder()
-                .code(1000)
                 .message("Favorite status checked successfully")
                 .result(isFavorite)
                 .build());
@@ -101,7 +96,6 @@ public class FavoriteController {
      * @return Danh sách manga yêu thích có phân trang
      */
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Page<FavoriteResponse>>> getFavorites(
             @AuthenticationPrincipal Jwt jwt,
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable
@@ -112,7 +106,6 @@ public class FavoriteController {
         Page<FavoriteResponse> favorites = favoriteService.getFavorites(userId, pageable);
 
         return ResponseEntity.ok(ApiResponse.<Page<FavoriteResponse>>builder()
-                .code(1000)
                 .message("Favorites retrieved successfully")
                 .result(favorites)
                 .build());
@@ -130,7 +123,6 @@ public class FavoriteController {
         long count = favoriteService.countFavoritesByMangaId(mangaId);
 
         return ResponseEntity.ok(ApiResponse.<Long>builder()
-                .code(1000)
                 .message("Favorites counted successfully")
                 .result(count)
                 .build());
@@ -147,7 +139,6 @@ public class FavoriteController {
         long count = favoriteService.countTotalFavorites();
 
         return ResponseEntity.ok(ApiResponse.<Long>builder()
-                .code(1000)
                 .message("Total favorites counted successfully")
                 .result(count)
                 .build());
@@ -164,7 +155,6 @@ public class FavoriteController {
         long count = favoriteService.countTodayFavorites();
 
         return ResponseEntity.ok(ApiResponse.<Long>builder()
-                .code(1000)
                 .message("Today's favorites counted successfully")
                 .result(count)
                 .build());

@@ -23,9 +23,10 @@ public class GenreController {
     GenreService genreService;
 
     @PostMapping()
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<GenreResponse> createGenre(@RequestBody @Valid GenreRequest request) {
         return ApiResponse.<GenreResponse>builder()
+                .code(201)
                 .message("Genre created successfully")
                 .result(genreService.createGenre(request))
                 .build();
@@ -64,7 +65,7 @@ public class GenreController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<GenreResponse> updateGenreById(@PathVariable Long id, @RequestBody GenreRequest request) {
         return ApiResponse.<GenreResponse>builder()
                 .message("Genre updated successfully")
@@ -73,7 +74,7 @@ public class GenreController {
     }
 
     @PutMapping("/name/{name}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<GenreResponse> updateGenreByName(@PathVariable String name, @RequestBody GenreRequest request) {
         return ApiResponse.<GenreResponse>builder()
                 .message("Genre updated successfully")
@@ -82,7 +83,7 @@ public class GenreController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Void> deleteGenreById(@PathVariable Long id) {
         genreService.deleteGenreById(id);
         return ApiResponse.<Void>builder()
@@ -91,7 +92,7 @@ public class GenreController {
     }
 
     @DeleteMapping("/name/{name}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Void> deleteGenreByName(@PathVariable String name) {
         genreService.deleteGenreByName(name);
         return ApiResponse.<Void>builder()

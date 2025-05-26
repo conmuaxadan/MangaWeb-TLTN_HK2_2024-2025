@@ -12,6 +12,7 @@ import Statistics from "../pages/admin/Statistics";
 import RoleManagement from "../pages/admin/RoleManagement";
 import PermissionManagement from "../pages/admin/PermissionManagement";
 import Login from "../pages/admin/Login";
+import DefaultRedirect from "../components/DefaultRedirect";
 
 // Định nghĩa các route cho ứng dụng
 export const routes: IRoute[] = [
@@ -32,6 +33,12 @@ export const routes: IRoute[] = [
     // Admin routes
     {
         path: '/admin',
+        Component: DefaultRedirect,
+        Layout: null,
+        requireAuth: true
+    },
+    {
+        path: '/admin/dashboard',
         Component: Dashboard,
         Layout: AdminLayout,
         requireAuth: true

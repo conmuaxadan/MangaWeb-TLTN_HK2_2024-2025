@@ -12,19 +12,22 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
-  const { login, isLogin, isAdmin } = useAuth();
+  const { login, isLogin, hasMangaManagement, hasSystemManagement } = useAuth();
 
-  // Nếu đã đăng nhập và có quyền admin, chuyển hướng đến trang dashboard
+  // Nếu đã đăng nhập và có quyền truy cập admin, chuyển hướng đến trang phù hợp
   useEffect(() => {
     if (isLogin) {
-      if (isAdmin) {
-        navigate('/admin');
+      // Kiểm tra xem có ít nhất một quyền admin không
+      const hasAdminAccess = hasMangaManagement || hasSystemManagement;
+
+      if (hasAdminAccess) {
+        navigate('/admin'); // Sẽ được DefaultRedirect xử lý chuyển hướng phù hợp
       } else {
         // Không hiển thị thông báo về quyền, chỉ đăng xuất người dùng
         authService.logout();
       }
     }
-  }, [isLogin, isAdmin, navigate]);
+  }, [isLogin, hasMangaManagement, hasSystemManagement, navigate]);
 
   // Animation effect khi component mount
   useEffect(() => {
@@ -61,11 +64,17 @@ const Login: React.FC = () => {
           }).join(''));
 
           const payload = JSON.parse(jsonPayload);
-          const hasAdminRole = payload.scope && payload.scope.includes('ROLE_ADMIN');
+          const permissions: string[] = payload.scope ? payload.scope.split(' ') : [];
 
-          if (hasAdminRole) {
+          // Kiểm tra các quyền cần thiết để truy cập admin
+          const hasMangaManagementPerm = permissions.includes('MANGA_MANAGEMENT');
+          const hasSystemManagementPerm = permissions.includes('SYSTEM_MANAGEMENT');
+
+          const hasAdminAccess = hasMangaManagementPerm || hasSystemManagementPerm;
+
+          if (hasAdminAccess) {
             toast.success('Đăng nhập thành công!', { position: 'top-right' });
-            navigate('/admin');
+            navigate('/admin'); // DefaultRedirect sẽ xử lý chuyển hướng phù hợp
           } else {
             // Không hiển thị thông báo về quyền, chỉ thông báo sai thông tin đăng nhập
             toast.error('Sai thông tin đăng nhập. Vui lòng kiểm tra lại tên đăng nhập và mật khẩu.', { position: 'top-right' });
@@ -108,7 +117,7 @@ const Login: React.FC = () => {
           <div className="p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                MangaWeb Admin
+                R-Admin
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
                 Đăng nhập để quản lý hệ thống
@@ -191,7 +200,7 @@ const Login: React.FC = () => {
         </div>
 
         <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>© {new Date().getFullYear()} MangaWeb Admin. Bản quyền thuộc về MangaWeb.</p>
+          <p>© {new Date().getFullYear()}. Bản quyền thuộc về R-Admin.</p>
         </div>
       </div>
     </div>

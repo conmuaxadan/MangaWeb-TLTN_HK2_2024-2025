@@ -31,7 +31,6 @@ class MangaService {
             const params = new URLSearchParams();
             params.append('page', page.toString());
             params.append('size', size.toString());
-
             if (keyword && keyword.trim()) {
                 params.append('keyword', keyword.trim());
             }
@@ -44,21 +43,18 @@ class MangaService {
             if (yearOfRelease) {
                 params.append('yearOfRelease', yearOfRelease.toString());
             }
-
             const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaManagementResponse>>>(`/mangas?${params.toString()}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách manga", { position: "top-right" });
                 return null;
             }
-
             // Thêm ảnh mặc định cho các manga không có coverUrl
             apiResponse.result.content.forEach(manga => {
                 if (!manga.coverUrl) {
                     manga.coverUrl = '/images/default-manga-cover.jpg';
                 }
             });
-
             return apiResponse.result;
         } catch (error) {
             console.error("Lỗi lấy danh sách manga:", error);
@@ -96,7 +92,7 @@ class MangaService {
 
             const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaManagementResponse>>>(`/mangas/management/deleted?${params.toString()}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách manga", { position: "top-right" });
                 return null;
             }
@@ -128,7 +124,7 @@ class MangaService {
             const url = `/mangas/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${size}`;
             const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaResponse>>>(url);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể tìm kiếm manga", { position: "top-right" });
                 return null;
             }
@@ -152,16 +148,16 @@ class MangaService {
      * @param formData FormData chứa thông tin truyện mới
      * @returns Thông tin truyện đã tạo hoặc null nếu thất bại
      */
-    async createManga(formData: FormData): Promise<MangaResponse | null> {
+    async createManga(formData: FormData): Promise<MangaManagementResponse | null> {
         logApiCall('createManga');
         try {
-            const apiResponse = await mangaHttpClient.post<ApiResponse<MangaResponse>>('/mangas', formData, {
+            const apiResponse = await mangaHttpClient.post<ApiResponse<MangaManagementResponse>>('/mangas', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 201) {
                 toast.error(apiResponse.message || "Không thể tạo truyện mới", { position: "top-right" });
                 return null;
             }
@@ -181,16 +177,16 @@ class MangaService {
      * @param formData FormData chứa thông tin cập nhật
      * @returns Thông tin truyện đã cập nhật hoặc null nếu thất bại
      */
-    async updateManga(id: string, formData: FormData): Promise<MangaResponse | null> {
+    async updateManga(id: string, formData: FormData): Promise<MangaManagementResponse | null> {
         logApiCall('updateManga');
         try {
-            const apiResponse = await mangaHttpClient.put<ApiResponse<MangaResponse>>(`/mangas/${id}`, formData, {
+            const apiResponse = await mangaHttpClient.put<ApiResponse<MangaManagementResponse>>(`/mangas/${id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể cập nhật truyện", { position: "top-right" });
                 return null;
             }
@@ -214,7 +210,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.delete<ApiResponse<void>>(`/mangas/${id}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể xóa truyện", { position: "top-right" });
                 return false;
             }
@@ -241,7 +237,7 @@ class MangaService {
                 `/mangas/deleted?page=${page}&size=${size}`
             );
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách truyện đã xóa", { position: "top-right" });
                 return null;
             }
@@ -266,12 +262,12 @@ class MangaService {
      * @param id ID của truyện cần khôi phục
      * @returns Thông tin truyện đã khôi phục hoặc null nếu thất bại
      */
-    async restoreManga(id: string): Promise<MangaResponse | null> {
+    async restoreManga(id: string): Promise<MangaManagementResponse | null> {
         logApiCall('restoreManga');
         try {
-            const apiResponse = await mangaHttpClient.post<ApiResponse<MangaResponse>>(`/mangas/${id}/restore`);
+            const apiResponse = await mangaHttpClient.post<ApiResponse<MangaManagementResponse>>(`/mangas/${id}/restore`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể khôi phục truyện", { position: "top-right" });
                 return null;
             }
@@ -299,7 +295,7 @@ class MangaService {
                 }
             });
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 201) {
                 toast.error(apiResponse.message || "Không thể tạo chapter mới", { position: "top-right" });
                 return null;
             }
@@ -323,7 +319,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.delete<ApiResponse<void>>(`/chapters/${id}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể xóa chapter", { position: "top-right" });
                 return false;
             }
@@ -352,7 +348,7 @@ class MangaService {
                 }
             });
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể cập nhật chapter", { position: "top-right" });
                 return null;
             }
@@ -408,7 +404,7 @@ class MangaService {
                 }
             );
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể cập nhật trang", { position: "top-right" });
                 return null;
             }
@@ -417,25 +413,7 @@ class MangaService {
             return apiResponse.result;
         } catch (error:any) {
             console.error(`Lỗi cập nhật trang ${pageIndex} của chapter ID ${chapterId}:`, error);
-
-            // Hiển thị thông báo lỗi chi ti���t hơn
-            let errorMessage = "Đã xảy ra lỗi khi cập nhật trang";
-            if (error.response) {
-                // Nếu có response từ server
-                if (error.response.data && error.response.data.message) {
-                    errorMessage = error.response.data.message;
-                } else {
-                    errorMessage += ` (${error.response.status}: ${error.response.statusText})`;
-                }
-            } else if (error.request) {
-                // Nếu request đã được gửi nhưng không nhận được response
-                errorMessage += " (Không nhận được phản hồi từ server)";
-            } else {
-                // Lỗi khi thiết lập request
-                errorMessage += ` (${error.message})`;
-            }
-
-            toast.error(errorMessage, { position: "top-right" });
+            toast.error(error, { position: "top-right" });
             return null;
         }
     }
@@ -453,7 +431,7 @@ class MangaService {
                 `/chapters/${chapterId}/pages/${pageIndex}`
             );
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể xóa trang", { position: "top-right" });
                 return null;
             }
@@ -462,25 +440,7 @@ class MangaService {
             return apiResponse.result;
         } catch (error:any) {
             console.error(`Lỗi xóa trang ${pageIndex} của chapter ID ${chapterId}:`, error);
-
-            // Hiển thị thông báo lỗi chi tiết hơn
-            let errorMessage = "Đã xảy ra lỗi khi xóa trang";
-            if (error.response) {
-                // Nếu có response từ server
-                if (error.response.data && error.response.data.message) {
-                    errorMessage = error.response.data.message;
-                } else {
-                    errorMessage += ` (${error.response.status}: ${error.response.statusText})`;
-                }
-            } else if (error.request) {
-                // Nếu request đã được gửi nhưng không nhận được response
-                errorMessage += " (Không nhận được phản hồi từ server)";
-            } else {
-                // Lỗi khi thiết lập request
-                errorMessage += ` (${error.message})`;
-            }
-
-            toast.error(errorMessage, { position: "top-right" });
+            toast.error("Đã xảy ra lỗi khi xóa trang", { position: "top-right" });
             return null;
         }
     }
@@ -515,7 +475,7 @@ class MangaService {
             const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<ChapterResponse>>>(url);
             console.log('Kết quả API getAllChapters:', apiResponse);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error("Không thể lấy danh sách chapter:", apiResponse.message);
                 return null;
             }
@@ -538,7 +498,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<ChapterResponse[]>>(`/chapters/manga/${mangaId}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(`Không thể lấy danh sách chapter của truyện ${mangaId}:`, apiResponse.message);
                 return [];
             }
@@ -561,7 +521,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<number>>(`/mangas/${mangaId}/highest-chapter-number`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(`Không thể lấy số chapter cao nhất của truyện ${mangaId}:`, apiResponse.message);
                 return 0;
             }
@@ -584,7 +544,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<number>>(`/mangas/count?includeDeleted=${includeDeleted}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể đếm tổng số truyện", { position: "top-right" });
                 return 0;
             }
@@ -606,7 +566,7 @@ class MangaService {
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<MangaStatisticsResponse>>('/mangas/statistics');
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể lấy thống kê truyện", { position: "top-right" });
                 return null;
             }
@@ -631,7 +591,7 @@ class MangaService {
             const url = `/mangas/search/quick?keyword=${encodeURIComponent(keyword)}&limit=${limit}`;
             const apiResponse = await mangaHttpClient.get<ApiResponse<MangaQuickSearchResponse[]>>(url);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error("Không thể tìm kiếm nhanh manga:", apiResponse.message);
                 return [];
             }

@@ -120,7 +120,7 @@ public class RecommendationService {
         try {
             ApiResponse<List<ReadingHistoryResponse>> historyResponse = historyClient.getRecentReadingHistory(authHeader, userId, 3);
 
-            if (historyResponse.getCode() != 1000 || historyResponse.getResult().isEmpty()) {
+            if (historyResponse.getCode() != 200 || historyResponse.getResult().isEmpty()) {
                 log.info("Không tìm thấy lịch sử đọc cho người dùng {}, không trả về gợi ý", userId);
                 return Collections.emptyList();
             }

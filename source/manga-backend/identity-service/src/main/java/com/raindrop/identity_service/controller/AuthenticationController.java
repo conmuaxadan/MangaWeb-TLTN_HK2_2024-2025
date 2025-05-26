@@ -35,6 +35,7 @@ public class AuthenticationController {
         log.info("Login attempt for user: {}", request.getUsername());
         var result = authenticationService.authenticate(request);
         return ApiResponse.<AuthenticationResponse>builder()
+                .code(200)
                 .result(result)
                 .build();
     }

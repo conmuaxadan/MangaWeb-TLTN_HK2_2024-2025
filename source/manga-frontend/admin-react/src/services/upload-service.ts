@@ -30,7 +30,7 @@ class UploadService {
 
             const apiResponse = await uploadHttpClient.delete<ApiResponse<void>>(`/files/${fileName}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(`Không thể xóa file: ${fileName}`, apiResponse.message);
                 return false;
             }

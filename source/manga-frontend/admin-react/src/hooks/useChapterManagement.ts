@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { ChapterResponse, MangaResponse, MangaQuickSearchResponse } from '../interfaces/models/manga';
+import { ChapterResponse, MangaQuickSearchResponse } from '../interfaces/models/manga';
 import mangaService from '../services/manga-service';
 
-export const useChapterManagement = (itemsPerPage: number = 10) => {
+export const useChapterManagement = (initialItemsPerPage: number = 10) => {
   // State cho danh sách chapter
   const [chapters, setChapters] = useState<ChapterResponse[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [availableMangas, setAvailableMangas] = useState<MangaResponse[]>([]);
   const [error, setError] = useState<Error | null>(null);
 
   // State cho thao tác CRUD
@@ -30,24 +29,15 @@ export const useChapterManagement = (itemsPerPage: number = 10) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(initialItemsPerPage);
 
-  // Tải danh sách chapter và manga khi component mount hoặc khi currentPage thay đổi
+  // Reset về trang đầu tiên khi filter thay đổi hoặc itemsPerPage thay đổi
   useEffect(() => {
-    fetchChapters();
-    if (availableMangas.length === 0) {
-      fetchMangas();
-    }
-  }, [currentPage]);
-
-  // Reset về trang đầu tiên khi filter thay đổi
-  useEffect(() => {
-    console.log('🔄 Resetting currentPage to 1 due to filter change:', { filterManga });
     setCurrentPage(1);
-  }, [filterManga]);
+  }, [filterManga, itemsPerPage]);
 
   // Hàm lấy danh sách chapter với phân trang server-side
   const fetchChapters = useCallback(async () => {
-    console.log('🔥 fetchChapters called with dependencies:', { currentPage, itemsPerPage, filterManga });
     setIsLoading(true);
     setError(null);
     try {
@@ -84,29 +74,8 @@ export const useChapterManagement = (itemsPerPage: number = 10) => {
 
   // Force fetch khi filterManga thay đổi (ngay cả khi currentPage đã là 1)
   useEffect(() => {
-    console.log('🚀 Force fetching due to filterManga change:', filterManga);
     fetchChapters();
   }, [filterManga, fetchChapters]);
-
-  // Hàm lấy danh sách manga
-  const fetchMangas = useCallback(async () => {
-    try {
-      console.log('Fetching available mangas for dropdown...');
-      // Lấy danh sách tất cả manga để hiển thị trong dropdown
-      const allMangas = await mangaService.getAllMangas(0, 1000);
-      console.log('Available mangas response:', allMangas);
-      if (allMangas && allMangas.content) {
-        console.log('Setting available mangas:', allMangas.content.length);
-        setAvailableMangas(allMangas.content);
-      } else {
-        console.log('No manga content found');
-        setAvailableMangas([]);
-      }
-    } catch (err) {
-      console.error('Lỗi khi lấy danh sách manga:', err);
-      setAvailableMangas([]);
-    }
-  }, []);
 
   // Tìm kiếm manga
   const searchMangas = useCallback(async (term: string) => {
@@ -220,8 +189,9 @@ export const useChapterManagement = (itemsPerPage: number = 10) => {
   };
 
   // Xóa chapter
-  const deleteChapter = async (chapterId: string | undefined): Promise<boolean> => {
+  const deleteChapter = async (chapterId: string): Promise<boolean> => {
     try {
+
       const success = await mangaService.deleteChapter(chapterId);
       if (success) {
         await fetchChapters(); // Tải lại danh sách sau khi xóa
@@ -248,7 +218,6 @@ export const useChapterManagement = (itemsPerPage: number = 10) => {
     // Data
     chapters,
     currentChapters,
-    availableMangas,
 
     // Manga search
     mangaSearchTerm,
@@ -279,6 +248,7 @@ export const useChapterManagement = (itemsPerPage: number = 10) => {
     handleFilterSearchChange,
     handleSelectFilterManga,
     handleClearFilterManga,
+    setItemsPerPage,
 
     // Loading states
     isLoading,

@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,15 +25,18 @@ public class RoleController {
     RoleService roleService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<RoleResponse> createRole(@RequestBody RoleRequest request) {
         return ApiResponse.<RoleResponse>builder()
+                .code(201)
                 .message("Role created successfully")
                 .result(roleService.create(request))
                 .build();
     }
 
     @GetMapping
-    ApiResponse<List<RoleResponse>> getAllPermissions() {
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
+    ApiResponse<List<RoleResponse>> getAllRoles() {
         return ApiResponse.<List<RoleResponse>>builder()
                 .message("Roles retrieved successfully")
                 .result(roleService.getAll())
@@ -45,6 +49,7 @@ public class RoleController {
      * @return Danh sách role có phân trang
      */
     @GetMapping("/paginated")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<Page<RoleResponse>> getAllRolesPaginated(
             @PageableDefault(size = 10, sort = "name") Pageable pageable) {
         return ApiResponse.<Page<RoleResponse>>builder()
@@ -53,13 +58,8 @@ public class RoleController {
                 .build();
     }
 
-    @DeleteMapping("/{id}")
-    ApiResponse<Void> delete(@PathVariable Long id) {
-        roleService.delete(id);
-        return ApiResponse.<Void>builder().message("Role deleted successfully").build();
-    }
-
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<RoleResponse> getRoleById(@PathVariable Long id) {
         return ApiResponse.<RoleResponse>builder()
                 .message("Role retrieved successfully")
@@ -67,7 +67,15 @@ public class RoleController {
                 .build();
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
+    ApiResponse<Void> delete(@PathVariable Long id) {
+        roleService.delete(id);
+        return ApiResponse.<Void>builder().message("Role deleted successfully").build();
+    }
+
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<RoleResponse> updateRole(@PathVariable Long id, @RequestBody RoleRequest request) {
         return ApiResponse.<RoleResponse>builder()
                 .message("Role updated successfully")

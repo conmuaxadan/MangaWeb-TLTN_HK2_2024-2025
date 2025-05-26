@@ -31,7 +31,7 @@ const Header = () => {
     <header className="bg-white dark:bg-gray-800 shadow-sm">
       <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">MangaWeb Admin</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">R-Admin</h1>
         </div>
 
         <div className="flex items-center space-x-4">

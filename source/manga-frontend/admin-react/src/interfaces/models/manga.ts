@@ -20,6 +20,7 @@ export interface MangaResponse {
     author: string;
     loves: number;
     views: number;
+    comments: number;
     coverUrl?: string;
     description: string;
     genres: string[];

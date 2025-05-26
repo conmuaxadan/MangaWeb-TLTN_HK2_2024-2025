@@ -40,7 +40,7 @@ public class CommentController {
     ) {
         String userId = jwt.getSubject();
         return ApiResponse.<CommentResponse>builder()
-                .code(1000)
+                .code(201)
                 .message("Comment created successfully")
                 .result(commentService.createComment(userId, request))
                 .build();
@@ -58,7 +58,7 @@ public class CommentController {
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable
     ) {
         return ApiResponse.<Page<CommentResponse>>builder()
-                .code(1000)
+                .code(200)
                 .message("Comments retrieved successfully")
                 .result(commentService.getCommentsByChapterId(chapterId, pageable))
                 .build();
@@ -76,7 +76,7 @@ public class CommentController {
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable
     ) {
         return ApiResponse.<Page<CommentResponse>>builder()
-                .code(1000)
+                .code(200)
                 .message("Comments retrieved successfully")
                 .result(commentService.getCommentsByMangaId(mangaId, pageable))
                 .build();
@@ -96,7 +96,7 @@ public class CommentController {
     ) {
         String userId = jwt.getSubject();
         return ApiResponse.<Page<CommentResponse>>builder()
-                .code(1000)
+                .code(200)
                 .message("My comments retrieved successfully")
                 .result(commentService.getCommentsByUserId(userId, pageable))
                 .build();
@@ -109,10 +109,10 @@ public class CommentController {
      */
     @GetMapping("/latest")
     public ApiResponse<Page<CommentResponse>> getLatestComments(
-            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable
+            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable
     ) {
         return ApiResponse.<Page<CommentResponse>>builder()
-                .code(1000)
+                .code(200)
                 .message("Latest comments retrieved successfully")
                 .result(commentService.getLatestComments(pageable))
                 .build();
@@ -129,7 +129,7 @@ public class CommentController {
     ) {
         log.info("Counting comments for manga: {}", mangaId);
         return ApiResponse.<Long>builder()
-                .code(1000)
+                .code(200)
                 .message("Comments counted successfully")
                 .result(commentService.countCommentsByMangaId(mangaId))
                 .build();
@@ -143,7 +143,6 @@ public class CommentController {
      */
     @DeleteMapping("/{commentId}")
     @PreAuthorize("isAuthenticated()")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ApiResponse<Void> deleteComment(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable String commentId
@@ -151,7 +150,7 @@ public class CommentController {
         String userId = jwt.getSubject();
         commentService.deleteComment(commentId, userId);
         return ApiResponse.<Void>builder()
-                .code(1000)
+                .code(200)
                 .message("Comment deleted successfully")
                 .build();
     }
@@ -162,12 +161,12 @@ public class CommentController {
      * @return Danh sách bình luận có phân trang
      */
     @GetMapping("/admin/all")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<Page<CommentResponse>> getAllComments(
             @PageableDefault(size = 20, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable
     ) {
         return ApiResponse.<Page<CommentResponse>>builder()
-                .code(1000)
+                .code(200)
                 .message("All comments retrieved successfully")
                 .result(commentService.getAllComments(pageable))
                 .build();
@@ -179,14 +178,14 @@ public class CommentController {
      * @return Thông báo xóa thành công
      */
     @DeleteMapping("/admin/{commentId}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
+//    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ApiResponse<Void> adminDeleteComment(
             @PathVariable String commentId
     ) {
         commentService.adminDeleteComment(commentId);
         return ApiResponse.<Void>builder()
-                .code(1000)
+                .code(200)
                 .message("Comment deleted successfully by admin")
                 .build();
     }
@@ -198,13 +197,12 @@ public class CommentController {
      * @return Danh sách bình luận có phân trang
      */
     @GetMapping("/admin/search")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<Page<CommentResponse>> searchComments(
             @RequestParam(required = false) String keyword,
             @PageableDefault(size = 20, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable
     ) {
         return ApiResponse.<Page<CommentResponse>>builder()
-                .code(1000)
                 .message("Comments searched successfully")
                 .result(commentService.searchComments(keyword, pageable))
                 .build();
@@ -215,10 +213,10 @@ public class CommentController {
      * @return Tổng số bình luận
      */
     @GetMapping("/count")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<Long> countTotalComments() {
         log.info("Counting total comments");
         return ApiResponse.<Long>builder()
-                .code(1000)
                 .message("Total comments counted successfully")
                 .result(commentService.countTotalComments())
                 .build();
@@ -229,10 +227,10 @@ public class CommentController {
      * @return Số bình luận mới trong ngày
      */
     @GetMapping("/count/today")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<Long> countTodayComments() {
         log.info("Counting today's comments");
         return ApiResponse.<Long>builder()
-                .code(1000)
                 .message("Today's comments counted successfully")
                 .result(commentService.countTodayComments())
                 .build();

@@ -231,7 +231,6 @@ class HttpClient {
 // Create instances for each service
 export const identityHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.IDENTITY_SERVICE}`);
 export const mangaHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.MANGA_SERVICE}`);
-export const profileHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.PROFILE_SERVICE}`);
 export const historyHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.HISTORY_SERVICE}`);
 export const commentHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.COMMENT_SERVICE}`);
 export const favoriteHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.FAVORITE_SERVICE}`);

@@ -1,8 +1,7 @@
 import React from 'react';
 import { faBook, faCheckCircle, faTrash, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
-import { MangaGenreChart, MangaStatusChart, MostViewedMangaChart } from './ChartComponents';
+import { MangaGenreChart, MangaStatusChart } from './ChartComponents';
 import StatsCard from './StatsCard';
-import { MostViewedMangaResponse } from '../../services/manga-statistics-service';
 
 interface MangasTabProps {
   mangaStats: {
@@ -18,11 +17,10 @@ interface MangasTabProps {
     newMangasToday: number;
     ongoingMangas: number;
     completedMangas: number;
-    mostViewedMangas: MostViewedMangaResponse[];
   };
 }
 
-const MangasTab: React.FC<MangasTabProps> = React.memo(({ mangaStats, mangas }) => {
+const MangasTab: React.FC<MangasTabProps> = React.memo(({ mangaStats }) => {
   return (
     <div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-6">
@@ -52,12 +50,10 @@ const MangasTab: React.FC<MangasTabProps> = React.memo(({ mangaStats, mangas }) 
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MangaGenreChart data={mangaStats.mangasByGenre || {}} />
         <MangaStatusChart data={mangaStats.mangasByStatus || {}} />
       </div>
-
-      <MostViewedMangaChart data={mangas.mostViewedMangas || []} />
     </div>
   );
 });

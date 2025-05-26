@@ -14,7 +14,7 @@ class GenreService {
         try {
             const apiResponse = await mangaHttpClient.get<ApiResponse<GenreResponse[]>>('/genres');
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error("Không thể lấy danh sách thể loại:", apiResponse.message);
                 return null;
             }
@@ -30,46 +30,6 @@ class GenreService {
         }
     }
 
-
-    /**
-     * Lấy thông tin chi tiết của thể loại
-     * @param name Tên thể loại
-     * @returns Thông tin chi tiết thể loại hoặc null nếu thất bại
-     */
-    async getGenreById(id: number): Promise<GenreResponse | null> {
-        logApiCall('getGenreById');
-        try {
-            const apiResponse = await mangaHttpClient.get<ApiResponse<GenreResponse>>(`/genres/${id}`);
-
-            if (apiResponse.code !== 1000) {
-                console.error(`Không thể lấy thông tin thể loại với ID ${id}:`, apiResponse.message);
-                return null;
-            }
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error(`Lỗi lấy thông tin thể loại với ID ${id}:`, error);
-            return null;
-        }
-    }
-
-    async getGenreByName(name: string): Promise<GenreResponse | null> {
-        logApiCall('getGenreByName');
-        try {
-            const apiResponse = await mangaHttpClient.get<ApiResponse<GenreResponse>>(`/genres/name/${name}`);
-
-            if (apiResponse.code !== 1000) {
-                console.error(`Không thể lấy thông tin thể loại ${name}:`, apiResponse.message);
-                return null;
-            }
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error(`Lỗi lấy thông tin thể loại ${name}:`, error);
-            return null;
-        }
-    }
-
     /**
      * Tạo thể loại mới
      * @param genreRequest Thông tin thể loại mới
@@ -80,7 +40,7 @@ class GenreService {
         try {
             const apiResponse = await mangaHttpClient.post<ApiResponse<GenreResponse>>('/genres', genreRequest);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 201) {
                 toast.error(apiResponse.message || "Không thể tạo thể loại", { position: "top-right" });
                 return null;
             }
@@ -105,7 +65,7 @@ class GenreService {
         try {
             const apiResponse = await mangaHttpClient.put<ApiResponse<GenreResponse>>(`/genres/${id}`, genreRequest);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể cập nhật thể loại", { position: "top-right" });
                 return null;
             }
@@ -141,7 +101,6 @@ class GenreService {
             } else {
                 toast.error("Đã xảy ra lỗi khi xóa thể loại", { position: "top-right" });
             }
-
             return false;
         }
     }

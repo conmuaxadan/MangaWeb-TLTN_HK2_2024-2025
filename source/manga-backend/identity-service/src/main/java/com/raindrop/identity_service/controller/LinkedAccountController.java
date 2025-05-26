@@ -33,7 +33,6 @@ public class LinkedAccountController {
         log.info("Linking Google account with redirect URI: {}", request.getRedirectUri());
         userService.linkGoogleAccount(request.getCode(), request.getRedirectUri());
         return ApiResponse.<Void>builder()
-                .code(1000)
                 .message("Google account linked successfully")
                 .build();
     }
@@ -46,7 +45,6 @@ public class LinkedAccountController {
         log.info("Linking local account with username: {}", request.getUsername());
         userService.linkLocalAccount(request);
         return ApiResponse.<Void>builder()
-                .code(1000)
                 .message("Local account linked successfully")
                 .build();
     }
@@ -59,7 +57,6 @@ public class LinkedAccountController {
         log.info("Getting linked accounts for current user");
         List<LinkedAccountResponse> accounts = userService.getLinkedAccounts();
         return ApiResponse.<List<LinkedAccountResponse>>builder()
-                .code(1000)
                 .message("Linked accounts retrieved successfully")
                 .result(accounts)
                 .build();
@@ -73,7 +70,6 @@ public class LinkedAccountController {
         log.info("Unlinking account with ID: {}", id);
         userService.unlinkAccount(id);
         return ApiResponse.<Void>builder()
-                .code(1000)
                 .message("Account unlinked successfully")
                 .build();
     }

@@ -26,9 +26,11 @@ public class FileController {
     FileService fileService;
 
     @PostMapping(value = "/manga", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     public ApiResponse<FileInfoResponse> uploadMangaFile(@RequestPart("image") MultipartFile file) throws IOException {
         FileInfoResponse uploadImage = fileService.uploadMangaFile(file);
         return ApiResponse.<FileInfoResponse>builder()
+                .code(201)
                 .result(uploadImage)
                 .build();
     }
@@ -37,6 +39,7 @@ public class FileController {
     public ApiResponse<FileInfoResponse> uploadAvatarFile(@RequestPart("image") MultipartFile file) throws IOException {
         FileInfoResponse uploadImage = fileService.uploadUserFile(file);
         return ApiResponse.<FileInfoResponse>builder()
+                .code(201)
                 .result(uploadImage)
                 .build();
     }

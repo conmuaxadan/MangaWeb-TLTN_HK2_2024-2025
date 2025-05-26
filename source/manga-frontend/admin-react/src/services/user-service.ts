@@ -3,6 +3,7 @@ import { identityHttpClient } from "./http-client";
 import { ApiResponse } from "../interfaces/models/ApiResponse";
 import { ToggleUserStatusRequest, UserPageResponse, UserRequest, UserResponse } from "../interfaces/models/auth";
 import { logApiCall } from "../utils/api-logger";
+import {UserStatisticsResponse} from "../interfaces/models/profile.ts";
 
 class UserService {
     /**
@@ -14,7 +15,7 @@ class UserService {
         try {
             const apiResponse = await identityHttpClient.get<ApiResponse<UserResponse[]>>('/users');
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách người dùng", { position: "top-right" });
                 return null;
             }
@@ -47,7 +48,7 @@ class UserService {
 
             const apiResponse = await identityHttpClient.get<ApiResponse<UserPageResponse>>(url);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể lấy danh sách người dùng", { position: "top-right" });
                 return null;
             }
@@ -70,7 +71,7 @@ class UserService {
         try {
             const apiResponse = await identityHttpClient.get<ApiResponse<UserResponse>>(`/users/${username}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể lấy thông tin người dùng", { position: "top-right" });
                 return null;
             }
@@ -93,7 +94,7 @@ class UserService {
         try {
             const apiResponse = await identityHttpClient.post<ApiResponse<UserResponse>>('/users', request);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 201) {
                 toast.error(apiResponse.message || "Không thể tạo người dùng", { position: "top-right" });
                 return null;
             }
@@ -117,7 +118,7 @@ class UserService {
         try {
             const apiResponse = await identityHttpClient.put<ApiResponse<UserResponse>>('/users', request);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể cập nhật người dùng", { position: "top-right" });
                 return null;
             }
@@ -141,7 +142,7 @@ class UserService {
         try {
             const apiResponse = await identityHttpClient.delete<ApiResponse<void>>(`/users/${username}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể xóa người dùng", { position: "top-right" });
                 return false;
             }
@@ -156,6 +157,28 @@ class UserService {
     }
 
     /**
+     * Lấy thông tin profile của người dùng hiện tại
+     * @returns Thông tin profile hoặc null nếu thất bại
+     */
+    async getMyProfile(): Promise<UserResponse | null> {
+        logApiCall('getMyProfile');
+        try {
+            const apiResponse = await identityHttpClient.get<ApiResponse<UserResponse>>('/users/me');
+
+            if (apiResponse.code !== 200) {
+                console.error('Lỗi lấy thông tin profile của người dùng hiện tại:', apiResponse.message);
+                return null;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error('Lỗi lấy thông tin profile của người dùng hiện tại:', error);
+            // Không hiển thị thông báo lỗi vì đây là tính năng ngầm
+            return null;
+        }
+    }
+
+    /**
      * Lấy thông tin profile của người dùng theo ID
      * @param userId ID của người dùng
      * @returns Thông tin profile hoặc null nếu thất bại
@@ -165,7 +188,7 @@ class UserService {
         try {
             const apiResponse = await identityHttpClient.get<ApiResponse<UserResponse>>(`/users/id/${userId}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(`Lỗi lấy thông tin profile của người dùng ID ${userId}:`, apiResponse.message);
                 return null;
             }
@@ -205,7 +228,7 @@ class UserService {
                 }
             );
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể tải lên avatar", { position: "top-right" });
                 return null;
             }
@@ -239,7 +262,7 @@ class UserService {
                 request
             );
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || `Không thể ${enabled ? 'mở khóa' : 'khóa'} tài khoản`, { position: "top-right" });
                 return null;
             }
@@ -296,7 +319,7 @@ class UserService {
 
             const apiResponse = await identityHttpClient.get<ApiResponse<UserPageResponse>>(url);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể tìm kiếm người dùng", { position: "top-right" });
                 return null;
             }
@@ -310,62 +333,71 @@ class UserService {
     }
 
     /**
-     * Tìm kiếm và lọc người dùng theo nhiều tiêu chí
-     * @param keyword Từ khóa tìm kiếm (tùy chọn)
-     * @param roleId ID của vai trò cần lọc (tùy chọn)
-     * @param provider Nhà cung cấp xác thực cần lọc (tùy chọn)
-     * @param enabled Trạng thái tài khoản cần lọc (tùy chọn)
-     * @param page Số trang (bắt đầu từ 0)
-     * @param size Số lượng item trên mỗi trang
-     * @param sort Trường sắp xếp
-     * @returns Danh sách người dùng có phân trang đã được lọc
+     * Lấy thống kê tổng hợp về người dùng
+     * @returns Thống kê tổng hợp về người dùng hoặc null nếu thất bại
      */
-    async filterUsers(
-        keyword?: string,
-        roleId?: number,
-        provider?: string,
-        enabled?: boolean,
-        page: number = 0,
-        size: number = 10,
-        sort: string = 'username'
-    ): Promise<UserPageResponse | null> {
-        logApiCall('filterUsers');
+    async getUserStatistics(): Promise<UserStatisticsResponse | null> {
+        logApiCall('getUserStatistics');
         try {
-            // Xây dựng URL cơ bản với các tham số phân trang
-            let url = `/users/filter?page=${page}&size=${size}&sort=${sort}`;
+            const apiResponse = await identityHttpClient.get<ApiResponse<UserStatisticsResponse>>('/users/statistics');
 
-            // Thêm các tham số lọc tùy chọn nếu có
-            if (keyword && keyword.trim() !== '') {
-                url += `&keyword=${encodeURIComponent(keyword)}`;
-            }
-
-            if (roleId !== undefined) {
-                url += `&roleId=${roleId}`;
-            }
-
-            if (provider) {
-                url += `&provider=${provider}`;
-            }
-
-            if (enabled !== undefined) {
-                url += `&enabled=${enabled}`;
-            }
-
-            const apiResponse = await identityHttpClient.get<ApiResponse<UserPageResponse>>(url);
-
-            if (apiResponse.code !== 1000) {
-                toast.error(apiResponse.message || "Không thể lọc danh sách người dùng", { position: "top-right" });
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Không thể lấy thống kê người dùng", { position: "top-right" });
                 return null;
             }
 
             return apiResponse.result;
         } catch (error) {
-            console.error("Lỗi lọc danh sách người dùng:", error);
-            toast.error("Đã xảy ra lỗi khi lọc danh sách người dùng", { position: "top-right" });
+            console.error("Lỗi lấy thống kê người dùng:", error);
+            toast.error("Đã xảy ra lỗi khi lấy thống kê người dùng", { position: "top-right" });
             return null;
         }
     }
+
+    /**
+     * Lấy tổng số người dùng
+     * @returns Tổng số người dùng hoặc 0 nếu thất bại
+     */
+    async getTotalUsers(): Promise<number> {
+        logApiCall('getTotalUsers');
+        try {
+            const apiResponse = await identityHttpClient.get<ApiResponse<number>>('/users/statistics/total');
+
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Không thể lấy tổng số người dùng", { position: "top-right" });
+                return 0;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error("Lỗi lấy tổng số người dùng:", error);
+            return 0;
+        }
+    }
+
+    /**
+     * Lấy số người dùng mới trong ngày
+     * @returns Số người dùng mới trong ngày hoặc 0 nếu thất bại
+     */
+    async getNewUsersToday(): Promise<number> {
+        logApiCall('getNewUsersToday');
+        try {
+            const apiResponse = await identityHttpClient.get<ApiResponse<number>>('/users/statistics/today');
+
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Không thể lấy số người dùng mới trong ngày", { position: "top-right" });
+                return 0;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error("Lỗi lấy số người dùng mới trong ngày:", error);
+            return 0;
+        }
+    }
 }
+
+
 
 // Export singleton instance
 const userService = new UserService();

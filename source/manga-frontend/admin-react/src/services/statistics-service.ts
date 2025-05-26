@@ -1,4 +1,4 @@
-import {  historyHttpClient } from './http-client';
+import {historyHttpClient} from './http-client';
 import mangaService from './manga-service';
 import userService from './user-service';
 import commentService from './comment-service';
@@ -45,7 +45,7 @@ const statisticsService = {
                 commentsToday: 0,
                 favoritesToday: 0,
                 viewsThisWeek: 0,
-                viewsThisMonth:0
+                viewsThisMonth: 0
             };
 
             console.log('Thông tin thống kê mặc định:', stats);
@@ -53,28 +53,14 @@ const statisticsService = {
             // Lấy tổng số người dùng và số người dùng mới trong ngày
             try {
                 // Lấy tổng số người dùng
-                const usersResponse = await userService.getUsersPaginated(0, 1);
-                console.log('Kết quả lấy tổng số người dùng:', usersResponse);
-                if (usersResponse && usersResponse.totalElements !== undefined) {
-                    stats.totalUsers = usersResponse.totalElements;
+                const totalUser = await userService.getTotalUsers();
+                if (totalUser) {
+                    stats.totalUsers = totalUser;
                 }
-
-                // Lấy danh sách người dùng mới nhất để đếm số người dùng mới trong ngày
-                const recentUsers = await userService.getUsersPaginated(0, 20, 'createdAt,desc');
-                if (recentUsers && recentUsers.content) {
-                    // Lấy ngày hiện tại (không bao gồm giờ, phút, giây)
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-
-                    // Đếm số người dùng có ngày tạo là ngày hôm nay
-                    const newUsersToday = recentUsers.content.filter((user: { createdAt: string | number | Date; }) => {
-                        if (!user.createdAt) return false;
-                        const createdDate = new Date(user.createdAt);
-                        return createdDate >= today;
-                    }).length;
-
+                // Lấy số người dùng mới trong ngày
+                const newUsersToday = await userService.getNewUsersToday();
+                if (newUsersToday) {
                     stats.newUsersToday = newUsersToday;
-                    console.log('Số người dùng mới trong ngày:', newUsersToday);
                 }
             } catch (error) {
                 console.error('Lỗi khi lấy thông tin người dùng:', error);
@@ -90,24 +76,9 @@ const statisticsService = {
                     // Cập nhật thống kê tổng số truyện và số truyện mới trong ngày
                     stats.totalMangas = mangaStats.activeMangas; // Chỉ đếm truyện chưa bị xóa
                     stats.newMangasToday = mangaStats.newMangasToday;
-
-                    console.log('Tổng số truyện (chưa bị xóa):', mangaStats.activeMangas);
-                    console.log('Số truyện mới trong ngày:', mangaStats.newMangasToday);
-                    console.log('Số truyện đã bị xóa:', mangaStats.deletedMangas);
                 }
             } catch (error) {
                 console.error('Lỗi khi lấy thống kê truyện:', error);
-
-                // Nếu không lấy được thống kê, thử sử dụng cách cũ để đếm tổng số truyện
-                try {
-                    const mangasResponse = await mangaService.searchManga('', 0, 1);
-                    console.log('Kết quả lấy tổng số truyện (cách cũ):', mangasResponse);
-                    if (mangasResponse && mangasResponse.totalElements !== undefined) {
-                        stats.totalMangas = mangasResponse.totalElements;
-                    }
-                } catch (innerError) {
-                    console.error('Lỗi khi lấy tổng số truyện (cách cũ):', innerError);
-                }
             }
 
             // Lấy tổng lượt xem từ history service
@@ -196,7 +167,7 @@ const statisticsService = {
             const response = await historyHttpClient.get<ApiResponse<ViewsByDayResponse[]>>(`/statistics/by-day?days=${days}`);
             console.log('Kết quả lấy lượt xem theo ngày:', response);
 
-            if (response && response.code === 1000 && response.result) {
+            if (response && response.code === 200 && response.result) {
                 return response.result;
             }
 
@@ -220,7 +191,7 @@ const statisticsService = {
             const response = await historyHttpClient.get<ApiResponse<ViewsByDayResponse[]>>(`/statistics/by-day?startDate=${startDate}&endDate=${endDate}`);
             console.log('Kết quả lấy lượt xem theo date range:', response);
 
-            if (response && response.code === 1000 && response.result) {
+            if (response && response.code === 200 && response.result) {
                 return response.result;
             }
 
@@ -245,7 +216,7 @@ const statisticsService = {
             const response = await historyHttpClient.get<ApiResponse<MangaViewsResponse[]>>(`/statistics/by-manga?startDate=${startDate}&endDate=${endDate}&limit=${limit}`);
             console.log('Kết quả lấy lượt xem theo truyện date range:', response);
 
-            if (response && response.code === 1000 && response.result) {
+            if (response && response.code === 200 && response.result) {
                 return response.result;
             }
 
@@ -269,7 +240,7 @@ const statisticsService = {
             const response = await historyHttpClient.get<ApiResponse<MangaViewsResponse[]>>(`/statistics/by-manga?days=${days}&limit=${limit}`);
             console.log('Kết quả lấy lượt xem theo truyện:', response);
 
-            if (response && response.code === 1000 && response.result) {
+            if (response && response.code === 200 && response.result) {
                 return response.result;
             }
 

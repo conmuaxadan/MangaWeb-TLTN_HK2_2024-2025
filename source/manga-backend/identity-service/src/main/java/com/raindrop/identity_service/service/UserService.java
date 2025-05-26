@@ -588,7 +588,7 @@ public class UserService {
 
             // Upload ảnh mới
             var uploadResponse = uploadClient.uploadAvatar(header, file);
-            if (uploadResponse.getCode() != 1000 || uploadResponse.getResult() == null) {
+            if (uploadResponse.getCode() != 201 || uploadResponse.getResult() == null) {
                 log.error("Failed to upload avatar: {}", uploadResponse.getMessage());
                 throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
             }

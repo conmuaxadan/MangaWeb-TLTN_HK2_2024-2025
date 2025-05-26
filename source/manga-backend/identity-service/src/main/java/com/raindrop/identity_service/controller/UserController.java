@@ -34,12 +34,13 @@ import java.util.List;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @Slf4j
 public class UserController {
-     UserService userService;
-     UserMapper userMapper;
+    UserService userService;
+    UserMapper userMapper;
 
     @PostMapping
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserRequest request) {
         return ApiResponse.<UserResponse>builder()
+                .code(201)
                 .message("User created successfully")
                 .result(userService.createUser(request))
                 .build();
@@ -54,6 +55,7 @@ public class UserController {
     }
 
     @GetMapping("/paginated")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<Page<UserResponse>> getAllUsersPaginated(
             @PageableDefault(size = 10, sort = "username") Pageable pageable) {
         return ApiResponse.<Page<UserResponse>>builder()
@@ -64,15 +66,16 @@ public class UserController {
 
     /**
      * Tìm kiếm người dùng theo từ khóa và phân trang (được nâng cấp để hỗ trợ bộ lọc nâng cao)
-     * @param keyword Từ khóa tìm kiếm
-     * @param roleId ID của vai trò (tùy chọn)
+     *
+     * @param keyword  Từ khóa tìm kiếm
+     * @param roleId   ID của vai trò (tùy chọn)
      * @param provider Nhà cung cấp xác thực (tùy chọn)
-     * @param enabled Trạng thái tài khoản (tùy chọn)
+     * @param enabled  Trạng thái tài khoản (tùy chọn)
      * @param pageable Thông tin phân trang
      * @return Danh sách người dùng phân trang phù hợp với các tiêu chí tìm kiếm và lọc
      */
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<Page<UserResponse>> searchUsers(
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "roleId", required = false) Integer roleId,
@@ -87,13 +90,13 @@ public class UserController {
                 .build();
     }
 
-    @GetMapping("/{username}")
-    ApiResponse<UserResponse> getUserByUsername(@PathVariable String username) {
-        return ApiResponse.<UserResponse>builder()
-                .message("User retrieved successfully")
-                .result(userService.getUserByUsername(username))
-                .build();
-    }
+//    @GetMapping("/{username}")
+//    ApiResponse<UserResponse> getUserByUsername(@PathVariable String username) {
+//        return ApiResponse.<UserResponse>builder()
+//                .message("User retrieved successfully")
+//                .result(userService.getUserByUsername(username))
+//                .build();
+//    }
 
     @GetMapping("/id/{userId}")
     ApiResponse<UserResponse> getUserByUserId(@PathVariable String userId) {
@@ -122,7 +125,8 @@ public class UserController {
 
     /**
      * Cập nhật ảnh đại diện của người dùng hiện tại
-     * @param jwt JWT token của người dùng
+     *
+     * @param jwt  JWT token của người dùng
      * @param file File ảnh đại diện
      * @return Thông tin người dùng đã cập nhật
      */
@@ -137,7 +141,6 @@ public class UserController {
         UserResponse response = userService.updateAvatar(userId, file);
 
         return ApiResponse.<UserResponse>builder()
-                .code(1000)
                 .message("Avatar updated successfully")
                 .result(response)
                 .build();
@@ -145,8 +148,9 @@ public class UserController {
 
     /**
      * Cập nhật ảnh đại diện của người dùng khác (chỉ dành cho admin)
+     *
      * @param userId ID của người dùng cần cập nhật
-     * @param file File ảnh đại diện
+     * @param file   File ảnh đại diện
      * @return Thông tin người dùng đã cập nhật
      */
     @PostMapping(value = "/{userId}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -160,13 +164,13 @@ public class UserController {
         UserResponse response = userService.updateAvatar(userId, file);
 
         return ApiResponse.<UserResponse>builder()
-                .code(1000)
                 .message("Avatar updated successfully")
                 .result(response)
                 .build();
     }
 
     @DeleteMapping("/{username}")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<Void> deleteUser(@PathVariable String username) {
         userService.deleteUserByUsername(username);
         return ApiResponse.<Void>builder()
@@ -176,18 +180,18 @@ public class UserController {
 
     /**
      * Xóa ảnh đại diện của người dùng (chỉ dành cho admin)
+     *
      * @param userId ID của người dùng cần xóa avatar
      * @return Thông tin người dùng đã cập nhật
      */
     @DeleteMapping("/{userId}/avatar")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<UserResponse> deleteUserAvatar(@PathVariable String userId) {
         log.info("Admin deleting avatar for user {}", userId);
 
         UserResponse response = userService.deleteAvatar(userId);
 
         return ApiResponse.<UserResponse>builder()
-                .code(1000)
                 .message("Avatar deleted successfully")
                 .result(response)
                 .build();
@@ -195,6 +199,7 @@ public class UserController {
 
     /**
      * Đổi mật khẩu của người dùng hiện tại
+     *
      * @param request Yêu cầu đổi mật khẩu
      * @return Thông báo kết quả
      */
@@ -203,7 +208,6 @@ public class UserController {
         log.info("Change password request received");
         userService.changePassword(request);
         return ApiResponse.<Void>builder()
-                .code(1000)
                 .message("Password changed successfully")
                 .build();
     }
@@ -219,18 +223,18 @@ public class UserController {
         userService.updateDisplayName(userId, request);
         // Trả về thông tin người dùng đã cập nhật
         return ApiResponse.<Void>builder()
-                .code(1000)
                 .message("User updated successfully")
                 .build();
     }
 
     /**
      * Khóa hoặc mở khóa tài khoản người dùng
+     *
      * @param request Yêu cầu thay đổi trạng thái
      * @return Thông tin người dùng đã cập nhật
      */
     @PostMapping("/status")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<UserResponse> toggleUserStatus(@RequestBody @Valid ToggleUserStatusRequest request) {
         log.info("Received request to {} user with ID: {}", request.isEnabled() ? "enable" : "disable", request.getUserId());
         return ApiResponse.<UserResponse>builder()
@@ -241,14 +245,14 @@ public class UserController {
 
     /**
      * Lấy thống kê tổng hợp về người dùng
+     *
      * @return Thống kê tổng hợp về người dùng
      */
     @GetMapping("/statistics")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<UserStatisticsResponse> getUserStatistics() {
         log.info("Getting user statistics");
         return ApiResponse.<UserStatisticsResponse>builder()
-                .code(1000)
                 .message("User statistics retrieved successfully")
                 .result(userService.getUserStatistics())
                 .build();
@@ -256,13 +260,14 @@ public class UserController {
 
     /**
      * Lấy tổng số người dùng
+     *
      * @return Tổng số người dùng
      */
     @GetMapping("/statistics/total")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<Long> getTotalUsers() {
         log.info("Getting total users");
         return ApiResponse.<Long>builder()
-                .code(1000)
                 .message("Total users retrieved successfully")
                 .result(userService.getUserStatistics().getTotalUsers())
                 .build();
@@ -270,13 +275,14 @@ public class UserController {
 
     /**
      * Lấy số người dùng mới trong ngày
+     *
      * @return Số người dùng mới trong ngày
      */
     @GetMapping("/statistics/today")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<Long> getNewUsersToday() {
         log.info("Getting new users today");
         return ApiResponse.<Long>builder()
-                .code(1000)
                 .message("New users today retrieved successfully")
                 .result(userService.getUserStatistics().getNewUsersToday())
                 .build();

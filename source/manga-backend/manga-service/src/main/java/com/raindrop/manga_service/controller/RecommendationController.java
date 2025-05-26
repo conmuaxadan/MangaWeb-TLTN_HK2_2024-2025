@@ -33,24 +33,19 @@ public class RecommendationController {
             @RequestParam(required = false) Integer limit
     ) {
         log.info("Getting recommendations by genre for user: {}, limit: {}", userId, limit);
-
         log.info("Calling recommendationService.getRecommendationsByGenre for user: {}, limit: {}", userId, limit);
         List<MangaSummaryResponse> recommendations = recommendationService.getRecommendationsByGenreSummary(userId, limit);
 
         if (recommendations.isEmpty()) {
             log.info("No recommendations found for user {}", userId);
             return ApiResponse.<List<MangaSummaryResponse>>builder()
-                    .code(1000)
                     .message("No recommendations found")
                     .result(recommendations)
                     .build();
         }
-
         log.info("Found {} recommendations for user {}", recommendations.size(), userId);
-
         log.info("Returning {} recommendations for user {}", recommendations.size(), userId);
         return ApiResponse.<List<MangaSummaryResponse>>builder()
-                .code(1000)
                 .message("Recommendations retrieved successfully")
                 .result(recommendations)
                 .build();

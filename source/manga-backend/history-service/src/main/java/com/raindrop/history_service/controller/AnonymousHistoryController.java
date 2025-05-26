@@ -42,7 +42,7 @@ public class AnonymousHistoryController {
         AnonymousHistoryResponse response = anonymousHistoryService.markChapterAsRead(request, ipAddress);
 
         return ApiResponse.<AnonymousHistoryResponse>builder()
-                .code(1000)
+                .code(201)
                 .message("Chapter marked as read successfully")
                 .result(response)
                 .build();
@@ -64,7 +64,6 @@ public class AnonymousHistoryController {
         Page<AnonymousHistoryResponse> readingHistory = anonymousHistoryService.getReadingHistory(sessionId, pageable);
 
         return ApiResponse.<Page<AnonymousHistoryResponse>>builder()
-                .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
                 .build();
@@ -86,7 +85,6 @@ public class AnonymousHistoryController {
         AnonymousHistoryResponse readingHistory = anonymousHistoryService.getMangaReadingHistory(sessionId, mangaId);
 
         return ApiResponse.<AnonymousHistoryResponse>builder()
-                .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
                 .build();
@@ -101,7 +99,6 @@ public class AnonymousHistoryController {
         Long count = anonymousHistoryService.countDistinctSessions();
 
         return ApiResponse.<Long>builder()
-                .code(1000)
                 .message("Distinct sessions counted successfully")
                 .result(count)
                 .build();
@@ -116,7 +113,6 @@ public class AnonymousHistoryController {
         Long count = anonymousHistoryService.countTotalViews();
 
         return ApiResponse.<Long>builder()
-                .code(1000)
                 .message("Total views counted successfully")
                 .result(count)
                 .build();
@@ -131,7 +127,6 @@ public class AnonymousHistoryController {
         Long count = anonymousHistoryService.countTodayViews();
 
         return ApiResponse.<Long>builder()
-                .code(1000)
                 .message("Today views counted successfully")
                 .result(count)
                 .build();
@@ -147,7 +142,6 @@ public class AnonymousHistoryController {
         Long count = anonymousHistoryService.countDistinctSessionsByMangaId(mangaId);
 
         return ApiResponse.<Long>builder()
-                .code(1000)
                 .message("Distinct sessions counted successfully")
                 .result(count)
                 .build();
@@ -163,7 +157,6 @@ public class AnonymousHistoryController {
         Long count = anonymousHistoryService.countDistinctSessionsByChapterId(chapterId);
 
         return ApiResponse.<Long>builder()
-                .code(1000)
                 .message("Distinct sessions counted successfully")
                 .result(count)
                 .build();

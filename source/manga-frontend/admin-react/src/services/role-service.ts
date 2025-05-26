@@ -14,7 +14,7 @@ class RoleService {
         try {
             const apiResponse = await identityHttpClient.get<ApiResponse<RoleResponse[]>>('/roles');
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error("Không thể lấy danh sách vai trò:", apiResponse.message);
                 return null;
             }
@@ -40,7 +40,7 @@ class RoleService {
                 `/roles/paginated?page=${page}&size=${size}&sort=${sort}`
             );
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error("Không thể lấy danh sách vai trò phân trang:", apiResponse.message);
                 return null;
             }
@@ -62,7 +62,7 @@ class RoleService {
         try {
             const apiResponse = await identityHttpClient.post<ApiResponse<RoleResponse>>('/roles', roleRequest);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 201) {
                 toast.error(apiResponse.message || "Không thể tạo vai trò", { position: "top-right" });
                 return null;
             }
@@ -91,7 +91,7 @@ class RoleService {
             const apiResponse = await identityHttpClient.put<ApiResponse<RoleResponse>>(`/roles/${roleId}`, roleRequest);
             console.log('Kết quả API cập nhật vai trò:', apiResponse);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể cập nhật vai trò", { position: "top-right" });
                 return null;
             }
@@ -116,7 +116,7 @@ class RoleService {
         logApiCall('deleteRole');
 
         // Kiểm tra xem có phải vai trò đặc biệt không (ADMIN, USER)
-        if (roleName === 'ADMIN' || roleName === 'USER') {
+        if (roleName === 'ROLE_ADMIN' || roleName === 'ROLE_USER') {
             // Không cho phép xóa vai trò đặc biệt
             toast.error(`Không thể xóa vai trò ${roleName} vì đây là vai trò hệ thống`, { position: "top-right" });
             return false;
@@ -125,7 +125,7 @@ class RoleService {
         try {
             const apiResponse = await identityHttpClient.delete<ApiResponse<void>>(`/roles/${roleId}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể xóa vai trò", { position: "top-right" });
                 return false;
             }
@@ -147,7 +147,7 @@ class RoleService {
         try {
             const apiResponse = await identityHttpClient.get<ApiResponse<PermissionResponse[]>>('/permissions');
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error("Không thể lấy danh sách quyền hạn:", apiResponse.message);
                 return null;
             }
@@ -169,7 +169,7 @@ class RoleService {
         try {
             const apiResponse = await identityHttpClient.post<ApiResponse<PermissionResponse>>('/permissions', permissionRequest);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 201) {
                 toast.error(apiResponse.message || "Không thể tạo quyền hạn", { position: "top-right" });
                 return null;
             }
@@ -194,7 +194,7 @@ class RoleService {
         try {
             const apiResponse = await identityHttpClient.delete<ApiResponse<void>>(`/permissions/${permissionId}`);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể xóa quyền hạn", { position: "top-right" });
                 return false;
             }
@@ -220,7 +220,7 @@ class RoleService {
             const apiResponse = await identityHttpClient.get<ApiResponse<RoleResponse>>(`/roles/${roleId}`);
             console.log(`RoleService: Kết quả API lấy thông tin vai trò ID ${roleId}:`, apiResponse);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error(`Không thể lấy thông tin vai trò ID ${roleId}: ${apiResponse.message}`);
                 return null;
             }
@@ -246,7 +246,7 @@ class RoleService {
             const apiResponse = await identityHttpClient.put<ApiResponse<PermissionResponse>>(`/permissions/${permissionId}`, permissionRequest);
             console.log('Kết quả API cập nhật quyền hạn:', apiResponse);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể cập nhật quyền hạn", { position: "top-right" });
                 return null;
             }

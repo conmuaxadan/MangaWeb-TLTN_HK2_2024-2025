@@ -20,7 +20,6 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,7 +32,7 @@ public class MangaController {
     MangaService mangaService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<MangaResponse> createManga(
             @RequestParam("title") String title,
             @RequestParam("author") String author,
@@ -68,6 +67,7 @@ public class MangaController {
                 .build();
 
         return ApiResponse.<MangaResponse>builder()
+                .code(201)
                 .message("Manga created successfully")
                 .result(mangaService.createManga(request))
                 .build();
@@ -142,7 +142,7 @@ public class MangaController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<MangaResponse> updateManga(
             @PathVariable String id,
             @RequestParam("title") String title,
@@ -186,7 +186,7 @@ public class MangaController {
      * @return Thông báo xóa thành công
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Void> deleteManga(
             @PathVariable String id,
             @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt
@@ -204,7 +204,7 @@ public class MangaController {
      * @return Danh sách manga đã bị xóa
      */
     @GetMapping("/deleted")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Page<MangaResponse>> getDeletedMangas(Pageable pageable) {
         return ApiResponse.<Page<MangaResponse>>builder()
                 .message("Deleted mangas retrieved successfully")
@@ -218,7 +218,7 @@ public class MangaController {
      * @return Thông tin manga đã khôi phục
      */
     @PostMapping("/{id}/restore")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<MangaResponse> restoreManga(@PathVariable String id) {
         return ApiResponse.<MangaResponse>builder()
                 .message("Manga restored successfully")
@@ -267,6 +267,7 @@ public class MangaController {
      * @return Danh sách truyện phù hợp với từ khóa
      */
     @GetMapping("/search/quick")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<List<MangaQuickSearchResponse>> quickSearchManga(
             @RequestParam String keyword,
             @RequestParam(required = false, defaultValue = "10") int limit
@@ -285,6 +286,7 @@ public class MangaController {
      * @return Danh sách manga thuộc thể loại
      */
     @GetMapping("/genre/{genreName}")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Page<MangaResponse>> findByGenre(
             @PathVariable String genreName,
             @PageableDefault(size = 10) Pageable pageable
@@ -301,6 +303,7 @@ public class MangaController {
      * @return Số chapter cao nhất
      */
     @GetMapping("/{id}/highest-chapter-number")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Double> getHighestChapterNumber(@PathVariable String id) {
         return ApiResponse.<Double>builder()
                 .message("Highest chapter number retrieved successfully")
@@ -314,6 +317,7 @@ public class MangaController {
      * @return Tổng số truyện
      */
     @GetMapping("/count")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Long> countMangas(@RequestParam(required = false, defaultValue = "false") boolean includeDeleted) {
         return ApiResponse.<Long>builder()
                 .message("Manga count retrieved successfully")
@@ -326,25 +330,11 @@ public class MangaController {
      * @return Thống kê tổng hợp về truyện
      */
     @GetMapping("/statistics")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<MangaStatisticsResponse> getMangaStatistics() {
         return ApiResponse.<MangaStatisticsResponse>builder()
                 .message("Manga statistics retrieved successfully")
                 .result(mangaService.getMangaStatistics())
-                .build();
-    }
-
-    /**
-     * Lấy danh sách truyện được xem nhiều nhất
-     * @param limit Số lượng truyện cần lấy (mặc định là 10)
-     * @return Danh sách truyện được xem nhiều nhất
-     */
-    @GetMapping("/most-viewed")
-    ApiResponse<List<MostViewedMangaResponse>> getMostViewedMangas(
-            @RequestParam(required = false, defaultValue = "10") int limit
-    ) {
-        return ApiResponse.<List<MostViewedMangaResponse>>builder()
-                .message("Most viewed mangas retrieved successfully")
-                .result(mangaService.getMostViewedMangas(limit))
                 .build();
     }
 }

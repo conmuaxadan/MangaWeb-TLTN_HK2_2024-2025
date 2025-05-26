@@ -578,36 +578,36 @@ public class MangaService {
         }
     }
 
-    /**
-     * Lấy danh sách truyện được xem nhiều nhất
-     *
-     * @param limit Số lượng truyện cần lấy
-     * @return Danh sách truyện được xem nhiều nhất
-     */
-    public List<MostViewedMangaResponse> getMostViewedMangas(int limit) {
-        log.info("Getting {} most viewed mangas", limit);
-
-        // Lấy danh sách truyện được xem nhiều nhất
-        Pageable pageable = PageRequest.of(0, limit);
-        List<Manga> mostViewedMangas = mangaRepository.findByOrderByViewsDesc(pageable);
-
-        // Chuyển đổi sang response
-        return mostViewedMangas.stream()
-                .map(manga -> {
-                    // Lấy thể loại chính của truyện (nếu có)
-                    String mainGenre = manga.getGenres().isEmpty() ? "" :
-                            manga.getGenres().iterator().next().getName();
-
-                    return MostViewedMangaResponse.builder()
-                            .id(manga.getId())
-                            .title(manga.getTitle())
-                            .views(manga.getViews())
-                            .author(manga.getAuthor())
-                            .mainGenre(mainGenre)
-                            .build();
-                })
-                .collect(Collectors.toList());
-    }
+//    /**
+//     * Lấy danh sách truyện được xem nhiều nhất
+//     *
+//     * @param limit Số lượng truyện cần lấy
+//     * @return Danh sách truyện được xem nhiều nhất
+//     */
+//    public List<MostViewedMangaResponse> getMostViewedMangas(int limit) {
+//        log.info("Getting {} most viewed mangas", limit);
+//
+//        // Lấy danh sách truyện được xem nhiều nhất
+//        Pageable pageable = PageRequest.of(0, limit);
+//        List<Manga> mostViewedMangas = mangaRepository.findByOrderByViewsDesc(pageable);
+//
+//        // Chuyển đổi sang response
+//        return mostViewedMangas.stream()
+//                .map(manga -> {
+//                    // Lấy thể loại chính của truyện (nếu có)
+//                    String mainGenre = manga.getGenres().isEmpty() ? "" :
+//                            manga.getGenres().iterator().next().getName();
+//
+//                    return MostViewedMangaResponse.builder()
+//                            .id(manga.getId())
+//                            .title(manga.getTitle())
+//                            .views(manga.getViews())
+//                            .author(manga.getAuthor())
+//                            .mainGenre(mainGenre)
+//                            .build();
+//                })
+//                .collect(Collectors.toList());
+//    }
 
     /**
      * Lấy thống kê tổng hợp về truyện

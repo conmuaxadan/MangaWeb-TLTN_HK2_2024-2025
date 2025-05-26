@@ -34,7 +34,6 @@ public class HistoryController {
      * @return Danh sách lịch sử đọc có phân trang
      */
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public ApiResponse<Page<HistoryResponse>> getCurrentUserReadingHistory(
             @AuthenticationPrincipal Jwt jwt,
             @PageableDefault(size = 10, sort = "updatedAt") Pageable pageable
@@ -45,7 +44,6 @@ public class HistoryController {
         Page<HistoryResponse> readingHistory = historyService.getReadingHistory(userId, pageable);
 
         return ApiResponse.<Page<HistoryResponse>>builder()
-                .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
                 .build();
@@ -67,7 +65,6 @@ public class HistoryController {
         Page<HistoryResponse> readingHistory = historyService.getReadingHistory(userId, pageable);
 
         return ApiResponse.<Page<HistoryResponse>>builder()
-                .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
                 .build();
@@ -80,7 +77,6 @@ public class HistoryController {
      * @return Thông tin lịch sử đọc
      */
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     public ApiResponse<HistoryResponse> markChapterAsReadForCurrentUser(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody @Valid HistoryRequest request
@@ -91,7 +87,7 @@ public class HistoryController {
         HistoryResponse response = historyService.markChapterAsRead(userId, request);
 
         return ApiResponse.<HistoryResponse>builder()
-                .code(1000)
+                .code(201)
                 .message("Chapter marked as read successfully")
                 .result(response)
                 .build();
@@ -113,7 +109,7 @@ public class HistoryController {
         HistoryResponse response = historyService.markChapterAsRead(userId, request);
 
         return ApiResponse.<HistoryResponse>builder()
-                .code(1000)
+                .code(201)
                 .message("Chapter marked as read successfully")
                 .result(response)
                 .build();
@@ -136,7 +132,6 @@ public class HistoryController {
         HistoryResponse readingHistory = historyService.getMangaReadingHistory(userId, mangaId);
 
         return ApiResponse.<HistoryResponse>builder()
-                .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
                 .build();
@@ -158,7 +153,6 @@ public class HistoryController {
         HistoryResponse readingHistory = historyService.getMangaReadingHistory(userId, mangaId);
 
         return ApiResponse.<HistoryResponse>builder()
-                .code(1000)
                 .message("Reading history retrieved successfully")
                 .result(readingHistory)
                 .build();
@@ -171,7 +165,6 @@ public class HistoryController {
      * @return Danh sách lịch sử đọc gần đây
      */
     @GetMapping("/recent")
-    @PreAuthorize("isAuthenticated()")
     public ApiResponse<List<HistoryResponse>> getRecentReadingHistoryForCurrentUser(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam(defaultValue = "3") int limit
@@ -180,7 +173,6 @@ public class HistoryController {
         log.info("Getting recent reading history for current user {}, limit: {}", userId, limit);
         List<HistoryResponse> recentHistory = historyService.getRecentReadingHistory(userId, limit);
         return ApiResponse.<List<HistoryResponse>>builder()
-                .code(1000)
                 .message("Recent reading history retrieved successfully")
                 .result(recentHistory)
                 .build();
@@ -202,7 +194,6 @@ public class HistoryController {
         List<HistoryResponse> recentHistory = historyService.getRecentReadingHistory(userId, limit);
 
         return ApiResponse.<List<HistoryResponse>>builder()
-                .code(1000)
                 .message("Recent reading history retrieved successfully")
                 .result(recentHistory)
                 .build();
@@ -223,7 +214,6 @@ public class HistoryController {
         List<String> mangaIds = historyService.getAllReadMangaIds(userId);
 
         return ApiResponse.<List<String>>builder()
-                .code(1000)
                 .message("Read manga IDs retrieved successfully")
                 .result(mangaIds)
                 .build();
@@ -242,7 +232,6 @@ public class HistoryController {
         List<String> mangaIds = historyService.getAllReadMangaIds(userId);
 
         return ApiResponse.<List<String>>builder()
-                .code(1000)
                 .message("Read manga IDs retrieved successfully")
                 .result(mangaIds)
                 .build();

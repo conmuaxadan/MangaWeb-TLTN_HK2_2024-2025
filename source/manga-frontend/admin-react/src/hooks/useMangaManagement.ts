@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 export const useMangaManagement = (itemsPerPage: number = 10) => {
   // State cho danh sách manga
   const [mangas, setMangas] = useState<MangaManagementResponse[]>([]);
-  const [deletedMangas, setDeletedMangas] = useState<MangaResponse[]>([]);
+  const [deletedMangas] = useState<MangaResponse[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showDeleted, setShowDeleted] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -112,7 +112,7 @@ export const useMangaManagement = (itemsPerPage: number = 10) => {
       const newManga = await mangaService.createManga(formData);
       if (newManga) {
         setMangas(prev => {
-          return [...prev, newManga];
+          return [...prev, {...newManga}];
         });
         toast.success('Thêm truyện thành công', { position: 'top-right' });
         return newManga;
@@ -134,7 +134,6 @@ export const useMangaManagement = (itemsPerPage: number = 10) => {
       const updatedManga = await mangaService.updateManga(mangaId, formData);
       if (updatedManga) {
         setMangas(mangas.map(manga => manga.id === updatedManga.id ? updatedManga : manga));
-        toast.success('Cập nhật truyện thành công', { position: 'top-right' });
         return updatedManga;
       }
       return null;

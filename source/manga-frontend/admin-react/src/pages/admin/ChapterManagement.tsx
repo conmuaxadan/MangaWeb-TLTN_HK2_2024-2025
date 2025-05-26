@@ -23,6 +23,7 @@ const ChapterManagement: React.FC = () => {
     showingTo,
     totalItems,
     itemsPerPage,
+    setItemsPerPage,
 
     // Filter
     filterManga,
@@ -42,7 +43,7 @@ const ChapterManagement: React.FC = () => {
     createChapter,
     updateChapter,
     deleteChapter
-  } = useChapterManagement(10); // 10 items per page
+  } = useChapterManagement(10); // Bắt đầu với 10 items per page
 
   // State cho modal và form
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -55,6 +56,14 @@ const ChapterManagement: React.FC = () => {
       setCurrentPage(page);
     }, 300),
     [setCurrentPage]
+  );
+
+  // Xử lý thay đổi kích thước trang
+  const handlePageSizeChange = useCallback(
+    (newSize: number) => {
+      setItemsPerPage(newSize);
+    },
+    [setItemsPerPage]
   );
 
   // Xử lý mở modal thêm chapter mới
@@ -102,6 +111,10 @@ const ChapterManagement: React.FC = () => {
   // Xử lý xóa chapter
   const handleDeleteChapter = async (chapter: ChapterResponse) => {
     if (window.confirm(`Bạn có chắc chắn muốn xóa chapter ${chapter.title}"?`)) {
+      if (chapter.id === undefined) {
+        console.error('Không thể xóa chapter');
+        return;
+      }
       await deleteChapter(chapter.id);
     }
   };
@@ -110,7 +123,8 @@ const ChapterManagement: React.FC = () => {
   console.log('ChapterManagement render:', {
     filterManga,
     selectedFilterManga: selectedFilterManga?.title || 'None',
-    currentChapters: currentChapters?.length || 0
+    currentChapters: currentChapters?.length || 0,
+    itemsPerPage
   });
 
   return (
@@ -310,10 +324,7 @@ const ChapterManagement: React.FC = () => {
         showingFrom={showingFrom}
         showingTo={showingTo}
         pageSize={itemsPerPage}
-        onPageSizeChange={(newSize) => {
-          // Note: Chapter management sử dụng fixed page size từ hook
-          console.log('Page size change not implemented for server-side pagination:', newSize);
-        }}
+        onPageSizeChange={handlePageSizeChange}
       />
     </div>
   );

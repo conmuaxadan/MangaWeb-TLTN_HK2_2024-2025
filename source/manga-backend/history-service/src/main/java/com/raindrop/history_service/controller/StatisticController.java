@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,12 +28,12 @@ public class StatisticController {
      * @return Thống kê tổng hợp về lượt xem
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<ViewStatisticsResponse> getViewStatistics() {
         log.info("Getting view statistics");
         ViewStatisticsResponse response = statisticService.getViewStatistics();
 
         return ApiResponse.<ViewStatisticsResponse>builder()
-                .code(1000)
                 .message("View statistics retrieved successfully")
                 .result(response)
                 .build();
@@ -45,6 +46,7 @@ public class StatisticController {
      * @return Số lượt xem theo loại thống kê
      */
     @GetMapping("/{type}")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<Long> getViewsByType(@PathVariable String type) {
         log.info("Getting views by type: {}", type);
         String message;
@@ -60,7 +62,6 @@ public class StatisticController {
         Long views = statisticService.getViewsByType(type);
 
         return ApiResponse.<Long>builder()
-                .code(1000)
                 .message(message)
                 .result(views)
                 .build();
@@ -75,6 +76,7 @@ public class StatisticController {
      * @return Danh sách thống kê lượt xem theo ngày
      */
     @GetMapping("/by-day")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<List<ViewsByDayResponse>> getViewsByDay(
             @RequestParam(required = false) Integer days,
             @RequestParam(required = false) String startDate,
@@ -99,7 +101,6 @@ public class StatisticController {
         }
 
         return ApiResponse.<List<ViewsByDayResponse>>builder()
-                .code(1000)
                 .message("Views by day retrieved successfully")
                 .result(viewsByDay)
                 .build();
@@ -115,6 +116,7 @@ public class StatisticController {
      * @return Danh sách thống kê lượt xem theo truyện
      */
     @GetMapping("/by-manga")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<List<MangaViewsResponse>> getViewsByManga(
             @RequestParam(required = false) Integer days,
             @RequestParam(required = false) String startDate,
@@ -125,7 +127,6 @@ public class StatisticController {
         log.info("Getting views by manga from {} to {}, limit: {}", startDate, endDate, limit);
         viewsByManga = statisticService.getViewsByMangaDateRange(startDate, endDate, limit);
         return ApiResponse.<List<MangaViewsResponse>>builder()
-                .code(1000)
                 .message("Views by manga retrieved successfully")
                 .result(viewsByManga)
                 .build();

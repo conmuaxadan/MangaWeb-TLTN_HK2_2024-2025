@@ -45,7 +45,7 @@ class HistoryService {
     async getUserReadingHistory(userId: string): Promise<ReadingHistoryResponse[] | null> {
         try {
             const apiResponse = await historyHttpClient.get<ApiResponse<ReadingHistoryPageResponse>>(
-                `/reading-histories/user/${userId}?page=0&size=100&sort=updatedAt,desc`
+                `/histories/user/${userId}?page=0&size=100&sort=updatedAt,desc`
             );
 
             if (apiResponse.code !== 1000) {
@@ -68,7 +68,7 @@ class HistoryService {
     async getMyMangaReadingHistory(mangaId: string): Promise<ReadingHistoryResponse | null> {
         try {
             const apiResponse = await historyHttpClient.get<ApiResponse<ReadingHistoryResponse>>(
-                `/reading-histories/manga/${mangaId}`
+                `/histories/manga/${mangaId}`
             );
 
             if (apiResponse.code !== 1000) {
@@ -92,7 +92,7 @@ class HistoryService {
     async getUserMangaReadingHistory(userId: string, mangaId: string): Promise<ReadingHistoryResponse | null> {
         try {
             const apiResponse = await historyHttpClient.get<ApiResponse<ReadingHistoryResponse>>(
-                `/reading-histories/user/${userId}/manga/${mangaId}`
+                `/histories/user/${userId}/manga/${mangaId}`
             );
 
             if (apiResponse.code !== 1000) {
@@ -123,7 +123,7 @@ class HistoryService {
             console.log('Sending reading history request:', request);
 
             const apiResponse = await historyHttpClient.post<ApiResponse<ReadingHistoryResponse>>(
-                '/reading-histories',
+                '/histories',
                 request
             );
 
@@ -135,37 +135,6 @@ class HistoryService {
             return apiResponse.result;
         } catch (error) {
             console.error(`Lỗi đánh dấu đã đọc chapter ${chapterId} của manga ${mangaId}:`, error);
-            return null;
-        }
-    }
-
-    /**
-     * Đánh dấu đã đọc chapter cho người dùng cụ thể
-     * @param userId ID của người dùng
-     * @param mangaId ID của manga
-     * @param chapterId ID của chapter
-     * @returns Thông tin lịch sử đọc hoặc null nếu thất bại
-     */
-    async markUserChapterAsRead(userId: string, mangaId: string, chapterId: string): Promise<ReadingHistoryResponse | null> {
-        try {
-            const request: ReadingHistoryRequest = {
-                mangaId,
-                chapterId,
-            };
-
-            const apiResponse = await historyHttpClient.post<ApiResponse<ReadingHistoryResponse>>(
-                `/reading-histories/user/${userId}`,
-                request
-            );
-
-            if (apiResponse.code !== 1000) {
-                console.error(apiResponse.message || "Không thể đánh dấu đã đọc chapter");
-                return null;
-            }
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error(`Lỗi đánh dấu đã đọc chapter ID ${chapterId} của manga ID ${mangaId}:`, error);
             return null;
         }
     }
@@ -192,12 +161,12 @@ class HistoryService {
             };
 
             console.log('Sending anonymous reading history request:', request);
-            console.log('API endpoint:', `${API_CONFIG.BASE_URL}/history/anonymous-reading-histories`);
+            console.log('API endpoint:', `${API_CONFIG.BASE_URL}/history/anonymous-histories`);
 
             let apiResponse;
             try {
                 apiResponse = await historyHttpClient.post<ApiResponse<AnonymousReadingHistoryResponse>>(
-                    '/anonymous-reading-histories',
+                    '/anonymous-histories',
                     request
                 );
 
@@ -219,61 +188,8 @@ class HistoryService {
             return null;
         }
     }
-
-    /**
-     * Lấy lịch sử đọc của phiên không đăng nhập
-     * @param sessionId ID phiên của người dùng
-     * @returns Danh sách lịch sử đọc hoặc null nếu thất bại
-     */
-    async getAnonymousReadingHistory(sessionId: string): Promise<AnonymousReadingHistoryResponse[] | null> {
-        try {
-            const apiResponse = await historyHttpClient.get<ApiResponse<Page<AnonymousReadingHistoryResponse>>>(
-                `/anonymous-reading-histories/session/${sessionId}?page=0&size=100&sort=updatedAt,desc`
-            );
-
-            if (apiResponse.code !== 1000) {
-                console.error(apiResponse.message || "Không thể lấy lịch sử đọc ẩn danh");
-                return null;
-            }
-
-            return apiResponse.result.content || [];
-        } catch (error) {
-            console.error(`Lỗi lấy lịch sử đọc ẩn danh cho phiên ${sessionId}:`, error);
-            return null;
-        }
-    }
 }
 
 // Tạo một instance của HistoryService
 const historyService = new HistoryService();
 export default historyService;
-
-// Định nghĩa kiểu Page cho TypeScript
-interface Page<T> {
-    content: T[];
-    pageable: {
-        pageNumber: number;
-        pageSize: number;
-        sort: {
-            empty: boolean;
-            sorted: boolean;
-            unsorted: boolean;
-        };
-        offset: number;
-        paged: boolean;
-        unpaged: boolean;
-    };
-    last: boolean;
-    totalElements: number;
-    totalPages: number;
-    size: number;
-    number: number;
-    sort: {
-        empty: boolean;
-        sorted: boolean;
-        unsorted: boolean;
-    };
-    first: boolean;
-    numberOfElements: number;
-    empty: boolean;
-}

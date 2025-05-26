@@ -18,7 +18,7 @@ class AuthService {
             const request: AuthRequest = { username, password };
             const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/tokens', request);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 // Xử lý các mã lỗi cụ thể
                 if (apiResponse.code === 1007) {
                     toast.error("Tài khoản của bạn đã bị khóa", {position: "top-right"});
@@ -45,16 +45,6 @@ class AuthService {
             return apiResponse.result;
         } catch (error) {
             console.error("Lỗi đăng nhập:", error);
-
-            // Kiểm tra xem có phải lỗi từ API không
-            if (error.response && error.response.data) {
-                const apiError = error.response.data;
-                if (apiError.code === 1007) {
-                    toast.error("Tài khoản của bạn đã bị khóa", {position: "top-right"});
-                    return false;
-                }
-            }
-
             toast.error("Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại sau.", {position: "top-right"});
             return false;
         }
@@ -112,7 +102,7 @@ class AuthService {
             const request = { refreshToken };
             const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/tokens/refresh', request);
 
-            if (apiResponse.code !== 1000) {
+            if (apiResponse.code !== 200) {
                 console.error("Làm mới token thất bại:", apiResponse.message);
                 return false;
             }
@@ -137,15 +127,6 @@ class AuthService {
             return false;
         }
     }
-
-    /**
-     * Kiểm tra xem người dùng đã đăng nhập hay chưa
-     * @returns true nếu đã đăng nhập, false nếu chưa
-     */
-    isLoggedIn(): boolean {
-        return !!localStorage.getItem(TOKEN_STORAGE.ACCESS_TOKEN);
-    }
-
 
     /**
      * Lấy thông tin người dùng từ token JWT
@@ -195,37 +176,6 @@ class AuthService {
         } catch (error) {
             console.error("Lỗi lấy thông tin người dùng từ token:", error);
             return null;
-        }
-    }
-
-    /**
-     * Giải mã JWT token để lấy thông tin
-     * @param token JWT token
-     * @returns Thông tin từ token hoặc false nếu thất bại
-     */
-    decodeToken(token: string): { userId: string; email: string; authProvider: string } | false {
-        try {
-            // Tách phần payload của JWT (phần thứ 2 sau dấu .)
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(
-                atob(base64)
-                    .split('')
-                    .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                    .join('')
-            );
-
-            const payload = JSON.parse(jsonPayload);
-            console.log('JWT payload:', payload);
-
-            return {
-                userId: payload.sub, // ID người dùng là subject của token
-                email: payload.email || '', // Email được thêm vào claim
-                authProvider: payload.authProvider || 'LOCAL' // Loại tài khoản (LOCAL, GOOGLE, etc.)
-            };
-        } catch (error) {
-            console.error("Lỗi giải mã JWT token:", error);
-            return false;
         }
     }
 }

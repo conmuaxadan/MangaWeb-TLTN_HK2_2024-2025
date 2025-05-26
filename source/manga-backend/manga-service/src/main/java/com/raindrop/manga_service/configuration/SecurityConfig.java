@@ -48,9 +48,6 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, "/mangas/search/advanced").permitAll() // Cho phép POST cho tìm kiếm nâng cao
-                        .requestMatchers(HttpMethod.POST, "/mangas", "/chapters", "/genres").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/mangas/{id}", "/chapters/{id}", "/genres/{id}").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/mangas/{id}", "/chapters/{id}", "/genres/{id}").hasAuthority("ROLE_ADMIN")
                         .anyRequest()
                         .authenticated());
 

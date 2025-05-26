@@ -27,7 +27,7 @@ public class ChapterController {
     ChapterService chapterService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<ChapterResponse> createChapter(
             @RequestParam("chapterNumber") String chapterNumber,
             @RequestParam("mangaId") String mangaId,
@@ -44,6 +44,7 @@ public class ChapterController {
         log.info("Create chapter request: {}", request);
 
         return ApiResponse.<ChapterResponse>builder()
+                .code(201)
                 .message("Chapter created successfully")
                 .result(chapterService.createChapter(request))
                 .build();
@@ -107,7 +108,7 @@ public class ChapterController {
     }
 
     /**
-     * Phương thức mới để lấy danh sách chapter của một manga theo chuẩn REST
+     * Phương thức mới để lấy danh sách chapter của một manga
      * @param mangaId ID của manga
      * @return Danh sách chapter của manga
      */
@@ -141,7 +142,7 @@ public class ChapterController {
      * @return Thông tin chapter sau khi cập nhật
      */
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<ChapterResponse> updateChapter(
             @PathVariable String id,
             @RequestParam(value = "title", required = false, defaultValue = "") String title,
@@ -168,7 +169,7 @@ public class ChapterController {
      * @return Thông tin chapter sau khi cập nhật
      */
     @PutMapping(value = "/{id}/pages/{pageIndex}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<ChapterResponse> updateChapterPage(
             @PathVariable String id,
             @PathVariable int pageIndex,
@@ -188,7 +189,7 @@ public class ChapterController {
      * @return Thông báo xác nhận xóa thành công
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Void> deleteChapter(@PathVariable String id) {
         log.info("Delete chapter request: id={}", id);
         chapterService.deleteChapter(id);
@@ -204,7 +205,7 @@ public class ChapterController {
      * @return Thông tin chapter sau khi xóa trang
      */
     @DeleteMapping("/{id}/pages/{pageIndex}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<ChapterResponse> deleteChapterPage(
             @PathVariable String id,
             @PathVariable int pageIndex

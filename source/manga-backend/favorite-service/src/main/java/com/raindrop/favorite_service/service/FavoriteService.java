@@ -128,7 +128,7 @@ public class FavoriteService {
         // Bổ sung thông tin manga từ Manga Service
         try {
             ApiResponse<MangaInfoResponse> mangaResponse = mangaClient.getMangaById(response.getMangaId());
-            if (mangaResponse != null && mangaResponse.getCode() == 1000 && mangaResponse.getResult() != null) {
+            if (mangaResponse != null && mangaResponse.getCode() == 200 && mangaResponse.getResult() != null) {
                 MangaInfoResponse mangaInfo = mangaResponse.getResult();
                 response.setMangaTitle(mangaInfo.getTitle());
                 response.setMangaCoverUrl(mangaInfo.getCoverUrl());
