@@ -12,6 +12,6 @@ import lombok.experimental.FieldDefaults;
 public class ToggleUserStatusRequest {
     @NotBlank(message = "USER_ID_REQUIRED")
     String userId;
-
     boolean enabled;
+    String reason;
 }

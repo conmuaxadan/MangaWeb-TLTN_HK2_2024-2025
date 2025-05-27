@@ -94,8 +94,8 @@ public class ChapterService {
         mangaRepository.save(manga);
 
         // Cập nhật tổng số lượt xem và comment của manga
-        mangaStatsService.updateMangaTotalViews(manga.getId());
-        mangaStatsService.updateMangaTotalComments(manga.getId());
+//        mangaStatsService.updateMangaTotalViews(manga.getId());
+//        mangaStatsService.updateMangaTotalComments(manga.getId());
 
         // Gửi sự kiện chapter mới để thông báo cho người dùng đã yêu thích truyện
         newChapterEventProducer.sendNewChapterEvent(

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import mangaService from '../services/manga-service';
 import { GenreResponse } from '../interfaces/models/manga';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHome, faSearch, faTags, faChevronUp, faChevronDown, faHistory, faHeart } from '@fortawesome/free-solid-svg-icons';
 
 const NavigationToolbar: React.FC = () => {
   const [genres, setGenres] = useState<GenreResponse[]>([]);
@@ -45,14 +47,14 @@ const NavigationToolbar: React.FC = () => {
             to="/"
             className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
           >
-            <i className="fas fa-home mr-2"></i>
+            <FontAwesomeIcon icon={faHome} className="mr-2" />
             Trang chủ
           </Link>
           <Link
             to="/search"
             className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
           >
-            <i className="fas fa-search mr-2"></i>
+            <FontAwesomeIcon icon={faSearch} className="mr-2" />
             Tìm kiếm nâng cao
           </Link>
           <div className="relative" ref={genreDropdownRef}>
@@ -61,15 +63,18 @@ const NavigationToolbar: React.FC = () => {
               onMouseEnter={() => setShowGenreDropdown(true)}
               onClick={() => setShowGenreDropdown(!showGenreDropdown)}
             >
-              <i className="fas fa-tags mr-2"></i>
+              <FontAwesomeIcon icon={faTags} className="mr-2" />
               Thể loại
-              <i className={`fas fa-chevron-${showGenreDropdown ? 'up' : 'down'} ml-2`}></i>
+              <FontAwesomeIcon
+                icon={showGenreDropdown ? faChevronUp : faChevronDown}
+                className="ml-2"
+              />
             </button>
 
             {/* Dropdown menu */}
             {showGenreDropdown && (
               <div
-                className="absolute left-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg z-50 p-3"
+                className="absolute left-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg z-[60] p-3"
                 onMouseLeave={() => setShowGenreDropdown(false)}
               >
                 <div className="grid grid-cols-3 gap-2 max-h-80 overflow-y-auto">
@@ -94,14 +99,14 @@ const NavigationToolbar: React.FC = () => {
             to="/profile/reading-history"
             className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
           >
-            <i className="fas fa-history mr-2"></i>
+            <FontAwesomeIcon icon={faHistory} className="mr-2" />
             Lịch sử
           </Link>
           <Link
             to="/profile/favorites"
             className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
           >
-            <i className="fas fa-heart mr-2"></i>
+            <FontAwesomeIcon icon={faHeart} className="mr-2" />
             Yêu thích
           </Link>
 

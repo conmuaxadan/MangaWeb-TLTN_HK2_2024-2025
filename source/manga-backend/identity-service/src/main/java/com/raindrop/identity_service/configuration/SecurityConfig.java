@@ -31,6 +31,7 @@ public class SecurityConfig {
             "/users/accounts/google",
             "/users/accounts/local",
             "/users/comment/{userId}",
+            "/users/internal/user/email"
     };
 
     @Autowired

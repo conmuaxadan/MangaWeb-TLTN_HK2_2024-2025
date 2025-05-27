@@ -246,14 +246,16 @@ class UserService {
      * Khóa hoặc mở khóa tài khoản người dùng
      * @param userId ID của người dùng
      * @param enabled true để mở khóa, false để khóa
+     * @param reason Lý do khóa tài khoản (chỉ cần khi enabled = false)
      * @returns Thông tin người dùng đã cập nhật hoặc null nếu thất bại
      */
-    async toggleUserStatus(userId: string, enabled: boolean): Promise<UserResponse | null> {
+    async toggleUserStatus(userId: string, enabled: boolean, reason?: string): Promise<UserResponse | null> {
         logApiCall('toggleUserStatus');
         try {
             const request: ToggleUserStatusRequest = {
                 userId,
-                enabled
+                enabled,
+                reason: !enabled ? reason : undefined // Chỉ gửi reason khi khóa
             };
 
             // Sửa lại từ PUT thành POST và thay đổi endpoint từ /users/toggle-status thành /users/status

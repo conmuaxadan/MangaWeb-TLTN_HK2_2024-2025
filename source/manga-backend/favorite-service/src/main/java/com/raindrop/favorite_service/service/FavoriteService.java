@@ -18,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -172,4 +174,11 @@ public class FavoriteService {
         log.info("Counting today's favorites");
         return favoriteMangaRepository.countTodayFavorites();
     }
+
+    public List<String> userIdsByMangaId(String mangaId) {
+        log.info("Getting user IDs for manga {}", mangaId);
+        return favoriteMangaRepository.findUserIdsByMangaId(mangaId);
+    }
+
+
 }

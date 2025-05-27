@@ -34,6 +34,7 @@ spring:
 app:
   services:
     manga: http://localhost:8082/manga
+    identity: http://localhost:8080/identity
 
 logging:
   level:

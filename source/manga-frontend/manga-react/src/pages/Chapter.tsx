@@ -18,6 +18,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import CommentSection from '../components/CommentSection.tsx';
 import { getMangaPageUrl } from '../utils/file-utils';
+import { scrollThrottle } from '../utils/performance';
 
 const Chapter: React.FC = () => {
   const { id, chapterId } = useParams<{ id: string; chapterId: string }>();
@@ -62,9 +63,9 @@ const Chapter: React.FC = () => {
   // State để theo dõi việc đã gửi lịch sử đọc hay chưa
   const [hasRecordedHistory, setHasRecordedHistory] = useState<boolean>(false);
 
-  // Xử lý ẩn/hiện thanh điều hướng khi cuộn và theo dõi tiến trình đọc
+  // Xử lý ẩn/hiện thanh điều hướng khi cuộn và theo dõi tiến trình đọc với throttle
   useEffect(() => {
-    const handleScroll = () => {
+    const handleScroll = scrollThrottle(() => {
       const currentScrollY = window.scrollY;
       const scrollingDown = currentScrollY > lastScrollY;
       const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
@@ -143,7 +144,7 @@ const Chapter: React.FC = () => {
       }
 
       setLastScrollY(currentScrollY);
-    };
+    });
 
     window.addEventListener('scroll', handleScroll, { passive: true });
 

@@ -6,6 +6,7 @@ import UserTable from '../../components/admin/UserTable';
 import Pagination from '../../components/common/Pagination';
 import UserForm from '../../components/admin/UserForm';
 import Modal from '../../components/common/Modal';
+import BlockUserModal from '../../components/admin/BlockUserModal';
 import { useUserManagement } from '../../hooks/useUserManagement';
 import { throttle } from '../../utils/performance';
 
@@ -53,6 +54,10 @@ const UserManagement: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserResponse | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Block user modal state
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [userToBlock, setUserToBlock] = useState<UserResponse | null>(null);
+
   // Handle opening add user modal
   const handleAddUser = () => {
     setCurrentUser(undefined);
@@ -77,6 +82,42 @@ const UserManagement: React.FC = () => {
     if (result) {
       setIsModalOpen(false);
     }
+  };
+
+  // Handle toggle user status with modal for blocking
+  const handleToggleUserStatus = async (userId: string, enabled: boolean) => {
+    const user = currentUsers.find(u => u.id === userId);
+    if (!user) return;
+
+    if (!enabled) {
+      // Khóa tài khoản - hiển thị modal để nhập lý do
+      setUserToBlock(user);
+      setIsBlockModalOpen(true);
+    } else {
+      // Mở khóa tài khoản - thực hiện trực tiếp
+      if (window.confirm(`Bạn có chắc chắn muốn mở khóa tài khoản ${user.username}?`)) {
+        await toggleUserStatus(userId, enabled);
+      }
+    }
+  };
+
+  // Handle block user with reason
+  const handleBlockUser = async (reason: string) => {
+    if (!userToBlock) return;
+
+    // Gọi API với reason (adminId sẽ được lấy từ JWT token)
+    const success = await toggleUserStatus(userToBlock.id, false, reason);
+
+    if (success) {
+      setIsBlockModalOpen(false);
+      setUserToBlock(null);
+    }
+  };
+
+  // Handle close block modal
+  const handleCloseBlockModal = () => {
+    setIsBlockModalOpen(false);
+    setUserToBlock(null);
   };
 
   // Sử dụng throttle cho phân trang để tránh gọi quá nhiều khi click nhanh
@@ -137,6 +178,15 @@ const UserManagement: React.FC = () => {
           isLoading={isSubmitting}
         />
       </Modal>
+
+      {/* Modal khóa tài khoản */}
+      <BlockUserModal
+        isOpen={isBlockModalOpen}
+        onClose={handleCloseBlockModal}
+        onConfirm={handleBlockUser}
+        username={userToBlock?.username || ''}
+        isLoading={isSubmitting}
+      />
 
       {/* Tìm kiếm và bộ lọc */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 space-y-4">
@@ -253,7 +303,7 @@ const UserManagement: React.FC = () => {
         <UserTable
           users={currentUsers}
           onEdit={handleEditUser}
-          onToggleStatus={toggleUserStatus}
+          onToggleStatus={handleToggleUserStatus}
         />
       )}
 

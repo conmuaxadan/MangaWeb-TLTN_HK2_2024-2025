@@ -5,6 +5,7 @@ import { MangaResponse, MangaStatus, MangaStatusDisplayNames } from '../../inter
 import genreService from '../../services/genre-service';
 import { GenreResponse } from '../../interfaces/models/genre';
 import { getMangaImageUrl } from '../../utils/file-utils';
+import GenreSelector from '../common/GenreSelector';
 
 interface MangaFormProps {
   initialData?: MangaResponse;
@@ -93,9 +94,8 @@ const MangaForm: React.FC<MangaFormProps> = ({
   };
 
   // Handle genre selection
-  const handleGenreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-    setSelectedGenres(selectedOptions);
+  const handleGenreChange = (genres: string[]) => {
+    setSelectedGenres(genres);
 
     // Clear error if exists
     if (errors.genres) {
@@ -224,39 +224,17 @@ const MangaForm: React.FC<MangaFormProps> = ({
 
         {/* Genres */}
         <div>
-          <label htmlFor="genres" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Thể loại <span className="text-red-500">*</span>
           </label>
-          {loadingGenres ? (
-            <div className="flex items-center space-x-2">
-              <FontAwesomeIcon icon={faSpinner} className="animate-spin text-indigo-500" />
-              <span className="text-sm text-gray-500 dark:text-gray-400">Đang tải thể loại...</span>
-            </div>
-          ) : (
-            <select
-              id="genres"
-              multiple
-              value={selectedGenres}
-              onChange={handleGenreChange}
-              disabled={isLoading || loadingGenres}
-              className={`w-full px-3 py-2 border ${
-                errors.genres ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white`}
-              size={5}
-            >
-              {availableGenres.map((genre) => (
-                <option key={genre.name} value={genre.name}>
-                  {genre.name}
-                </option>
-              ))}
-            </select>
-          )}
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Giữ Ctrl (hoặc Command trên Mac) để chọn nhiều thể loại
-          </p>
-          {errors.genres && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.genres}</p>
-          )}
+          <GenreSelector
+            availableGenres={availableGenres}
+            selectedGenres={selectedGenres}
+            onGenreChange={handleGenreChange}
+            isLoading={loadingGenres}
+            error={errors.genres}
+            disabled={isLoading}
+          />
         </div>
 
         {/* Cover Image */}

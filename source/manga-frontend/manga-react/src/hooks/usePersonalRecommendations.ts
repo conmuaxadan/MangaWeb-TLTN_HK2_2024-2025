@@ -3,24 +3,11 @@ import { useAuth } from '../contexts/AuthContext';
 import mangaService from '../services/manga-service';
 import { MangaSummaryResponse } from '../interfaces/models/manga';
 
-export interface PersonalRecommendationData {
-    id: string;
-    title: string;
-    author?: string;
-    coverUrl?: string;
-    lastChapterNumber?: number;
-    lastChapterId?: string;
-    lastChapterAddedAt?: string;
-    views?: number;
-    loves?: number;
-    comments?: number;
-}
-
 export const usePersonalRecommendations = (limit: number = 6) => {
     const { isLogin, user } = useAuth();
 
     // State cho dữ liệu
-    const [recommendedMangas, setRecommendedMangas] = useState<PersonalRecommendationData[]>([]);
+    const [recommendedMangas, setRecommendedMangas] = useState<MangaSummaryResponse[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [noRecommendations, setNoRecommendations] = useState<boolean>(false);
@@ -53,21 +40,8 @@ export const usePersonalRecommendations = (limit: number = 6) => {
             const data = await mangaService.getPersonalRecommendations(limit);
 
             if (data && data.length > 0) {
-                // Chuyển đổi dữ liệu từ API sang định dạng phù hợp
-                const processedData = data.map((manga: MangaSummaryResponse) => ({
-                    id: manga.id,
-                    title: manga.title,
-                    author: manga.author || 'Không rõ',
-                    coverUrl: manga.coverUrl,
-                    lastChapterNumber: manga.lastChapterNumber,
-                    lastChapterId: manga.lastChapterId,
-                    lastChapterAddedAt: manga.lastChapterAddedAt,
-                    views: manga.views || 0,
-                    loves: manga.loves || 0,
-                    comments: manga.comments || 0
-                }));
-
-                setRecommendedMangas(processedData);
+                // Sử dụng trực tiếp MangaSummaryResponse từ API
+                setRecommendedMangas(data);
                 setNoRecommendations(false);
             } else {
                 setRecommendedMangas([]);

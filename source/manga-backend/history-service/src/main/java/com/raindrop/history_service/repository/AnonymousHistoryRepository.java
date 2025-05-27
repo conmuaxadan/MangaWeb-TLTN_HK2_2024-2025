@@ -1,6 +1,7 @@
 package com.raindrop.history_service.repository;
 
 import com.raindrop.history_service.entity.AnonymousHistory;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
+@Transactional
 public interface AnonymousHistoryRepository extends JpaRepository<AnonymousHistory, String> {
     Optional<AnonymousHistory> findBySessionIdAndMangaIdAndChapterId(String sessionId, String mangaId, String chapterId);
 

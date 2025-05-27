@@ -4,6 +4,7 @@ import { faSpinner, faTrash, faPlus, faSearch, faTimes, faExchangeAlt } from '@f
 import { ChapterResponse, MangaResponse, MangaQuickSearchResponse } from '../../interfaces/models/manga';
 import mangaService from '../../services/manga-service';
 import { toast } from 'react-toastify';
+import { getMangaPageUrl } from '../../utils/file-utils';
 
 interface ChapterFormProps {
   initialData?: ChapterResponse;
@@ -53,14 +54,7 @@ const ChapterForm: React.FC<ChapterFormProps> = ({
         // Sắp xếp các trang theo index trước khi hiển thị
         const sortedPages = [...initialData.pages].sort((a, b) => a.index - b.index);
         const previews = sortedPages.map(page => {
-          // Thêm tiền tố API Gateway nếu URL không bắt đầu bằng http
-          let url;
-          if (page.pageUrl.startsWith('http')) {
-            url = page.pageUrl;
-          } else {
-            url = `http://localhost:8888/api/v1/upload/files/${page.pageUrl}`;
-          }
-          return { url };
+          return { url: getMangaPageUrl(page.pageUrl) };
         });
         setPagePreviews(previews);
       }

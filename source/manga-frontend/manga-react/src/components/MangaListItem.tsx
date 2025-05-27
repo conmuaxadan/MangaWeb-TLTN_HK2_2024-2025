@@ -38,9 +38,9 @@ const MangaListItem: React.FC<MangaListItemProps> = ({
                 </span>
             </div>
 
-            {/* Ảnh bìa manga */}
+            {/* Ảnh bìa manga - Tỷ lệ 2:3 (manga standard) */}
             <a
-                className="relative w-12 h-12 shrink-0 rounded overflow-hidden shadow-lg"
+                className="relative w-14 h-20 shrink-0 rounded overflow-hidden shadow-lg"
                 title={manga.title}
                 href={`/mangas/${manga.id}`}
             >

@@ -10,7 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "anonymous_reading_histories", uniqueConstraints = {
+@Table(name = "anonymous_histories", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"session_id", "manga_id", "chapter_id"})
 })
 @Data

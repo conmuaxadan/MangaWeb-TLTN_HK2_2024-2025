@@ -1,19 +1,19 @@
 package com.raindrop.favorite_service.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class UserProfileResponse {
-    String id;
-    String email;
-    String displayName;
-    String avatarUrl;
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class UserEmailResponse {
+    List<UserInfoResponse> userInfoResponses;
 }

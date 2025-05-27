@@ -18,22 +18,22 @@ import org.springframework.stereotype.Component;
 public class ChapterNotificationEventConsumer {
     EmailService emailService;
 
-    @KafkaListener(topics = "chapter-notifications", groupId = "notification-service")
+    @KafkaListener(topics = "manga-new-chapter-notification")
     public void consume(ChapterNotificationEvent event) {
         log.info("Received CHAPTER_NOTIFICATION event for user: {}, manga: {}, chapter: {}",
                 event.getUserEmail(), event.getMangaTitle(), event.getChapterTitle());
 
         try {
             // Chuẩn bị nội dung email
-            String emailContent = buildEmailContent(event);
+            String emailContent = buildChapterNotificationEmailContent(event);
 
             // Tạo request gửi email
             SendEmailRequest request = SendEmailRequest.builder()
                     .to(Recipient.builder()
-                            .name("Manga Reader") // Tên mặc định cho người đọc
+                            .name(event.getDisplayName())
                             .email(event.getUserEmail())
                             .build())
-                    .subject("Chapter mới: " + event.getMangaTitle() + " - Chapter " + event.getChapterNumber())
+                    .subject("Chapter mới: " + event.getMangaTitle())
                     .htmlContent(emailContent)
                     .build();
 
@@ -46,28 +46,33 @@ public class ChapterNotificationEventConsumer {
         }
     }
 
-    /**
-     * Tạo nội dung email HTML
-     * @param event Thông tin sự kiện
-     * @return Nội dung email dạng HTML
-     */
-    private String buildEmailContent(ChapterNotificationEvent event) {
+    private String buildChapterNotificationEmailContent(ChapterNotificationEvent event) {
         return String.format(
-                "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>" +
-                "<h2 style='color: #333; border-bottom: 1px solid #ddd; padding-bottom: 10px;'>Chapter mới đã được thêm vào truyện bạn yêu thích!</h2>" +
-                "<div style='background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;'>" +
-                "<p style='margin: 5px 0;'><strong>Truyện:</strong> %s</p>" +
-                "<p style='margin: 5px 0;'><strong>Chapter %.1f:</strong> %s</p>" +
-                "</div>" +
-                "<p style='margin: 15px 0;'>" +
-                "<a href='http://localhost:3000/mangas/%s/chapters/%s' " +
-                "style='background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; " +
-                "border-radius: 4px; display: inline-block;'>Đọc ngay</a>" +
-                "</p>" +
-                "<p style='color: #666; font-size: 0.9em; margin-top: 20px;'>Chúc bạn đọc truyện vui vẻ!</p>" +
-                "<p style='color: #999; font-size: 0.8em;'>Nếu bạn không muốn nhận thông báo này nữa, " +
-                "vui lòng truy cập <a href='http://localhost:3000/profile/settings'>cài đặt tài khoản</a> của bạn.</p>" +
-                "</div>",
+                "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px;'>" +
+                        "<div style='background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>" +
+                        "<div style='text-align: center; margin-bottom: 30px;'>" +
+                        "<h1 style='color: #5dade2; margin: 0; font-size: 28px;'>🌧️ Raindrop Manga</h1>" +
+                        "<div style='width: 50px; height: 3px; background-color: #5dade2; margin: 10px auto;'></div>" +
+                        "</div>" +
+                        "<h2 style='color: #333; text-align: center; margin-bottom: 20px;'>📚 Chapter mới đã được thêm!</h2>" +
+                        "<p style='font-size: 16px; line-height: 1.6; color: #555;'>Tin tuyệt vời!</p>" +
+                        "<p style='font-size: 16px; line-height: 1.6; color: #555;'>Chapter mới đã được thêm vào truyện bạn đang theo dõi tại <strong>Raindrop Manga</strong>!</p>" +
+                        "<div style='background-color: #e8f5e8; border-left: 4px solid #4CAF50; padding: 20px; margin: 20px 0; border-radius: 5px;'>" +
+                        "<h4 style='color: #2e7d32; margin: 0 0 15px 0;'>📖 Thông tin chapter:</h4>" +
+                        "<p style='color: #2e7d32; margin: 5px 0; font-size: 16px;'><strong>Truyện:</strong> %s</p>" +
+                        "<p style='color: #2e7d32; margin: 5px 0; font-size: 16px;'><strong>Chapter %.1f:</strong> %s</p>" +
+                        "<div style='text-align: center; margin-top: 15px;'>" +
+                        "<a href='http://localhost:3000/mangas/%s/chapters/%s' style='background-color: #4CAF50; color: white; padding: 10px 25px; text-decoration: none; border-radius: 20px; font-weight: bold; display: inline-block;'>Đọc ngay 📖</a>" +
+                        "</div>" +
+                        "</div>" +
+                        "<p style='color: #555; font-size: 16px; line-height: 1.6;'>Chúc bạn đọc truyện vui vẻ và có những trải nghiệm thú vị!</p>" +
+                        "<div style='background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 20px; margin: 20px 0; border-radius: 5px;'>" +
+                        "<p style='color: #6c757d; margin: 0; font-size: 14px; line-height: 1.6;'>💡 <strong>Mẹo:</strong> Nếu bạn không muốn nhận thông báo này nữa, vui lòng truy cập <a href='http://localhost:3000/profile/settings' style='color: #6c757d;'>cài đặt tài khoản</a> của bạn.</p>" +
+                        "</div>" +
+                        "<hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;'>" +
+                        "<p style='color: #666; font-size: 0.9em; text-align: center;'>Trân trọng,<br><strong>Đội ngũ Raindrop Manga</strong></p>" +
+                        "</div>" +
+                        "</div>",
                 event.getMangaTitle(),
                 event.getChapterNumber(),
                 event.getChapterTitle(),

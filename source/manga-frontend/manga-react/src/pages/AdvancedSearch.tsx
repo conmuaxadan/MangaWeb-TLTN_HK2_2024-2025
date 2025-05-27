@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import useAdvancedSearch from '../hooks/useAdvancedSearch';
 import SearchForm from '../components/SearchForm';
-import SearchResultCard from '../components/SearchResultCard';
+import MangaCard from '../components/MangaCard';
 import Pagination from '../components/Pagination';
 
 const AdvancedSearch: React.FC = () => {
@@ -108,7 +108,7 @@ const AdvancedSearch: React.FC = () => {
                             {/* Grid hiển thị kết quả */}
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
                                 {searchResults.map((manga) => (
-                                    <SearchResultCard
+                                    <MangaCard
                                         key={manga.id}
                                         manga={manga}
                                         formatCount={formatCount}

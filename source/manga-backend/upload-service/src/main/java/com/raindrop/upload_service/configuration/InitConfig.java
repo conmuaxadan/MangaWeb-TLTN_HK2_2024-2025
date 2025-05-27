@@ -29,6 +29,20 @@ public class InitConfig {
                         .fileType("image/jpeg")
                         .build());
             }
+            if (!fileDataRepository.existsByName("default-manga-cover.jpg")) {
+                fileDataRepository.save(FileInfo.builder()
+                        .name("default-manga-cover.jpg")
+                        .filePath("C:/uploads/manga/default-manga-cover.jpg")
+                        .fileType("image/jpeg")
+                        .build());
+            }
+            if (!fileDataRepository.existsByName("default-manga-page.jpg")) {
+                fileDataRepository.save(FileInfo.builder()
+                        .name("default-manga-page.jpg")
+                        .filePath("C:/uploads/manga/default-manga-page.jpg")
+                        .fileType("image/jpeg")
+                        .build());
+            }
         };
     }
 }

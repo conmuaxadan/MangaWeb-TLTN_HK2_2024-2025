@@ -16,4 +16,5 @@ public class ChapterNotificationEvent {
     private double chapterNumber;
     private String chapterTitle;
     private String userEmail;
+    private String displayName;
 }

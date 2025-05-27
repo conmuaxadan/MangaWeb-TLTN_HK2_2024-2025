@@ -1,21 +1,15 @@
 package com.raindrop.identity_service.service;
 
 import com.raindrop.common.event.UserEvent;
-import com.raindrop.identity_service.dto.request.ChangeDisplayNameRequest;
-import com.raindrop.identity_service.dto.request.ChangePasswordRequest;
-import com.raindrop.identity_service.dto.request.LinkLocalAccountRequest;
-import com.raindrop.identity_service.dto.request.ToggleUserStatusRequest;
-import com.raindrop.identity_service.dto.request.UserRequest;
-import com.raindrop.identity_service.dto.response.LinkedAccountResponse;
-import com.raindrop.identity_service.dto.response.UserCommentResponse;
-import com.raindrop.identity_service.dto.response.UserResponse;
-import com.raindrop.identity_service.dto.response.UserStatisticsResponse;
+import com.raindrop.identity_service.dto.request.*;
+import com.raindrop.identity_service.dto.response.*;
 import com.raindrop.identity_service.entity.LinkedAccount;
 import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.enums.AuthProvider;
 import com.raindrop.identity_service.exception.AppException;
 import com.raindrop.identity_service.enums.ErrorCode;
+import com.raindrop.identity_service.kafka.UserBlockEventProducer;
 import com.raindrop.identity_service.kafka.UserEventProducer;
 import com.raindrop.identity_service.mapper.UserMapper;
 import com.raindrop.identity_service.repository.LinkedAccountRepository;
@@ -46,10 +40,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -67,6 +58,7 @@ public class UserService {
     UploadClient uploadClient;
 
     UserEventProducer userEventProducer;
+    UserBlockEventProducer userBlockEventProducer;
 
 
     public UserResponse createUser(UserRequest request) {
@@ -111,14 +103,12 @@ public class UserService {
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        // Assign default role - tìm kiếm role USER đã tồn tại trong cơ sở dữ liệu
         var roles = new HashSet<Role>();
-        Role userRole = roleRepository.findByName("USER");
-        if (userRole == null) {
-            log.error("Default USER role not found in database");
-            throw new AppException(ErrorCode.ROLE_NOT_FOUND);
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+            roles.addAll(roleRepository.findAllById(request.getRoles()));
+        }else{
+            roles.add(roleRepository.findByName("USER"));
         }
-        roles.add(userRole);
         user.setRoles(roles);
         user.setAuthProvider(AuthProvider.LOCAL);
         user.setDisplayName(request.getDisplayName() != null ? request.getDisplayName() : request.getUsername());
@@ -285,7 +275,6 @@ public class UserService {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Transactional
     public UserResponse toggleUserStatus(ToggleUserStatusRequest request) {
-        log.info("Admin attempting to {} user with ID: {}", request.isEnabled() ? "enable" : "disable", request.getUserId());
         User user = userRepository.findById(request.getUserId()).orElseThrow(() -> {
             log.warn("Toggle status failed: User not found with ID - {}", request.getUserId());
             return new AppException(ErrorCode.USER_NOT_EXISTED);
@@ -295,6 +284,11 @@ public class UserService {
         user.setEnabled(request.isEnabled());
         user = userRepository.save(user);
 
+        if (!request.isEnabled()) {
+            userBlockEventProducer.sendBlockUserEvent(user.getEmail(), user.getDisplayName(), request.getReason());
+        } else {
+            userBlockEventProducer.sendUnblockUserEvent(user.getEmail(), user.getDisplayName(), request.getReason());
+        }
         log.info("User status updated successfully: {} is now {}", user.getUsername(), request.isEnabled() ? "enabled" : "disabled");
         return userMapper.toUserResponse(user);
     }
@@ -764,5 +758,19 @@ public class UserService {
 
         log.info("Found {} users matching the criteria", userResponsePage.getTotalElements());
         return userResponsePage;
+    }
+
+    public UserEmailResponse getUserInfoById(UserEmailRequest request) {
+        List<UserInfoResponse> userInfoResponses = new ArrayList<>();
+        for (String id : request.getIds()) {
+            User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+            userInfoResponses.add(UserInfoResponse.builder()
+                            .displayName(user.getDisplayName())
+                            .email(user.getEmail())
+                    .build());
+        }
+        return UserEmailResponse.builder()
+                .userInfoResponses(userInfoResponses)
+                .build();
     }
 }

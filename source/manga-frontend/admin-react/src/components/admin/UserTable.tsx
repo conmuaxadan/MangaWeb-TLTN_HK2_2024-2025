@@ -2,6 +2,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
 import { UserResponse } from '../../interfaces/models/auth';
+import { getAvatarUrl } from '../../utils/file-utils';
 
 interface UserTableProps {
   users: UserResponse[];
@@ -76,7 +77,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onToggleStatus, lo
                     <div className="h-10 w-10">
                       <img
                         className="h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-gray-600"
-                        src={"http://localhost:8888/api/v1/upload/files/" + user.avatarUrl}
+                        src={getAvatarUrl(user.avatarUrl)}
                         alt={user.displayName || user.username}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;

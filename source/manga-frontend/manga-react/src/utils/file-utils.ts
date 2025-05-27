@@ -22,7 +22,7 @@ export const getFileUrl = (fileName: string): string | null => {
  * @returns URL đầy đủ của ảnh manga
  */
 export const getMangaImageUrl = (fileName: string | undefined): string => {
-    if (!fileName) return '/images/default-manga-cover.jpg';
+    if (!fileName) return <string>getFileUrl("default-manga-cover.jpg");
     return <string>getFileUrl(fileName);
 };
 
@@ -32,7 +32,7 @@ export const getMangaImageUrl = (fileName: string | undefined): string => {
  * @returns URL đầy đủ của ảnh avatar
  */
 export const getAvatarUrl = (fileName: string | undefined): string => {
-    if (!fileName) return '/images/avt_default.jpg';
+    if (!fileName) return <string>getFileUrl("default.jpg");
     return <string>getFileUrl(fileName);
 };
 
@@ -42,6 +42,6 @@ export const getAvatarUrl = (fileName: string | undefined): string => {
  * @returns URL đầy đủ của ảnh trang manga
  */
 export const getMangaPageUrl = (fileName: string): string => {
-    if (!fileName) return '/images/default-manga-page.jpg';
+    if (!fileName) return <string>getFileUrl("default-manga-page.jpg");
     return <string>getFileUrl(fileName);
 };

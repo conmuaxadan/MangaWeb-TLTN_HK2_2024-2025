@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import mangaService from '../services/manga-service';
-import { AdvancedSearchRequest, GenreResponse, MangaResponse, MangaStatus } from '../interfaces/models/manga';
+import { AdvancedSearchRequest, GenreResponse, MangaSummaryResponse, MangaStatus } from '../interfaces/models/manga';
 
 export interface SearchFilters {
     title: string;
@@ -31,7 +31,7 @@ export const useAdvancedSearch = (pageSize: number = 20) => {
     const [showGenres, setShowGenres] = useState<boolean>(true);
 
     // State cho kết quả tìm kiếm
-    const [searchResults, setSearchResults] = useState<MangaResponse[]>([]);
+    const [searchResults, setSearchResults] = useState<MangaSummaryResponse[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [totalPages, setTotalPages] = useState<number>(0);

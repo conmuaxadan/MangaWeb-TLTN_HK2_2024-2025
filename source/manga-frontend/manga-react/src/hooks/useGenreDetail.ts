@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import mangaService from '../services/manga-service';
-import { PageResponse, MangaResponse } from '../interfaces/models/manga';
+import {MangaSummaryResponse, PageResponse} from '../interfaces/models/manga';
 
 export const useGenreDetail = (pageSize: number = 18) => {
     const { genreName } = useParams<{ genreName: string }>();
     const [searchParams, setSearchParams] = useSearchParams();
 
     // State cho dữ liệu
-    const [data, setData] = useState<PageResponse<MangaResponse> | null>(null);
+    const [data, setData] = useState<PageResponse<MangaSummaryResponse> | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 

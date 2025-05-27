@@ -1,29 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
 import mangaService from '../services/manga-service';
-
-export interface LatestUpdateMangaData {
-    id: string;
-    title: string;
-    author: string;
-    image: string;
-    chapter: string;
-    timeAgo: string;
-    link: string;
-    chapterLink: string;
-    views: number;
-    loves: number;
-    comments: number;
-    lastChapterId?: string;
-}
+import { MangaSummaryResponse } from '../interfaces/models/manga';
 
 export const useLatestUpdates = (pageSize: number = 20) => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     // State cho dữ liệu manga
-    const [mangaList, setMangaList] = useState<LatestUpdateMangaData[]>([]);
+    const [mangaList, setMangaList] = useState<MangaSummaryResponse[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -58,38 +42,8 @@ export const useLatestUpdates = (pageSize: number = 20) => {
             const result = await mangaService.getMangaSummaries(currentPage, pageSize, "lastChapterAddedAt,desc");
 
             if (result && result.content) {
-                // Chuyển đổi dữ liệu từ API sang định dạng phù hợp
-                const processedData = result.content.map(manga => ({
-                    id: manga.id,
-                    title: manga.title,
-                    author: manga.author || 'Không rõ',
-                    image: manga.coverUrl || '/images/default-manga-cover.jpg',
-                    chapter: manga.lastChapterNumber ? `C. ${manga.lastChapterNumber}` : 'Chưa có chapter',
-                    timeAgo: manga.lastChapterAddedAt
-                        ? (() => {
-                            try {
-                                const date = new Date(manga.lastChapterAddedAt);
-                                if (isNaN(date.getTime())) {
-                                    return 'Chưa cập nhật';
-                                }
-                                return formatDistanceToNow(date, { addSuffix: true, locale: vi });
-                            } catch (error) {
-                                console.warn('Invalid date format for manga:', manga.id, manga.lastChapterAddedAt);
-                                return 'Chưa cập nhật';
-                            }
-                        })()
-                        : 'Chưa cập nhật',
-                    link: `/mangas/${manga.id}`,
-                    chapterLink: manga.lastChapterId
-                        ? `/mangas/${manga.id}/chapters/${manga.lastChapterId}`
-                        : `/mangas/${manga.id}`,
-                    views: manga.views || 0,
-                    loves: manga.loves || 0,
-                    comments: manga.comments || 0,
-                    lastChapterId: manga.lastChapterId
-                }));
-
-                setMangaList(processedData);
+                // Sử dụng trực tiếp MangaSummaryResponse từ API
+                setMangaList(result.content);
                 setTotalPages(result.totalPages);
                 setTotalElements(result.totalElements);
             } else {

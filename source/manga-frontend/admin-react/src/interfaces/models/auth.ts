@@ -141,4 +141,5 @@ export interface LinkedAccountResponse {
 export interface ToggleUserStatusRequest {
     userId: string;
     enabled: boolean;
+    reason?: string; // Lý do khóa tài khoản (chỉ cần khi enabled = false)
 }

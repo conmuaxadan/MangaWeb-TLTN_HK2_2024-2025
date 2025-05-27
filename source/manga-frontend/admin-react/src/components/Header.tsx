@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faBell, faCog } from '@fortawesome/free-solid-svg-icons';
+import { getAvatarUrl } from '../utils/file-utils';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -59,7 +60,7 @@ const Header = () => {
             >
               {userProfile?.avatarUrl ? (
                 <img
-                  src={`http://localhost:8888/api/v1/upload/files/${userProfile.avatarUrl}`}
+                  src={getAvatarUrl(userProfile.avatarUrl)}
                   alt="Avatar"
                   className="w-8 h-8 rounded-full object-cover"
                 />

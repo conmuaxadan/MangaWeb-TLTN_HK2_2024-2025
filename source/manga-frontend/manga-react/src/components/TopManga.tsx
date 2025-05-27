@@ -1,4 +1,3 @@
-import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrophy } from '@fortawesome/free-solid-svg-icons';
 import useTopManga, { MangaData } from '../hooks/useTopManga';
@@ -15,12 +14,12 @@ const TopManga = () => {
     } = useTopManga();
 
     // Hàm render danh sách manga được tối ưu
-    const renderMangaList = (mangas: MangaData[], icon: React.ReactNode, title: string, statIcon: React.ReactNode, statValue: (manga: MangaData) => string) => {
+    const renderMangaList = (mangas: MangaData[], icon: any, title: string, statIcon: any, statValue: (manga: MangaData) => string) => {
         if (!mangas || mangas.length === 0) {
             return (
                 <div className="mb-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        {icon}
+                        <FontAwesomeIcon icon={icon} />
                         {title}
                     </h3>
                     <p className="text-gray-500 text-center py-8">Không có dữ liệu</p>

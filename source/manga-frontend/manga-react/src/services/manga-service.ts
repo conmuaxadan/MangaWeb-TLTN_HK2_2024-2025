@@ -206,11 +206,11 @@ class MangaService {
      * @param size Số lượng item trên mỗi trang
      * @returns Danh sách manga thuộc thể loại hoặc null nếu thất bại
      */
-    async findByGenre(genreName: string, page: number = 0, size: number = 10): Promise<PageResponse<MangaResponse> | null> {
+    async findByGenre(genreName: string, page: number = 0, size: number = 10): Promise<PageResponse<MangaSummaryResponse> | null> {
         logApiCall('findByGenre');
         try {
             const url = `/mangas/genre/${encodeURIComponent(genreName)}?page=${page}&size=${size}`;
-            const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaResponse>>>(url);
+            const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaSummaryResponse>>>(url);
 
             if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể tìm kiếm manga theo thể loại", { position: "top-right" });

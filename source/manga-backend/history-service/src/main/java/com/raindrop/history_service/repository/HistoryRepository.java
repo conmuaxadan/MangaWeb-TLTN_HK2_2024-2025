@@ -1,6 +1,7 @@
 package com.raindrop.history_service.repository;
 
 import com.raindrop.history_service.entity.History;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+@Transactional
 public interface HistoryRepository extends JpaRepository<History, String> {
     Page<History> findByUserId(String userId, Pageable pageable);
 

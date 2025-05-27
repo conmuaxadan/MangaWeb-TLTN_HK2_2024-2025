@@ -1,58 +1,47 @@
-import { API_CONFIG } from "../configurations/api-config";
+import { API_CONFIG } from '../configurations/api-config';
 
 /**
- * Lấy URL đầy đủ của ảnh manga
- * @param imagePath Đường dẫn tương đối của ảnh
- * @returns URL đầy đủ của ảnh
+ * Tạo URL đầy đủ cho file từ tên file
+ * @param fileName Tên file
+ * @returns URL đầy đủ của file hoặc null nếu fileName không hợp lệ
  */
-export const getMangaImageUrl = (imagePath: string): string => {
-    if (!imagePath) return '/images/default-manga-cover.jpg';
+export const getFileUrl = (fileName: string): string | null => {
+    if (!fileName) return null;
 
-    // Nếu đường dẫn đã là URL đầy đủ hoặc là đường dẫn tương đối từ gốc, trả về nguyên bản
-    if (imagePath.startsWith('http') || imagePath.startsWith('/')) {
-        return imagePath;
+    // Nếu fileName đã là URL đầy đủ, trả về nguyên vẹn
+    if (fileName.startsWith('http://') || fileName.startsWith('https://')) {
+        return fileName;
     }
 
-    // Nếu không, thêm tiền tố API_CONFIG.FILES_PATH
-    return `${API_CONFIG.BASE_URL}${API_CONFIG.FILES_PATH}/${imagePath}`;
+    return `${API_CONFIG.BASE_URL}${API_CONFIG.FILES_PATH}/${fileName}`;
 };
 
 /**
- * Lấy URL đầy đủ của ảnh chapter
- * @param imagePath Đường dẫn tương đối của ảnh
- * @returns URL đầy đủ của ảnh
+ * Tạo URL đầy đủ cho ảnh manga từ tên file
+ * @param fileName Tên file ảnh manga
+ * @returns URL đầy đủ của ảnh manga
  */
-export const getMangaPageUrl = (imagePath: string): string => {
-    if (!imagePath) return '/images/default-page.jpg';
-
-    // Nếu đường dẫn đã là URL đầy đủ hoặc là đường dẫn tương đối từ gốc, trả về nguyên bản
-    if (imagePath.startsWith('http') || imagePath.startsWith('/')) {
-        return imagePath;
-    }
-
-    // Nếu không, thêm tiền tố API_CONFIG.FILES_PATH
-    return `${API_CONFIG.BASE_URL}${API_CONFIG.FILES_PATH}/${imagePath}`;
+export const getMangaImageUrl = (fileName: string | undefined): string => {
+    if (!fileName) return <string>getFileUrl("default-manga-cover.jpg");
+    return <string>getFileUrl(fileName);
 };
 
 /**
- * Lấy URL đầy đủ của avatar người dùng
- * @param avatarPath Đường dẫn tương đối của avatar
- * @returns URL đầy đủ của avatar
+ * Tạo URL đầy đủ cho ảnh avatar từ tên file
+ * @param fileName Tên file ảnh avatar
+ * @returns URL đầy đủ của ảnh avatar
  */
-export const getAvatarUrl = (avatarPath?: string): string => {
-    // Nếu không có đường dẫn, trả về ảnh mặc định
-    if (!avatarPath) return '/images/avt_default.jpg';
+export const getAvatarUrl = (fileName: string | undefined): string => {
+    if (!fileName) return <string>getFileUrl("default.jpg");
+    return <string>getFileUrl(fileName);
+};
 
-    // Nếu đường dẫn đã là URL đầy đủ, trả về nguyên bản
-    if (avatarPath.startsWith('http')) {
-        return avatarPath;
-    }
-
-    // Nếu là đường dẫn tương đối từ gốc
-    if (avatarPath.startsWith('/')) {
-        return avatarPath;
-    }
-
-    // Nếu không, thêm tiền tố API_CONFIG.FILES_PATH
-    return `${API_CONFIG.BASE_URL}${API_CONFIG.FILES_PATH}/${avatarPath}`;
+/**
+ * Tạo URL đầy đủ cho ảnh trang manga từ tên file
+ * @param fileName Tên file ảnh trang manga
+ * @returns URL đầy đủ của ảnh trang manga
+ */
+export const getMangaPageUrl = (fileName: string): string => {
+    if (!fileName) return <string>getFileUrl("default-manga-page.jpg");
+    return <string>getFileUrl(fileName);
 };

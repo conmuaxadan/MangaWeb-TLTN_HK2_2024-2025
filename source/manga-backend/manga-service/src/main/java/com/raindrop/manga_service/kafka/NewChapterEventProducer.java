@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class NewChapterEventProducer {
     KafkaTemplate<String, NewChapterEvent> kafkaTemplate;
 
-    private static final String NEW_CHAPTER_TOPIC = "manga-new-chapters";
+    private static final String NEW_CHAPTER_TOPIC = "manga-new-chapter";
 
     /**
      * Gửi sự kiện chapter mới

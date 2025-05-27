@@ -1,13 +1,7 @@
 package com.raindrop.identity_service.controller;
 
-import com.raindrop.identity_service.dto.request.ChangeDisplayNameRequest;
-import com.raindrop.identity_service.dto.request.ChangePasswordRequest;
-import com.raindrop.identity_service.dto.request.ToggleUserStatusRequest;
-import com.raindrop.identity_service.dto.request.UserRequest;
-import com.raindrop.identity_service.dto.response.ApiResponse;
-import com.raindrop.identity_service.dto.response.UserCommentResponse;
-import com.raindrop.identity_service.dto.response.UserResponse;
-import com.raindrop.identity_service.dto.response.UserStatisticsResponse;
+import com.raindrop.identity_service.dto.request.*;
+import com.raindrop.identity_service.dto.response.*;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.mapper.UserMapper;
 import com.raindrop.identity_service.service.UserService;
@@ -236,7 +230,6 @@ public class UserController {
     @PostMapping("/status")
     @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<UserResponse> toggleUserStatus(@RequestBody @Valid ToggleUserStatusRequest request) {
-        log.info("Received request to {} user with ID: {}", request.isEnabled() ? "enable" : "disable", request.getUserId());
         return ApiResponse.<UserResponse>builder()
                 .message("User status updated successfully")
                 .result(userService.toggleUserStatus(request))
@@ -285,6 +278,18 @@ public class UserController {
         return ApiResponse.<Long>builder()
                 .message("New users today retrieved successfully")
                 .result(userService.getUserStatistics().getNewUsersToday())
+                .build();
+    }
+
+    /**
+     * Endpoint nội bộ để lấy thông tin email và display name của nhiều người dùng
+     * Không yêu cầu authentication cho internal service calls
+     */
+    @PostMapping("/internal/user/email")
+    ApiResponse<UserEmailResponse> getUserInfoById(@RequestBody UserEmailRequest request) {
+        return ApiResponse.<UserEmailResponse>builder()
+                .message("User retrieved successfully")
+                .result(userService.getUserInfoById(request))
                 .build();
     }
 }

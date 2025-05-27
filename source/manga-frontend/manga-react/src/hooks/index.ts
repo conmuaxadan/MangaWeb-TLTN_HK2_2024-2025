@@ -3,6 +3,12 @@ export { default as useTopManga } from './useTopManga';
 export type { MangaData, TabType, TabInfo } from './useTopManga';
 
 export { default as useRecommendedManga } from './useRecommendedManga';
+
+// Header optimization hooks
+export { useSearch } from './useSearch';
+export { useMenu } from './useMenu';
+export { useGenres } from './useGenres';
+export { useScrollHeader } from './useScrollHeader';
 export type { RecommendedMangaData } from './useRecommendedManga';
 
 export { default as useLatestUpdates } from './useLatestUpdates';

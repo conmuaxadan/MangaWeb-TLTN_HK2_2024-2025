@@ -6,7 +6,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import useRecommendedManga from '../hooks/useRecommendedManga';
-import RecommendedMangaCard from './RecommendedMangaCard';
+import MangaCard from './MangaCard';
 
 const RecommendedManga = () => {
     const {
@@ -82,7 +82,7 @@ const RecommendedManga = () => {
                 >
                     {recommendedManga.map((manga) => (
                         <SwiperSlide key={manga.id}>
-                            <RecommendedMangaCard
+                            <MangaCard
                                 manga={manga}
                                 formatCount={formatCount}
                             />

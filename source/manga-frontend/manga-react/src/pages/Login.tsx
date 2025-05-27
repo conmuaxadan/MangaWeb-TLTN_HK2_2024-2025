@@ -6,6 +6,7 @@ import {OAuthConfig} from "../configurations/configuration.ts";
 import { useAuth } from "../contexts/AuthContext.tsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faLock, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 
 
 const Login = () => {
@@ -188,7 +189,7 @@ const Login = () => {
                                     className="social-login-btn w-full py-3 px-4 bg-white text-gray-800 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-gray-100 transition-all duration-200 shadow-md"
                                     disabled={isLoading}
                                 >
-                                    <i className="fab fa-google text-red-500"></i>
+                                    <FontAwesomeIcon icon={faGoogle} className="text-red-500" />
                                     Đăng nhập bằng Google
                                 </button>
                             </div>

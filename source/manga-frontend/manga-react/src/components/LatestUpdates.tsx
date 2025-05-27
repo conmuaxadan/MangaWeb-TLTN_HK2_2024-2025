@@ -2,7 +2,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock } from '@fortawesome/free-solid-svg-icons';
 import useLatestUpdates from '../hooks/useLatestUpdates';
-import LatestUpdateCard from './LatestUpdateCard';
+import MangaCard from './MangaCard';
 import Pagination from './Pagination';
 
 const LatestUpdates: React.FC = () => {
@@ -53,7 +53,7 @@ const LatestUpdates: React.FC = () => {
             ) : (
                 <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
                     {mangaList.map((manga) => (
-                        <LatestUpdateCard
+                        <MangaCard
                             key={manga.id}
                             manga={manga}
                             formatCount={formatCount}

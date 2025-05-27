@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faTrash, faLock, faLockOpen, faSync } from '@fortawesome/free-solid-svg-icons';
 import { formatDate } from '../../utils/date-utils';
@@ -6,8 +6,13 @@ import Pagination from '../../components/common/Pagination';
 import { Link } from 'react-router-dom';
 import { truncateText } from '../../utils/string-utils';
 import { useCommentManagement } from '../../hooks/useCommentManagement';
+import BlockUserModal from '../../components/admin/BlockUserModal';
 
 const CommentManagement: React.FC = () => {
+  // Block user modal state
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [userToBlock, setUserToBlock] = useState<{username: string, userId: string} | null>(null);
+
   // Sử dụng custom hook
   const {
     comments,
@@ -26,6 +31,43 @@ const CommentManagement: React.FC = () => {
     handleToggleUserStatus,
     resetSearch
   } = useCommentManagement();
+
+  // Handle toggle user status with modal for blocking
+  const handleToggleUserStatusWithModal = async (username: string, userId: string) => {
+    // Tìm comment của người dùng để lấy trạng thái hiện tại
+    const comment = comments.find(c => c.userId === userId);
+    if (!comment) return;
+
+    const isEnabled = comment.userEnabled !== false;
+
+    if (isEnabled) {
+      // Khóa tài khoản - hiển thị modal để nhập lý do
+      setUserToBlock({ username, userId });
+      setIsBlockModalOpen(true);
+    } else {
+      // Mở khóa tài khoản - thực hiện trực tiếp
+      if (window.confirm(`Bạn có chắc chắn muốn mở khóa tài khoản ${username}?`)) {
+        await handleToggleUserStatus(username, userId);
+      }
+    }
+  };
+
+  // Handle block user with reason
+  const handleBlockUser = async (reason: string) => {
+    if (!userToBlock) return;
+
+    // Gọi API với reason - useCommentManagement sẽ cần cập nhật để nhận reason
+    await handleToggleUserStatus(userToBlock.username, userToBlock.userId, reason);
+
+    setIsBlockModalOpen(false);
+    setUserToBlock(null);
+  };
+
+  // Handle close block modal
+  const handleCloseBlockModal = () => {
+    setIsBlockModalOpen(false);
+    setUserToBlock(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -166,7 +208,7 @@ const CommentManagement: React.FC = () => {
                       <FontAwesomeIcon icon={faTrash} />
                     </button>
                     <button
-                      onClick={() => handleToggleUserStatus(comment.username, comment.userId)}
+                      onClick={() => handleToggleUserStatusWithModal(comment.username, comment.userId)}
                       className={`${comment.userEnabled !== false ? 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300' : 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300'}`}
                       title={comment.userEnabled !== false ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
                     >
@@ -195,6 +237,15 @@ const CommentManagement: React.FC = () => {
           onPageSizeChange={setPageSize}
         />
       )}
+
+      {/* Modal khóa tài khoản */}
+      <BlockUserModal
+        isOpen={isBlockModalOpen}
+        onClose={handleCloseBlockModal}
+        onConfirm={handleBlockUser}
+        username={userToBlock?.username || ''}
+        isLoading={false}
+      />
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTag } from '@fortawesome/free-solid-svg-icons';
 import useGenreDetail from '../hooks/useGenreDetail';
-import GenreMangaCard from '../components/GenreMangaCard';
+import MangaCard from '../components/MangaCard';
 import Pagination from '../components/Pagination';
 
 
@@ -84,7 +84,7 @@ const GenreDetail: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {mangaList.map((manga) => (
-              <GenreMangaCard
+              <MangaCard
                 key={manga.id}
                 manga={manga}
                 formatCount={formatCount}

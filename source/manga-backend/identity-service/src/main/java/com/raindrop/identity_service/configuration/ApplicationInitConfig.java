@@ -1,5 +1,6 @@
 package com.raindrop.identity_service.configuration;
 
+import com.raindrop.identity_service.entity.Permission;
 import com.raindrop.identity_service.entity.Role;
 import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.enums.AuthProvider;
@@ -29,12 +30,34 @@ public class ApplicationInitConfig {
     @Transactional
     ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository, PermissionRepository permissionRepository) {
         return args -> {
+            if (!permissionRepository.existsByName("MANGA_MANAGEMENT")) {
+                permissionRepository.save(Permission.builder().name("MANGA_MANAGEMENT")
+                        .description("Quản lý truyện, chương, thể loại")
+                        .build());
+            }
+            if (!permissionRepository.existsByName("SYSTEM_MANAGEMENT")) {
+                permissionRepository.save(Permission.builder().name("SYSTEM_MANAGEMENT")
+                        .description("Quản lý người dùng, vai trò, quyền hạn, bình luận, thống kê")
+                        .build());
+            }
+
             // Tạo các role nếu chưa tồn tại
             if (!roleRepository.existsByName("USER")) {
                 roleRepository.save(Role.builder().name("USER").build());
             }
             if (!roleRepository.existsByName("ADMIN")) {
-                roleRepository.save(Role.builder().name("ADMIN").build());
+                roleRepository.save(Role.builder().name("ADMIN")
+                        .permissions(Set.of(permissionRepository.findByName("MANGA_MANAGEMENT"),
+                                permissionRepository.findByName("SYSTEM_MANAGEMENT")))
+                        .description("Quản trị viên hệ thống")
+                        .build());
+            }
+
+            if (!roleRepository.existsByName("MODERATOR")) {
+                roleRepository.save(Role.builder().name("MODERATOR")
+                        .permissions(Set.of(permissionRepository.findByName("MANGA_MANAGEMENT")))
+                        .description("Cộng tác viên")
+                        .build());
             }
 
             // Tạo admin user nếu chưa tồn tại

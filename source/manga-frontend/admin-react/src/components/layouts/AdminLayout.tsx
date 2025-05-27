@@ -17,6 +17,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {useAuth} from '../../contexts/AuthContext';
 import {ILayout} from '../../interfaces/ILayout';
+import { getAvatarUrl } from '../../utils/file-utils';
 
 const AdminLayout: React.FC<ILayout> = ({children}) => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -106,7 +107,7 @@ const AdminLayout: React.FC<ILayout> = ({children}) => {
                         <div className="flex-shrink-0">
                             {userProfile?.avatarUrl ? (
                                 <img
-                                    src={`http://localhost:8888/api/v1/upload/files/${userProfile.avatarUrl}`}
+                                    src={getAvatarUrl(userProfile.avatarUrl)}
                                     alt="Avatar"
                                     className="w-10 h-10 rounded-full object-cover"
                                 />

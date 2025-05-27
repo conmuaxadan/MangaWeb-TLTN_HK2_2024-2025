@@ -470,6 +470,13 @@ public class MangaService {
                     .collect(Collectors.toList());
             response.setChapters(chapterIds);
 
+            // Nếu có lastChapterId, tìm chapter tương ứng để lấy chapterNumber
+            if (manga.getLastChapterId() != null) {
+                chapterRepository.findById(manga.getLastChapterId()).ifPresent(chapter -> {
+                    response.setLastChapterNumber(chapter.getChapterNumber());
+                });
+            }
+
             return response;
         });
     }
@@ -528,6 +535,14 @@ public class MangaService {
         // Chuyển đổi kết quả sang DTO và thêm thông tin chapter
         return mangaPage.map(manga -> {
             MangaSummaryResponse response = mangaMapper.toMangaSummaryResponse(manga);
+
+            // Nếu có lastChapterId, tìm chapter tương ứng để lấy chapterNumber
+            if (manga.getLastChapterId() != null) {
+                chapterRepository.findById(manga.getLastChapterId()).ifPresent(chapter -> {
+                    response.setLastChapterNumber(chapter.getChapterNumber());
+                });
+            }
+
             return response;
         });
     }

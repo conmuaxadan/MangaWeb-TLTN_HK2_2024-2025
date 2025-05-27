@@ -1,22 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import mangaService from '../services/manga-service';
-
-export interface RecommendedMangaData {
-    id: string;
-    title: string;
-    coverUrl?: string;
-    author?: string;
-    lastChapterAddedAt?: string;
-    lastChapterNumber?: number;
-    lastChapterId?: string;
-    views?: number;
-    loves?: number;
-    comments?: number;
-}
+import { MangaResponse } from '../interfaces/models/manga';
 
 export const useRecommendedManga = (limit: number = 10) => {
     // State cho dữ liệu manga
-    const [recommendedManga, setRecommendedManga] = useState<RecommendedMangaData[]>([]);
+    const [recommendedManga, setRecommendedManga] = useState<MangaResponse[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -30,16 +18,8 @@ export const useRecommendedManga = (limit: number = 10) => {
             const result = await mangaService.getMangaSummaries(0, limit, "createdAt,desc");
 
             if (result && result.content) {
-                // Đảm bảo có đầy đủ thông tin cho mỗi manga
-                const mangaWithDetails = result.content.map(manga => ({
-                    ...manga,
-                    lastChapterNumber: manga.lastChapterNumber || 0,
-                    views: manga.views || 0,
-                    loves: manga.loves || 0,
-                    comments: manga.comments || 0,
-                    author: manga.author || 'Không rõ'
-                }));
-                setRecommendedManga(mangaWithDetails);
+                // Sử dụng trực tiếp MangaResponse từ API
+                setRecommendedManga(result.content);
             } else {
                 setError('Không thể tải dữ liệu truyện đề cử');
             }
@@ -74,14 +54,14 @@ export const useRecommendedManga = (limit: number = 10) => {
     return {
         // Data
         recommendedManga,
-        
+
         // States
         loading,
         error,
-        
+
         // Actions
         refreshData,
-        
+
         // Utils
         formatCount
     };

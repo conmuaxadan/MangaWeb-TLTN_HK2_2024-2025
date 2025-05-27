@@ -161,9 +161,9 @@ export const useUserManagement = (itemsPerPage: number = 10) => {
   };
 
   // Handle toggle user status
-  const toggleUserStatus = async (userId: string, enabled: boolean) => {
+  const toggleUserStatus = async (userId: string, enabled: boolean, reason?: string) => {
     try {
-      const updatedUser = await userService.toggleUserStatus(userId, enabled);
+      const updatedUser = await userService.toggleUserStatus(userId, enabled, reason);
       if (updatedUser) {
         // Update the user in the list
         setUsers(users.map(user => user.id === userId ? { ...user, enabled: enabled } : user));
