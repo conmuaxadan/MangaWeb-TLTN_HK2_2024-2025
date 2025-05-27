@@ -41,7 +41,6 @@ public class ChapterService {
     UploadClient uploadClient;
     MangaRepository mangaRepository;
     PageRepository pageRepository;
-    MangaStatsService mangaStatsService;
     NewChapterEventProducer newChapterEventProducer;
 
     @Transactional
@@ -438,8 +437,11 @@ public class ChapterService {
         Chapter chapter = chapterRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
 
-        // Lấy mangaId để cập nhật lại thông tin sau khi xóa chapter
-        String mangaId = chapter.getManga().getId();
+        // Lấy manga để cập nhật lại thông tin sau khi xóa chapter
+        Manga manga = chapter.getManga();
+
+        // Kiểm tra xem chapter đang xóa có phải là chapter mới nhất không
+        boolean isLatestChapter = id.equals(manga.getLastChapterId());
 
         // Xóa tất cả các trang của chapter
         for (Page page : chapter.getPages()) {
@@ -453,8 +455,41 @@ public class ChapterService {
                 // Tiếp tục xóa chapter ngay cả khi không xóa được file
             }
         }
+
         // Xóa chapter từ database
         chapterRepository.delete(chapter);
         log.info("Chapter deleted successfully: {}", id);
+
+        // Nếu chapter vừa xóa là chapter mới nhất, cập nhật lại thông tin manga
+        if (isLatestChapter) {
+            log.info("Deleted chapter was the latest chapter, updating manga info...");
+            updateMangaLatestChapter(manga);
+        }
+    }
+
+    /**
+     * Cập nhật thông tin chapter mới nhất của manga sau khi xóa chapter
+     * @param manga Manga cần cập nhật
+     */
+    private void updateMangaLatestChapter(Manga manga) {
+        // Lấy danh sách chapter còn lại của manga, sắp xếp theo chapterNumber giảm dần
+        List<Chapter> remainingChapters = chapterRepository.findByMangaIdOrderByChapterNumberDesc(manga.getId());
+
+        if (remainingChapters.isEmpty()) {
+            // Nếu không còn chapter nào, set lastChapterId và lastChapterAddedAt về null
+            manga.setLastChapterId(null);
+            manga.setLastChapterAddedAt(null);
+            log.info("No chapters remaining for manga: {}, set lastChapterId to null", manga.getId());
+        } else {
+            // Lấy chapter có chapterNumber cao nhất (chapter đầu tiên trong danh sách đã sắp xếp)
+            Chapter newLatestChapter = remainingChapters.get(0);
+            manga.setLastChapterId(newLatestChapter.getId());
+            manga.setLastChapterAddedAt(newLatestChapter.getCreatedAt());
+            log.info("Updated latest chapter for manga: {} to chapter: {} (number: {})",
+                    manga.getId(), newLatestChapter.getId(), newLatestChapter.getChapterNumber());
+        }
+
+        // Lưu thông tin manga đã cập nhật
+        mangaRepository.save(manga);
     }
 }

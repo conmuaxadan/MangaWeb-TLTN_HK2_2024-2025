@@ -81,4 +81,12 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
      */
     @Query("SELECT SUM(c.comments) FROM Chapter c WHERE c.manga.id = :mangaId")
     Integer sumCommentsByMangaId(@Param("mangaId") String mangaId);
+
+    /**
+     * Tìm chapter có chapterNumber cao thứ hai của một manga
+     * @param mangaId ID của manga
+     * @return Danh sách chapter sắp xếp theo chapterNumber giảm dần
+     */
+    @Query("SELECT c FROM Chapter c WHERE c.manga.id = :mangaId ORDER BY c.chapterNumber DESC")
+    List<Chapter> findByMangaIdOrderByChapterNumberDesc(@Param("mangaId") String mangaId);
 }
