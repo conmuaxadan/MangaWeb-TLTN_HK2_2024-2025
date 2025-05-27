@@ -21,16 +21,16 @@ export interface LatestUpdateMangaData {
 
 export const useLatestUpdates = (pageSize: number = 20) => {
     const [searchParams, setSearchParams] = useSearchParams();
-    
+
     // State cho dữ liệu manga
     const [mangaList, setMangaList] = useState<LatestUpdateMangaData[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    
+
     // State cho pagination
     const [totalPages, setTotalPages] = useState<number>(1);
     const [totalElements, setTotalElements] = useState<number>(0);
-    
+
     // Lấy trang hiện tại từ URL, mặc định là 0 (trang đầu tiên)
     const currentPage = parseInt(searchParams.get('page') || '0');
 
@@ -66,7 +66,18 @@ export const useLatestUpdates = (pageSize: number = 20) => {
                     image: manga.coverUrl || '/images/default-manga-cover.jpg',
                     chapter: manga.lastChapterNumber ? `C. ${manga.lastChapterNumber}` : 'Chưa có chapter',
                     timeAgo: manga.lastChapterAddedAt
-                        ? formatDistanceToNow(new Date(manga.lastChapterAddedAt), { addSuffix: true, locale: vi })
+                        ? (() => {
+                            try {
+                                const date = new Date(manga.lastChapterAddedAt);
+                                if (isNaN(date.getTime())) {
+                                    return 'Chưa cập nhật';
+                                }
+                                return formatDistanceToNow(date, { addSuffix: true, locale: vi });
+                            } catch (error) {
+                                console.warn('Invalid date format for manga:', manga.id, manga.lastChapterAddedAt);
+                                return 'Chưa cập nhật';
+                            }
+                        })()
                         : 'Chưa cập nhật',
                     link: `/mangas/${manga.id}`,
                     chapterLink: manga.lastChapterId
@@ -105,21 +116,21 @@ export const useLatestUpdates = (pageSize: number = 20) => {
     return {
         // Data
         mangaList,
-        
+
         // Pagination
         currentPage,
         totalPages,
         totalElements,
         pageSize,
         handlePageChange,
-        
+
         // States
         loading,
         error,
-        
+
         // Actions
         refreshData,
-        
+
         // Utils
         formatCount
     };

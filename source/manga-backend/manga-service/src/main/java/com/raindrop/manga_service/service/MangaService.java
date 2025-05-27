@@ -43,6 +43,7 @@ public class MangaService {
     GenreRepository genreRepository;
     ChapterRepository chapterRepository;
     UploadClient uploadClient;
+    MangaSummariesRedisService mangaSummariesRedisService;
 
     @Transactional
     public MangaResponse createManga(MangaRequest request) {
@@ -139,30 +140,10 @@ public class MangaService {
     public Page<MangaManagementResponse> getAllDeletedMangas(Pageable pageable) {
         log.info("Getting all mangas with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
         Page<Manga> mangasPage = mangaRepository.findByDeletedTrue(pageable);
-
         return mangasPage.map(manga -> {
-            // Chuyển đổi entity Manga sang MangaManagementResponse
-            return MangaManagementResponse.builder()
-                    .id(manga.getId())
-                    .title(manga.getTitle())
-                    .author(manga.getAuthor())
-                    .loves(manga.getLoves())
-                    .views(manga.getViews())
-                    .comments(manga.getComments())
-                    .coverUrl(manga.getCoverUrl())
-                    .description(manga.getDescription())
-                    .genres(manga.getGenres().stream().map(Genre::getName).collect(Collectors.toList()))
-                    .yearOfRelease(manga.getYearOfRelease())
-                    .status(manga.getStatus())
-                    .lastChapterId(manga.getLastChapterId())
-                    .lastChapterAddedAt(manga.getLastChapterAddedAt())
-                    .chapters(chapterRepository.countByMangaId(manga.getId()))
-                    .createdAt(manga.getCreatedAt())
-                    .updatedAt(manga.getUpdatedAt())
-                    .deleted(manga.isDeleted())
-                    .deletedAt(manga.getDeletedAt())
-                    .deletedBy(manga.getDeletedBy())
-                    .build();
+            MangaManagementResponse response = mangaMapper.toMangaManagementResponse(manga);
+            response.setChapters(chapterRepository.countByMangaId(manga.getId()));
+            return response;
         });
     }
 
@@ -189,6 +170,29 @@ public class MangaService {
      */
     public Page<MangaSummaryResponse> getMangaSummariesPaginated(Pageable pageable) {
         log.info("Getting paginated manga summaries with page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+
+        // Kiểm tra xem có phải là request cho latest updates không (sort by lastChapterAddedAt,desc)
+        boolean isLatestUpdatesRequest = pageable.getSort().stream()
+                .anyMatch(order -> "lastChapterAddedAt".equals(order.getProperty()) &&
+                                 order.getDirection().isDescending());
+
+        // Nếu là latest updates request, thử lấy từ cache trước
+        if (isLatestUpdatesRequest) {
+            log.debug("This is a latest updates request, checking cache...");
+            try {
+                Page<MangaSummaryResponse> cachedResult = mangaSummariesRedisService.getFromCache(pageable);
+                if (cachedResult != null) {
+                    log.info("Cache hit! Returning cached latest updates: page={}, size={}",
+                        pageable.getPageNumber(), pageable.getPageSize());
+                    return cachedResult;
+                }
+                log.debug("Cache miss, querying database...");
+            } catch (Exception e) {
+                log.warn("Error accessing cache, falling back to database: {}", e.getMessage());
+            }
+        }
+
+        // Query database
         Page<Manga> mangasPage = mangaRepository.findByDeletedFalse(pageable);
 
         // Chuyển đổi Manga sang MangaSummaryResponse và thêm lastChapterNumber
@@ -204,6 +208,16 @@ public class MangaService {
 
             return response;
         });
+
+        // Nếu là latest updates request, cache kết quả
+        if (isLatestUpdatesRequest) {
+            log.debug("Caching latest updates result...");
+            try {
+                mangaSummariesRedisService.saveToCache(pageable, mangaSummaryResponsePage);
+            } catch (Exception e) {
+                log.warn("Error saving to cache: {}", e.getMessage());
+            }
+        }
 
         log.info("Retrieved {} manga summaries out of {} total", mangaSummaryResponsePage.getNumberOfElements(), mangaSummaryResponsePage.getTotalElements());
         return mangaSummaryResponsePage;

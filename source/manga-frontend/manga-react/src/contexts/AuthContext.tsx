@@ -8,7 +8,7 @@ interface AuthContextType {
     isLogin: boolean;
     user: UserResponse | null;
     login: (authResponse: { token: string, refreshToken: string, expiresIn?: number }) => void;
-    logout: () => void;
+    logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -81,8 +81,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLogin(true);
     };
 
-    const logout = () => {
-        authService.logout();
+    const logout = async () => {
+        try {
+            await authService.logout();
+        } catch (error) {
+            console.error('AuthContext: Lỗi khi gọi API logout:', error);
+            // Tiếp tục logout ở client ngay cả khi API thất bại
+        }
         setIsLogin(false);
         setUser(null);
     };

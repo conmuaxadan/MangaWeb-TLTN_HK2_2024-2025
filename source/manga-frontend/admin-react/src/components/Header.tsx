@@ -23,8 +23,14 @@ const Header = () => {
   }, []);
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Header: Lỗi khi logout:', error);
+      // Vẫn chuyển hướng về login ngay cả khi có lỗi
+      navigate('/login');
+    }
   };
 
   return (

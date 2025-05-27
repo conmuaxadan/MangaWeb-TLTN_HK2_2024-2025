@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { UserProfileResponse } from '../interfaces/models/user';
-import profileService from '../services/profile-service';
 import commentService from '../services/comment-service';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faClock, faComment, faBookmark } from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope, faClock, faComment } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import ProfileLayout from '../components/layouts/ProfileLayout.tsx';
 
 const Profile: React.FC = () => {
-  const { isLogin, user } = useAuth();
-  const [profile, setProfile] = useState<UserProfileResponse | null>(null);
+  const {user } = useAuth();
   const [commentCount, setCommentCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
@@ -32,10 +29,6 @@ const Profile: React.FC = () => {
           setCommentCount(comments.totalElements || 0);
         }
 
-        // Sử dụng thông tin user từ AuthContext nếu có
-        if (user) {
-          setProfile(user);
-        }
       } catch (error) {
         console.error('Lỗi khi tải thông tin profile:', error);
       } finally {
@@ -85,14 +78,6 @@ const Profile: React.FC = () => {
               <div className="flex flex-1 flex-row gap-1 md:flex-row">
                 <h6 className="mb-0 font-medium text-blue-500">Số bình luận:</h6>
                 <span className="text-gray-400">{commentCount}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <FontAwesomeIcon icon={faBookmark} className="mr-3 h-6 w-6 text-gray-400" />
-              <div className="flex flex-1 flex-row gap-1 md:flex-row">
-                <h6 className="mb-0 font-medium text-blue-500">Chức danh:</h6>
-                <span className="text-gray-400">MEMBER</span>
               </div>
             </div>
           </div>

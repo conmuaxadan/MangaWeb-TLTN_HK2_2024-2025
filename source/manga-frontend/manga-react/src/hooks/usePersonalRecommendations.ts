@@ -18,7 +18,7 @@ export interface PersonalRecommendationData {
 
 export const usePersonalRecommendations = (limit: number = 6) => {
     const { isLogin, user } = useAuth();
-    
+
     // State cho dữ liệu
     const [recommendedMangas, setRecommendedMangas] = useState<PersonalRecommendationData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -42,7 +42,6 @@ export const usePersonalRecommendations = (limit: number = 6) => {
     const fetchRecommendations = useCallback(async () => {
         if (!isLogin || !user) {
             setIsLoading(false);
-            setShowSection(false);
             return;
         }
 
@@ -52,7 +51,7 @@ export const usePersonalRecommendations = (limit: number = 6) => {
 
             // Sử dụng mangaService để lấy gợi ý cá nhân
             const data = await mangaService.getPersonalRecommendations(limit);
-            
+
             if (data && data.length > 0) {
                 // Chuyển đổi dữ liệu từ API sang định dạng phù hợp
                 const processedData = data.map((manga: MangaSummaryResponse) => ({
@@ -97,20 +96,20 @@ export const usePersonalRecommendations = (limit: number = 6) => {
     return {
         // Data
         recommendedMangas,
-        
+
         // States
         isLoading,
         error,
         noRecommendations,
         showSection,
-        
+
         // Auth states
         isLogin,
         user,
-        
+
         // Actions
         refreshData,
-        
+
         // Utils
         formatCount
     };

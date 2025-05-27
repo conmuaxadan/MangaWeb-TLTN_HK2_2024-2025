@@ -11,9 +11,9 @@ interface RecommendedMangaCardProps {
     formatCount: (count: number) => string;
 }
 
-const RecommendedMangaCard: React.FC<RecommendedMangaCardProps> = ({ 
-    manga, 
-    formatCount 
+const RecommendedMangaCard: React.FC<RecommendedMangaCardProps> = ({
+    manga,
+    formatCount
 }) => {
     return (
         <div className="group bg-white rounded-lg overflow-hidden transition-all duration-300">
@@ -25,7 +25,7 @@ const RecommendedMangaCard: React.FC<RecommendedMangaCardProps> = ({
                                 <div className="relative h-full w-full">
                                     {/* Gradient overlay */}
                                     <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-gray-900/80 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
-                                    
+
                                     {/* Manga cover image */}
                                     <img
                                         src={getMangaImageUrl(manga.coverUrl)}
@@ -40,7 +40,7 @@ const RecommendedMangaCard: React.FC<RecommendedMangaCardProps> = ({
                                 </div>
                             </div>
                         </div>
-                        
+
                         {/* Overlay content */}
                         <div className="absolute bottom-0 left-0 z-[2] w-full px-3 py-2">
                             <h3 className="mb-1 line-clamp-2 text-sm font-semibold leading-tight text-white transition group-hover:line-clamp-4">
@@ -49,7 +49,7 @@ const RecommendedMangaCard: React.FC<RecommendedMangaCardProps> = ({
                             <p className="mb-1 text-xs text-gray-300 line-clamp-1">
                                 {manga.author}
                             </p>
-                            
+
                             {/* Stats with FontAwesome icons */}
                             <span className="flex items-center justify-between gap-1 text-xs text-gray-300">
                                 <span className="flex items-center gap-1">
@@ -68,7 +68,7 @@ const RecommendedMangaCard: React.FC<RecommendedMangaCardProps> = ({
                         </div>
                     </a>
                 </div>
-                
+
                 {/* Chapter info */}
                 <figcaption className="px-3 pb-3 relative z-10 bg-white">
                     <ul className="flex flex-col gap-1">
@@ -84,7 +84,18 @@ const RecommendedMangaCard: React.FC<RecommendedMangaCardProps> = ({
                             </a>
                             <span className="whitespace-nowrap leading-tight text-gray-500">
                                 {manga.lastChapterAddedAt
-                                    ? formatDistanceToNow(new Date(manga.lastChapterAddedAt), { locale: vi }).replace('trước', '')
+                                    ? (() => {
+                                        try {
+                                            const date = new Date(manga.lastChapterAddedAt);
+                                            if (isNaN(date.getTime())) {
+                                                return 'Chưa cập nhật';
+                                            }
+                                            return formatDistanceToNow(date, { locale: vi }).replace('trước', '');
+                                        } catch (error) {
+                                            console.warn('Invalid date format for manga:', manga.id, manga.lastChapterAddedAt);
+                                            return 'Chưa cập nhật';
+                                        }
+                                    })()
                                     : 'Chưa cập nhật'}
                             </span>
                         </li>

@@ -35,7 +35,18 @@ const MangaList: React.FC = () => {
                         image: manga.coverUrl || '/images/default-manga-cover.jpg',
                         chapter: manga.lastChapterNumber ? `C. ${manga.lastChapterNumber}` : 'Chưa có chapter',
                         timeAgo: manga.lastChapterAddedAt
-                            ? formatDistanceToNow(new Date(manga.lastChapterAddedAt), { addSuffix: true, locale: vi })
+                            ? (() => {
+                                try {
+                                    const date = new Date(manga.lastChapterAddedAt);
+                                    if (isNaN(date.getTime())) {
+                                        return 'Chưa cập nhật';
+                                    }
+                                    return formatDistanceToNow(date, { addSuffix: true, locale: vi });
+                                } catch (error) {
+                                    console.warn('Invalid date format for manga:', manga.id, manga.lastChapterAddedAt);
+                                    return 'Chưa cập nhật';
+                                }
+                            })()
                             : 'Chưa cập nhật',
                         link: `/mangas/${manga.id}`,
                         chapterLink: manga.lastChapterId

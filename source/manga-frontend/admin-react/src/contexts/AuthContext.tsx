@@ -13,7 +13,7 @@ interface AuthContextType {
     userProfile: UserResponse | null;
     isLoading: boolean;
     login: (authResponse: { token: string, refreshToken: string, expiresIn?: number }) => void;
-    logout: () => void;
+    logout: () => Promise<void>;
     refreshUserProfile: () => Promise<void>;
     hasPermission: (permission: string) => boolean;
 }
@@ -149,7 +149,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log("AuthContext: Có quyền SYSTEM_MANAGEMENT:", hasSystemManagementPerm);
     };
 
-    const logout = () => {
+    const logout = async () => {
+        try {
+            // Gọi API logout để revoke token trên server
+            await authService.logout();
+        } catch (error) {
+            console.error('AuthContext: Lỗi khi gọi API logout:', error);
+            // Tiếp tục logout ở client ngay cả khi API thất bại
+        }
+
         // Xóa tất cả các token khỏi localStorage
         localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
         localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);

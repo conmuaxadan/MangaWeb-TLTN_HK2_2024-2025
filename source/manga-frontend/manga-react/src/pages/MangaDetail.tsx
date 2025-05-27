@@ -203,7 +203,18 @@ const MangaDetail: React.FC = () => {
                   <span className="hidden md:inline">Cập nhật lúc: </span>
                   <span className="text-gray-900 font-medium">
                     {manga.lastChapterAddedAt
-                        ? formatDistanceToNow(new Date(manga.lastChapterAddedAt), {addSuffix: true, locale: vi})
+                        ? (() => {
+                            try {
+                                const date = new Date(manga.lastChapterAddedAt);
+                                if (isNaN(date.getTime())) {
+                                    return 'Chưa cập nhật';
+                                }
+                                return formatDistanceToNow(date, {addSuffix: true, locale: vi});
+                            } catch (error) {
+                                console.warn('Invalid date format for manga:', manga.id, manga.lastChapterAddedAt);
+                                return 'Chưa cập nhật';
+                            }
+                        })()
                         : 'Chưa cập nhật'}
                   </span>
                 </span>

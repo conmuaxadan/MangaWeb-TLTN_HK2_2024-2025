@@ -21,7 +21,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({chapterId, mangaId}) => 
     const {isLogin, user} = useAuth();
     const [currentPage, setCurrentPage] = useState<number>(0);
     const [totalPages, setTotalPages] = useState<number>(0);
-    const [totalElements, setTotalElements] = useState<number>(0);
+    // const [totalElements, setTotalElements] = useState<number>(0);
 
     // Lấy danh sách bình luận
     const fetchComments = async (pageNum: number = 0) => {
@@ -36,11 +36,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({chapterId, mangaId}) => 
             // Cập nhật thông tin phân trang
             if (response) {
                 setTotalPages(response.totalPages || 0);
-                setTotalElements(response.totalElements || 0);
+                // setTotalElements(response.totalElements || 0);
                 setCurrentPage(pageNum);
             } else {
                 setTotalPages(0);
-                setTotalElements(0);
+                // setTotalElements(0);
             }
         } catch (error) {
             console.error('Lỗi khi tải bình luận:', error);

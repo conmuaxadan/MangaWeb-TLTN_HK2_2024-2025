@@ -21,7 +21,7 @@ const ReadingHistoryCard: React.FC<ReadingHistoryCardProps> = ({ history }) => {
                                 <div className="overflow-hidden rounded-lg group-hover:shadow-lg" style={{ position: 'absolute', inset: 0 }}>
                                     {/* Gradient overlay */}
                                     <div className="absolute bottom-0 left-0 z-[1] h-3/5 w-full bg-gradient-to-t from-neutral-900 from-[15%] to-transparent transition-all duration-500 group-hover:h-3/4"></div>
-                                    
+
                                     {/* Manga cover image */}
                                     <img
                                         src={history.mangaCoverUrl ? getMangaImageUrl(history.mangaCoverUrl) : '/images/default-manga-cover.jpg'}
@@ -35,7 +35,7 @@ const ReadingHistoryCard: React.FC<ReadingHistoryCardProps> = ({ history }) => {
                                     />
                                 </div>
                             </div>
-                            
+
                             {/* Overlay content */}
                             <div className="absolute bottom-0 left-0 z-[2] w-full px-2 py-1.5">
                                 <h3 className="mb-1 line-clamp-2 text-[12px] font-semibold leading-tight text-white transition group-hover:line-clamp-3">
@@ -44,7 +44,7 @@ const ReadingHistoryCard: React.FC<ReadingHistoryCardProps> = ({ history }) => {
                                 <p className="mb-1 text-[10px] text-gray-400 line-clamp-1">
                                     {history.author || 'Không rõ'}
                                 </p>
-                                
+
                                 {/* Reading info with FontAwesome icons */}
                                 <span className="flex items-center justify-between gap-[4px] text-[10px] text-gray-300">
                                     <span className="flex items-center gap-[4px]">
@@ -53,7 +53,18 @@ const ReadingHistoryCard: React.FC<ReadingHistoryCardProps> = ({ history }) => {
                                     </span>
                                     <span className="flex items-center gap-[4px]">
                                         <FontAwesomeIcon icon={faClock} className="text-purple-400" />
-                                        {formatDistanceToNow(new Date(history.updatedAt), { addSuffix: true, locale: vi }).replace('khoảng ', '')}
+                                        {(() => {
+                                            try {
+                                                const date = new Date(history.updatedAt);
+                                                if (isNaN(date.getTime())) {
+                                                    return 'Chưa cập nhật';
+                                                }
+                                                return formatDistanceToNow(date, { addSuffix: true, locale: vi }).replace('khoảng ', '');
+                                            } catch (error) {
+                                                console.warn('Invalid date format for history:', history.id, history.updatedAt);
+                                                return 'Chưa cập nhật';
+                                            }
+                                        })()}
                                     </span>
                                 </span>
                             </div>
@@ -61,7 +72,7 @@ const ReadingHistoryCard: React.FC<ReadingHistoryCardProps> = ({ history }) => {
                     </div>
                 </figure>
             </div>
-            
+
             {/* Continue reading button */}
             <a
                 href={`/mangas/${history.mangaId}/chapters/${history.chapterId}`}

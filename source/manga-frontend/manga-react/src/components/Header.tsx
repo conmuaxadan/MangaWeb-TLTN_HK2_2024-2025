@@ -128,9 +128,13 @@ const NewHeader = () => {
     debouncedSearch(value);
   };
 
-  const handleLogout = (e: React.MouseEvent) => {
+  const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
-    logout();
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Header: Lỗi khi logout:', error);
+    }
     setIsMenuOpen(false);
     scrollToTop();
   };
