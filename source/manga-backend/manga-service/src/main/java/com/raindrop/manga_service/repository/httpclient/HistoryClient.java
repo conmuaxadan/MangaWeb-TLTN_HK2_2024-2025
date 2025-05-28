@@ -1,6 +1,7 @@
 package com.raindrop.manga_service.repository.httpclient;
 
 import com.raindrop.manga_service.dto.response.ApiResponse;
+import com.raindrop.manga_service.dto.response.HistoryResponse;
 import com.raindrop.manga_service.dto.response.ReadingHistoryResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,11 +14,11 @@ import java.util.List;
 @FeignClient(name = "history-service", url = "${app.services.history}")
 public interface HistoryClient {
 
-    @GetMapping("/histories/user/{userId}/recent")
-    ApiResponse<List<ReadingHistoryResponse>> getRecentReadingHistory(
-            @RequestHeader("Authorization") String token,
-            @PathVariable("userId") String userId,
-            @RequestParam("limit") int limit);
+//    @GetMapping("/histories/user/{userId}/recent")
+//    ApiResponse<List<HistoryResponse>> getRecentReadingHistory(
+//            @RequestHeader("Authorization") String token,
+//            @PathVariable("userId") String userId,
+//            @RequestParam("limit") int limit);
 
 
     @GetMapping("/histories/user/{userId}/manga-ids")

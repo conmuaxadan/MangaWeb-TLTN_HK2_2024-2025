@@ -92,24 +92,19 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
      */
     List<Manga> findByOrderByViewsDesc(Pageable pageable);
 
-    /**
-     * Tìm các manga dựa trên thể loại, loại trừ các manga đã đọc gần đây
-     *
-     * @param genres          Danh sách thể loại ưu tiên
-     * @param excludeMangaIds Danh sách ID manga cần loại trừ
-     * @param pageable        Thông tin phân trang
-     * @return Danh sách manga phù hợp
-     */
-    @Query(value = "SELECT DISTINCT m.* FROM manga m "
-            + "JOIN manga_genres mg ON m.id = mg.manga_id "
-            + "JOIN genre g ON mg.genres_id = g.id "
-            + "WHERE g.name IN :genres "
-            + "AND m.id NOT IN :excludeMangaIds "
-            + "AND m.deleted = false "
-            + "ORDER BY m.views DESC",
+    @Query(value = "SELECT m.* FROM manga m " +
+            "JOIN manga_genres mg ON m.id = mg.manga_id " +
+            "JOIN genre g ON mg.genres_id = g.id " +
+            "WHERE g.name IN :genres " +
+            "AND m.id NOT IN :excludeMangaIds " +
+            "AND m.deleted = false " +
+            "GROUP BY m.id " +
+            "HAVING COUNT(DISTINCT g.name) = :genreCount " +
+            "ORDER BY m.views DESC",
             nativeQuery = true)
-    List<Manga> findMangasByGenres(
+    List<Manga> findMangasByAllGenres(
             @Param("genres") List<String> genres,
+            @Param("genreCount") int genreCount,
             @Param("excludeMangaIds") List<String> excludeMangaIds,
             Pageable pageable);
 
@@ -120,6 +115,26 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
      */
     @Query("SELECT DISTINCT g.name FROM Genre g ORDER BY g.name")
     List<String> findAllGenreNames();
+
+    /**
+     * Tìm manga theo IDs với eager loading genres để tránh N+1 problem
+     *
+     * @param mangaIds Danh sách manga IDs
+     * @return Danh sách manga với genres đã được load
+     */
+    @Query("SELECT DISTINCT m FROM Manga m LEFT JOIN FETCH m.genres WHERE m.id IN :mangaIds")
+    List<Manga> findAllByIdWithGenres(@Param("mangaIds") List<String> mangaIds);
+
+    /**
+     * Batch query để lấy lastChapterNumber cho nhiều manga cùng lúc
+     *
+     * @param mangaIds Danh sách manga IDs
+     * @return Map với key là mangaId và value là lastChapterNumber
+     */
+    @Query("SELECT m.id as mangaId, c.chapterNumber as lastChapterNumber " +
+           "FROM Manga m LEFT JOIN Chapter c ON m.lastChapterId = c.id " +
+           "WHERE m.id IN :mangaIds AND m.lastChapterId IS NOT NULL")
+    List<Object[]> findLastChapterNumbersByMangaIds(@Param("mangaIds") List<String> mangaIds);
 
     /**
      * Tìm kiếm manga theo từ khóa

@@ -32,19 +32,8 @@ public interface HistoryRepository extends JpaRepository<History, String> {
      * @param userId ID của người dùng
      * @return Danh sách tất cả mangaId đã đọc
      */
-    @Query(value = "SELECT DISTINCT manga_id FROM reading_histories WHERE user_id = :userId", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT manga_id FROM histories WHERE user_id = :userId", nativeQuery = true)
     List<String> findAllMangaIdsByUserId(@Param("userId") String userId);
-
-    /**
-     * Lấy danh sách mangaId gần đây của người dùng, mỗi manga chỉ lấy 1 lần
-     * @param userId ID của người dùng
-     * @param limit Số lượng mangaId cần lấy
-     * @return Danh sách mangaId gần đây
-     */
-    @Query(value = "SELECT DISTINCT rh.manga_id FROM reading_histories rh " +
-            "WHERE rh.user_id = :userId " +
-            "ORDER BY MAX(rh.updated_at) DESC LIMIT :limit", nativeQuery = true)
-    List<String> findRecentMangaIdsByUserId(@Param("userId") String userId, @Param("limit") int limit);
 
     /**
      * Đếm tổng số lượt xem của người dùng đã đăng nhập (mỗi bản ghi là 1 lượt xem chapter)

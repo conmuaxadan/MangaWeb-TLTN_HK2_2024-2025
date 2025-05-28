@@ -1,14 +1,12 @@
 package com.raindrop.manga_service.controller;
 
 import com.raindrop.manga_service.dto.response.ApiResponse;
-import com.raindrop.manga_service.dto.response.MangaResponse;
 import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
 import com.raindrop.manga_service.service.RecommendationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,7 +28,7 @@ public class RecommendationController {
     @GetMapping("/by-genre")
     public ApiResponse<List<MangaSummaryResponse>> getRecommendationsByGenre(
             @RequestParam String userId,
-            @RequestParam(required = false) Integer limit
+            @RequestParam(defaultValue = "6") int limit
     ) {
         log.info("Getting recommendations by genre for user: {}, limit: {}", userId, limit);
         log.info("Calling recommendationService.getRecommendationsByGenre for user: {}, limit: {}", userId, limit);

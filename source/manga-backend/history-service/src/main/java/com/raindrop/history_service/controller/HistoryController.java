@@ -224,7 +224,7 @@ public class HistoryController {
      * @return Danh sách tất cả mangaId đã đọc
      */
     @GetMapping("/user/{userId}/manga-ids")
-    public ApiResponse<List<String>> getAllReadMangaIdsForUser(
+    public ApiResponse<List<String>> getAllReadMangaIds(
             @PathVariable String userId
     ) {
         log.info("Getting all read manga IDs for user {}", userId);

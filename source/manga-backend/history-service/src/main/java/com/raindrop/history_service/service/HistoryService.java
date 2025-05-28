@@ -6,7 +6,6 @@ import com.raindrop.history_service.dto.response.HistoryResponse;
 import com.raindrop.history_service.entity.History;
 import com.raindrop.history_service.kafka.ChapterViewEventProducer;
 import com.raindrop.history_service.mapper.HistoryMapper;
-import com.raindrop.history_service.repository.AnonymousHistoryRepository;
 import com.raindrop.history_service.repository.HistoryRepository;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;

@@ -731,8 +731,6 @@ public class MangaService {
                 .collect(Collectors.toList());
     }
 
-    ;
-
     /**
      * Tìm kiếm và lọc manga chưa bị xóa theo nhiều tiêu chí
      *
