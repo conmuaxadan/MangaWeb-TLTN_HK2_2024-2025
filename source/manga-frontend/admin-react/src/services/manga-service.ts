@@ -268,6 +268,56 @@ class MangaService {
     }
 
     /**
+     * Lấy danh sách truyện đã xóa của translator
+     * @param page Số trang
+     * @param size Số lượng item trên mỗi trang
+     * @returns Danh sách truyện đã bị xóa hoặc null nếu thất bại
+     */
+    async getMyDeletedMangas(page: number = 0, size: number = 10): Promise<PageResponse<MangaManagementResponse> | null> {
+        logApiCall('getMyDeletedMangas');
+        try {
+            const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaManagementResponse>>>(
+                `/mangas/my-deleted?page=${page}&size=${size}`
+            );
+
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Không thể lấy danh sách truyện đã xóa", { position: "top-right" });
+                return null;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error('Lỗi lấy danh sách truyện đã xóa:', error);
+            toast.error("Đã xảy ra lỗi khi lấy danh sách truyện đã xóa", { position: "top-right" });
+            return null;
+        }
+    }
+
+    /**
+     * Khôi phục truyện của translator
+     * @param id ID của truyện cần khôi phục
+     * @returns true nếu thành công, false nếu thất bại
+     */
+    async restoreMyManga(id: string): Promise<boolean> {
+        logApiCall('restoreMyManga');
+        try {
+            const apiResponse = await mangaHttpClient.post<ApiResponse<MangaResponse>>(`/mangas/${id}/my-restore`);
+
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Không thể khôi phục truyện", { position: "top-right" });
+                return false;
+            }
+
+            toast.success("Khôi phục truyện thành công", { position: "top-right" });
+            return true;
+        } catch (error) {
+            console.error(`Lỗi khôi phục truyện ID ${id}:`, error);
+            toast.error("Đã xảy ra lỗi khi khôi phục truyện", { position: "top-right" });
+            return false;
+        }
+    }
+
+    /**
      * Lấy danh sách truyện đã bị xóa có phân trang
      * @param page Số trang
      * @param size Số lượng item trên mỗi trang

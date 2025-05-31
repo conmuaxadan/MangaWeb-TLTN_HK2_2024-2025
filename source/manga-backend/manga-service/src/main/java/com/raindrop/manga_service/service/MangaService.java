@@ -298,6 +298,20 @@ public class MangaService {
 
     @Transactional
     public void deleteManga(String id, String userId) {
+        // Kiểm tra quyền sở hữu cho translator
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+        boolean hasTranslatorManagement = authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("TRANSLATOR_MANAGEMENT"));
+        boolean hasMangaManagement = authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("MANGA_MANAGEMENT"));
+
+        // Nếu chỉ có quyền TRANSLATOR_MANAGEMENT, kiểm tra quyền sở hữu
+        if (hasTranslatorManagement && !hasMangaManagement) {
+            checkOwnership(id, userId);
+        }
+
         softDeleteManga(id, userId);
     }
 
@@ -635,6 +649,35 @@ public class MangaService {
         if (!manga.getCreatedBy().equals(userId)) {
             throw new AppException(ErrorCode.UNAUTHORIZED_OPERATION);
         }
+    }
+
+    // Lấy danh sách truyện đã xóa của translator
+    public Page<MangaManagementResponse> getMyDeletedMangas(String userId, Pageable pageable) {
+        Page<Manga> mangasPage = mangaRepository.findByCreatedByAndDeletedTrue(userId, pageable);
+        List<String> mangaIds = mangasPage.getContent().stream().map(Manga::getId).collect(Collectors.toList());
+        Map<String, Integer> chapterCountsMap = getChapterCountsMap(mangaIds);
+        return mangasPage.map(manga -> enrichManagementResponse(manga, chapterCountsMap));
+    }
+
+    // Khôi phục truyện của translator
+    @Transactional
+    public MangaResponse restoreMyManga(String id, String userId) {
+        // Kiểm tra quyền sở hữu
+        checkOwnership(id, userId);
+
+        var manga = mangaRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
+
+        if (!manga.isDeleted()) {
+            throw new AppException(ErrorCode.MANGA_NOT_DELETED);
+        }
+
+        manga.setDeleted(false);
+        manga.setDeletedAt(null);
+        manga.setDeletedBy(null);
+        manga = mangaRepository.save(manga);
+
+        return mangaMapper.toMangaResponse(manga);
     }
 
     // Thêm phương thức lọc truyện theo người tạo

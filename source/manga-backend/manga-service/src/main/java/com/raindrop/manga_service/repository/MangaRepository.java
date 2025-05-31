@@ -34,6 +34,7 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
 
     // Thêm các phương thức tìm kiếm theo người tạo
     Page<Manga> findByCreatedByAndDeletedFalse(String createdBy, Pageable pageable);
+    Page<Manga> findByCreatedByAndDeletedTrue(String createdBy, Pageable pageable);
 
     @Query("SELECT m FROM Manga m WHERE m.deleted = false AND m.createdBy = :createdBy " +
            "AND (:keyword IS NULL OR LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +

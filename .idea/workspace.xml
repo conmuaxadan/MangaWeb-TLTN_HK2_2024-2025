@@ -4,38 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0751fe69-cb2c-4b14-9a28-3b0ede98af3d" name="Changes" comment="feat: clean up code">
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/common/DefaultRedirect.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/common/SearchBar.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/guards/ProtectedRoute.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/ui/Button.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/common/Unauthorized.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/translator/TranslatorMyChapters.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/translator/TranslatorMyMangas.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/chapter-service.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/translator-implementation-guide.txt" afterDir="false" />
+    <list default="true" id="0751fe69-cb2c-4b14-9a28-3b0ede98af3d" name="Changes" comment="feat: add translator management">
       <change beforePath="$PROJECT_DIR$/.idea/AugmentWebviewStateStore.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/AugmentWebviewStateStore.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/configuration/ApplicationInitConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/java/com/raindrop/identity_service/configuration/ApplicationInitConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/identity-service/src/main/resources/application.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/controller/ChapterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/controller/ChapterController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/controller/MangaController.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/controller/MangaController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/entity/Chapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/entity/Chapter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/entity/Manga.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/entity/Manga.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/enums/ErrorCode.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/enums/ErrorCode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/repository/ChapterRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/repository/ChapterRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/repository/MangaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/repository/MangaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/service/ChapterService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/service/ChapterService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/service/MangaService.java" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/manga-service/src/main/java/com/raindrop/manga_service/service/MangaService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-backend/notification-service/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-backend/notification-service/src/main/resources/application.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/common/Pagination.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/common/Pagination.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/guards/AuthGuard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/guards/AuthGuard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/layouts/AdminLayout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/components/layouts/AdminLayout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/contexts/AuthContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/contexts/AuthContext.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/hooks/useChapterManagement.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/hooks/useChapterManagement.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/hooks/useMangaManagement.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/hooks/useMangaManagement.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/admin/Login.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/admin/Login.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/routes/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/routes/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/translator/TranslatorMyMangas.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/pages/translator/TranslatorMyMangas.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/manga-service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/source/manga-frontend/admin-react/src/services/manga-service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -79,48 +56,49 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Maven.manga-service [clean].executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;Spring Boot.ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.CommentServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.FavoriteServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.HistoryServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.IdentityServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.MangaServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.NotificationServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.UploadServiceApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;jsx.switch.disabled&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Ra1ndr0p/Desktop/MangaWeb-TLTN_HK2_2024-2025/source/manga-backend/favorite-service/src/main/java/com/raindrop/favorite_service/dto/response&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;npm.admin-react.executor&quot;: &quot;Run&quot;,
-    &quot;npm.manga-react.executor&quot;: &quot;Run&quot;,
-    &quot;npm.run.executor&quot;: &quot;Run&quot;,
-    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\Ra1ndr0p\\Desktop\\MangaWeb-TLTN_HK2_2024-2025\\source\\manga-frontend\\admin-react\\node_modules\\typescript\\lib&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Maven.manga-service [clean].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Spring Boot.ApiGatewayApplication.executor": "Run",
+    "Spring Boot.CommentServiceApplication.executor": "Run",
+    "Spring Boot.FavoriteServiceApplication.executor": "Run",
+    "Spring Boot.HistoryServiceApplication.executor": "Run",
+    "Spring Boot.IdentityServiceApplication.executor": "Run",
+    "Spring Boot.MangaServiceApplication.executor": "Run",
+    "Spring Boot.NotificationServiceApplication.executor": "Run",
+    "Spring Boot.UploadServiceApplication.executor": "Run",
+    "git-widget-placeholder": "master",
+    "jsx.switch.disabled": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "C:/Users/Ra1ndr0p/Desktop/MangaWeb-TLTN_HK2_2024-2025/source/manga-frontend/admin-react",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "npm.admin-react.executor": "Run",
+    "npm.manga-react.executor": "Run",
+    "npm.run.executor": "Run",
+    "run.configurations.included.in.services": "true",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "ts.external.directory.path": "C:\\Users\\Ra1ndr0p\\Desktop\\MangaWeb-TLTN_HK2_2024-2025\\source\\manga-frontend\\admin-react\\node_modules\\typescript\\lib",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Ra1ndr0p\Desktop\MangaWeb-TLTN_HK2_2024-2025\source\manga-frontend\admin-react" />
       <recent name="C:\Users\Ra1ndr0p\Desktop\MangaWeb-TLTN_HK2_2024-2025\source\manga-backend\favorite-service\src\main\java\com\raindrop\favorite_service\dto\response" />
       <recent name="C:\Users\Ra1ndr0p\Desktop\MangaWeb-TLTN_HK2_2024-2025\source\manga-frontend\manga-react\src\components" />
       <recent name="C:\Users\Ra1ndr0p\Desktop\MangaWeb-TLTN_HK2_2024-2025\source\manga-frontend\manga-react\src\hooks" />
@@ -315,7 +293,8 @@
       <workItem from="1748617271764" duration="3169000" />
       <workItem from="1748625635538" duration="3788000" />
       <workItem from="1748659815935" duration="83000" />
-      <workItem from="1748660562930" duration="13010000" />
+      <workItem from="1748660562930" duration="19941000" />
+      <workItem from="1748684064346" duration="1162000" />
     </task>
     <task id="LOCAL-00001" summary="-- rename history service">
       <option name="closed" value="true" />
@@ -413,7 +392,15 @@
       <option name="project" value="LOCAL" />
       <updated>1748669665794</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="feat: add translator management">
+      <option name="closed" value="true" />
+      <created>1748677346108</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1748677346108</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -442,7 +429,8 @@
     <MESSAGE value="feat: migrate manga-react from TypeScript to JavaScript" />
     <MESSAGE value="feat: refactor history service and enhance recommendation logic" />
     <MESSAGE value="feat: clean up code" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: clean up code" />
+    <MESSAGE value="feat: add translator management" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: add translator management" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

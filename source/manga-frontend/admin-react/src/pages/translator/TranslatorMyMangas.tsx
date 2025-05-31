@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faPlus, faSearch, faEye, faHeart, faComment, faSync } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faPlus, faSearch, faEye, faHeart, faComment, faSync, faUndo } from '@fortawesome/free-solid-svg-icons';
 import { MangaManagementResponse, MangaStatusDisplayNames } from '../../interfaces/models/manga';
 import { getMangaImageUrl } from '../../utils/file-utils';
 import MangaForm from '../../components/admin/MangaForm';
@@ -15,6 +15,9 @@ const TranslatorMyMangas: React.FC = () => {
   const [mangas, setMangas] = useState<MangaManagementResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Tab selection
+  const [showDeleted, setShowDeleted] = useState(false);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,11 +36,21 @@ const TranslatorMyMangas: React.FC = () => {
   const fetchMyMangas = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await mangaService.getMyMangas(
-        currentPage - 1,
-        pageSize,
-        searchTerm || undefined
-      );
+      let response;
+      if (showDeleted) {
+        // Lấy danh sách truyện đã xóa
+        response = await mangaService.getMyDeletedMangas(
+          currentPage - 1,
+          pageSize
+        );
+      } else {
+        // Lấy danh sách truyện đang hoạt động
+        response = await mangaService.getMyMangas(
+          currentPage - 1,
+          pageSize,
+          searchTerm || undefined
+        );
+      }
 
       if (response) {
         setMangas(response.content || []);
@@ -54,7 +67,7 @@ const TranslatorMyMangas: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm]);
+  }, [currentPage, pageSize, searchTerm, showDeleted]);
 
   // Load data khi component mount hoặc dependencies thay đổi
   useEffect(() => {
@@ -140,19 +153,58 @@ const TranslatorMyMangas: React.FC = () => {
     }
   };
 
+  // Xử lý khôi phục manga
+  const handleRestoreManga = async (mangaId: string) => {
+    if (window.confirm('Bạn có chắc chắn muốn khôi phục manga này?')) {
+      try {
+        const success = await mangaService.restoreMyManga(mangaId);
+        if (success) {
+          // Refresh danh sách
+          await fetchMyMangas();
+        }
+      } catch (error) {
+        console.error('Error restoring manga:', error);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Truyện của tôi</h1>
         <div className="flex space-x-2">
-          <button
-            onClick={handleAddManga}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            <FontAwesomeIcon icon={faPlus} />
-            <span>Thêm truyện mới</span>
-          </button>
+          {!showDeleted && (
+            <button
+              onClick={handleAddManga}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            >
+              <FontAwesomeIcon icon={faPlus} />
+              <span>Thêm truyện mới</span>
+            </button>
+          )}
         </div>
+      </div>
+
+      {/* Tab chuyển đổi giữa manga đang hoạt động và đã xóa */}
+      <div className="flex space-x-2">
+        <button
+          className={`px-4 py-2 rounded-md ${!showDeleted ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+          onClick={() => {
+            setShowDeleted(false);
+            setCurrentPage(1);
+          }}
+        >
+          Truyện đang hoạt động
+        </button>
+        <button
+          className={`px-4 py-2 rounded-md ${showDeleted ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+          onClick={() => {
+            setShowDeleted(true);
+            setCurrentPage(1);
+          }}
+        >
+          Truyện đã xóa
+        </button>
       </div>
 
       {/* Modal thêm/sửa manga */}
@@ -170,38 +222,40 @@ const TranslatorMyMangas: React.FC = () => {
         />
       </Modal>
 
-      {/* Tìm kiếm và Lọc */}
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="flex flex-wrap items-center gap-4">
-          {/* Tìm kiếm */}
-          <div className="relative flex-1 min-w-[200px]">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FontAwesomeIcon icon={faSearch} className="text-gray-500" />
+      {/* Tìm kiếm và Lọc - chỉ hiển thị cho tab truyện đang hoạt động */}
+      {!showDeleted && (
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Tìm kiếm */}
+            <div className="relative flex-1 min-w-[200px]">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <FontAwesomeIcon icon={faSearch} className="text-gray-500" />
+              </div>
+              <input
+                type="text"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+                placeholder="Tìm kiếm theo tên hoặc tác giả"
+                value={searchTerm}
+                onChange={handleSearchChange}
+              />
             </div>
-            <input
-              type="text"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
-              placeholder="Tìm kiếm theo tên hoặc tác giả"
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-          </div>
 
-          {/* Nút đặt lại search */}
-          <div className="flex items-center">
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setCurrentPage(1);
-              }}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-            >
-              <FontAwesomeIcon icon={faSync} className="mr-2" />
-              Đặt lại
-            </button>
+            {/* Nút đặt lại search */}
+            <div className="flex items-center">
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setCurrentPage(1);
+                }}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                <FontAwesomeIcon icon={faSync} className="mr-2" />
+                Đặt lại
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Bảng manga */}
       {isLoading ? (
@@ -230,7 +284,7 @@ const TranslatorMyMangas: React.FC = () => {
                     Thống kê
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cập nhật
+                    {showDeleted ? 'Ngày xóa' : 'Cập nhật'}
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Thao tác
@@ -241,7 +295,7 @@ const TranslatorMyMangas: React.FC = () => {
                 {mangas.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                      Không có truyện nào
+                      {showDeleted ? 'Không có truyện nào đã xóa' : 'Không có truyện nào'}
                     </td>
                   </tr>
                 ) : (
@@ -316,23 +370,40 @@ const TranslatorMyMangas: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                        {manga.updatedAt ? new Date(manga.updatedAt).toLocaleDateString('vi-VN') : '-'}
+                        {showDeleted
+                          ? (manga.deletedAt ? new Date(manga.deletedAt).toLocaleDateString('vi-VN') : '-')
+                          : (manga.updatedAt ? new Date(manga.updatedAt).toLocaleDateString('vi-VN') : '-')
+                        }
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3"
-                          onClick={() => handleEditManga(manga)}
-                          title="Chỉnh sửa"
-                        >
-                          <FontAwesomeIcon icon={faEdit} />
-                        </button>
-                        <button
-                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                          onClick={() => handleDeleteManga(manga.id)}
-                          title="Xóa"
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </button>
+                        {showDeleted ? (
+                          // Nút khôi phục cho manga đã xóa
+                          <button
+                            onClick={() => handleRestoreManga(manga.id)}
+                            className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                            title="Khôi phục"
+                          >
+                            <FontAwesomeIcon icon={faUndo} />
+                          </button>
+                        ) : (
+                          // Các nút thao tác cho manga đang hoạt động
+                          <>
+                            <button
+                              className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3"
+                              onClick={() => handleEditManga(manga)}
+                              title="Chỉnh sửa"
+                            >
+                              <FontAwesomeIcon icon={faEdit} />
+                            </button>
+                            <button
+                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                              onClick={() => handleDeleteManga(manga.id)}
+                              title="Xóa"
+                            >
+                              <FontAwesomeIcon icon={faTrash} />
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))

@@ -176,7 +176,7 @@ public class MangaController {
 
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT')")
     ApiResponse<Void> deleteManga(
             @PathVariable String id,
             @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt
@@ -198,6 +198,19 @@ public class MangaController {
                 .build();
     }
 
+    @GetMapping("/my-deleted")
+    @PreAuthorize("hasAuthority('TRANSLATOR_MANAGEMENT')")
+    ApiResponse<Page<MangaManagementResponse>> getMyDeletedMangas(
+            Pageable pageable,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt
+    ) {
+        String userId = jwt.getSubject();
+        return ApiResponse.<Page<MangaManagementResponse>>builder()
+                .message("My deleted mangas retrieved successfully")
+                .result(mangaService.getMyDeletedMangas(userId, pageable))
+                .build();
+    }
+
 
     @PostMapping("/{id}/restore")
     @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
@@ -205,6 +218,19 @@ public class MangaController {
         return ApiResponse.<MangaResponse>builder()
                 .message("Manga restored successfully")
                 .result(mangaService.restoreManga(id))
+                .build();
+    }
+
+    @PostMapping("/{id}/my-restore")
+    @PreAuthorize("hasAuthority('TRANSLATOR_MANAGEMENT')")
+    ApiResponse<MangaResponse> restoreMyManga(
+            @PathVariable String id,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt
+    ) {
+        String userId = jwt.getSubject();
+        return ApiResponse.<MangaResponse>builder()
+                .message("Manga restored successfully")
+                .result(mangaService.restoreMyManga(id, userId))
                 .build();
     }
 
