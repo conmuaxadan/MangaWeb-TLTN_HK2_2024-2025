@@ -14,8 +14,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -33,7 +36,7 @@ public class MangaController {
     MangaService mangaService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT')")
     ApiResponse<MangaResponse> createManga(
             @RequestParam("title") String title,
             @RequestParam("author") String author,
@@ -81,13 +84,16 @@ public class MangaController {
     }
 
     @GetMapping()
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Page<MangaManagementResponse>> getAllMangas(
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "genreName", required = false) String genreName,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "yearOfRelease", required = false) Integer yearOfRelease,
-            @PageableDefault(size = 10) Pageable pageable
+            @PageableDefault(size = 10) Pageable pageable,
+            @AuthenticationPrincipal Jwt jwt
     ) {
+        // Nếu có quyền MANGA_MANAGEMENT hoặc SYSTEM_MANAGEMENT, xem tất cả truyện
         if (keyword != null || genreName != null || status != null || yearOfRelease != null) {
             return ApiResponse.<Page<MangaManagementResponse>>builder()
                     .message("Filtered mangas retrieved successfully")
@@ -132,7 +138,7 @@ public class MangaController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT')")
     ApiResponse<MangaResponse> updateManga(
             @PathVariable String id,
             @RequestParam("title") String title,
@@ -226,12 +232,44 @@ public class MangaController {
                 .build();
     }
 
+    @GetMapping("/my-mangas")
+    @PreAuthorize("hasAuthority('TRANSLATOR_MANAGEMENT')")
+    ApiResponse<Page<MangaManagementResponse>> getMyMangas(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @PageableDefault(size = 10) Pageable pageable,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        String userId = jwt.getSubject();
+        return ApiResponse.<Page<MangaManagementResponse>>builder()
+                .message("My mangas retrieved successfully")
+                .result(mangaService.searchAndFilterMangasByCreatedBy(keyword, null, null, null, userId, pageable))
+                .build();
+    }
+
     @GetMapping("/search/quick")
-    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT')")
     ApiResponse<List<MangaQuickSearchResponse>> quickSearchManga(
             @RequestParam String keyword,
-            @RequestParam(required = false, defaultValue = "10") int limit
+            @RequestParam(required = false, defaultValue = "10") int limit,
+            @AuthenticationPrincipal Jwt jwt
     ) {
+        // Lấy thông tin người dùng và quyền
+        String userId = jwt.getSubject();
+        Collection<String> authorities = jwt.getClaimAsStringList("scope");
+
+        boolean hasTranslatorManagement = authorities.stream().anyMatch(auth -> auth.contains("TRANSLATOR_MANAGEMENT"));
+        boolean hasMangaManagement = authorities.stream().anyMatch(auth -> auth.contains("MANGA_MANAGEMENT"));
+        boolean hasSystemManagement = authorities.stream().anyMatch(auth -> auth.contains("SYSTEM_MANAGEMENT"));
+
+        // Nếu chỉ có quyền TRANSLATOR_MANAGEMENT, chỉ tìm trong truyện của họ
+        if (hasTranslatorManagement && !hasMangaManagement && !hasSystemManagement) {
+            return ApiResponse.<List<MangaQuickSearchResponse>>builder()
+                    .message("Quick search results retrieved successfully")
+                    .result(mangaService.quickSearchMangaByCreatedBy(keyword, limit, userId))
+                    .build();
+        }
+
+        // Admin hoặc manga manager - tìm tất cả
         return ApiResponse.<List<MangaQuickSearchResponse>>builder()
                 .message("Quick search results retrieved successfully")
                 .result(mangaService.quickSearchManga(keyword, limit))

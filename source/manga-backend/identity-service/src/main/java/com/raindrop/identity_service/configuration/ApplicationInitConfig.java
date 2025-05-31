@@ -39,6 +39,13 @@ public class ApplicationInitConfig {
                         .build());
             }
 
+            // Thêm permission mới cho translator
+            if (!permissionRepository.existsByName("TRANSLATOR_MANAGEMENT")) {
+                permissionRepository.save(Permission.builder().name("TRANSLATOR_MANAGEMENT")
+                        .description("Quyền dịch và quản lý truyện của riêng mình")
+                        .build());
+            }
+
             // Tạo các role nếu chưa tồn tại
             if (!roleRepository.existsByName("USER")) {
                 roleRepository.save(Role.builder().name("USER").build());
@@ -55,6 +62,14 @@ public class ApplicationInitConfig {
                 roleRepository.save(Role.builder().name("MODERATOR")
                         .permissions(Set.of(permissionRepository.findByName("MANGA_MANAGEMENT")))
                         .description("Cộng tác viên")
+                        .build());
+            }
+
+            // Thêm role mới cho translator
+            if (!roleRepository.existsByName("TRANSLATOR")) {
+                roleRepository.save(Role.builder().name("TRANSLATOR")
+                        .permissions(Set.of(permissionRepository.findByName("TRANSLATOR_MANAGEMENT")))
+                        .description("Dịch giả")
                         .build());
             }
 

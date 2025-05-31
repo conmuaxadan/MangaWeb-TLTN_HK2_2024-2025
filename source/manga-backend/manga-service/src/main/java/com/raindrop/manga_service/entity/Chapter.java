@@ -35,4 +35,8 @@ public class Chapter {
     LocalDateTime createdAt;
     @LastModifiedDate
     LocalDateTime updatedAt;
+
+    // Người tạo chương
+    @Column(name = "created_by", updatable = false)
+    String createdBy;
 }

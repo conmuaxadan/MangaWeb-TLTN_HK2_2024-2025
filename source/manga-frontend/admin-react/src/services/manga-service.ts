@@ -12,6 +12,49 @@ import { logApiCall } from "../utils/api-logger";
 
 class MangaService {
     /**
+     * Lấy danh sách manga của translator hiện tại
+     * @param page Số trang (mặc định là 0)
+     * @param size Số lượng item trên mỗi trang (mặc định là 10)
+     * @param keyword Từ khóa tìm kiếm (optional)
+     * @returns Danh sách manga của translator hoặc null nếu thất bại
+     */
+    async getMyMangas(
+        page: number = 0,
+        size: number = 10,
+        keyword?: string
+    ): Promise<PageResponse<MangaManagementResponse> | null> {
+        logApiCall('getMyMangas');
+        try {
+            // Xây dựng URL với các tham số filter
+            const params = new URLSearchParams();
+            params.append('page', page.toString());
+            params.append('size', size.toString());
+            if (keyword && keyword.trim()) {
+                params.append('keyword', keyword.trim());
+            }
+
+            const apiResponse = await mangaHttpClient.get<ApiResponse<PageResponse<MangaManagementResponse>>>(`/mangas/my-mangas?${params.toString()}`);
+
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Không thể lấy danh sách truyện của bạn", { position: "top-right" });
+                return null;
+            }
+
+            // Thêm ảnh mặc định cho các manga không có coverUrl
+            apiResponse.result.content.forEach(manga => {
+                if (!manga.coverUrl) {
+                    manga.coverUrl = '/images/default-manga-cover.jpg';
+                }
+            });
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error("Lỗi lấy danh sách truyện của tôi:", error);
+            return null;
+        }
+    }
+
+    /**
      * Lấy danh sách tất cả manga có phân trang
      * @param page Số trang (mặc định là 0)
      * @param size Số lượng item trên mỗi trang (mặc định là 10)

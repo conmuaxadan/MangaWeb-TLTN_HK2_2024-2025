@@ -44,6 +44,10 @@ public class Manga {
     @LastModifiedDate
     LocalDateTime updatedAt;
 
+    // Người tạo truyện
+    @Column(name = "created_by", updatable = false)
+    String createdBy;
+
     //ID chapter mới nhất
     String lastChapterId;
     // Thời gian thêm chapter mới nhất

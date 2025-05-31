@@ -12,22 +12,22 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
-  const { login, isLogin, hasMangaManagement, hasSystemManagement } = useAuth();
+  const { login, isLogin, hasMangaManagement, hasSystemManagement, hasTranslatorManagement, getRedirectPath } = useAuth();
 
-  // Nếu đã đăng nhập và có quyền truy cập admin, chuyển hướng đến trang phù hợp
+  // Nếu đã đăng nhập và có quyền truy cập, chuyển hướng đến trang phù hợp
   useEffect(() => {
     if (isLogin) {
-      // Kiểm tra xem có ít nhất một quyền admin không
-      const hasAdminAccess = hasMangaManagement || hasSystemManagement;
+      // Kiểm tra xem có ít nhất một quyền truy cập không
+      const hasAccess = hasMangaManagement || hasSystemManagement || hasTranslatorManagement;
 
-      if (hasAdminAccess) {
-        navigate('/admin'); // Sẽ được DefaultRedirect xử lý chuyển hướng phù hợp
+      if (hasAccess) {
+        navigate(getRedirectPath()); // Sử dụng getRedirectPath từ AuthContext
       } else {
         // Không hiển thị thông báo về quyền, chỉ đăng xuất người dùng
         authService.logout();
       }
     }
-  }, [isLogin, hasMangaManagement, hasSystemManagement, navigate]);
+  }, [isLogin, hasMangaManagement, hasSystemManagement, hasTranslatorManagement, getRedirectPath, navigate]);
 
   // Animation effect khi component mount
   useEffect(() => {
@@ -66,19 +66,20 @@ const Login: React.FC = () => {
           const payload = JSON.parse(jsonPayload);
           const permissions: string[] = payload.scope ? payload.scope.split(' ') : [];
 
-          // Kiểm tra các quyền cần thiết để truy cập admin
+          // Kiểm tra các quyền cần thiết để truy cập hệ thống
           const hasMangaManagementPerm = permissions.includes('MANGA_MANAGEMENT');
           const hasSystemManagementPerm = permissions.includes('SYSTEM_MANAGEMENT');
+          const hasTranslatorManagementPerm = permissions.includes('TRANSLATOR_MANAGEMENT');
 
-          const hasAdminAccess = hasMangaManagementPerm || hasSystemManagementPerm;
+          const hasAccess = hasMangaManagementPerm || hasSystemManagementPerm || hasTranslatorManagementPerm;
 
-          if (hasAdminAccess) {
+          if (hasAccess) {
             toast.success('Đăng nhập thành công!', { position: 'top-right' });
-            navigate('/admin'); // DefaultRedirect sẽ xử lý chuyển hướng phù hợp
+            // getRedirectPath sẽ được gọi trong useEffect
           } else {
             // Không hiển thị thông báo về quyền, chỉ thông báo sai thông tin đăng nhập
             toast.error('Sai thông tin đăng nhập. Vui lòng kiểm tra lại tên đăng nhập và mật khẩu.', { position: 'top-right' });
-            // Đăng xuất người dùng không có quyền admin
+            // Đăng xuất người dùng không có quyền truy cập
             authService.logout();
           }
         } catch (error) {
@@ -117,10 +118,10 @@ const Login: React.FC = () => {
           <div className="p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                R-Admin
+                Manga Management
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                Đăng nhập để quản lý hệ thống
+                Đăng nhập để quản lý truyện tranh
               </p>
             </div>
 
@@ -200,7 +201,7 @@ const Login: React.FC = () => {
         </div>
 
         <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>© {new Date().getFullYear()}. Bản quyền thuộc về R-Admin.</p>
+          <p>© {new Date().getFullYear()}. Manga Management System.</p>
         </div>
       </div>
     </div>

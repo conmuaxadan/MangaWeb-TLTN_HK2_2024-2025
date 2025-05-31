@@ -12,7 +12,14 @@ import Statistics from "../pages/admin/Statistics";
 import RoleManagement from "../pages/admin/RoleManagement";
 import PermissionManagement from "../pages/admin/PermissionManagement";
 import Login from "../pages/admin/Login";
-import DefaultRedirect from "../components/DefaultRedirect";
+
+// Translator pages
+import TranslatorMyMangas from "../pages/translator/TranslatorMyMangas";
+import TranslatorMyChapters from "../pages/translator/TranslatorMyChapters";
+
+// Common components
+import DefaultRedirect from "../components/common/DefaultRedirect";
+import Unauthorized from "../pages/common/Unauthorized";
 
 // Định nghĩa các route cho ứng dụng
 export const routes: IRoute[] = [
@@ -26,6 +33,12 @@ export const routes: IRoute[] = [
     {
         path: '/login',
         Component: Login,
+        Layout: null,
+        requireAuth: false
+    },
+    {
+        path: '/unauthorized',
+        Component: Unauthorized,
         Layout: null,
         requireAuth: false
     },
@@ -88,6 +101,26 @@ export const routes: IRoute[] = [
     {
         path: '/admin/permissions',
         Component: PermissionManagement,
+        Layout: AdminLayout,
+        requireAuth: true
+    },
+
+    // Translator routes
+    {
+        path: '/translator',
+        Component: DefaultRedirect,
+        Layout: null,
+        requireAuth: true
+    },
+    {
+        path: '/translator/my-mangas',
+        Component: TranslatorMyMangas,
+        Layout: AdminLayout,
+        requireAuth: true
+    },
+    {
+        path: '/translator/my-chapters',
+        Component: TranslatorMyChapters,
         Layout: AdminLayout,
         requireAuth: true
     },

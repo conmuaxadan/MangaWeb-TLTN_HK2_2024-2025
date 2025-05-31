@@ -67,6 +67,14 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
             "WHERE c.id = :id")
     Optional<Chapter> findByIdWithPagesAndManga(@Param("id") String id);
 
+    // Thêm các phương thức tìm kiếm theo người tạo
+    Page<Chapter> findByCreatedBy(String createdBy, Pageable pageable);
+
+    @Query("SELECT c FROM Chapter c WHERE c.manga.id = :mangaId AND c.createdBy = :createdBy")
+    List<Chapter> findByMangaIdAndCreatedBy(@Param("mangaId") String mangaId, @Param("createdBy") String createdBy);
+
+    Page<Chapter> findByCreatedByAndTitleContainingIgnoreCase(String createdBy, String keyword, Pageable pageable);
+
     @Query("SELECT DISTINCT c FROM Chapter c " +
             "LEFT JOIN FETCH c.pages p " +
             "LEFT JOIN FETCH c.manga m " +

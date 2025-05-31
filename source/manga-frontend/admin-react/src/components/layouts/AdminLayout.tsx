@@ -23,7 +23,7 @@ const AdminLayout: React.FC<ILayout> = ({children}) => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const location = useLocation();
     const navigate = useNavigate();
-    const {user, userProfile, logout, hasMangaManagement, hasSystemManagement} = useAuth();
+    const {user, userProfile, logout, hasMangaManagement, hasSystemManagement, hasTranslatorManagement, getRedirectPath} = useAuth();
 
     const handleLogout = async () => {
         await logout();
@@ -41,16 +41,19 @@ const AdminLayout: React.FC<ILayout> = ({children}) => {
         {path: '/admin/genres', icon: faTags, label: 'Quản lý thể loại', permission: 'MANGA_MANAGEMENT'},
         {path: '/admin/comments', icon: faComments, label: 'Quản lý bình luận', permission: 'SYSTEM_MANAGEMENT'},
         {path: '/admin/statistics', icon: faChartBar, label: 'Thống kê chi tiết', permission: 'SYSTEM_MANAGEMENT'},
+        {path: '/translator/my-mangas', icon: faBook, label: 'Truyện của tôi', permission: 'TRANSLATOR_MANAGEMENT'},
+        {path: '/translator/my-chapters', icon: faBookOpen, label: 'Chương của tôi', permission: 'TRANSLATOR_MANAGEMENT'},
     ];
 
     // Lọc menu items dựa trên quyền
     const menuItems = useMemo(() => {
         console.log("AdminLayout: hasMangaManagement:", hasMangaManagement);
         console.log("AdminLayout: hasSystemManagement:", hasSystemManagement);
+        console.log("AdminLayout: hasTranslatorManagement:", hasTranslatorManagement);
 
-        // Nếu có quyền SYSTEM_MANAGEMENT (Super Admin), hiển thị tất cả các menu
+        // Nếu có quyền SYSTEM_MANAGEMENT (Super Admin), hiển thị tất cả các menu admin
         if (hasSystemManagement) {
-            return allMenuItems;
+            return allMenuItems.filter(item => item.permission !== 'TRANSLATOR_MANAGEMENT');
         }
 
         // Nếu chỉ có quyền MANGA_MANAGEMENT, chỉ hiển thị các menu liên quan đến quản lý truyện
@@ -58,9 +61,14 @@ const AdminLayout: React.FC<ILayout> = ({children}) => {
             return allMenuItems.filter(item => item.permission === 'MANGA_MANAGEMENT');
         }
 
+        // Nếu chỉ có quyền TRANSLATOR_MANAGEMENT, chỉ hiển thị các menu translator
+        if (hasTranslatorManagement) {
+            return allMenuItems.filter(item => item.permission === 'TRANSLATOR_MANAGEMENT');
+        }
+
         // Nếu không có quyền nào, không hiển thị menu nào
         return [];
-    }, [hasMangaManagement, hasSystemManagement]);
+    }, [hasMangaManagement, hasSystemManagement, hasTranslatorManagement]);
 
     return (
         <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
@@ -71,8 +79,10 @@ const AdminLayout: React.FC<ILayout> = ({children}) => {
                 } fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:w-64`}
             >
                 <div className="flex items-center justify-between h-16 px-6 border-b dark:border-gray-700">
-                    <Link to="/admin" className="flex items-center space-x-2">
-                        <span className="text-xl font-bold text-gray-800 dark:text-white">R-Admin</span>
+                    <Link to={getRedirectPath()} className="flex items-center space-x-2">
+                        <span className="text-xl font-bold text-gray-800 dark:text-white">
+                            {hasTranslatorManagement && !hasMangaManagement && !hasSystemManagement ? 'R-Translator' : 'R-Admin'}
+                        </span>
                     </Link>
                     <button
                         onClick={() => setSidebarOpen(false)}
@@ -132,6 +142,11 @@ const AdminLayout: React.FC<ILayout> = ({children}) => {
                                     <span
                                         className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                     Quản lý truyện
+                  </span>
+                                ) : hasTranslatorManagement ? (
+                                    <span
+                                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                    Dịch giả
                   </span>
                                 ) : null}
                             </div>

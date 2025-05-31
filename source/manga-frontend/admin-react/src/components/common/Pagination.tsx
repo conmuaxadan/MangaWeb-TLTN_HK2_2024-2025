@@ -61,9 +61,9 @@ const Pagination: React.FC<PaginationProps> = ({
         {totalItems !== undefined && (
           <div>
             <p className="text-sm text-gray-700 dark:text-gray-300">
-              Hiển thị <span className="font-medium">{showingFrom || (Math.max(0, currentPage) * (pageSize || 10) + 1)}</span> đến{' '}
+              Hiển thị <span className="font-medium">{showingFrom || (Math.max(0, currentPage - 1) * (pageSize || 10) + 1)}</span> đến{' '}
               <span className="font-medium">
-                {showingTo || Math.min((Math.max(0, currentPage) + 1) * (pageSize || 10), totalItems || 0)}
+                {showingTo || Math.min(currentPage * (pageSize || 10), totalItems || 0)}
               </span>{' '}
               trong <span className="font-medium">{totalItems || 0}</span> kết quả
             </p>

@@ -25,12 +25,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.Comparator;
+import java.util.Collection;
 
 @Service
 @RequiredArgsConstructor
@@ -120,7 +124,14 @@ public class MangaService {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         var header = attributes.getRequest().getHeader("Authorization");
 
+        // Lấy thông tin người dùng hiện tại
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = authentication.getName();
+
         var manga = mangaMapper.toManga(request);
+
+        // Thiết lập người tạo
+        manga.setCreatedBy(currentUserId);
 
         // Khởi tạo danh sách genres rỗng
         manga.setGenres(new ArrayList<>());
@@ -293,6 +304,22 @@ public class MangaService {
     public MangaResponse updateManga(String id, MangaRequest request) {
         var manga = mangaRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
+
+        // Kiểm tra quyền sở hữu
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = authentication.getName();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+        boolean hasTranslatorManagement = authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("TRANSLATOR_MANAGEMENT"));
+        boolean hasMangaManagement = authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("MANGA_MANAGEMENT"));
+
+        // Nếu chỉ có quyền TRANSLATOR_MANAGEMENT, kiểm tra quyền sở hữu
+        if (hasTranslatorManagement && !hasMangaManagement &&
+            !manga.getCreatedBy().equals(currentUserId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED_OPERATION);
+        }
 
         // Kiểm tra xem title mới đã tồn tại chưa (nếu title thay đổi)
         if (!manga.getTitle().equals(request.getTitle())) {
@@ -502,6 +529,26 @@ public class MangaService {
                 .collect(Collectors.toList());
     }
 
+    public List<MangaQuickSearchResponse> quickSearchMangaByCreatedBy(String keyword, int limit, String createdBy) {
+        // Tìm kiếm manga theo keyword và createdBy
+        List<Manga> mangas = mangaRepository.searchByKeywordAndCreatedBy(keyword, createdBy, PageRequest.of(0, limit)).getContent();
+
+        return mangas.stream()
+                .map(manga -> {
+                    double highestChapterNumber = getHighestChapterNumber(manga.getId());
+
+                    return MangaQuickSearchResponse.builder()
+                            .id(manga.getId())
+                            .title(manga.getTitle())
+                            .author(manga.getAuthor())
+                            .coverUrl(manga.getCoverUrl())
+                            .highestChapterNumber(highestChapterNumber)
+                            .chapterCount(chapterRepository.countByMangaId(manga.getId()))
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
     /**
      * Tìm kiếm và lọc manga chưa bị xóa theo nhiều tiêu chí
      *
@@ -576,5 +623,41 @@ public class MangaService {
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    // ==================== TRANSLATOR METHODS ====================
+
+    // Thêm phương thức kiểm tra quyền sở hữu
+    public void checkOwnership(String mangaId, String userId) {
+        Manga manga = mangaRepository.findById(mangaId)
+                .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
+
+        if (!manga.getCreatedBy().equals(userId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED_OPERATION);
+        }
+    }
+
+    // Thêm phương thức lọc truyện theo người tạo
+    public Page<MangaManagementResponse> searchAndFilterMangasByCreatedBy(
+            String keyword, String genreName, String statusStr, Integer yearOfRelease,
+            String createdBy, Pageable pageable) {
+
+        MangaStatus status = null;
+        if (statusStr != null && !statusStr.isEmpty()) {
+            try {
+                status = MangaStatus.valueOf(statusStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Bỏ qua lỗi, status vẫn là null
+            }
+        }
+
+        Page<Manga> mangasPage = mangaRepository.searchAndFilterByCreatedBy(
+                keyword, genreName, status, yearOfRelease, createdBy, pageable);
+
+        List<String> mangaIds = mangasPage.getContent().stream()
+                .map(Manga::getId).collect(Collectors.toList());
+        Map<String, Integer> chapterCountsMap = getChapterCountsMap(mangaIds);
+
+        return mangasPage.map(manga -> enrichManagementResponse(manga, chapterCountsMap));
     }
 }

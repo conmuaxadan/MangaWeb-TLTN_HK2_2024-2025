@@ -32,6 +32,23 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
     @Query("UPDATE Manga m SET m.views = m.views + 1 WHERE m.id = :id")
     int incrementViews(@Param("id") String id);
 
+    // Thêm các phương thức tìm kiếm theo người tạo
+    Page<Manga> findByCreatedByAndDeletedFalse(String createdBy, Pageable pageable);
+
+    @Query("SELECT m FROM Manga m WHERE m.deleted = false AND m.createdBy = :createdBy " +
+           "AND (:keyword IS NULL OR LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(m.author) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "AND (:genreName IS NULL OR EXISTS (SELECT g FROM m.genres g WHERE LOWER(g.name) = LOWER(:genreName))) " +
+           "AND (:status IS NULL OR m.status = :status) " +
+           "AND (:yearOfRelease IS NULL OR m.yearOfRelease = :yearOfRelease)")
+    Page<Manga> searchAndFilterByCreatedBy(
+            @Param("keyword") String keyword,
+            @Param("genreName") String genreName,
+            @Param("status") MangaStatus status,
+            @Param("yearOfRelease") Integer yearOfRelease,
+            @Param("createdBy") String createdBy,
+            Pageable pageable);
+
     @Modifying
     @Transactional
     @Query("UPDATE Manga m SET m.comments = m.comments + 1 WHERE m.id = :id")
@@ -95,6 +112,11 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
 
     @Query("SELECT m FROM Manga m WHERE LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.author) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY m.views DESC")
     Page<Manga> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT m FROM Manga m WHERE m.deleted = false AND m.createdBy = :createdBy " +
+           "AND (LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.author) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "ORDER BY m.views DESC")
+    Page<Manga> searchByKeywordAndCreatedBy(@Param("keyword") String keyword, @Param("createdBy") String createdBy, Pageable pageable);
 
     @Query("SELECT DISTINCT m FROM Manga m JOIN m.genres g WHERE g.name = :genreName AND m.deleted = false ORDER BY m.lastChapterAddedAt DESC")
     Page<Manga> findByGenre(@Param("genreName") String genreName, Pageable pageable);

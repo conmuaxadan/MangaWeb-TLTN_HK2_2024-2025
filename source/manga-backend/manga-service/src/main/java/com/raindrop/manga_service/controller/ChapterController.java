@@ -11,8 +11,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,7 +30,7 @@ public class ChapterController {
     ChapterService chapterService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT')")
     ApiResponse<ChapterResponse> createChapter(
             @RequestParam("chapterNumber") String chapterNumber,
             @RequestParam("mangaId") String mangaId,
@@ -106,8 +109,22 @@ public class ChapterController {
     }
 
 
+    @GetMapping("/my-chapters")
+    @PreAuthorize("hasAuthority('TRANSLATOR_MANAGEMENT')")
+    ApiResponse<Page<ChapterResponse>> getMyChapters(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @PageableDefault(size = 10) Pageable pageable,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        String userId = jwt.getSubject();
+        return ApiResponse.<Page<ChapterResponse>>builder()
+                .message("My chapters retrieved successfully")
+                .result(chapterService.getChaptersByCreatedBy(userId, keyword, pageable))
+                .build();
+    }
+
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT')")
     ApiResponse<ChapterResponse> updateChapter(
             @PathVariable String id,
             @RequestParam(value = "title", required = false, defaultValue = "") String title,
@@ -142,7 +159,7 @@ public class ChapterController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT')")
     ApiResponse<Void> deleteChapter(@PathVariable String id) {
         chapterService.deleteChapter(id);
         return ApiResponse.<Void>builder()

@@ -45,7 +45,10 @@ public enum ErrorCode {
     COVER_UPLOAD_FAILED(2404, "Failed to upload cover image", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // External service errors (2500-2599)
-    UPLOAD_SERVICE_ERROR(2501, "Error communicating with upload service", HttpStatus.INTERNAL_SERVER_ERROR);
+    UPLOAD_SERVICE_ERROR(2501, "Error communicating with upload service", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // Authorization errors (2600-2699)
+    UNAUTHORIZED_OPERATION(2601, "Bạn không có quyền thực hiện thao tác này", HttpStatus.FORBIDDEN);
 
     private final int code;
     private final String message;

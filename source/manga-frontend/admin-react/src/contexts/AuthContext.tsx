@@ -8,6 +8,7 @@ interface AuthContextType {
     isLogin: boolean;
     hasMangaManagement: boolean;
     hasSystemManagement: boolean;
+    hasTranslatorManagement: boolean;
     userPermissions: string[];
     user: UserResponse | null;
     userProfile: UserResponse | null;
@@ -16,6 +17,7 @@ interface AuthContextType {
     logout: () => Promise<void>;
     refreshUserProfile: () => Promise<void>;
     hasPermission: (permission: string) => boolean;
+    getRedirectPath: () => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,14 +37,16 @@ const parseTokenPermissions = (token: string) => {
         return {
             permissions,
             hasMangaManagement: permissions.includes('MANGA_MANAGEMENT'),
-            hasSystemManagement: permissions.includes('SYSTEM_MANAGEMENT')
+            hasSystemManagement: permissions.includes('SYSTEM_MANAGEMENT'),
+            hasTranslatorManagement: permissions.includes('TRANSLATOR_MANAGEMENT')
         };
     } catch (error) {
         console.error("Lỗi khi parse token:", error);
         return {
             permissions: [],
             hasMangaManagement: false,
-            hasSystemManagement: false
+            hasSystemManagement: false,
+            hasTranslatorManagement: false
         };
     }
 };
@@ -67,6 +71,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (token) {
             const { hasSystemManagement } = parseTokenPermissions(token);
             return hasSystemManagement;
+        }
+        return false;
+    });
+
+    const [hasTranslatorManagement, setHasTranslatorManagement] = useState<boolean>(() => {
+        const token = localStorage.getItem(TOKEN_STORAGE.ACCESS_TOKEN);
+        if (token) {
+            const { hasTranslatorManagement } = parseTokenPermissions(token);
+            return hasTranslatorManagement;
         }
         return false;
     });
@@ -138,15 +151,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         // Parse permissions từ token
-        const { permissions, hasMangaManagement: hasMangaManagementPerm, hasSystemManagement: hasSystemManagementPerm } = parseTokenPermissions(authResponse.token);
+        const { permissions, hasMangaManagement: hasMangaManagementPerm, hasSystemManagement: hasSystemManagementPerm, hasTranslatorManagement: hasTranslatorManagementPerm } = parseTokenPermissions(authResponse.token);
 
         setUserPermissions(permissions);
         setHasMangaManagement(hasMangaManagementPerm);
         setHasSystemManagement(hasSystemManagementPerm);
+        setHasTranslatorManagement(hasTranslatorManagementPerm);
 
         console.log("AuthContext: Quyền của người dùng:", permissions);
         console.log("AuthContext: Có quyền MANGA_MANAGEMENT:", hasMangaManagementPerm);
         console.log("AuthContext: Có quyền SYSTEM_MANAGEMENT:", hasSystemManagementPerm);
+        console.log("AuthContext: Có quyền TRANSLATOR_MANAGEMENT:", hasTranslatorManagementPerm);
     };
 
     const logout = async () => {
@@ -166,10 +181,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLogin(false);
         setHasMangaManagement(false);
         setHasSystemManagement(false);
+        setHasTranslatorManagement(false);
         setUserPermissions([]);
         setUser(null);
         setUserProfile(null);
         setIsLoading(false);
+    };
+
+    const getRedirectPath = () => {
+        if (hasSystemManagement || hasMangaManagement) {
+            return '/admin/dashboard';
+        } else if (hasTranslatorManagement) {
+            return '/translator/my-mangas';
+        } else {
+            return '/login';
+        }
     };
 
     const refreshUserProfile = async () => {
@@ -193,6 +219,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 isLogin,
                 hasMangaManagement,
                 hasSystemManagement,
+                hasTranslatorManagement,
                 userPermissions,
                 user,
                 userProfile,
@@ -200,7 +227,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 login,
                 logout,
                 refreshUserProfile,
-                hasPermission
+                hasPermission,
+                getRedirectPath
             }}
         >
             {children}

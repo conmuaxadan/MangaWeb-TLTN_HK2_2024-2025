@@ -12,6 +12,7 @@ import com.raindrop.manga_service.entity.Page;
 import com.raindrop.manga_service.enums.ErrorCode;
 import com.raindrop.manga_service.exception.AppException;
 import com.raindrop.manga_service.mapper.ChapterMapper;
+import com.raindrop.manga_service.repository.ChapterRepository;
 import com.raindrop.manga_service.repository.MangaRepository;
 import com.raindrop.manga_service.repository.PageRepository;
 import com.raindrop.manga_service.repository.httpclient.UploadClient;
@@ -22,6 +23,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -29,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.Collection;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +41,6 @@ import java.util.*;
 @Slf4j
 public class ChapterService {
     ChapterRepository chapterRepository;
-    ChapterMapper chapterMapper;
     UploadClient uploadClient;
     MangaRepository mangaRepository;
     PageRepository pageRepository;
@@ -231,11 +235,30 @@ public class ChapterService {
         Manga manga = mangaRepository.findById(request.getMangaId())
                 .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
 
+        // Lấy thông tin người dùng hiện tại
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = authentication.getName();
+
+        // Kiểm tra quyền sở hữu manga nếu là translator
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        boolean hasTranslatorManagement = authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("TRANSLATOR_MANAGEMENT"));
+        boolean hasMangaManagement = authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("MANGA_MANAGEMENT"));
+
+        if (hasTranslatorManagement && !hasMangaManagement) {
+            // Kiểm tra xem manga có thuộc về user này không
+            if (!manga.getCreatedBy().equals(currentUserId)) {
+                throw new AppException(ErrorCode.UNAUTHORIZED_OPERATION);
+            }
+        }
+
         // **Tạo Chapter trước để có ID**
         Chapter chapter = Chapter.builder()
                 .chapterNumber(request.getChapterNumber())
                 .title(request.getTitle())
                 .manga(manga)
+                .createdBy(currentUserId) // Thêm dòng này
                 .build();
         chapter = chapterRepository.save(chapter);
 
@@ -430,5 +453,19 @@ public class ChapterService {
         }
 
         mangaRepository.save(manga);
+    }
+
+    // ==================== TRANSLATOR METHODS ====================
+
+    public org.springframework.data.domain.Page<ChapterResponse> getChaptersByCreatedBy(String createdBy, String keyword, Pageable pageable) {
+        org.springframework.data.domain.Page<Chapter> chapters;
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            chapters = chapterRepository.findByCreatedByAndTitleContainingIgnoreCase(createdBy, keyword, pageable);
+        } else {
+            chapters = chapterRepository.findByCreatedBy(createdBy, pageable);
+        }
+
+        return chapters.map(this::buildChapterResponse);
     }
 }

@@ -4,6 +4,7 @@ import mangaService from '../services/manga-service';
 import { toast } from 'react-toastify';
 
 export const useMangaManagement = (itemsPerPage: number = 10) => {
+
   // State cho danh sách manga
   const [mangas, setMangas] = useState<MangaManagementResponse[]>([]);
   const [deletedMangas] = useState<MangaResponse[]>([]);
@@ -69,6 +70,7 @@ export const useMangaManagement = (itemsPerPage: number = 10) => {
           status,
           yearOfRelease
         );
+
         if (activeResponse) {
           setMangas(activeResponse.content || []);
           setTotalItems(activeResponse.totalElements || 0);

@@ -4,6 +4,7 @@ import { ChapterResponse, MangaQuickSearchResponse } from '../interfaces/models/
 import mangaService from '../services/manga-service';
 
 export const useChapterManagement = (initialItemsPerPage: number = 10) => {
+
   // State cho danh sách chapter
   const [chapters, setChapters] = useState<ChapterResponse[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -249,6 +250,23 @@ export const useChapterManagement = (initialItemsPerPage: number = 10) => {
     handleSelectFilterManga,
     handleClearFilterManga,
     setItemsPerPage,
+
+    // Search term for translator
+    searchTerm: '',
+    setSearchTerm: () => {},
+    resetFilters: () => {
+      setFilterManga('');
+      setSelectedFilterManga(null);
+      setFilterSearchTerm('');
+      setShowFilterResults(false);
+    },
+
+    // All mangas for translator dropdown
+    allMangas: filterSearchResults,
+
+    // Page size handling
+    pageSize: itemsPerPage,
+    handlePageSizeChange: setItemsPerPage,
 
     // Loading states
     isLoading,
