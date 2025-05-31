@@ -16,7 +16,7 @@ class AuthService {
         logApiCall('login');
         try {
             const request: AuthRequest = { username, password };
-            const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/tokens', request);
+            const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/login', request);
 
             if (apiResponse.code !== 200) {
                 // Xử lý các mã lỗi cụ thể
@@ -63,7 +63,7 @@ class AuthService {
             if (token) {
                 try {
                     console.log('AuthService: Gọi API đăng xuất');
-                    await identityHttpClient.post<ApiResponse<void>>('/auth/tokens/revoke', { token });
+                    await identityHttpClient.post<ApiResponse<void>>('/auth/logout', { token });
                     console.log('AuthService: Đăng xuất thành công trên server');
                 } catch (apiError) {
                     console.error('AuthService: Lỗi khi gọi API đăng xuất:', apiError);
@@ -100,7 +100,7 @@ class AuthService {
             }
 
             const request = { refreshToken };
-            const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/tokens/refresh', request);
+            const apiResponse = await identityHttpClient.post<ApiResponse<AuthResponse>>('/auth/refresh', request);
 
             if (apiResponse.code !== 200) {
                 console.error("Làm mới token thất bại:", apiResponse.message);

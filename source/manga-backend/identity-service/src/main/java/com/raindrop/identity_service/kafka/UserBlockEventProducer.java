@@ -5,12 +5,10 @@ import com.raindrop.common.event.PasswordResetEvent;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-@Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserBlockEventProducer {
@@ -27,7 +25,6 @@ public class UserBlockEventProducer {
                 .build();
 
         kafkaTemplate.send(BLOCK_USER_TOPIC, event);
-        log.info("Sent BLOCK_USER event to Kafka for user: {}", email );
     }
 
     public void sendUnblockUserEvent(String email, String displayName, String reason) {
@@ -38,7 +35,6 @@ public class UserBlockEventProducer {
                 .build();
 
         kafkaTemplate.send(UNBLOCK_USER_TOPIC, event);
-        log.info("Sent UNBLOCK_USER event to Kafka for user: {}", email);
     }
 
 

@@ -21,7 +21,7 @@ class CommentService {
 
             const apiResponse = await commentHttpClient.post('/comments', request);
 
-            if (apiResponse.code !== 200) {
+            if (apiResponse.code !== 201) {
                 toast.error(apiResponse.message || "Không thể tạo bình luận", { position: "top-right" });
                 return null;
             }
@@ -133,6 +133,43 @@ class CommentService {
         } catch (error) {
             console.error(`Lỗi lấy danh sách bình luận mới nhất:`, error);
             return null;
+        }
+    }
+
+    /**
+     * Xóa bình luận (chỉ người tạo mới được xóa)
+     * @param commentId ID của bình luận
+     * @returns true nếu thành công, false nếu thất bại
+     */
+    async deleteComment(commentId) {
+        logApiCall('deleteComment');
+        try {
+            const apiResponse = await commentHttpClient.delete(`/comments/${commentId}`);
+
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Không thể xóa bình luận", { position: "top-right" });
+                return false;
+            }
+
+            toast.success("Xóa bình luận thành công", { position: "top-right" });
+            return true;
+        } catch (error) {
+            console.error(`Lỗi xóa bình luận ID ${commentId}:`, error);
+
+            // Xử lý lỗi cụ thể
+            if (error.response && error.response.data) {
+                const errorMessage = error.response.data.message;
+                if (errorMessage.includes("not authorized")) {
+                    toast.error("Bạn chỉ có thể xóa bình luận của chính mình", { position: "top-right" });
+                } else if (errorMessage.includes("not found")) {
+                    toast.error("Bình luận không tồn tại", { position: "top-right" });
+                } else {
+                    toast.error(errorMessage || "Không thể xóa bình luận", { position: "top-right" });
+                }
+            } else {
+                toast.error("Đã xảy ra lỗi khi xóa bình luận", { position: "top-right" });
+            }
+            return false;
         }
     }
 

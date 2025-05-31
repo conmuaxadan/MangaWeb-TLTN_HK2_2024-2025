@@ -17,39 +17,23 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class FavoriteEventConsumer {
     MangaRepository mangaRepository;
-    
-    /**
-     * Xử lý sự kiện yêu thích từ Kafka
-     * @param event Sự kiện yêu thích
-     */
+
     @KafkaListener(topics = "manga-favorites", groupId = "manga-service")
     @Transactional
     public void consumeFavoriteEvent(FavoriteEvent event) {
-        log.info("Received favorite event: {}", event);
-        
         String mangaId = event.getMangaId();
         FavoriteEvent.EventType eventType = event.getEventType();
-        
-        // Tìm manga
+
         Manga manga = mangaRepository.findById(mangaId)
-                .orElseThrow(() -> {
-                    log.error("Manga not found with ID: {}", mangaId);
-                    return new RuntimeException("Manga not found");
-                });
-        
-        // Cập nhật số lượng yêu thích
+                .orElseThrow(() -> new RuntimeException("Manga not found"));
+
         if (eventType == FavoriteEvent.EventType.ADDED) {
             manga.setLoves(manga.getLoves() + 1);
-            log.info("Increased loves for manga {}: {}", mangaId, manga.getLoves());
         } else if (eventType == FavoriteEvent.EventType.REMOVED) {
-            // Đảm bảo loves không âm
             if (manga.getLoves() > 0) {
                 manga.setLoves(manga.getLoves() - 1);
-                log.info("Decreased loves for manga {}: {}", mangaId, manga.getLoves());
             }
         }
-        
-        // Lưu manga
         mangaRepository.save(manga);
     }
 }

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import authService from "../services/auth-service.js";
-import profileService from "../services/profile-service.js";
+import userService from "../services/user-service.js";
 import { TOKEN_STORAGE } from "../configurations/api-config.js";
 
 const AuthContext = createContext(undefined);
@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
                 if (tokenInfo) {
                     try {
                         // Sử dụng API mới để lấy thông tin người dùng từ identity service
-                        const userInfo = await profileService.getUserById(tokenInfo.userId);
+                        const userInfo = await userService.getUserById(tokenInfo.userId);
                         if (userInfo) {
                             // Chuyển đổi từ UserResponse sang UserProfileResponse
                             setUser({

@@ -82,7 +82,7 @@ export const useTopManga = () => {
                     icon: icons.new,
                     title: "Truyện mới",
                     statIcon: null,
-                    statValue: () => "Mới cập nhật"
+                    statValue: () => "Mới nhất"
                 };
             default:
                 return {

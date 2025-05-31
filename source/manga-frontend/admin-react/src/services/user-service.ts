@@ -186,7 +186,7 @@ class UserService {
     async getProfileByUserId(userId: string): Promise<UserResponse | null> {
         logApiCall('getProfileByUserId');
         try {
-            const apiResponse = await identityHttpClient.get<ApiResponse<UserResponse>>(`/users/id/${userId}`);
+            const apiResponse = await identityHttpClient.get<ApiResponse<UserResponse>>(`/users/${userId}`);
 
             if (apiResponse.code !== 200) {
                 console.error(`Lỗi lấy thông tin profile của người dùng ID ${userId}:`, apiResponse.message);
@@ -218,7 +218,7 @@ class UserService {
                 ? `/users/${userId}/avatar` // Endpoint cho admin cập nhật avatar của người dùng khác
                 : '/users/me/avatar';      // Endpoint cho người dùng cập nhật avatar của chính mình
 
-            const apiResponse = await identityHttpClient.post<ApiResponse<UserResponse>>(
+            const apiResponse = await identityHttpClient.put<ApiResponse<UserResponse>>(
                 endpoint,
                 formData,
                 {
@@ -258,9 +258,9 @@ class UserService {
                 reason: !enabled ? reason : undefined // Chỉ gửi reason khi khóa
             };
 
-            // Sửa lại từ PUT thành POST và thay đổi endpoint từ /users/toggle-status thành /users/status
-            const apiResponse = await identityHttpClient.post<ApiResponse<UserResponse>>(
-                '/users/status',
+            // Sử dụng PUT với endpoint REST-compliant
+            const apiResponse = await identityHttpClient.put<ApiResponse<UserResponse>>(
+                `/users/${userId}/status`,
                 request
             );
 
@@ -384,7 +384,7 @@ class UserService {
     async getNewUsersToday(): Promise<number> {
         logApiCall('getNewUsersToday');
         try {
-            const apiResponse = await identityHttpClient.get<ApiResponse<number>>('/users/statistics/today');
+            const apiResponse = await identityHttpClient.get<ApiResponse<number>>('/users/statistics/daily');
 
             if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Không thể lấy số người dùng mới trong ngày", { position: "top-right" });

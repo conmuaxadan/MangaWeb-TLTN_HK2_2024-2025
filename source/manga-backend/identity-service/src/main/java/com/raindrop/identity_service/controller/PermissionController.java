@@ -7,7 +7,6 @@ import com.raindrop.identity_service.service.PermissionService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +17,6 @@ import java.util.List;
 @RequestMapping("/permissions")
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-@Slf4j
 public class PermissionController {
     PermissionService permissionService;
 
@@ -38,6 +36,15 @@ public class PermissionController {
         return ApiResponse.<List<PermissionResponse>>builder()
                 .message("Permissions retrieved successfully")
                 .result(permissionService.getAll())
+                .build();
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
+    ApiResponse<PermissionResponse> getPermissionById(@PathVariable Long id) {
+        return ApiResponse.<PermissionResponse>builder()
+                .message("Permission retrieved successfully")
+                .result(permissionService.getById(id))
                 .build();
     }
 

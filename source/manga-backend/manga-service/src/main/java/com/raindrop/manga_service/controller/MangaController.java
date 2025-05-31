@@ -17,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
@@ -46,13 +47,10 @@ public class MangaController {
                 .map(String::trim)
                 .collect(Collectors.toSet());
 
-        // Chuyển đổi String status thành enum MangaStatus
         MangaStatus status;
         try {
             status = MangaStatus.valueOf(statusStr.toUpperCase());
         } catch (IllegalArgumentException e) {
-            // Nếu không chuyển đổi được, sử dụng giá trị mặc định ONGOING
-            log.warn("Invalid status value: {}, using default ONGOING", statusStr);
             status = MangaStatus.ONGOING;
         }
 
@@ -90,7 +88,6 @@ public class MangaController {
             @RequestParam(value = "yearOfRelease", required = false) Integer yearOfRelease,
             @PageableDefault(size = 10) Pageable pageable
     ) {
-        // Nếu có bất kỳ filter nào, sử dụng search and filter
         if (keyword != null || genreName != null || status != null || yearOfRelease != null) {
             return ApiResponse.<Page<MangaManagementResponse>>builder()
                     .message("Filtered mangas retrieved successfully")
@@ -98,12 +95,12 @@ public class MangaController {
                     .build();
         }
 
-        // Nếu không có filter, sử dụng method cũ
         return ApiResponse.<Page<MangaManagementResponse>>builder()
                 .message("Mangas retrieved successfully")
                 .result(mangaService.getAllMangas(pageable))
                 .build();
     }
+
     @GetMapping("/management/deleted")
     ApiResponse<Page<MangaManagementResponse>> getAllDeletedMangas(
             @RequestParam(value = "keyword", required = false) String keyword,
@@ -112,7 +109,6 @@ public class MangaController {
             @RequestParam(value = "yearOfRelease", required = false) Integer yearOfRelease,
             @PageableDefault(size = 10) Pageable pageable
     ) {
-        // Nếu có bất kỳ filter nào, sử dụng search and filter
         if (keyword != null || genreName != null || status != null || yearOfRelease != null) {
             return ApiResponse.<Page<MangaManagementResponse>>builder()
                     .message("Filtered deleted mangas retrieved successfully")
@@ -120,7 +116,6 @@ public class MangaController {
                     .build();
         }
 
-        // Nếu không có filter, sử dụng method cũ
         return ApiResponse.<Page<MangaManagementResponse>>builder()
                 .message("Deleted mangas retrieved successfully")
                 .result(mangaService.getAllDeletedMangas(pageable))
@@ -128,11 +123,6 @@ public class MangaController {
     }
 
 
-    /**
-     * Lấy danh sách tóm tắt manga có phân trang
-     * @param pageable Thông tin phân trang
-     * @return Danh sách tóm tắt manga có phân trang
-     */
     @GetMapping("/summaries")
     ApiResponse<Page<MangaSummaryResponse>> getMangaSummaries(Pageable pageable) {
         return ApiResponse.<Page<MangaSummaryResponse>>builder()
@@ -153,13 +143,12 @@ public class MangaController {
             @RequestParam(value = "yearOfRelease", required = false, defaultValue = "0") int yearOfRelease,
             @RequestParam(value = "status", required = false) String statusStr
     ) {
-        // Chuyển đổi String status thành enum MangaStatus nếu có
         MangaStatus status = null;
         if (statusStr != null && !statusStr.isEmpty()) {
             try {
                 status = MangaStatus.valueOf(statusStr.toUpperCase());
             } catch (IllegalArgumentException e) {
-                log.warn("Invalid status value: {}, using null", statusStr);
+                // Invalid status, keep null
             }
         }
 
@@ -179,12 +168,7 @@ public class MangaController {
                 .build();
     }
 
-    /**
-     * Xóa mềm manga
-     * @param id ID của manga cần xóa
-     * @param jwt JWT token của người dùng
-     * @return Thông báo xóa thành công
-     */
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Void> deleteManga(
@@ -198,11 +182,7 @@ public class MangaController {
                 .build();
     }
 
-    /**
-     * Lấy danh sách manga đã bị xóa
-     * @param pageable Thông tin phân trang
-     * @return Danh sách manga đã bị xóa
-     */
+
     @GetMapping("/deleted")
     @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Page<MangaResponse>> getDeletedMangas(Pageable pageable) {
@@ -212,11 +192,7 @@ public class MangaController {
                 .build();
     }
 
-    /**
-     * Khôi phục manga đã xóa
-     * @param id ID của manga cần khôi phục
-     * @return Thông tin manga đã khôi phục
-     */
+
     @PostMapping("/{id}/restore")
     @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<MangaResponse> restoreManga(@PathVariable String id) {
@@ -226,12 +202,7 @@ public class MangaController {
                 .build();
     }
 
-    /**
-     * Tìm kiếm nâng cao manga
-     * @param searchRequest Yêu cầu tìm kiếm nâng cao
-     * @param pageable Thông tin phân trang
-     * @return Danh sách manga phù hợp với điều kiện tìm kiếm
-     */
+
     @PostMapping("/search/advanced")
     ApiResponse<Page<MangaResponse>> advancedSearch(
             @RequestBody AdvancedSearchRequest searchRequest,
@@ -243,12 +214,7 @@ public class MangaController {
                 .build();
     }
 
-    /**
-     * Tìm kiếm manga theo từ khóa
-     * @param keyword Từ khóa tìm kiếm
-     * @param pageable Thông tin phân trang
-     * @return Danh sách manga phù hợp với từ khóa
-     */
+
     @GetMapping("/search")
     ApiResponse<Page<MangaResponse>> searchByKeyword(
             @RequestParam String keyword,
@@ -260,31 +226,19 @@ public class MangaController {
                 .build();
     }
 
-    /**
-     * Endpoint dành riêng cho việc tìm kiếm truyện khi thêm chapter
-     * Trả về danh sách truyện ngắn gọn với các thông tin cần thiết
-     * @param keyword Từ khóa tìm kiếm (tên truyện)
-     * @return Danh sách truyện phù hợp với từ khóa
-     */
     @GetMapping("/search/quick")
     @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<List<MangaQuickSearchResponse>> quickSearchManga(
             @RequestParam String keyword,
             @RequestParam(required = false, defaultValue = "10") int limit
     ) {
-        log.info("Quick searching manga with keyword: {}, limit: {}", keyword, limit);
         return ApiResponse.<List<MangaQuickSearchResponse>>builder()
                 .message("Quick search results retrieved successfully")
                 .result(mangaService.quickSearchManga(keyword, limit))
                 .build();
     }
 
-    /**
-     * Tìm kiếm manga theo thể loại
-     * @param genreName Tên thể loại
-     * @param pageable Thông tin phân trang
-     * @return Danh sách manga thuộc thể loại
-     */
+
     @GetMapping("/genre/{genreName}")
     ApiResponse<Page<MangaSummaryResponse>> findByGenre(
             @PathVariable String genreName,
@@ -296,11 +250,7 @@ public class MangaController {
                 .build();
     }
 
-    /**
-     * Lấy số chapter cao nhất của một truyện
-     * @param id ID của truyện
-     * @return Số chapter cao nhất
-     */
+
     @GetMapping("/{id}/highest-chapter-number")
     @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Double> getHighestChapterNumber(@PathVariable String id) {
@@ -310,11 +260,7 @@ public class MangaController {
                 .build();
     }
 
-    /**
-     * Đếm tổng số truyện trong hệ thống
-     * @param includeDeleted Có bao gồm truyện đã xóa hay không (mặc định là false)
-     * @return Tổng số truyện
-     */
+
     @GetMapping("/count")
     @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Long> countMangas(@RequestParam(required = false, defaultValue = "false") boolean includeDeleted) {
@@ -324,10 +270,7 @@ public class MangaController {
                 .build();
     }
 
-    /**
-     * Lấy thống kê tổng hợp về truyện
-     * @return Thống kê tổng hợp về truyện
-     */
+
     @GetMapping("/statistics")
     @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<MangaStatisticsResponse> getMangaStatistics() {

@@ -11,9 +11,6 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
-/**
- * DTO chứa thông tin tài khoản liên kết để trả về cho client
- */
 @Data
 @Builder
 @NoArgsConstructor

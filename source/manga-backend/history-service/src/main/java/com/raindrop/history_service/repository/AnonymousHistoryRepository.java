@@ -31,69 +31,32 @@ public interface AnonymousHistoryRepository extends JpaRepository<AnonymousHisto
 
     Optional<AnonymousHistory> findFirstBySessionIdAndMangaIdOrderByUpdatedAtDesc(String sessionId, String mangaId);
 
-    /**
-     * Đếm tổng số lượt xem (mỗi bản ghi là 1 lượt xem chapter)
-     * @return Tổng số lượt xem
-     */
     @Query("SELECT COUNT(a) FROM AnonymousHistory a")
     Long countTotalViews();
 
-    /**
-     * Đếm số lượt xem trong ngày hôm nay
-     * @return Số lượt xem trong ngày
-     */
     @Query("SELECT COUNT(a) FROM AnonymousHistory a WHERE DATE(a.createdAt) = CURRENT_DATE")
     Long countTodayViews();
 
-    /**
-     * Đếm số lượt xem theo ngày trong khoảng thời gian
-     * @param startDate Ngày bắt đầu
-     * @param endDate Ngày kết thúc
-     * @return Danh sách thống kê lượt xem theo ngày
-     */
     @Query("SELECT (DATE(a.createdAt), COUNT(a)) " +
             "FROM AnonymousHistory a " +
             "WHERE DATE(a.createdAt) BETWEEN :startDate AND :endDate " +
             "GROUP BY DATE(a.createdAt) ORDER BY DATE(a.createdAt)")
     List<Object[]> countViewsByDayBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-    /**
-     * Đếm số lượt xem trong tuần này
-     * @return Số lượt xem trong tuần
-     */
     @Query("SELECT COUNT(a) FROM AnonymousHistory a WHERE YEARWEEK(a.createdAt) = YEARWEEK(CURRENT_DATE)")
     Long countThisWeekViews();
 
-    /**
-     * Đếm số lượt xem trong tháng này
-     * @return Số lượt xem trong tháng
-     */
     @Query("SELECT COUNT(a) FROM AnonymousHistory a WHERE YEAR(a.createdAt) = YEAR(CURRENT_DATE) AND MONTH(a.createdAt) = MONTH(CURRENT_DATE)")
     Long countThisMonthViews();
 
-    /**
-     * Đếm số lượt xem theo truyện của người dùng không đăng nhập
-     * @return Danh sách số lượt xem theo truyện
-     */
     @Query("SELECT (a.mangaId, COUNT(a)) " +
             "FROM AnonymousHistory a GROUP BY a.mangaId ORDER BY COUNT(a) DESC")
     List<Object[]> countViewsByManga();
 
-    /**
-     * Đếm số lượt xem theo truyện của người dùng không đăng nhập
-     * @param mangaIds Danh sách ID của truyện
-     * @return Số lượt xem của mỗi truyện
-     */
     @Query("SELECT (a.mangaId, COUNT(a)) " +
             "FROM AnonymousHistory a WHERE a.mangaId IN :mangaIds GROUP BY a.mangaId")
     List<Object[]> countViewsByMangaIds(@Param("mangaIds") List<String> mangaIds);
 
-    /**
-     * Đếm số lượt xem theo truyện trong khoảng thời gian
-     * @param startDate Ngày bắt đầu
-     * @param endDate Ngày kết thúc
-     * @return Danh sách số lượt xem theo truyện
-     */
     @Query("SELECT (a.mangaId, COUNT(a)) " +
             "FROM AnonymousHistory a " +
             "WHERE DATE(a.createdAt) BETWEEN :startDate AND :endDate " +

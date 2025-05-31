@@ -2,7 +2,6 @@ package com.raindrop.identity_service.exception;
 
 import com.raindrop.identity_service.dto.response.ApiResponse;
 import com.raindrop.identity_service.enums.ErrorCode;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,11 +9,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
-@Slf4j
 public class GlobalExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<ApiResponse> handleRuntimeException(Exception e) {
-        log.error("Uncategorized exception:", e);
         ApiResponse response = new ApiResponse();
         response.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
         response.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage() + ": " + e.getMessage());
@@ -53,7 +50,6 @@ public class GlobalExceptionHandler {
             errorCode = ErrorCode.valueOf(defaultMessage);
         } catch (IllegalArgumentException exception) {
             // Nếu không phải là tên của enum ErrorCode, sử dụng VALIDATION_ERROR
-            log.warn("Validation message '{}' is not an ErrorCode enum name", defaultMessage);
         }
 
         // Tạo response với mã lỗi và thông báo phù hợp

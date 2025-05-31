@@ -41,9 +41,6 @@ public class User {
     @LastModifiedDate
     LocalDateTime updatedAt;
 
-    /**
-     * Trạng thái tài khoản: true = đang hoạt động, false = bị khóa
-     */
     @Builder.Default
     boolean enabled = true;
 }

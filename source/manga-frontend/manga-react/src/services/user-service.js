@@ -2,7 +2,7 @@ import { toast } from "react-toastify";
 import { identityHttpClient } from "./http-client.js";
 import { logApiCall } from "../utils/api-logger.js";
 
-class ProfileService {
+class UserService {
     /**
      * Lấy thông tin người dùng theo user ID từ identity service
      * @param userId ID của người dùng
@@ -11,7 +11,7 @@ class ProfileService {
     async getUserById(userId) {
         logApiCall('getUserById');
         try {
-            const apiResponse = await identityHttpClient.get(`/users/id/${userId}`);
+            const apiResponse = await identityHttpClient.get(`/users/${userId}`);
 
             if (apiResponse.code !== 200) {
                 // Không hiển thị thông báo lỗi vì đây là tính năng ngầm
@@ -85,7 +85,7 @@ class ProfileService {
             formData.append('image', file);
 
             // Gọi API cập nhật avatar từ identity service
-            const apiResponse = await identityHttpClient.post('/users/me/avatar', formData, {
+            const apiResponse = await identityHttpClient.put('/users/me/avatar', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -115,14 +115,14 @@ class ProfileService {
      */
     async changePassword(oldPassword, newPassword) {
         try {
-            console.log('Sending change password request to identity service:', '/users/change-password');
+            console.log('Sending change password request to identity service:', '/users/me/password');
             console.log('Request data:', { oldPassword, newPassword });
 
             const request = {
                 oldPassword,
                 newPassword
             };
-            const apiResponse = await identityHttpClient.post('/users/password', request);
+            const apiResponse = await identityHttpClient.put('/users/me/password', request);
 
             console.log('Change password response:', apiResponse);
 
@@ -141,5 +141,5 @@ class ProfileService {
     }
 }
 
-const profileService = new ProfileService();
-export default profileService;
+const userService = new UserService();
+export default userService;

@@ -9,9 +9,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repository để thao tác với LinkedAccount entity
- */
 @Repository
 public interface LinkedAccountRepository extends JpaRepository<LinkedAccount, String> {
     Optional<LinkedAccount> findByProviderAndUsername(AuthProvider provider, String username);

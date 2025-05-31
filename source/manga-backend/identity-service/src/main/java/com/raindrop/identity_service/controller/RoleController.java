@@ -7,7 +7,6 @@ import com.raindrop.identity_service.service.RoleService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -20,7 +19,6 @@ import java.util.List;
 @RequestMapping("/roles")
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-@Slf4j
 public class RoleController {
     RoleService roleService;
 
@@ -43,11 +41,6 @@ public class RoleController {
                 .build();
     }
 
-    /**
-     * Lấy danh sách role có phân trang
-     * @param pageable Thông tin phân trang
-     * @return Danh sách role có phân trang
-     */
     @GetMapping("/paginated")
     @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     ApiResponse<Page<RoleResponse>> getAllRolesPaginated(

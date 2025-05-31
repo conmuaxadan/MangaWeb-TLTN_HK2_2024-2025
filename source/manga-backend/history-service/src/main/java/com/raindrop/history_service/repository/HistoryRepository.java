@@ -27,84 +27,38 @@ public interface HistoryRepository extends JpaRepository<History, String> {
 
     List<History> findByUserIdOrderByUpdatedAtDesc(String userId);
 
-    /**
-     * Lấy tất cả mangaId đã đọc của người dùng
-     * @param userId ID của người dùng
-     * @return Danh sách tất cả mangaId đã đọc
-     */
     @Query(value = "SELECT DISTINCT manga_id FROM histories WHERE user_id = :userId", nativeQuery = true)
     List<String> findAllMangaIdsByUserId(@Param("userId") String userId);
 
-    /**
-     * Đếm tổng số lượt xem của người dùng đã đăng nhập (mỗi bản ghi là 1 lượt xem chapter)
-     * @return Tổng số lượt xem
-     */
     @Query("SELECT COUNT(rh) FROM History rh")
     Long countTotalViews();
 
-    /**
-     * Đếm số lượt xem trong ngày hôm nay của người dùng đã đăng nhập
-     * @return Số lượt xem trong ngày
-     */
     @Query("SELECT COUNT(rh) FROM History rh WHERE DATE(rh.createdAt) = CURRENT_DATE")
     Long countTodayViews();
 
-    /**
-     * Đếm số lượng người dùng duy nhất đã đọc truyện
-     * @return Số lượng người dùng duy nhất
-     */
     @Query("SELECT COUNT(DISTINCT rh.userId) FROM History rh")
     Long countDistinctUsers();
 
-    /**
-     * Đếm số lượt xem theo ngày trong khoảng thời gian
-     * @param startDate Ngày bắt đầu
-     * @param endDate Ngày kết thúc
-     * @return Danh sách thống kê lượt xem theo ngày
-     */
     @Query("SELECT (DATE(rh.createdAt), COUNT(rh)) " +
             "FROM History rh " +
             "WHERE DATE(rh.createdAt) BETWEEN :startDate AND :endDate " +
             "GROUP BY DATE(rh.createdAt) ORDER BY DATE(rh.createdAt)")
     List<Object[]> countViewsByDayBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-    /**
-     * Đếm số lượt xem trong tuần này
-     * @return Số lượt xem trong tuần
-     */
     @Query("SELECT COUNT(rh) FROM History rh WHERE YEARWEEK(rh.createdAt) = YEARWEEK(CURRENT_DATE)")
     Long countThisWeekViews();
 
-    /**
-     * Đếm số lượt xem trong tháng này
-     * @return Số lượt xem trong tháng
-     */
     @Query("SELECT COUNT(rh) FROM History rh WHERE YEAR(rh.createdAt) = YEAR(CURRENT_DATE) AND MONTH(rh.createdAt) = MONTH(CURRENT_DATE)")
     Long countThisMonthViews();
 
-    /**
-     * Đếm số lượt xem theo truyện
-     * @return Danh sách số lượt xem theo truyện
-     */
     @Query("SELECT (rh.mangaId, COUNT(rh)) " +
             "FROM History rh GROUP BY rh.mangaId ORDER BY COUNT(rh) DESC")
     List<Object[]> countViewsByManga();
 
-    /**
-     * Đếm số lượt xem theo truyện của người dùng đã đăng nhập
-     * @param mangaIds Danh sách ID của truyện
-     * @return Số lượt xem của mỗi truyện
-     */
     @Query("SELECT (rh.mangaId, COUNT(rh)) " +
             "FROM History rh WHERE rh.mangaId IN :mangaIds GROUP BY rh.mangaId")
     List<Object[]> countViewsByMangaIds(@Param("mangaIds") List<String> mangaIds);
 
-    /**
-     * Đếm số lượt xem theo truyện trong khoảng thời gian
-     * @param startDate Ngày bắt đầu
-     * @param endDate Ngày kết thúc
-     * @return Danh sách số lượt xem theo truyện
-     */
     @Query("SELECT (rh.mangaId, COUNT(rh)) " +
             "FROM History rh " +
             "WHERE DATE(rh.createdAt) BETWEEN :startDate AND :endDate " +

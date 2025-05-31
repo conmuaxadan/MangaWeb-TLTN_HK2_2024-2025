@@ -5,12 +5,10 @@ import com.raindrop.common.event.NewChapterEvent;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-@Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class NewChapterEventProducer {
@@ -30,6 +28,5 @@ public class NewChapterEventProducer {
                 .build();
 
         kafkaTemplate.send(NEW_CHAPTER_TOPIC, mangaId, event);
-        log.info("Sent NEW_CHAPTER event to Kafka for manga: {}, chapter: {}", mangaTitle, chapterTitle);
     }
 }

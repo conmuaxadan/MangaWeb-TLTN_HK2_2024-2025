@@ -21,7 +21,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -38,7 +37,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@Slf4j
 public class GoogleAuthService {
     AuthenticationService authenticationService;
     UserRepository userRepository;
@@ -66,17 +64,9 @@ public class GoogleAuthService {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * Xử lý đăng nhập Google
-     *
-     * @param code        Mã xác thực từ Google
-     * @param redirectUri URI chuyển hướng
-     * @return Thông tin xác thực
-     */
     @Transactional
     public AuthenticationResponse googleLogin(String code, String redirectUri) {
         try {
-            log.info("Processing Google login request");
             // Lấy thông tin người dùng từ Google
             GoogleUserInfoResponse googleUserInfo = getGoogleUserInfo(code, redirectUri);
             // Tìm tài khoản đã liên kết với Google ID này
@@ -87,7 +77,6 @@ public class GoogleAuthService {
             if (linkedAccount.isPresent()) {
                 // Nếu đã liên kết, lấy user chính
                 user = linkedAccount.get().getUser();
-                log.info("Found linked account for Google ID: {}", googleUserInfo.getGoogleId());
             } else {
                 // Tìm user có email trùng với Google
                 var existingUser = userRepository.findByEmail(googleUserInfo.getEmail());
@@ -103,14 +92,10 @@ public class GoogleAuthService {
                                 .providerUserId(googleUserInfo.getGoogleId())
                                 .build();
                         linkedAccountRepository.save(newLink);
-                        log.info("Auto-linked Google account to existing LOCAL user with email: {}", googleUserInfo.getEmail());
-                    } else {
-                        log.info("Found existing user with matching email but not LOCAL provider: {}", googleUserInfo.getEmail());
                     }
                 } else {
                     // Nếu không tìm thấy, tạo user mới
                     user = createNewGoogleUser(googleUserInfo);
-                    log.info("Created new user from Google authentication: {}", googleUserInfo.getEmail());
                 }
             }
             // Xác thực người dùng
@@ -122,19 +107,11 @@ public class GoogleAuthService {
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Error during Google login: {}", e.getMessage(), e);
             throw new AppException(ErrorCode.GOOGLE_LOGIN_ERROR);
         }
     }
 
 
-    /**
-     * Lấy thông tin người dùng từ Google
-     *
-     * @param code        Mã xác thực từ Google
-     * @param redirectUri URI chuyển hướng
-     * @return Thông tin người dùng Google
-     */
     public GoogleUserInfoResponse getGoogleUserInfo(String code, String redirectUri) {
         try {
             // Đổi code lấy token từ Google
@@ -147,14 +124,10 @@ public class GoogleAuthService {
             String userInfoResponse = getUserInfo(accessToken);
             JsonNode userJson = parseAndValidateJsonResponse(userInfoResponse, ErrorCode.GOOGLE_USER_INFO_ERROR, "Google User Info error");
 
-            log.info(userJson.toString());
-
             String email = userJson.get("email").asText();
             String name = userJson.get("name") != null ? userJson.get("name").asText() : email;
             String googleId = userJson.get("sub").asText();
             String picture = userJson.get("picture").asText();
-
-            log.info("User authenticated via Google - Email: {}, Google ID: {}", email, googleId);
 
             return GoogleUserInfoResponse.builder()
                     .email(email)
@@ -165,51 +138,30 @@ public class GoogleAuthService {
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Error getting Google user info: {}", e.getMessage());
             throw new AppException(ErrorCode.GOOGLE_USER_INFO_ERROR);
         }
     }
 
-    /**
-     * Phân tích và xác thực phản hồi JSON
-     *
-     * @param jsonResponse Phản hồi JSON
-     * @param errorCode    Mã lỗi nếu có lỗi
-     * @param errorPrefix  Tiền tố lỗi cho log
-     * @return JsonNode đã phân tích
-     */
     private JsonNode parseAndValidateJsonResponse(String jsonResponse, ErrorCode errorCode, String errorPrefix) {
         try {
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             // Kiểm tra lỗi từ Google
             if (jsonNode.has("error")) {
-                String error = jsonNode.get("error").asText();
-                String errorDescription = jsonNode.has("error_description") ?
-                        jsonNode.get("error_description").asText() : "Unknown error";
-                log.error("{}: {} - {}", errorPrefix, error, errorDescription);
                 throw new AppException(errorCode);
             }
 
             return jsonNode;
         } catch (Exception e) {
-            log.error("Error parsing JSON response: {}", e.getMessage());
             throw new AppException(errorCode);
         }
     }
 
-    /**
-     * Tạo người dùng mới từ thông tin Google
-     *
-     * @param googleUserInfo Thông tin người dùng Google
-     * @return Đối tượng User mới
-     */
     private User createNewGoogleUser(GoogleUserInfoResponse googleUserInfo) {
         // Tìm kiếm role USER đã tồn tại trong cơ sở dữ liệu
         var roles = new HashSet<Role>();
         Role userRole = roleRepository.findByName("USER");
         if (userRole == null) {
-            log.error("Default USER role not found in database");
             throw new AppException(ErrorCode.ROLE_NOT_FOUND);
         }
         roles.add(userRole);
@@ -248,7 +200,6 @@ public class GoogleAuthService {
                 displayName = originalDisplayName + counter;
             }
             counter++;
-            log.debug("Display name already exists, trying: {}", displayName);
         }
 
         User user = User.builder()
@@ -272,7 +223,6 @@ public class GoogleAuthService {
     }
 
     private String exchangeCodeForToken(String code, String redirectUri) throws Exception {
-        log.debug("Exchanging code for token with Google OAuth");
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(tokenUri);
         httpPost.setHeader("Content-Type", "application/json");
@@ -291,19 +241,16 @@ public class GoogleAuthService {
             String responseBody = EntityUtils.toString(response.getEntity());
 
             if (statusCode < 200 || statusCode >= 300) {
-                log.error("Error response from Google token endpoint: {} - {}", statusCode, responseBody);
                 throw new Exception("Google token endpoint returned status code: " + statusCode);
             }
 
             return responseBody;
         } catch (Exception e) {
-            log.error("Exception during token exchange: {}", e.getMessage());
             throw e;
         }
     }
 
     private String getUserInfo(String accessToken) throws Exception {
-        log.debug("Fetching user info from Google");
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(userInfoUri);
         httpPost.setHeader("Authorization", "Bearer " + accessToken);
@@ -313,13 +260,11 @@ public class GoogleAuthService {
             String responseBody = EntityUtils.toString(response.getEntity());
 
             if (statusCode < 200 || statusCode >= 300) {
-                log.error("Error response from Google user info endpoint: {} - {}", statusCode, responseBody);
                 throw new Exception("Google user info endpoint returned status code: " + statusCode);
             }
 
             return responseBody;
         } catch (Exception e) {
-            log.error("Exception during user info fetch: {}", e.getMessage());
             throw e;
         }
     }

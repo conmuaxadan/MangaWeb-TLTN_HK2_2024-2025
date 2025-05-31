@@ -11,7 +11,6 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AnonymousHistoryService {
@@ -28,17 +26,8 @@ public class AnonymousHistoryService {
     ChapterViewEventProducer chapterViewEventProducer;
     MangaClient mangaClient;
 
-    /**
-     * Đánh dấu đã đọc chapter cho người dùng không đăng nhập
-     * @param request Thông tin chapter đã đọc
-     * @param ipAddress Địa chỉ IP của người dùng
-     * @return Thông tin lịch sử đọc
-     */
     @Transactional
     public AnonymousHistoryResponse markChapterAsRead(AnonymousHistoryRequest request, String ipAddress) {
-        log.info("Marking chapter {} of manga {} as read for anonymous user with session {}",
-                request.getChapterId(), request.getMangaId(), request.getSessionId());
-
         // Kiểm tra xem đã có lịch sử đọc cho chapter này chưa
         Optional<AnonymousHistory> existingHistory = anonymousHistoryRepository
                 .findBySessionIdAndMangaIdAndChapterId(request.getSessionId(), request.getMangaId(), request.getChapterId());
@@ -55,8 +44,6 @@ public class AnonymousHistoryService {
                 request.getMangaId(),
                 null
         );
-        log.info("Sent chapter view event for anonymous user, chapter {} of manga {}",
-                request.getChapterId(), request.getMangaId());
 
         // Tạo response
         AnonymousHistoryResponse response = anonymousHistoryMapper.toAnonymousReadingHistoryResponse(readingHistory);
@@ -67,15 +54,7 @@ public class AnonymousHistoryService {
         return response;
     }
 
-    /**
-     * Lấy lịch sử đọc của người dùng không đăng nhập
-     * @param sessionId ID phiên của người dùng
-     * @param pageable Thông tin phân trang
-     * @return Danh sách lịch sử đọc có phân trang
-     */
     public Page<AnonymousHistoryResponse> getReadingHistory(String sessionId, Pageable pageable) {
-        log.info("Getting reading history for anonymous user with session {}", sessionId);
-
         // Lấy lịch sử đọc theo manga (mỗi manga chỉ lấy chapter đọc gần nhất)
         Page<AnonymousHistory> readingHistories = anonymousHistoryRepository
                 .findLatestBySessionIdGroupByManga(sessionId, pageable);
@@ -97,8 +76,6 @@ public class AnonymousHistoryService {
      * @return Thông tin lịch sử đọc
      */
     public AnonymousHistoryResponse getMangaReadingHistory(String sessionId, String mangaId) {
-        log.info("Getting reading history for manga {} and anonymous user with session {}", mangaId, sessionId);
-
         // Lấy lịch sử đọc gần nhất của manga
         AnonymousHistory readingHistory = anonymousHistoryRepository
                 .findFirstBySessionIdAndMangaIdOrderByUpdatedAtDesc(sessionId, mangaId)
@@ -112,44 +89,22 @@ public class AnonymousHistoryService {
         return response;
     }
 
-    /**
-     * Đếm số lượng phiên duy nhất
-     * @return Số lượng phiên duy nhất
-     */
     public Long countDistinctSessions() {
         return anonymousHistoryRepository.countDistinctSessions();
     }
 
-    /**
-     * Đếm số lượng phiên duy nhất đã đọc một manga cụ thể
-     * @param mangaId ID của manga
-     * @return Số lượng phiên duy nhất
-     */
     public Long countDistinctSessionsByMangaId(String mangaId) {
         return anonymousHistoryRepository.countDistinctSessionsByMangaId(mangaId);
     }
 
-    /**
-     * Đếm số lượng phiên duy nhất đã đọc một chapter cụ thể
-     * @param chapterId ID của chapter
-     * @return Số lượng phiên duy nhất
-     */
     public Long countDistinctSessionsByChapterId(String chapterId) {
         return anonymousHistoryRepository.countDistinctSessionsByChapterId(chapterId);
     }
 
-    /**
-     * Đếm tổng số lượt xem (mỗi bản ghi là 1 lượt xem chapter)
-     * @return Tổng số lượt xem
-     */
     public Long countTotalViews() {
         return anonymousHistoryRepository.countTotalViews();
     }
 
-    /**
-     * Đếm số lượt xem trong ngày hôm nay
-     * @return Số lượt xem trong ngày
-     */
     public Long countTodayViews() {
         return anonymousHistoryRepository.countTodayViews();
     }
@@ -181,7 +136,6 @@ public class AnonymousHistoryService {
             }
 
         } catch (Exception e) {
-            log.error("Error getting manga/chapter info", e);
         }
     }
 }

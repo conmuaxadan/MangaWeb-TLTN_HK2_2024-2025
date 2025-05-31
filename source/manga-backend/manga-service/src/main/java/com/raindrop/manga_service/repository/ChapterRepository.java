@@ -23,70 +23,59 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
 
     int countByMangaId(String mangaId);
 
-    /**
-     * Tìm kiếm và lọc chapter theo manga
-     * @param mangaId ID của manga (nếu có)
-     * @param pageable Thông tin phân trang
-     * @return Danh sách chapter đã được lọc
-     */
-    @Query("SELECT c FROM Chapter c " +
-           "WHERE (:mangaId IS NULL OR c.manga.id = :mangaId) " +
-           "ORDER BY c.manga.title ASC, c.chapterNumber ASC")
-    Page<Chapter> searchAndFilterChapters(
-            @Param("mangaId") String mangaId,
-            Pageable pageable);
-
-    /**
-     * Tăng lượt xem của chapter mà không cập nhật thời gian updatedAt
-     * @param id ID của chapter
-     * @return Số bản ghi được cập nhật
-     */
     @Modifying
     @Transactional
     @Query("UPDATE Chapter c SET c.views = c.views + 1 WHERE c.id = :id")
     int incrementViews(@Param("id") String id);
 
-    /**
-     * Tăng số lượng comment của chapter
-     * @param id ID của chapter
-     * @return Số bản ghi được cập nhật
-     */
     @Modifying
     @Transactional
     @Query("UPDATE Chapter c SET c.comments = c.comments + 1 WHERE c.id = :id")
     int incrementComments(@Param("id") String id);
 
-    /**
-     * Giảm số lượng comment của chapter
-     * @param id ID của chapter
-     * @return Số bản ghi được cập nhật
-     */
     @Modifying
     @Transactional
     @Query("UPDATE Chapter c SET c.comments = CASE WHEN c.comments > 0 THEN c.comments - 1 ELSE 0 END WHERE c.id = :id")
     int decrementComments(@Param("id") String id);
 
-    /**
-     * Tính tổng số lượt xem của tất cả các chapter của một manga
-     * @param mangaId ID của manga
-     * @return Tổng số lượt xem
-     */
     @Query("SELECT SUM(c.views) FROM Chapter c WHERE c.manga.id = :mangaId")
     Integer sumViewsByMangaId(@Param("mangaId") String mangaId);
 
-    /**
-     * Tính t���ng số comment của tất cả các chapter của một manga
-     * @param mangaId ID của manga
-     * @return Tổng số comment
-     */
     @Query("SELECT SUM(c.comments) FROM Chapter c WHERE c.manga.id = :mangaId")
     Integer sumCommentsByMangaId(@Param("mangaId") String mangaId);
 
-    /**
-     * Tìm chapter có chapterNumber cao thứ hai của một manga
-     * @param mangaId ID của manga
-     * @return Danh sách chapter sắp xếp theo chapterNumber giảm dần
-     */
     @Query("SELECT c FROM Chapter c WHERE c.manga.id = :mangaId ORDER BY c.chapterNumber DESC")
     List<Chapter> findByMangaIdOrderByChapterNumberDesc(@Param("mangaId") String mangaId);
+
+    // ==================== BATCH QUERIES WITH EAGER LOADING ====================
+
+    @Query("SELECT DISTINCT c FROM Chapter c " +
+            "LEFT JOIN FETCH c.pages p " +
+            "LEFT JOIN FETCH c.manga m " +
+            "ORDER BY c.createdAt DESC")
+    Page<Chapter> findAllWithPagesAndManga(Pageable pageable);
+
+    @Query("SELECT DISTINCT c FROM Chapter c " +
+            "LEFT JOIN FETCH c.pages p " +
+            "WHERE c.manga.id = :mangaId " +
+            "ORDER BY c.chapterNumber ASC")
+    List<Chapter> findByMangaIdWithPages(@Param("mangaId") String mangaId);
+
+    @Query("SELECT c FROM Chapter c " +
+            "LEFT JOIN FETCH c.pages p " +
+            "LEFT JOIN FETCH c.manga m " +
+            "WHERE c.id = :id")
+    Optional<Chapter> findByIdWithPagesAndManga(@Param("id") String id);
+
+    @Query("SELECT DISTINCT c FROM Chapter c " +
+            "LEFT JOIN FETCH c.pages p " +
+            "LEFT JOIN FETCH c.manga m " +
+            "WHERE (:mangaId IS NULL OR c.manga.id = :mangaId) " +
+            "ORDER BY c.manga.title ASC, c.chapterNumber ASC")
+    Page<Chapter> searchAndFilterChaptersWithPages(
+            @Param("mangaId") String mangaId,
+            Pageable pageable);
+
+
 }
+

@@ -17,7 +17,7 @@ class AuthService {
         logApiCall('login');
         try {
             const request = {username, password};
-            const apiResponse = await identityHttpClient.post('/auth/tokens', request);
+            const apiResponse = await identityHttpClient.post('/auth/login', request);
 
             if (apiResponse.code !== 200) {
                 // Xử lý các mã lỗi cụ thể
@@ -67,7 +67,7 @@ class AuthService {
                 code,
                 redirectUri: OAuthConfig.redirectUri,
             };
-            const apiResponse = await identityHttpClient.post('/auth/google/tokens', request);
+            const apiResponse = await identityHttpClient.post('/auth/google/login', request);
 
             if (apiResponse.code !== 200) {
                 // Xử lý các mã lỗi cụ thể
@@ -180,7 +180,7 @@ class AuthService {
             if (token) {
                 try {
                     console.log('AuthService: Gọi API đăng xuất');
-                    await identityHttpClient.post('/auth/tokens/revoke', {token});
+                    await identityHttpClient.post('/auth/logout', {token});
                     console.log('AuthService: Đăng xuất thành công trên server');
                 } catch (apiError) {
                     console.error('AuthService: Lỗi khi gọi API đăng xuất:', apiError);
@@ -217,7 +217,7 @@ class AuthService {
             }
 
             const request = {refreshToken};
-            const apiResponse = await identityHttpClient.post('/auth/tokens/refresh', request);
+            const apiResponse = await identityHttpClient.post('/auth/refresh', request);
 
             if (apiResponse.code !== 200) {
                 console.error("Làm mới token thất bại:", apiResponse.message);
@@ -256,7 +256,7 @@ class AuthService {
                 code,
                 redirectUri: OAuthConfig.redirectUri,
             };
-            const apiResponse = await identityHttpClient.post('/users/accounts/google', request);
+            const apiResponse = await identityHttpClient.post('/users/me/accounts/google', request);
 
             if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Liên kết tài khoản Google thất bại", {position: "top-right"});
@@ -283,7 +283,7 @@ class AuthService {
         logApiCall('linkLocalAccount');
         try {
             const request = {username, email, password};
-            const apiResponse = await identityHttpClient.post('/users/accounts/local', request);
+            const apiResponse = await identityHttpClient.post('/users/me/accounts/local', request);
 
             if (apiResponse.code !== 200) {
                 toast.error(apiResponse.message || "Liên kết tài khoản Local thất bại", {position: "top-right"});
@@ -306,7 +306,7 @@ class AuthService {
     async getLinkedAccounts() {
         logApiCall('getLinkedAccounts');
         try {
-            const apiResponse = await identityHttpClient.get('/users/accounts');
+            const apiResponse = await identityHttpClient.get('/users/me/accounts');
 
             if (apiResponse.code !== 200) {
                 console.error("Lấy danh sách tài khoản liên kết thất bại:", apiResponse.message);
@@ -374,7 +374,7 @@ class AuthService {
 
         try {
             console.log('Gọi API DELETE đến:', `/users/accounts/${accountId}`);
-            const apiResponse = await identityHttpClient.delete(`/users/accounts/${accountId}`);
+            const apiResponse = await identityHttpClient.delete(`/users/me/accounts/${accountId}`);
             console.log('Kết quả API:', apiResponse);
 
             if (apiResponse.code !== 200) {

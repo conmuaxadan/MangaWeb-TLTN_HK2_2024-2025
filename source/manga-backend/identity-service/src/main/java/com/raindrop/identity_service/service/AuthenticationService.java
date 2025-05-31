@@ -22,7 +22,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -38,7 +37,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
@@ -67,17 +65,14 @@ public class AuthenticationService {
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
-        log.debug("Introspecting token");
         boolean valid;
         String errorCode = null;
         try {
             verifyToken(token);
             valid = true;
-            log.debug("Token is valid");
         } catch (AppException e) {
             valid = false;
             errorCode = String.valueOf(e.getErrorCode().getCode());
-            log.debug("Token is invalid: {}, error code: {}", e.getMessage(), errorCode);
         }
         return IntrospectResponse.builder()
                 .valid(valid)
@@ -87,8 +82,6 @@ public class AuthenticationService {
 
     @Transactional
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        log.info("Authenticating user with input: {}", request.getUsername());
-
         String usernameOrEmail = request.getUsername();
         User user;
 
@@ -99,7 +92,6 @@ public class AuthenticationService {
 
             // Kiểm tra trạng thái tài khoản
             if (!user.isEnabled()) {
-                log.warn("Authentication failed: Account is locked for user {}", usernameOrEmail);
                 throw new AppException(ErrorCode.ACCOUNT_LOCKED);
             }
 
@@ -108,7 +100,6 @@ public class AuthenticationService {
             boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
             if (!authenticated) {
-                log.warn("Authentication failed: Invalid password for user {}", usernameOrEmail);
                 throw new AppException(ErrorCode.INVALID_CREDENTIALS);
             }
         } else {
@@ -118,7 +109,6 @@ public class AuthenticationService {
 
                 // Kiểm tra trạng thái tài khoản
                 if (!user.isEnabled()) {
-                    log.warn("Authentication failed: Account is locked for user {}", usernameOrEmail);
                     throw new AppException(ErrorCode.ACCOUNT_LOCKED);
                 }
 
@@ -127,7 +117,6 @@ public class AuthenticationService {
                 boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
                 if (!authenticated) {
-                    log.warn("Authentication failed: Invalid password for user {}", usernameOrEmail);
                     throw new AppException(ErrorCode.INVALID_CREDENTIALS);
                 }
             } else {
@@ -136,13 +125,10 @@ public class AuthenticationService {
 
                 // Kiểm tra trạng thái tài khoản
                 if (!user.isEnabled()) {
-                    log.warn("Authentication failed: Account is locked for user {}", user.getUsername());
                     throw new AppException(ErrorCode.ACCOUNT_LOCKED);
                 }
             }
         }
-
-        log.info("User authenticated successfully: {}", user.getUsername());
 
         // Tạo access token và refresh token cho user chính
         var accessToken = generateToken(user);
@@ -158,19 +144,13 @@ public class AuthenticationService {
 
     @Transactional
     public AuthenticationResponse googleAuthenticate(GoogleAuthenticationRequest request) {
-        log.info("Authenticating Google user: {}", request.getUsername());
-        var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> {
-            log.warn("Google authentication failed: User not found - {}", request.getUsername());
-            return new AppException(ErrorCode.USER_NOT_EXISTED);
-        });
+        var user = userRepository.findByUsername(request.getUsername()).orElseThrow(() ->
+            new AppException(ErrorCode.USER_NOT_EXISTED));
 
         // Kiểm tra trạng thái tài khoản
         if (!user.isEnabled()) {
-            log.warn("Google authentication failed: Account is locked for user {}", request.getUsername());
             throw new AppException(ErrorCode.ACCOUNT_LOCKED);
         }
-
-        log.info("Google user authenticated successfully: {}", request.getUsername());
         // Tạo access token
         var accessToken = generateToken(user);
         // Tạo refresh token
@@ -188,14 +168,11 @@ public class AuthenticationService {
 
     @Transactional
     public void logout(LogoutRequest request) throws JOSEException, ParseException {
-        log.info("Processing logout request");
         var signToken = verifyToken(request.getToken());
 
         String jit = signToken.getJWTClaimsSet().getJWTID();
         String subject = signToken.getJWTClaimsSet().getSubject();
         Date expirationTime = signToken.getJWTClaimsSet().getExpirationTime();
-
-        log.info("Invalidating token for user: {}", subject);
 
         // Tính thời gian còn lại của token (tính bằng giây)
         long expirationTimeInSeconds = (expirationTime.getTime() - System.currentTimeMillis()) / 1000;
@@ -206,13 +183,9 @@ public class AuthenticationService {
 
         // Thu hồi tất cả refresh token của người dùng
         tokenRedisService.revokeAllUserRefreshTokens(subject);
-        log.info("All refresh tokens revoked for user: {}", subject);
-
-        log.info("User logged out successfully: {}", subject);
     }
 
     private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
-        log.debug("Verifying token");
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
 
@@ -222,38 +195,28 @@ public class AuthenticationService {
 
         var verified = signedJWT.verify(verifier);
         if (!verified) {
-            log.warn("Token verification failed: Invalid signature");
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
         if (expirationTime.before(new Date())) {
-            log.warn("Token verification failed: Token expired for user {}", subject);
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
         // Kiểm tra token có trong blacklist của Redis không
         if (tokenRedisService.isBlacklisted(tokenId)) {
-            log.warn("Token verification failed: Token has been blacklisted for user {}", subject);
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
         // Kiểm tra trạng thái tài khoản
         checkAccountStatus(subject);
 
-        log.debug("Token verified successfully for user: {}", subject);
         return signedJWT;
     }
 
-    /**
-     * Kiểm tra trạng thái tài khoản
-     * @param userId ID của người dùng
-     * @throws AppException nếu tài khoản bị khóa
-     */
     private void checkAccountStatus(String userId) {
         // Tìm user trong database
         userRepository.findById(userId).ifPresent(user -> {
             if (!user.isEnabled()) {
-                log.warn("Token rejected: Account is locked for user {}", user.getUsername());
                 // Thu hồi tất cả refresh token của người dùng
                 tokenRedisService.revokeAllUserRefreshTokens(userId);
                 throw new AppException(ErrorCode.ACCOUNT_LOCKED);
@@ -262,7 +225,6 @@ public class AuthenticationService {
     }
 
     private String generateToken(User user) {
-        log.debug("Generating token for user: {}", user.getUsername());
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
         String tokenId = UUID.randomUUID().toString();
@@ -287,11 +249,8 @@ public class AuthenticationService {
 
         try {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
-            log.info("Token generated successfully for user: {}, expires at: {}",
-                    user.getUsername(), expirationTime);
             return jwsObject.serialize();
         } catch (JOSEException e) {
-            log.error("Error signing token for user: {}", user.getUsername(), e);
             throw new RuntimeException(e);
         }
     }
@@ -313,15 +272,8 @@ public class AuthenticationService {
         return joiner.toString();
     }
 
-    /**
-     * Tạo mới refresh token cho người dùng
-     * @param user Người dùng cần tạo refresh token
-     * @return String refresh token value
-     */
     @Transactional
     public String createRefreshToken(User user) {
-        log.info("Creating refresh token for user: {}", user.getUsername());
-
         // Tạo refresh token mới
         String tokenId = UUID.randomUUID().toString();
         String refreshTokenValue = UUID.randomUUID().toString();
@@ -329,24 +281,17 @@ public class AuthenticationService {
         // Lưu vào Redis
         tokenRedisService.saveRefreshToken(tokenId, user.getId(), refreshTokenValue, REFRESH_TOKEN_EXPIRATION);
 
-        log.info("Refresh token created successfully for user: {}", user.getUsername());
-
         return refreshTokenValue;
     }
 
-    /**
-     * Xử lý yêu cầu quên mật khẩu
-     */
     public ForgotPasswordResponse processForgotPassword(ForgotPasswordRequest request) {
         String email = request.getEmail();
-        log.info("Processing forgot password request for email: {}", email);
 
         // Tìm tất cả user có email này
         List<User> users = userRepository.findAllByEmail(email);
 
         if (users.isEmpty()) {
             // Không thông báo cụ thể để tránh lộ thông tin
-            log.warn("No users found with email: {}", email);
             return ForgotPasswordResponse.builder()
                 .success(true)
                 .message("Nếu email tồn tại, bạn sẽ nhận được mã xác nhận qua email")
@@ -359,7 +304,6 @@ public class AuthenticationService {
             .findFirst();
 
         if (localUserOpt.isEmpty()) {
-            log.warn("No local account found with email: {}", email);
             return ForgotPasswordResponse.builder()
                 .success(false)
                 .message("Không tìm thấy tài khoản local với email này. Nếu bạn đã đăng ký bằng mạng xã hội, vui lòng đăng nhập bằng tài khoản mạng xã hội đó.")
@@ -379,23 +323,17 @@ public class AuthenticationService {
         // Gửi sự kiện để notification service gửi email
         passwordResetEventProducer.sendPasswordResetEvent(email, localUser.getDisplayName(), resetCode);
 
-        log.info("Reset code sent to email: {} for local user: {}", email, localUser.getUsername());
         return ForgotPasswordResponse.builder()
             .success(true)
             .message("Mã xác nhận đã được gửi đến email của bạn")
             .build();
     }
 
-    /**
-     * Xác thực mã và đặt lại mật khẩu
-     */
     @Transactional
     public void verifyCodeAndResetPassword(ResetPasswordRequest request) {
         String email = request.getEmail();
         String code = request.getCode();
         String newPassword = request.getNewPassword();
-
-        log.info("Verifying reset code for email: {}", email);
 
         // Tìm tất cả user có email này
         List<User> users = userRepository.findAllByEmail(email);
@@ -410,7 +348,6 @@ public class AuthenticationService {
             .findFirst();
 
         if (localUserOpt.isEmpty()) {
-            log.warn("No local account found with email: {}", email);
             throw new AppException(ErrorCode.ACCOUNT_NOT_LOCAL);
         }
 
@@ -422,7 +359,6 @@ public class AuthenticationService {
 
         // Kiểm tra mã có tồn tại và khớp không
         if (storedCode == null || !storedCode.toString().equals(code)) {
-            log.warn("Invalid or expired reset code for email: {}", email);
             throw new AppException(ErrorCode.INVALID_RESET_CODE);
         }
 
@@ -432,53 +368,36 @@ public class AuthenticationService {
 
         // Xóa mã khỏi Redis
         redisTemplate.delete(redisKey);
-
-        log.info("Password reset successful for user: {}", localUser.getUsername());
     }
 
-    /**
-     * Tạo mã xác nhận ngẫu nhiên 6 số
-     */
     private String generateRandomCode() {
         Random random = new Random();
         int code = 100000 + random.nextInt(900000); // Tạo số ngẫu nhiên từ 100000 đến 999999
         return String.valueOf(code);
     }
 
-    /**
-     * Làm mới token dựa trên refresh token
-     * @param refreshTokenRequest Yêu cầu làm mới token
-     * @return Thông tin xác thực mới
-     */
     @Transactional
     public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
-        log.info("Processing refresh token request");
         String requestToken = refreshTokenRequest.getRefreshToken();
 
         // Kiểm tra refresh token trong Redis
         String redisToken = tokenRedisService.getRefreshToken(requestToken);
         if (redisToken == null) {
-            log.warn("Refresh token not found in Redis: {}", requestToken);
             throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         // Lấy userId từ refresh token
         String userId = tokenRedisService.getUserIdFromToken(requestToken);
         if (userId == null) {
-            log.warn("User ID not found for refresh token: {}", requestToken);
             throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         // Tìm user trong database
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    log.warn("User not found with ID: {}", userId);
-                    return new AppException(ErrorCode.USER_NOT_EXISTED);
-                });
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         // Kiểm tra trạng thái tài khoản
         if (!user.isEnabled()) {
-            log.warn("Refresh token rejected: Account is locked for user {}", user.getUsername());
             // Thu hồi tất cả refresh token của người dùng
             tokenRedisService.revokeAllUserRefreshTokens(userId);
             throw new AppException(ErrorCode.ACCOUNT_LOCKED);
@@ -486,8 +405,6 @@ public class AuthenticationService {
 
         // Tạo access token mới
         String accessToken = generateToken(user);
-
-        log.info("Token refreshed successfully for user: {}", user.getUsername());
 
         return AuthenticationResponse.builder()
                 .token(accessToken)
@@ -497,13 +414,6 @@ public class AuthenticationService {
                 .build();
     }
 
-    /**
-     * Tìm kiếm người dùng thông qua tài khoản liên kết
-     * @param usernameOrEmail Username hoặc email của tài khoản liên kết
-     * @param password Mật khẩu của tài khoản liên kết
-     * @return Đối tượng User nếu tìm thấy và xác thực thành công
-     * @throws AppException Nếu không tìm thấy hoặc xác thực thất bại
-     */
     private User findUserByLinkedAccount(String usernameOrEmail, String password) {
         // Tìm kiếm theo username
         var linkedAccountByUsername =
@@ -517,7 +427,6 @@ public class AuthenticationService {
             boolean authenticated = passwordEncoder.matches(password, linkedAccount.getPassword());
 
             if (!authenticated) {
-                log.warn("Authentication failed: Invalid password for linked account {}", usernameOrEmail);
                 throw new AppException(ErrorCode.INVALID_CREDENTIALS);
             }
 
@@ -536,7 +445,6 @@ public class AuthenticationService {
             boolean authenticated = passwordEncoder.matches(password, linkedAccount.getPassword());
 
             if (!authenticated) {
-                log.warn("Authentication failed: Invalid password for linked account {}", usernameOrEmail);
                 throw new AppException(ErrorCode.INVALID_CREDENTIALS);
             }
 
@@ -544,7 +452,6 @@ public class AuthenticationService {
         }
 
         // Không tìm thấy tài khoản liên kết
-        log.warn("Authentication failed: User not found with username/email - {}", usernameOrEmail);
         throw new AppException(ErrorCode.INVALID_CREDENTIALS);
     }
 }

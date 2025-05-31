@@ -18,25 +18,12 @@ public interface FavoriteRepository extends JpaRepository<Favorite, String> {
     void deleteByUserIdAndMangaId(String userId, String mangaId);
     long countByMangaId(String mangaId);
 
-    /**
-     * Lấy danh sách userId của người dùng đã yêu thích truyện
-     * @param mangaId ID của manga
-     * @return Danh sách userId của người dùng
-     */
     @Query("SELECT f.userId FROM Favorite f WHERE f.mangaId = :mangaId")
     List<String> findUserIdsByMangaId(@Param("mangaId") String mangaId);
 
-    /**
-     * Đếm tổng số yêu thích trong hệ thống
-     * @return Tổng số yêu thích
-     */
     @Query("SELECT COUNT(f) FROM Favorite f")
     long countTotalFavorites();
 
-    /**
-     * Đếm số yêu thích mới trong ngày hôm nay
-     * @return Số yêu thích mới trong ngày
-     */
     @Query("SELECT COUNT(f) FROM Favorite f WHERE DATE(f.createdAt) = CURRENT_DATE")
     long countTodayFavorites();
 }

@@ -11,7 +11,6 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +21,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class HistoryService {
@@ -32,18 +30,8 @@ public class HistoryService {
     MangaClient mangaClient;
 
 
-    /**
-     * Đánh dấu đã đọc chapter
-     *
-     * @param userId  ID của người dùng
-     * @param request Thông tin chapter đã đọc
-     * @return Thông tin lịch sử đọc
-     */
     @Transactional
     public HistoryResponse markChapterAsRead(String userId, HistoryRequest request) {
-        log.info("Marking chapter {} of manga {} as read for user {}",
-                request.getChapterId(), request.getMangaId(), userId);
-
         // Kiểm tra xem đã có lịch sử đọc cho chapter này chưa
         Optional<History> existingHistory = historyRepository
                 .findByUserIdAndMangaIdAndChapterId(userId, request.getMangaId(), request.getChapterId());
@@ -66,10 +54,6 @@ public class HistoryService {
         // Lưu lịch sử đọc
         history = historyRepository.save(history);
 
-
-        log.info("Sent chapter view event for chapter {} of manga {}",
-                request.getChapterId(), request.getMangaId());
-
         // Tạo response
         HistoryResponse response = historyMapper.toReadingHistoryResponse(history);
 
@@ -79,16 +63,7 @@ public class HistoryService {
         return response;
     }
 
-    /**
-     * Lấy lịch sử đọc của người dùng
-     *
-     * @param userId   ID của người dùng
-     * @param pageable Thông tin phân trang
-     * @return Danh sách lịch sử đọc có phân trang
-     */
     public Page<HistoryResponse> getReadingHistory(String userId, Pageable pageable) {
-        log.info("Getting reading history for user {}", userId);
-
         // Lấy lịch sử đọc theo manga (mỗi manga chỉ lấy chapter đọc gần nhất)
         Page<History> readingHistories = historyRepository
                 .findLatestByUserIdGroupByManga(userId, pageable);
@@ -111,16 +86,7 @@ public class HistoryService {
                 filteredContent.size() == result.getContent().size() ? result.getTotalElements() : filteredContent.size());
     }
 
-    /**
-     * Lấy lịch sử đọc của một manga cụ thể
-     *
-     * @param userId  ID của người dùng
-     * @param mangaId ID của manga
-     * @return Thông tin lịch sử đọc
-     */
     public HistoryResponse getMangaReadingHistory(String userId, String mangaId) {
-        log.info("Getting reading history for manga {} and user {}", mangaId, userId);
-
         // Lấy lịch sử đọc gần nhất của manga
         History history = historyRepository
                 .findFirstByUserIdAndMangaIdOrderByUpdatedAtDesc(userId, mangaId)
@@ -133,16 +99,7 @@ public class HistoryService {
         return response;
     }
 
-    /**
-     * Lấy lịch sử đọc gần đây của người dùng (mỗi manga chỉ lấy 1 lần)
-     *
-     * @param userId ID của người dùng
-     * @param limit  Số lượng manga cần lấy
-     * @return Danh sách lịch sử đọc gần đây
-     */
     public List<HistoryResponse> getRecentReadingHistory(String userId, int limit) {
-        log.info("Getting recent reading history for user {}, limit: {}", userId, limit);
-
         // Lấy tất cả lịch sử đọc của người dùng, sắp xếp theo thời gian gần nhất
         List<History> allHistory = historyRepository.findByUserIdOrderByUpdatedAtDesc(userId);
 
@@ -183,12 +140,7 @@ public class HistoryService {
      * @return Danh sách tất cả mangaId đã đọc
      */
     public List<String> getAllReadMangaIds(String userId) {
-        log.info("Getting all read manga IDs for user {}", userId);
-
-        // Lấy tất cả mangaId đã đọc
         List<String> allReadMangaIds = historyRepository.findAllMangaIdsByUserId(userId);
-        log.info("Retrieved {} manga IDs from reading history for user {}", allReadMangaIds.size(), userId);
-
         return allReadMangaIds;
     }
 
@@ -214,10 +166,8 @@ public class HistoryService {
 
 
         } catch (feign.FeignException.NotFound e) {
-            log.warn("Manga not found for ID: {}", mangaId);
             response.setMangaTitle("Truyện đã bị xóa");
         } catch (Exception e) {
-            log.error("Error getting manga/chapter info", e);
         }
 
         try {
@@ -229,11 +179,9 @@ public class HistoryService {
                 response.setChapterNumber(chapterInfo.getChapterNumber());
             }
         }catch (feign.FeignException.NotFound e) {
-            log.warn("Chapter not found for ID: {}", mangaId);
             response.setChapterTitle("Chương đã bị xóa");
             response.setChapterNumber(0);
         } catch (Exception e) {
-            log.error("Error getting manga/chapter info", e);
         }
     }
 }

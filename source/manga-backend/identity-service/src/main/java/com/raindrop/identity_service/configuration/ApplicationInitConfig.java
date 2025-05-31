@@ -10,7 +10,6 @@ import com.raindrop.identity_service.repository.PermissionRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +21,6 @@ import java.util.Set;
 @Configuration
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-@Slf4j
 public class ApplicationInitConfig {
     PasswordEncoder passwordEncoder;
 
@@ -77,7 +75,6 @@ public class ApplicationInitConfig {
                 user.setRoles(Set.of(adminRole));
 
                 user = userRepository.save(user);
-                log.warn("Admin user created with password: admin");
             }
         };
     }

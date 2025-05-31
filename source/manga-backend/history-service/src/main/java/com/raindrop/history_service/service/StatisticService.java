@@ -9,7 +9,6 @@ import com.raindrop.history_service.repository.httpclient.MangaClient;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -21,7 +20,6 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@Slf4j
 public class StatisticService {
     HistoryRepository historyRepository;
     AnonymousHistoryRepository anonymousHistoryRepository;
@@ -33,8 +31,6 @@ public class StatisticService {
      * @return Thống kê tổng hợp về lượt xem
      */
     public ViewStatisticsResponse getViewStatistics() {
-        log.info("Getting view statistics");
-
         // Đếm lượt xem của người dùng đã đăng nhập
         Long registeredUserViews = historyRepository.countTotalViews();
         Long registeredUserTodayViews = historyRepository.countTodayViews();
@@ -66,8 +62,6 @@ public class StatisticService {
      * @return Số lượt xem theo loại thống kê
      */
     public Long getViewsByType(String type) {
-        log.info("Getting views by type: {}", type);
-
         return switch (type) {
             case "total" -> {
                 // Đếm lượt xem của người dùng đã đăng nhập
@@ -97,8 +91,6 @@ public class StatisticService {
      * @return Danh sách thống kê lượt xem theo truyện
      */
     public List<MangaViewsResponse> getViewsByManga(int days, int limit) {
-        log.info("Getting views by manga, days: {}, limit: {}", days, limit);
-
         return days > 0
                 ? getViewsByMangaInPeriod(days, limit)
                 : getViewsByManga(limit);
@@ -112,8 +104,6 @@ public class StatisticService {
      * @return Danh sách thống kê lượt xem theo truyện
      */
     private List<MangaViewsResponse> getViewsByMangaInPeriod(int days, int limit) {
-        log.info("Getting views by manga for the last {} days, limit: {}", days, limit);
-
         // Tính toán ngày bắt đầu và ngày kết thúc
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(days - 1); // -1 vì bao gồm cả ngày hiện tại
@@ -132,8 +122,6 @@ public class StatisticService {
      * @return Danh sách thống kê lượt xem theo truyện
      */
     private List<MangaViewsResponse> getViewsByManga(int limit) {
-        log.info("Getting views by manga (all time), limit: {}", limit);
-
         // Lấy danh sách truyện có lượt xem nhiều nhất (tổng hợp cả 2 loại người dùng)
         List<Object[]> registeredUserViews = historyRepository.countViewsByManga();
         List<Object[]> anonymousViews = anonymousHistoryRepository.countViewsByManga();
@@ -212,24 +200,14 @@ public class StatisticService {
             }
         } catch (feign.FeignException.NotFound e) {
             // Xử lý riêng trường hợp truyện không tồn tại (404)
-            log.warn("Manga not found for ID: {}", mangaId);
             return "Truyện đã bị xóa #" + mangaId;
         } catch (Exception e) {
             // Xử lý các lỗi khác
-            log.error("Error getting manga info for ID: {}", mangaId, e);
         }
         return "Truyện #" + mangaId;
     }
 
-    /**
-     * Lấy thống kê lượt xem theo ngày trong khoảng thời gian
-     *
-     * @param days Số ngày cần lấy (7, 30, 90)
-     * @return Danh sách thống kê lượt xem theo ngày
-     */
     public List<ViewsByDayResponse> getViewsByDay(int days) {
-        log.info("Getting views by day for the last {} days", days);
-
         // Tính toán ngày bắt đầu và ngày kết thúc
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(days - 1); // -1 vì bao gồm cả ngày hiện tại
@@ -277,15 +255,7 @@ public class StatisticService {
         return registeredUserViews + anonymousViews;
     }
 
-    /**
-     * Lấy thống kê lượt xem theo ngày trong khoảng thời gian cụ thể
-     *
-     * @param startDateStr Ngày bắt đầu (format: yyyy-MM-dd)
-     * @param endDateStr Ngày kết thúc (format: yyyy-MM-dd)
-     * @return Danh sách thống kê lượt xem theo ngày
-     */
     public List<ViewsByDayResponse> getViewsByDateRange(String startDateStr, String endDateStr) {
-        log.info("Getting views by day from {} to {}", startDateStr, endDateStr);
 
         try {
             // Parse dates
@@ -332,21 +302,11 @@ public class StatisticService {
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
-            log.error("Error getting views by date range from {} to {}: {}", startDateStr, endDateStr, e.getMessage());
             return new ArrayList<>();
         }
     }
 
-    /**
-     * Lấy thống kê lượt xem theo truyện trong khoảng thời gian cụ thể
-     *
-     * @param startDateStr Ngày bắt đầu (format: yyyy-MM-dd)
-     * @param endDateStr Ngày kết thúc (format: yyyy-MM-dd)
-     * @param limit Số lượng truyện cần lấy
-     * @return Danh sách thống kê lượt xem theo truyện
-     */
     public List<MangaViewsResponse> getViewsByMangaDateRange(String startDateStr, String endDateStr, int limit) {
-        log.info("Getting views by manga from {} to {}, limit: {}", startDateStr, endDateStr, limit);
 
         try {
             // Parse dates
@@ -396,7 +356,6 @@ public class StatisticService {
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
-            log.error("Error getting views by manga date range from {} to {}: {}", startDateStr, endDateStr, e.getMessage());
             return new ArrayList<>();
         }
     }

@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -22,16 +21,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/comments")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@Slf4j
 public class CommentController {
     CommentService commentService;
 
-    /**
-     * Tạo bình luận mới
-     * @param jwt JWT token
-     * @param request Thông tin bình luận
-     * @return Thông tin bình luận đã tạo
-     */
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<CommentResponse> createComment(
@@ -46,12 +38,6 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * Lấy danh sách bình luận theo chapterId
-     * @param chapterId ID của chapter
-     * @param pageable Thông tin phân trang
-     * @return Danh sách bình luận có phân trang
-     */
     @GetMapping("/chapters/{chapterId}")
     public ApiResponse<Page<CommentResponse>> getCommentsByChapterId(
             @PathVariable String chapterId,
@@ -64,12 +50,6 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * Lấy danh sách bình luận theo mangaId
-     * @param mangaId ID của manga
-     * @param pageable Thông tin phân trang
-     * @return Danh sách bình luận có phân trang
-     */
     @GetMapping("/mangas/{mangaId}")
     public ApiResponse<Page<CommentResponse>> getCommentsByMangaId(
             @PathVariable String mangaId,
@@ -82,12 +62,6 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * Lấy danh sách bình luận của người dùng hiện tại
-     * @param jwt JWT token
-     * @param pageable Thông tin phân trang
-     * @return Danh sách bình luận có phân trang
-     */
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Page<CommentResponse>> getMyComments(
@@ -102,11 +76,6 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * Lấy danh sách bình luận mới nhất
-     * @param pageable Thông tin phân trang
-     * @return Danh sách bình luận có phân trang
-     */
     @GetMapping("/latest")
     public ApiResponse<Page<CommentResponse>> getLatestComments(
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable
@@ -118,16 +87,10 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * Đếm số bình luận của một manga
-     * @param mangaId ID của manga
-     * @return Số lượng bình luận
-     */
     @GetMapping("/mangas/{mangaId}/count")
     public ApiResponse<Long> countCommentsByMangaId(
             @PathVariable String mangaId
     ) {
-        log.info("Counting comments for manga: {}", mangaId);
         return ApiResponse.<Long>builder()
                 .code(200)
                 .message("Comments counted successfully")
@@ -135,12 +98,6 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * Xóa bình luận
-     * @param jwt JWT token
-     * @param commentId ID của bình luận
-     * @return Thông báo xóa thành công
-     */
     @DeleteMapping("/{commentId}")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Void> deleteComment(
@@ -155,11 +112,6 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * Lấy tất cả bình luận (dành cho admin)
-     * @param pageable Thông tin phân trang
-     * @return Danh sách bình luận có phân trang
-     */
     @GetMapping("/admin/all")
     @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<Page<CommentResponse>> getAllComments(
@@ -172,11 +124,6 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * Xóa bình luận (dành cho admin)
-     * @param commentId ID của bình luận
-     * @return Thông báo xóa thành công
-     */
     @DeleteMapping("/admin/{commentId}")
     @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
 //    @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -190,12 +137,6 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * Tìm kiếm bình luận (dành cho admin)
-     * @param keyword Từ khóa tìm kiếm
-     * @param pageable Thông tin phân trang
-     * @return Danh sách bình luận có phân trang
-     */
     @GetMapping("/admin/search")
     @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<Page<CommentResponse>> searchComments(
@@ -208,28 +149,18 @@ public class CommentController {
                 .build();
     }
 
-    /**
-     * Đếm tổng số bình luận trong hệ thống
-     * @return Tổng số bình luận
-     */
     @GetMapping("/count")
     @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<Long> countTotalComments() {
-        log.info("Counting total comments");
         return ApiResponse.<Long>builder()
                 .message("Total comments counted successfully")
                 .result(commentService.countTotalComments())
                 .build();
     }
 
-    /**
-     * Đếm số bình luận mới trong ngày hôm nay
-     * @return Số bình luận mới trong ngày
-     */
     @GetMapping("/count/today")
     @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public ApiResponse<Long> countTodayComments() {
-        log.info("Counting today's comments");
         return ApiResponse.<Long>builder()
                 .message("Today's comments counted successfully")
                 .result(commentService.countTodayComments())

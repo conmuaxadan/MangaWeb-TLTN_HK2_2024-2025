@@ -41,7 +41,6 @@ public class ChapterController {
                 .pages(pages)
                 .build();
 
-        log.info("Create chapter request: {}", request);
 
         return ApiResponse.<ChapterResponse>builder()
                 .code(201)
@@ -50,11 +49,7 @@ public class ChapterController {
                 .build();
     }
 
-    /**
-     * Lấy chapter theo ID
-     * @param id ID của chapter
-     * @return Thông tin chapter
-     */
+
     @GetMapping("/{id}")
     ApiResponse<ChapterResponse> getChapterById(@PathVariable String id) {
         return ApiResponse.<ChapterResponse>builder()
@@ -63,41 +58,25 @@ public class ChapterController {
                 .build();
     }
 
-    /**
-     * Lấy tất cả chapter với khả năng lọc
-     * @param mangaId ID của manga để lọc (optional)
-     * @param pageable Thông tin phân trang
-     * @return Danh sách chapter
-     */
     @GetMapping()
     ApiResponse<Page<ChapterResponse>> getAllChapters(
             @RequestParam(value = "mangaId", required = false) String mangaId,
             Pageable pageable) {
 
-        log.info("getAllChapters called with mangaId: {}, pageable: {}", mangaId, pageable);
-
-        // Nếu có mangaId filter, sử dụng search and filter
         if (mangaId != null && !mangaId.trim().isEmpty()) {
-            log.info("Using filtered search with mangaId: {}", mangaId);
             return ApiResponse.<Page<ChapterResponse>>builder()
                     .message("Filtered chapters retrieved successfully")
                     .result(chapterService.searchAndFilterChapters(mangaId, pageable))
                     .build();
         }
 
-        // Nếu không có filter, sử dụng method cũ
-        log.info("Using non-filtered search");
         return ApiResponse.<Page<ChapterResponse>>builder()
                 .message("Chapters retrieved successfully")
                 .result(chapterService.getAllChapters(pageable))
                 .build();
     }
 
-    /**
-     * Lấy danh sách chapter của một manga
-     * @param mangaId ID của manga
-     * @return Danh sách chapter của manga
-     */
+
     @GetMapping("/manga/{mangaId}")
     ApiResponse<List<ChapterResponse>> getChaptersByMangaId(
             @PathVariable String mangaId) {
@@ -107,11 +86,7 @@ public class ChapterController {
                 .build();
     }
 
-    /**
-     * Phương thức mới để lấy danh sách chapter của một manga
-     * @param mangaId ID của manga
-     * @return Danh sách chapter của manga
-     */
+
     @GetMapping("/byManga/{mangaId}")
     ApiResponse<List<ChapterResponse>> getChaptersByMangaIdRest(
             @PathVariable String mangaId) {
@@ -121,11 +96,7 @@ public class ChapterController {
                 .build();
     }
 
-    /**
-     * Lấy thông tin cơ bản của chapter
-     * @param id ID của chapter
-     * @return Thông tin cơ bản của chapter
-     */
+
     @GetMapping("/{id}/info")
     ApiResponse<ChapterInfoResponse> getChapterInfo(@PathVariable String id) {
         return ApiResponse.<ChapterInfoResponse>builder()
@@ -134,13 +105,7 @@ public class ChapterController {
                 .build();
     }
 
-    /**
-     * Cập nhật chapter
-     * @param id ID của chapter
-     * @param title Tiêu đề mới của chapter
-     * @param pages Danh sách trang mới (nếu có)
-     * @return Thông tin chapter sau khi cập nhật
-     */
+
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<ChapterResponse> updateChapter(
@@ -153,7 +118,6 @@ public class ChapterController {
                 .pages(pages)
                 .build();
 
-        log.info("Update chapter request: {}", request);
 
         return ApiResponse.<ChapterResponse>builder()
                 .message("Chapter updated successfully")
@@ -161,13 +125,7 @@ public class ChapterController {
                 .build();
     }
 
-    /**
-     * Cập nhật một trang cụ thể trong chapter
-     * @param id ID của chapter
-     * @param pageIndex Vị trí của trang cần cập nhật
-     * @param page File ảnh mới
-     * @return Thông tin chapter sau khi cập nhật
-     */
+
     @PutMapping(value = "/{id}/pages/{pageIndex}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<ChapterResponse> updateChapterPage(
@@ -175,7 +133,7 @@ public class ChapterController {
             @PathVariable int pageIndex,
             @RequestParam("page") MultipartFile page
     ) {
-        log.info("Update chapter page request: chapterId={}, pageIndex={}", id, pageIndex);
+
 
         return ApiResponse.<ChapterResponse>builder()
                 .message("Chapter page updated successfully")
@@ -183,35 +141,21 @@ public class ChapterController {
                 .build();
     }
 
-    /**
-     * Xóa một chapter
-     * @param id ID của chapter cần xóa
-     * @return Thông báo xác nhận xóa thành công
-     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<Void> deleteChapter(@PathVariable String id) {
-        log.info("Delete chapter request: id={}", id);
         chapterService.deleteChapter(id);
         return ApiResponse.<Void>builder()
                 .message("Chapter deleted successfully")
                 .build();
     }
 
-    /**
-     * Xóa một trang cụ thể trong chapter
-     * @param id ID của chapter
-     * @param pageIndex Vị trí của trang cần xóa
-     * @return Thông tin chapter sau khi xóa trang
-     */
     @DeleteMapping("/{id}/pages/{pageIndex}")
     @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
     ApiResponse<ChapterResponse> deleteChapterPage(
             @PathVariable String id,
             @PathVariable int pageIndex
     ) {
-        log.info("Delete chapter page request: chapterId={}, pageIndex={}", id, pageIndex);
-
         return ApiResponse.<ChapterResponse>builder()
                 .message("Chapter page deleted successfully")
                 .result(chapterService.deleteChapterPage(id, pageIndex))

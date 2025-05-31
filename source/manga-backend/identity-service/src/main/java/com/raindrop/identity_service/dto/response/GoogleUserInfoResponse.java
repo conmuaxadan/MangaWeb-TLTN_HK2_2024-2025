@@ -8,9 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-/**
- * Đối tượng chứa thông tin người dùng từ Google
- */
 @Data
 @Builder
 @NoArgsConstructor

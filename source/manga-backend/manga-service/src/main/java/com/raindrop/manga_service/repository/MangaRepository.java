@@ -27,70 +27,30 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
     Page<Manga> findAllByDeletedFalse(Specification<Manga>spec, Pageable pageable);
     Page<Manga> findByDeletedTrue(Pageable pageable);
 
-    /**
-     * Tăng lượt xem của manga mà không cập nhật thời gian updatedAt
-     *
-     * @param id ID của manga
-     * @return Số bản ghi được cập nhật
-     */
     @Modifying
     @Transactional
     @Query("UPDATE Manga m SET m.views = m.views + 1 WHERE m.id = :id")
     int incrementViews(@Param("id") String id);
 
-    /**
-     * Tăng số lượng comment của manga
-     *
-     * @param id ID của manga
-     * @return Số bản ghi được cập nhật
-     */
     @Modifying
     @Transactional
     @Query("UPDATE Manga m SET m.comments = m.comments + 1 WHERE m.id = :id")
     int incrementComments(@Param("id") String id);
 
-    /**
-     * Giảm số lượng comment của manga
-     *
-     * @param id ID của manga
-     * @return Số bản ghi được cập nhật
-     */
     @Modifying
     @Transactional
     @Query("UPDATE Manga m SET m.comments = CASE WHEN m.comments > 0 THEN m.comments - 1 ELSE 0 END WHERE m.id = :id")
     int decrementComments(@Param("id") String id);
 
-    /**
-     * Cập nhật tổng số lượt xem của manga bằng tổng số lượt xem của tất cả các chapter
-     *
-     * @param mangaId    ID của manga
-     * @param totalViews Tổng số lượt xem
-     * @return Số bản ghi được cập nhật
-     */
     @Modifying
     @Transactional
     @Query("UPDATE Manga m SET m.views = :totalViews WHERE m.id = :mangaId")
     int updateTotalViews(@Param("mangaId") String mangaId, @Param("totalViews") int totalViews);
 
-    /**
-     * Cập nhật tổng số comment của manga bằng tổng số comment của tất cả các chapter
-     *
-     * @param mangaId       ID của manga
-     * @param totalComments Tổng số comment
-     * @return Số bản ghi được cập nhật
-     */
     @Modifying
     @Transactional
     @Query("UPDATE Manga m SET m.comments = :totalComments WHERE m.id = :mangaId")
     int updateTotalComments(@Param("mangaId") String mangaId, @Param("totalComments") int totalComments);
-
-    /**
-     * Tìm các manga có lượt xem cao nhất
-     *
-     * @param pageable Thông tin phân trang và số lượng cần lấy
-     * @return Danh sách manga có lượt xem cao nhất
-     */
-    List<Manga> findByOrderByViewsDesc(Pageable pageable);
 
     @Query(value = "SELECT m.* FROM manga m " +
             "JOIN manga_genres mg ON m.id = mg.manga_id " +
@@ -108,64 +68,37 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
             @Param("excludeMangaIds") List<String> excludeMangaIds,
             Pageable pageable);
 
-    /**
-     * Lấy tất cả các tên thể loại trong hệ thống
-     *
-     * @return Danh sách tên thể loại
-     */
-    @Query("SELECT DISTINCT g.name FROM Genre g ORDER BY g.name")
-    List<String> findAllGenreNames();
-
-    /**
-     * Tìm manga theo IDs với eager loading genres để tránh N+1 problem
-     *
-     * @param mangaIds Danh sách manga IDs
-     * @return Danh sách manga với genres đã được load
-     */
     @Query("SELECT DISTINCT m FROM Manga m LEFT JOIN FETCH m.genres WHERE m.id IN :mangaIds")
     List<Manga> findAllByIdWithGenres(@Param("mangaIds") List<String> mangaIds);
 
-    /**
-     * Batch query để lấy lastChapterNumber cho nhiều manga cùng lúc
-     *
-     * @param mangaIds Danh sách manga IDs
-     * @return Map với key là mangaId và value là lastChapterNumber
-     */
     @Query("SELECT m.id as mangaId, c.chapterNumber as lastChapterNumber " +
            "FROM Manga m LEFT JOIN Chapter c ON m.lastChapterId = c.id " +
            "WHERE m.id IN :mangaIds AND m.lastChapterId IS NOT NULL")
     List<Object[]> findLastChapterNumbersByMangaIds(@Param("mangaIds") List<String> mangaIds);
 
-    /**
-     * Tìm kiếm manga theo từ khóa
-     *
-     * @param keyword  Từ khóa tìm kiếm (tìm trong tiêu đề hoặc tác giả)
-     * @param pageable Thông tin phân trang
-     * @return Danh sách manga phù hợp với từ khóa
-     */
+    @Query("SELECT c.manga.id as mangaId, COUNT(c) as chapterCount " +
+           "FROM Chapter c WHERE c.manga.id IN :mangaIds GROUP BY c.manga.id")
+    List<Object[]> findChapterCountsByMangaIds(@Param("mangaIds") List<String> mangaIds);
+
+    @Query("SELECT c.manga.id as mangaId, c.id as chapterId, c.chapterNumber " +
+           "FROM Chapter c WHERE c.manga.id IN :mangaIds ORDER BY c.manga.id, c.chapterNumber")
+    List<Object[]> findChapterIdsByMangaIds(@Param("mangaIds") List<String> mangaIds);
+
+    @Query("SELECT COUNT(m) FROM Manga m WHERE m.deleted = false")
+    Long countActiveMangas();
+
+    @Query("SELECT COUNT(m) FROM Manga m WHERE m.deleted = true")
+    Long countDeletedMangas();
+
+    @Query("SELECT COUNT(m) FROM Manga m WHERE m.deleted = false AND DATE(m.createdAt) = CURRENT_DATE")
+    Long countNewMangasToday();
+
     @Query("SELECT m FROM Manga m WHERE LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.author) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY m.views DESC")
     Page<Manga> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
-    /**
-     * Tìm kiếm manga theo thể loại
-     *
-     * @param genreName Tên thể loại
-     * @param pageable  Thông tin phân trang
-     * @return Danh sách manga thuộc thể loại
-     */
     @Query("SELECT DISTINCT m FROM Manga m JOIN m.genres g WHERE g.name = :genreName AND m.deleted = false ORDER BY m.lastChapterAddedAt DESC")
     Page<Manga> findByGenre(@Param("genreName") String genreName, Pageable pageable);
 
-    /**
-     * Tìm kiếm và lọc manga theo nhiều tiêu chí (chưa bị xóa)
-     *
-     * @param keyword       Từ khóa tìm kiếm (title hoặc author)
-     * @param genreName     Tên thể loại (nếu có)
-     * @param status        Trạng thái manga (nếu có)
-     * @param yearOfRelease Năm phát hành (nếu có)
-     * @param pageable      Thông tin phân trang
-     * @return Danh sách manga phù hợp với tiêu chí
-     */
     @Query("SELECT DISTINCT m FROM Manga m " +
             "LEFT JOIN m.genres g " +
             "WHERE m.deleted = false " +
@@ -182,16 +115,6 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
             @Param("yearOfRelease") Integer yearOfRelease,
             Pageable pageable);
 
-    /**
-     * Tìm kiếm và lọc manga theo nhiều tiêu chí (đã bị xóa)
-     *
-     * @param keyword       Từ khóa tìm kiếm (title hoặc author)
-     * @param genreName     Tên thể loại (nếu có)
-     * @param status        Trạng thái manga (nếu có)
-     * @param yearOfRelease Năm phát hành (nếu có)
-     * @param pageable      Thông tin phân trang
-     * @return Danh sách manga đã xóa phù hợp với tiêu chí
-     */
     @Query("SELECT DISTINCT m FROM Manga m " +
             "LEFT JOIN m.genres g " +
             "WHERE m.deleted = true " +

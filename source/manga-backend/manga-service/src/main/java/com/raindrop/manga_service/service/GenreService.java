@@ -46,20 +46,9 @@ public class GenreService {
 
     public List<GenreResponse> getAllGenres(){
         List<Genre> genres = genreRepository.findAll();
-        log.info("Found {} genres", genres.size());
-        for (Genre genre : genres) {
-            log.info("Genre: id={}, name={}, description={}", genre.getId(), genre.getName(), genre.getDescription());
-        }
-
-        List<GenreResponse> responses = genres.stream()
-                .map(genre -> {
-                    GenreResponse response = genreMapper.toGenreResponse(genre);
-                    log.info("Mapped Genre to GenreResponse: id={} -> id={}", genre.getId(), response.getId());
-                    return response;
-                })
+        return genres.stream()
+                .map(genreMapper::toGenreResponse)
                 .toList();
-
-        return responses;
     }
 
     public void deleteGenreById(Long id){
@@ -69,7 +58,6 @@ public class GenreService {
         try {
             genreRepository.delete(genre);
         } catch (Exception e) {
-            log.error("Error deleting genre with ID {}: {}", id, e.getMessage());
             throw new AppException(ErrorCode.GENRE_IN_USE, "Không thể xóa thể loại này vì nó đang được sử dụng trong một hoặc nhiều truyện. Hãy gỡ bỏ thể loại khỏi các truyện trước khi xóa.");
         }
     }
@@ -83,7 +71,6 @@ public class GenreService {
         try {
             genreRepository.delete(genre);
         } catch (Exception e) {
-            log.error("Error deleting genre with name {}: {}", name, e.getMessage());
             throw new AppException(ErrorCode.GENRE_IN_USE, "Không thể xóa thể loại này vì nó đang được sử dụng trong một hoặc nhiều truyện. Hãy gỡ bỏ thể loại khỏi các truyện trước khi xóa.");
         }
     }

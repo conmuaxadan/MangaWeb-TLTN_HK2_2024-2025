@@ -19,30 +19,20 @@ import java.util.List;
 public class RecommendationController {
     RecommendationService recommendationService;
 
-    /**
-     * Lấy gợi ý manga dựa trên thể loại từ lịch sử đọc
-     * @param userId ID của người dùng
-     * @param limit Số lượng manga gợi ý (mặc định là 6)
-     * @return Danh sách manga được gợi ý
-     */
     @GetMapping("/by-genre")
     public ApiResponse<List<MangaSummaryResponse>> getRecommendationsByGenre(
             @RequestParam String userId,
             @RequestParam(defaultValue = "6") int limit
     ) {
-        log.info("Getting recommendations by genre for user: {}, limit: {}", userId, limit);
-        log.info("Calling recommendationService.getRecommendationsByGenre for user: {}, limit: {}", userId, limit);
         List<MangaSummaryResponse> recommendations = recommendationService.getRecommendationsByGenreSummary(userId, limit);
 
         if (recommendations.isEmpty()) {
-            log.info("No recommendations found for user {}", userId);
             return ApiResponse.<List<MangaSummaryResponse>>builder()
                     .message("No recommendations found")
                     .result(recommendations)
                     .build();
         }
-        log.info("Found {} recommendations for user {}", recommendations.size(), userId);
-        log.info("Returning {} recommendations for user {}", recommendations.size(), userId);
+
         return ApiResponse.<List<MangaSummaryResponse>>builder()
                 .message("Recommendations retrieved successfully")
                 .result(recommendations)

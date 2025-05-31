@@ -1,7 +1,6 @@
 package com.raindrop.manga_service.service;
 
 import com.raindrop.manga_service.dto.response.ApiResponse;
-import com.raindrop.manga_service.dto.response.HistoryResponse;
 import com.raindrop.manga_service.dto.response.MangaSummaryResponse;
 import com.raindrop.manga_service.entity.Genre;
 import com.raindrop.manga_service.entity.Manga;
@@ -30,11 +29,10 @@ public class RecommendationService {
     MangaMapper mangaMapper;
 
 
-    public List<MangaSummaryResponse> getRecommendationsByGenreSummary(String userId, Integer limit) {
-        int recommendationLimit = (limit != null && limit > 0) ? limit : 6;
-
+    public List<MangaSummaryResponse> getRecommendationsByGenreSummary(String userId, int limit) {
+        int recommendationLimit = (limit > 0) ? limit : 6;
         try {
-            // Chỉ cần 1 API call để lấy tất cả manga đã đọc (theo thứ tự thời gian)
+            // lấy tất cả manga đã đọc (theo thứ tự thời gian)
             List<String> allReadMangaIds = getAllReadMangaIds(userId);
             if (allReadMangaIds.isEmpty()) return Collections.emptyList();
 
@@ -48,8 +46,8 @@ public class RecommendationService {
 
             log.info("Top genres cho user {}: {}", userId, topGenres);
 
-            // Tìm manga gợi ý với logic fallback thông minh
-            List<Manga> recommendations = findMangasWithSmartFallback(topGenres, allReadMangaIds, recommendationLimit);
+            // Tìm manga gợi ý
+            List<Manga> recommendations = findMangas(topGenres, allReadMangaIds, recommendationLimit);
 
             return convertToResponses(recommendations);
 
@@ -86,7 +84,7 @@ public class RecommendationService {
                 .collect(Collectors.toList());
     }
 
-    private List<Manga> findMangasWithSmartFallback(List<String> topGenres, List<String> excludeIds, int limit) {
+    private List<Manga> findMangas(List<String> topGenres, List<String> excludeIds, int limit) {
         Map<String, Manga> found = new LinkedHashMap<>();
         Set<String> exclude = new HashSet<>(excludeIds);
 
@@ -112,7 +110,6 @@ public class RecommendationService {
         if (excludeIds.isEmpty()) {
             excludeIds = List.of("no-manga-id"); // Tránh lỗi SQL
         }
-
         return mangaRepository.findMangasByAllGenres(
                 genres, genres.size(), excludeIds, PageRequest.of(0, limit));
     }

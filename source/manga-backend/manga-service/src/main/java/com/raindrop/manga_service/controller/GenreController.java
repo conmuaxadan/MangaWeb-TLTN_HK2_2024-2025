@@ -51,13 +51,6 @@ public class GenreController {
     @GetMapping()
     ApiResponse<List<GenreResponse>> getAllGenres() {
         List<GenreResponse> genres = genreService.getAllGenres();
-        log.info("Returning {} genres to client", genres.size());
-        for (GenreResponse genre : genres) {
-            log.info("Controller - GenreResponse: id={} ({}), name={}, description={}",
-                    genre.getId(), genre.getId() != null ? genre.getId().getClass().getSimpleName() : "null",
-                    genre.getName(), genre.getDescription());
-        }
-
         return ApiResponse.<List<GenreResponse>>builder()
                 .message("Genres retrieved successfully")
                 .result(genres)

@@ -118,7 +118,6 @@ const GenreDetail = () => {
       {/* Mô tả thể loại */}
       {genreInfo?.description && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900 mb-2">Về thể loại {genreName}</h2>
           <p className="text-gray-700 leading-relaxed">{genreInfo.description}</p>
         </div>
       )}

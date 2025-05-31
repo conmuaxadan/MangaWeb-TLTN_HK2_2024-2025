@@ -5,14 +5,15 @@ import {formatDistanceToNow} from 'date-fns';
 import {vi} from 'date-fns/locale';
 import {toast} from 'react-toastify';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faUser, faPaperPlane, faClock} from '@fortawesome/free-solid-svg-icons';
+import {faUser, faPaperPlane, faClock, faTrash} from '@fortawesome/free-solid-svg-icons';
 import {getAvatarUrl} from '../utils/file-utils.js';
 import {preventRapidClicks, apiThrottle} from '../utils/performance.js';
 import Pagination from './Pagination.jsx';
 
 // Memoized Comment Item Component
-const CommentItem = React.memo(({comment}) => {
+const CommentItem = React.memo(({comment, currentUser, onDelete}) => {
     const isTemporary = comment.id.startsWith('temp-');
+    const canDelete = currentUser && comment.userId === currentUser.id && !isTemporary;
 
     return (
         <div className={`bg-gray-700 rounded-lg p-4 transition-opacity ${
@@ -47,6 +48,15 @@ const CommentItem = React.memo(({comment}) => {
                                 })}
                             </p>
                         </div>
+                        {canDelete && (
+                            <button
+                                onClick={() => onDelete(comment.id)}
+                                className="text-red-400 hover:text-red-300 transition-colors p-1 rounded hover:bg-red-900/20"
+                                title="Xóa bình luận"
+                            >
+                                <FontAwesomeIcon icon={faTrash} className="text-sm"/>
+                            </button>
+                        )}
                     </div>
                     <p className="text-gray-200 mt-2 whitespace-pre-wrap">{comment.content}</p>
                 </div>
@@ -104,6 +114,34 @@ const CommentSection = ({chapterId, mangaId}) => {
         fetchComments();
     }, [chapterId]);
 
+    // Xóa bình luận với optimistic update
+    const handleDeleteComment = useCallback(async (commentId) => {
+        if (!window.confirm('Bạn có chắc chắn muốn xóa bình luận này?')) {
+            return;
+        }
+
+        // Optimistic update - xóa comment khỏi UI ngay lập tức
+        const originalComments = [...comments];
+        setComments(prev => prev.filter(comment => comment.id !== commentId));
+
+        try {
+            const success = await commentService.deleteComment(commentId);
+
+            if (!success) {
+                // Rollback nếu thất bại
+                setComments(originalComments);
+            } else {
+                // Cập nhật tổng số comment
+                setTotalElements(prev => Math.max(0, prev - 1));
+            }
+        } catch (error) {
+            console.error('Lỗi khi xóa bình luận:', error);
+            // Rollback nếu có lỗi
+            setComments(originalComments);
+            toast.error('Không thể xóa bình luận', {position: 'top-right'});
+        }
+    }, [comments]);
+
     // Gửi bình luận mới với optimistic updates và prevent rapid clicks
     const handleSubmitComment = useCallback(
         preventRapidClicks(async (e) => {
@@ -132,7 +170,7 @@ const CommentSection = ({chapterId, mangaId}) => {
                 createdAt: new Date().toISOString(),
                 mangaId,
                 chapterId,
-                userId: '',
+                userId: user?.id || '',
                 updatedAt: ''
             };
 
@@ -281,7 +319,12 @@ const CommentSection = ({chapterId, mangaId}) => {
                     <>
 
                         {safeComments.map((comment) => (
-                            <CommentItem key={comment.id} comment={comment} />
+                            <CommentItem
+                                key={comment.id}
+                                comment={comment}
+                                currentUser={user}
+                                onDelete={handleDeleteComment}
+                            />
                         ))}
 
 

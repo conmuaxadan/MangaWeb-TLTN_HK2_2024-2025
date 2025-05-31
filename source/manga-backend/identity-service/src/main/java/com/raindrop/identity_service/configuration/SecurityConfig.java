@@ -21,15 +21,15 @@ public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/users",
             "/users/me",
-            "/auth/tokens",
-            "/auth/tokens/validate",
-            "/auth/tokens/revoke",
-            "/auth/google/tokens",
-            "/auth/tokens/refresh",
+            "/auth/login",
+            "/auth/validate",
+            "/auth/logout",
+            "/auth/google/login",
+            "/auth/refresh",
             "/auth/forgot-password",    // Thêm endpoint quên mật khẩu
             "/auth/reset-password",     // Thêm endpoint đặt lại mật khẩu
-            "/users/accounts/google",
-            "/users/accounts/local",
+            "/users/me/accounts/google",
+            "/users/me/accounts/local",
             "/users/comment/{userId}",
             "/users/internal/user/email"
     };
@@ -41,7 +41,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/users/me", "/roles", "/permissions", "/users/comment/{userId}","auth/forgot-password","/auth/reset-password").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/me", "/roles", "/permissions", "/users/comment/{userId}", "/users/me/accounts", "/auth/forgot-password", "/auth/reset-password").permitAll()
                         .anyRequest()
                         .authenticated());
 

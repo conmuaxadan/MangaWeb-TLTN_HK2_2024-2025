@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import mangaService from '../services/manga-service.js';
-import profileService from '../services/profile-service.js';
+import userService from '../services/user-service.js';
 import historyService from '../services/history-service.js';
 import sessionService from '../services/session-service.js';
 import { useAuth } from '../contexts/AuthContext.jsx';

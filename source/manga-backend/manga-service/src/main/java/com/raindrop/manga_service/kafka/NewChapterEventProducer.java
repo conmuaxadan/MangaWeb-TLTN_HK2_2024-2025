@@ -17,14 +17,6 @@ public class NewChapterEventProducer {
 
     private static final String NEW_CHAPTER_TOPIC = "manga-new-chapter";
 
-    /**
-     * Gửi sự kiện chapter mới
-     * @param mangaId ID của manga
-     * @param mangaTitle Tiêu đề của manga
-     * @param chapterId ID của chapter mới
-     * @param chapterNumber Số chapter
-     * @param chapterTitle Tiêu đề của chapter
-     */
     public void sendNewChapterEvent(String mangaId, String mangaTitle, String chapterId, double chapterNumber, String chapterTitle) {
         NewChapterEvent event = NewChapterEvent.builder()
                 .mangaId(mangaId)
@@ -35,6 +27,5 @@ public class NewChapterEventProducer {
                 .build();
 
         kafkaTemplate.send(NEW_CHAPTER_TOPIC, mangaId, event);
-        log.info("Sent NEW_CHAPTER event to Kafka for manga: {}, chapter: {}", mangaTitle, chapterTitle);
     }
 }

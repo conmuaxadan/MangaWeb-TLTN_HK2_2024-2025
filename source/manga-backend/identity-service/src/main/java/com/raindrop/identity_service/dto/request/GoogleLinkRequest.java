@@ -8,9 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-/**
- * DTO chứa thông tin yêu cầu liên kết tài khoản Google
- */
 @Data
 @Builder
 @NoArgsConstructor

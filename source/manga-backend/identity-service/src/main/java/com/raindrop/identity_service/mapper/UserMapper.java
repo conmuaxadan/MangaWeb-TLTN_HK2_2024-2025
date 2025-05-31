@@ -8,16 +8,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-/**
- * Mapper cho User entity
- */
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface UserMapper {
-    /**
-     * Chuyển đổi từ UserRequest sang User
-     * @param request UserRequest
-     * @return User
-     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "authProvider", ignore = true)
@@ -25,11 +17,6 @@ public interface UserMapper {
     @Mapping(target = "updatedAt", ignore = true)
     User toUser(UserRequest request);
 
-    /**
-     * Chuyển đổi từ User sang UserResponse
-     * @param user User
-     * @return UserResponse
-     */
     @Mapping(target = "id", source = "id")
     @Mapping(target = "username", source = "username")
     @Mapping(target = "email", source = "email")
@@ -39,11 +26,6 @@ public interface UserMapper {
     @Mapping(target = "enabled", source = "enabled")
     UserResponse toUserResponse(User user);
 
-    /**
-     * Cập nhật User từ UserRequest
-     * @param user User cần cập nhật
-     * @param request UserRequest chứa thông tin cập nhật
-     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "authProvider", ignore = true)

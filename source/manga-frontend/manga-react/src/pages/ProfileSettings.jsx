@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faKey } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
-import profileService from '../services/profile-service.js';
+import userService from '../services/user-service.js';
 import { toast } from 'react-toastify';
 import ProfileLayout from '../components/layouts/ProfileLayout.jsx';
 
@@ -71,7 +71,7 @@ const ProfileSettings = () => {
     setLoading(true);
     try {
       // Gọi API đổi mật khẩu
-      const success = await profileService.changePassword(oldPassword, newPassword);
+      const success = await userService.changePassword(oldPassword, newPassword);
 
       if (success) {
         toast.success('Đổi mật khẩu thành công', { position: 'top-right' });
@@ -107,7 +107,7 @@ const ProfileSettings = () => {
 
     setLoading(true);
     try {
-      const success = await profileService.updateProfile(displayName);
+      const success = await userService.updateProfile(displayName);
       if (success) {
         // Reload trang để cập nhật thông tin
         window.location.reload();
@@ -133,7 +133,7 @@ const ProfileSettings = () => {
     setLoading(true);
     try {
       // Upload avatar
-      const success = await profileService.uploadAvatar(avatarFile);
+      const success = await userService.uploadAvatar(avatarFile);
 
       if (success) {
         // Reload trang để hiển thị ảnh mới

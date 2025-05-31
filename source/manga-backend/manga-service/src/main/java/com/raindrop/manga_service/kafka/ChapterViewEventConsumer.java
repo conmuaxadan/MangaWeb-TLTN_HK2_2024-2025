@@ -2,7 +2,6 @@ package com.raindrop.manga_service.kafka;
 
 import com.raindrop.common.event.ChapterViewEvent;
 import com.raindrop.manga_service.entity.Chapter;
-import com.raindrop.manga_service.entity.Manga;
 import com.raindrop.manga_service.enums.ErrorCode;
 import com.raindrop.manga_service.exception.AppException;
 import com.raindrop.manga_service.repository.ChapterRepository;
@@ -24,11 +23,7 @@ public class ChapterViewEventConsumer {
     ChapterRepository chapterRepository;
     MangaRepository mangaRepository;
     MangaStatsService mangaStatsService;
-    
-    /**
-     * Xử lý sự kiện xem chapter từ Kafka
-     * @param event Sự kiện xem chapter
-     */
+
     @KafkaListener(topics = "chapter-views", groupId = "manga-service")
     @Transactional
     public void consumeChapterViewEvent(ChapterViewEvent event) {
@@ -50,11 +45,7 @@ public class ChapterViewEventConsumer {
             // Tăng lượt xem của chapter
             chapterRepository.incrementViews(chapterId);
             log.info("Incremented views for chapter: {}", chapterId);
-            
-            // Tăng lượt xem của manga
-            mangaRepository.incrementViews(mangaId);
-            log.info("Incremented views for manga: {}", mangaId);
-            
+
             // Cập nhật tổng số lượt xem của manga
             mangaStatsService.updateMangaTotalViews(mangaId);
             log.info("Updated total views for manga: {}", mangaId);
