@@ -26,7 +26,7 @@ public class FileController {
     FileService fileService;
 
     @PostMapping(value = "/manga", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT')")
     public ApiResponse<FileInfoResponse> uploadMangaFile(@RequestPart("image") MultipartFile file) throws IOException {
         FileInfoResponse uploadImage = fileService.uploadMangaFile(file);
         return ApiResponse.<FileInfoResponse>builder()
@@ -36,6 +36,7 @@ public class FileController {
     }
 
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT', 'SYSTEM_MANAGEMENT')")
     public ApiResponse<FileInfoResponse> uploadAvatarFile(@RequestPart("image") MultipartFile file) throws IOException {
         FileInfoResponse uploadImage = fileService.uploadUserFile(file);
         return ApiResponse.<FileInfoResponse>builder()
@@ -54,6 +55,7 @@ public class FileController {
     }
 
     @DeleteMapping("/{fileName}")
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT', 'SYSTEM_MANAGEMENT')")
     public ApiResponse<Void> deleteImageFromFileSystem(@PathVariable String fileName) throws IOException {
         fileService.deleteFile(fileName);
         return ApiResponse.<Void>builder()

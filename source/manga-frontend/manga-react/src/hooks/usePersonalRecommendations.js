@@ -39,7 +39,6 @@ export const usePersonalRecommendations = (limit = 6) => {
             const data = await mangaService.getPersonalRecommendations(limit);
 
             if (data && data.length > 0) {
-                // Sử dụng trực tiếp MangaSummaryResponse từ API
                 setRecommendedMangas(data);
                 setNoRecommendations(false);
             } else {

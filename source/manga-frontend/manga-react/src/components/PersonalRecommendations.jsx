@@ -1,8 +1,8 @@
 import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserCheck } from '@fortawesome/free-solid-svg-icons';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination } from 'swiper/modules';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faUserCheck} from '@fortawesome/free-solid-svg-icons';
+import {Swiper, SwiperSlide} from 'swiper/react';
+import {Navigation, Pagination} from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -36,7 +36,7 @@ const PersonalRecommendations = () => {
     return (
         <div className="flex flex-col gap-5">
             <h2 className="flex items-center gap-3 text-xl font-semibold text-gray-900 border-l-4 border-green-500 pl-3 mb-4">
-                <FontAwesomeIcon icon={faUserCheck} className="text-green-500 text-2xl" />
+                <FontAwesomeIcon icon={faUserCheck} className="text-green-500 text-2xl"/>
                 Có thể bạn muốn đọc
             </h2>
             <div className="mb-5">

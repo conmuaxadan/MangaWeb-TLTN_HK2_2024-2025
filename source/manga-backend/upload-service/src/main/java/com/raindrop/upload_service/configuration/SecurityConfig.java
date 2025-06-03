@@ -30,8 +30,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/manga", "/avatar").hasAnyAuthority("MANGA_MANAGEMENT", "SYSTEM_MANAGEMENT")
-                        .requestMatchers(HttpMethod.DELETE, "/{fileName}").hasAnyAuthority("MANGA_MANAGEMENT", "SYSTEM_MANAGEMENT")
+                        .requestMatchers(HttpMethod.POST, "/files/manga", "/files/avatar").hasAnyAuthority("MANGA_MANAGEMENT", "TRANSLATOR_MANAGEMENT", "SYSTEM_MANAGEMENT")
+                        .requestMatchers(HttpMethod.DELETE, "/files/{fileName}").hasAnyAuthority("MANGA_MANAGEMENT", "TRANSLATOR_MANAGEMENT", "SYSTEM_MANAGEMENT")
                         .anyRequest()
                         .authenticated());
 

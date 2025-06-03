@@ -102,7 +102,7 @@ public class UserService {
         user.setRoles(roles);
         user.setAuthProvider(AuthProvider.LOCAL);
         user.setDisplayName(request.getDisplayName() != null ? request.getDisplayName() : request.getUsername());
-        user.setAvatarUrl("default.jpg");
+        user.setAvatarUrl(request.getAvatarUrl()!= null ? request.getAvatarUrl() : "default.jpg");
 
         user = userRepository.save(user);
         UserEvent userEvent = UserEvent.builder()

@@ -27,12 +27,25 @@ public class RecommendationService {
     MangaRepository mangaRepository;
     HistoryClient historyClient;
     MangaMapper mangaMapper;
+    MangaCacheService mangaCacheService;
 
 
     public List<MangaSummaryResponse> getRecommendationsByGenreSummary(String userId, int limit) {
         int recommendationLimit = (limit > 0) ? limit : 6;
+
+        // Kiểm tra cache trước
         try {
-            // lấy tất cả manga đã đọc (theo thứ tự thời gian)
+            List<MangaSummaryResponse> cachedResult = mangaCacheService.getRecommendationsFromCache(userId, recommendationLimit);
+            if (cachedResult != null) {
+                log.debug("Cache hit for recommendations userId: {}, limit: {}", userId, recommendationLimit);
+                return cachedResult;
+            }
+        } catch (Exception e) {
+            log.warn("Cache error for recommendations userId {}, limit {}: {}", userId, recommendationLimit, e.getMessage());
+        }
+
+        try {
+            // lấy tất cả manga đã đọc
             List<String> allReadMangaIds = getAllReadMangaIds(userId);
             if (allReadMangaIds.isEmpty()) return Collections.emptyList();
 
@@ -48,8 +61,16 @@ public class RecommendationService {
 
             // Tìm manga gợi ý
             List<Manga> recommendations = findMangas(topGenres, allReadMangaIds, recommendationLimit);
+            List<MangaSummaryResponse> result = convertToResponses(recommendations);
 
-            return convertToResponses(recommendations);
+            // Lưu vào cache
+            try {
+                mangaCacheService.saveRecommendationsToCache(userId, recommendationLimit, result);
+            } catch (Exception e) {
+                log.warn("Cache save error for recommendations userId {}, limit {}: {}", userId, recommendationLimit, e.getMessage());
+            }
+
+            return result;
 
         } catch (Exception e) {
             log.error("Lỗi gợi ý manga cho user {}: {}", userId, e.getMessage());
@@ -73,12 +94,24 @@ public class RecommendationService {
     }
 
     private List<String> calculateTopGenres(List<Manga> mangas, int topCount) {
-        return mangas.stream()
-                .flatMap(manga -> manga.getGenres().stream())
-                .map(Genre::getName)
-                .collect(Collectors.groupingBy(name -> name, Collectors.counting()))
-                .entrySet().stream()
-                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+        // Tạo map để lưu trữ điểm số cho mỗi thể loại
+        Map<String, Double> genreScores = new HashMap<>();
+
+        for (int i = 0; i < mangas.size(); i++) {
+            Manga manga = mangas.get(i);
+            // Trọng số giảm dần
+            double weight = 1.0 - (0.1 * i);
+            
+            // Tính điểm cho các thể loại
+            for (Genre genre : manga.getGenres()) {
+                String genreName = genre.getName();
+                genreScores.put(genreName, genreScores.getOrDefault(genreName, 0.0) + weight);
+            }
+        }
+        
+        // Sắp xếp thể loại theo điểm số và lấy top
+        return genreScores.entrySet().stream()
+                .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
                 .limit(topCount)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());

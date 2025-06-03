@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -35,6 +36,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.Comparator;
 import java.util.Collection;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
 
 @Service
 @RequiredArgsConstructor
@@ -46,9 +49,36 @@ public class MangaService {
     GenreRepository genreRepository;
     ChapterRepository chapterRepository;
     UploadClient uploadClient;
-    MangaSummariesRedisService mangaSummariesRedisService;
+    MangaCacheService mangaCacheService;
 
     // ==================== BATCH QUERY HELPER METHODS ====================
+
+    private String createSearchHash(AdvancedSearchRequest searchRequest) {
+        try {
+            String searchString = String.format("%s|%s|%s|%s|%s",
+                    searchRequest.getTitle() != null ? searchRequest.getTitle() : "",
+                    searchRequest.getAuthor() != null ? searchRequest.getAuthor() : "",
+                    searchRequest.getGenres() != null ? String.join(",", searchRequest.getGenres()) : "",
+                    searchRequest.getYearOfRelease() != null ? searchRequest.getYearOfRelease().toString() : "",
+                    searchRequest.getStatus() != null ? searchRequest.getStatus().toString() : ""
+            );
+
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            byte[] hash = digest.digest(searchString.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            log.warn("Error creating search hash: {}", e.getMessage());
+            return searchRequest.toString().hashCode() + "";
+        }
+    }
 
     private Map<String, Double> getLastChapterNumbersMap(List<String> mangaIds) {
         if (mangaIds.isEmpty()) return Collections.emptyMap();
@@ -182,6 +212,17 @@ public class MangaService {
     }
 
     public MangaResponse getMangaById(String id) {
+        // Kiểm tra cache trước
+        try {
+            MangaResponse cachedResult = mangaCacheService.getMangaByIdFromCache(id);
+            if (cachedResult != null) {
+                return cachedResult;
+            }
+        } catch (Exception e) {
+            log.warn("Cache error for manga ID {}: {}", id, e.getMessage());
+        }
+
+        // Nếu không có trong cache, query từ database
         Manga manga = mangaRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
         MangaResponse response = mangaMapper.toMangaResponse(manga);
@@ -193,6 +234,13 @@ public class MangaService {
                 .map(Chapter::getId)
                 .collect(Collectors.toList());
         response.setChapters(chapterIds);
+
+        // Lưu vào cache
+        try {
+            mangaCacheService.saveMangaByIdToCache(id, response);
+        } catch (Exception e) {
+            log.warn("Cache save error for manga ID {}: {}", id, e.getMessage());
+        }
 
         return response;
     }
@@ -218,32 +266,61 @@ public class MangaService {
     }
 
     public Page<MangaSummaryResponse> getMangaSummariesPaginated(Pageable pageable) {
-        boolean isLatestUpdatesRequest = pageable.getSort().stream()
-                .anyMatch(order -> "lastChapterAddedAt".equals(order.getProperty()) &&
-                                 order.getDirection().isDescending());
+        // Tạo sort string để làm cache key
+        String sortString = pageable.getSort().toString();
 
-        if (isLatestUpdatesRequest) {
-            try {
-                Page<MangaSummaryResponse> cachedResult = mangaSummariesRedisService.getFromCache(pageable);
-                if (cachedResult != null) {
-                    return cachedResult;
-                }
-            } catch (Exception e) {
-                log.warn("Cache error: {}", e.getMessage());
+        // Kiểm tra cache trước
+        try {
+            Page<MangaSummaryResponse> cachedResult = mangaCacheService.getMangaSummariesFromCache(pageable, sortString);
+            if (cachedResult != null) {
+                return cachedResult;
             }
+        } catch (Exception e) {
+            log.warn("Cache error for manga summaries: {}", e.getMessage());
         }
 
+        // Query từ database
         Page<Manga> mangasPage = mangaRepository.findByDeletedFalse(pageable);
         List<String> mangaIds = mangasPage.getContent().stream().map(Manga::getId).collect(Collectors.toList());
         Map<String, Double> lastChapterMap = getLastChapterNumbersMap(mangaIds);
         Page<MangaSummaryResponse> result = mangasPage.map(manga -> enrichSummaryResponse(manga, lastChapterMap));
 
-        if (isLatestUpdatesRequest) {
-            try {
-                mangaSummariesRedisService.saveToCache(pageable, result);
-            } catch (Exception e) {
-                log.warn("Cache save error: {}", e.getMessage());
+        // Lưu vào cache
+        try {
+            mangaCacheService.saveMangaSummariesToCache(pageable, sortString, result);
+        } catch (Exception e) {
+            log.warn("Cache save error for manga summaries: {}", e.getMessage());
+        }
+
+        return result;
+    }
+
+    public Page<MangaSummaryResponse> getLatestUpdates(Pageable pageable) {
+        // Tạo Pageable với sort theo lastChapterAddedAt desc
+        Pageable latestUpdatesPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "lastChapterAddedAt")
+        );
+
+        try {
+            Page<MangaSummaryResponse> cachedResult = mangaCacheService.getLatestUpdatesFromCache(latestUpdatesPageable);
+            if (cachedResult != null) {
+                return cachedResult;
             }
+        } catch (Exception e) {
+            log.warn("Cache error: {}", e.getMessage());
+        }
+
+        Page<Manga> mangasPage = mangaRepository.findByDeletedFalse(latestUpdatesPageable);
+        List<String> mangaIds = mangasPage.getContent().stream().map(Manga::getId).collect(Collectors.toList());
+        Map<String, Double> lastChapterMap = getLastChapterNumbersMap(mangaIds);
+        Page<MangaSummaryResponse> result = mangasPage.map(manga -> enrichSummaryResponse(manga, lastChapterMap));
+
+        try {
+            mangaCacheService.saveLatestUpdatesToCache(latestUpdatesPageable, result);
+        } catch (Exception e) {
+            log.warn("Cache save error: {}", e.getMessage());
         }
 
         return result;
@@ -331,7 +408,7 @@ public class MangaService {
 
         // Nếu chỉ có quyền TRANSLATOR_MANAGEMENT, kiểm tra quyền sở hữu
         if (hasTranslatorManagement && !hasMangaManagement &&
-            !manga.getCreatedBy().equals(currentUserId)) {
+                !manga.getCreatedBy().equals(currentUserId)) {
             throw new AppException(ErrorCode.UNAUTHORIZED_OPERATION);
         }
 
@@ -383,60 +460,92 @@ public class MangaService {
         return mangaMapper.toMangaResponse(manga);
     }
 
-    public Page<MangaResponse> advancedSearch(AdvancedSearchRequest searchRequest, Pageable pageable) {
+    public Page<MangaSummaryResponse> advancedSearch(AdvancedSearchRequest searchRequest, Pageable pageable) {
+        // Tạo hash cho search request để làm cache key
+        String searchHash = createSearchHash(searchRequest);
 
-        // Tạo Specification để xây dựng truy vấn động
-        Specification<Manga> spec = (root, query, criteriaBuilder) -> {
+        // Kiểm tra cache trước
+        try {
+            Page<MangaSummaryResponse> cachedResult = mangaCacheService.getAdvancedSearchSummaryFromCache(searchHash, pageable);
+            if (cachedResult != null) {
+                return cachedResult;
+            }
+        } catch (Exception e) {
+            log.warn("Cache error for advanced search: {}", e.getMessage());
+        }
+
+        // Tạo Specification và thực hiện tìm kiếm
+        Specification<Manga> spec = buildAdvancedSearchSpecification(searchRequest);
+        Page<Manga> mangaPage = mangaRepository.findAll(spec, pageable);
+
+        // Chuyển đổi kết quả sang DTO
+        Page<MangaSummaryResponse> result = enrichAdvancedSearchSummaryResults(mangaPage);
+
+        // Lưu vào cache
+        try {
+            mangaCacheService.saveAdvancedSearchSummaryToCache(searchHash, pageable, result);
+        } catch (Exception e) {
+            log.warn("Cache save error for advanced search: {}", e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * Xây dựng Specification cho advanced search
+     */
+    private Specification<Manga> buildAdvancedSearchSpecification(AdvancedSearchRequest searchRequest) {
+        return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Tìm kiếm theo tiêu đề
+            // Thêm các điều kiện tìm kiếm
             if (searchRequest.getTitle() != null && !searchRequest.getTitle().isEmpty()) {
                 predicates.add(criteriaBuilder.like(
                         criteriaBuilder.lower(root.get("title")),
                         "%" + searchRequest.getTitle().toLowerCase() + "%"));
             }
 
-            // Tìm kiếm theo tác giả
             if (searchRequest.getAuthor() != null && !searchRequest.getAuthor().isEmpty()) {
                 predicates.add(criteriaBuilder.like(
                         criteriaBuilder.lower(root.get("author")),
                         "%" + searchRequest.getAuthor().toLowerCase() + "%"));
             }
-
-            // Tìm kiếm theo thể loại
             if (searchRequest.getGenres() != null && !searchRequest.getGenres().isEmpty()) {
-                // Sử dụng subquery để đảm bảo manga chứa TẤT CẢ các thể loại được chọn
-                List<String> requestedGenres = searchRequest.getGenres();
-
                 // Tạo subquery để đếm số lượng thể loại khớp
                 Subquery<Long> subquery = query.subquery(Long.class);
                 Root<Manga> subRoot = subquery.correlate(root);
                 Join<Manga, Genre> genreJoin = subRoot.join("genres", JoinType.INNER);
 
                 subquery.select(criteriaBuilder.count(genreJoin.get("name")))
-                        .where(genreJoin.get("name").in(requestedGenres));
+                        .where(genreJoin.get("name").in(searchRequest.getGenres()));
 
                 // Manga phải chứa đúng số lượng thể loại được yêu cầu
-                predicates.add(criteriaBuilder.equal(subquery, (long) requestedGenres.size()));
+                predicates.add(criteriaBuilder.equal(subquery, (long) searchRequest.getGenres().size()));
             }
 
-            // Tìm kiếm theo năm phát hành
             if (searchRequest.getYearOfRelease() != null) {
                 predicates.add(criteriaBuilder.equal(root.get("yearOfRelease"), searchRequest.getYearOfRelease()));
             }
-
-            // Tìm kiếm theo tình trạng
             if (searchRequest.getStatus() != null) {
                 predicates.add(criteriaBuilder.equal(root.get("status"), searchRequest.getStatus()));
             }
-            predicates.add(criteriaBuilder.equal(root.get("deleted"), false));
 
+            // Luôn lọc manga chưa bị xóa
+            predicates.add(criteriaBuilder.equal(root.get("deleted"), false));
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
+    }
 
-        // Thực hiện tìm kiếm với Specification và Pageable
-        Page<Manga> mangaPage = mangaRepository.findAll(spec, pageable);
+    private Page<MangaSummaryResponse> enrichAdvancedSearchSummaryResults(Page<Manga> mangaPage) {
+        // Batch queries để lấy last chapter data
+        List<String> mangaIds = mangaPage.getContent().stream().map(Manga::getId).collect(Collectors.toList());
+        Map<String, Double> lastChapterMap = getLastChapterNumbersMap(mangaIds);
 
+        // Chuyển đổi kết quả sang DTO với batch data
+        return mangaPage.map(manga -> enrichSummaryResponse(manga, lastChapterMap));
+    }
+
+    private Page<MangaResponse> enrichAdvancedSearchResults(Page<Manga> mangaPage) {
         // Batch queries để lấy chapter data
         List<String> mangaIds = mangaPage.getContent().stream().map(Manga::getId).collect(Collectors.toList());
         Map<String, List<String>> chapterIdsMap = getChapterIdsMap(mangaIds);
@@ -447,6 +556,17 @@ public class MangaService {
     }
 
     public Page<MangaResponse> searchByKeyword(String keyword, Pageable pageable) {
+        // Kiểm tra cache trước
+        try {
+            Page<MangaResponse> cachedResult = mangaCacheService.getSearchFromCache(keyword, pageable);
+            if (cachedResult != null) {
+                return cachedResult;
+            }
+        } catch (Exception e) {
+            log.warn("Cache error for search keyword '{}': {}", keyword, e.getMessage());
+        }
+
+        // Nếu không có trong cache, query từ database
         Page<Manga> mangaPage = mangaRepository.searchByKeyword(keyword, pageable);
 
         // Batch query để lấy chapter IDs
@@ -454,24 +574,54 @@ public class MangaService {
         Map<String, List<String>> chapterIdsMap = getChapterIdsMap(mangaIds);
 
         // Chuyển đổi kết quả sang DTO với batch data
-        return mangaPage.map(manga -> {
+        Page<MangaResponse> result = mangaPage.map(manga -> {
             MangaResponse response = mangaMapper.toMangaResponse(manga);
             List<String> chapterIds = chapterIdsMap.getOrDefault(manga.getId(), Collections.emptyList());
             response.setChapters(chapterIds);
             return response;
         });
+
+        // Lưu vào cache
+        try {
+            mangaCacheService.saveSearchToCache(keyword, pageable, result);
+        } catch (Exception e) {
+            log.warn("Cache save error for search keyword '{}': {}", keyword, e.getMessage());
+        }
+
+        return result;
     }
 
     public Page<MangaSummaryResponse> findByGenre(String genreName, Pageable pageable) {
+        // Kiểm tra cache trước
+        try {
+            Page<MangaSummaryResponse> cachedResult = mangaCacheService.getByGenreFromCache(genreName, pageable);
+            if (cachedResult != null) {
+                return cachedResult;
+            }
+        } catch (Exception e) {
+            log.warn("Cache error for genre '{}': {}", genreName, e.getMessage());
+        }
+
+        // Validate genre exists
         Genre genre = genreRepository.findByName(genreName);
         if (genre == null) {
             throw new AppException(ErrorCode.GENRE_NOT_FOUND);
         }
 
+        // Query từ database
         Page<Manga> mangaPage = mangaRepository.findByGenre(genreName, pageable);
         List<String> mangaIds = mangaPage.getContent().stream().map(Manga::getId).collect(Collectors.toList());
         Map<String, Double> lastChapterMap = getLastChapterNumbersMap(mangaIds);
-        return mangaPage.map(manga -> enrichSummaryResponse(manga, lastChapterMap));
+        Page<MangaSummaryResponse> result = mangaPage.map(manga -> enrichSummaryResponse(manga, lastChapterMap));
+
+        // Lưu vào cache
+        try {
+            mangaCacheService.saveByGenreToCache(genreName, pageable, result);
+        } catch (Exception e) {
+            log.warn("Cache save error for genre '{}': {}", genreName, e.getMessage());
+        }
+
+        return result;
     }
 
     public Double getHighestChapterNumber(String mangaId) {
@@ -513,15 +663,47 @@ public class MangaService {
     }
 
     private Map<String, Long> getMangasByGenreStatistics() {
-        return Collections.emptyMap();
+        try {
+            List<Object[]> results = mangaRepository.countMangasByGenre();
+            return results.stream()
+                    .collect(Collectors.toMap(
+                            row -> (String) row[0],
+                            row -> ((Number) row[1]).longValue(),
+                            (existing, replacement) -> existing, // Giữ giá trị đầu tiên nếu có duplicate key
+                            LinkedHashMap::new // Giữ thứ tự sắp xếp từ query
+                    ));
+        } catch (Exception e) {
+            log.error("Error getting manga statistics by genre: {}", e.getMessage());
+            return Collections.emptyMap();
+        }
     }
 
     private Map<String, Long> getMangasByStatusStatistics() {
-        Map<String, Long> result = new HashMap<>();
-        result.put("ONGOING", 0L);
-        result.put("COMPLETED", 0L);
-        result.put("PAUSED", 0L);
-        return result;
+        try {
+            // Khởi tạo map với tất cả status có giá trị 0
+            Map<String, Long> result = new LinkedHashMap<>();
+            result.put("ONGOING", 0L);
+            result.put("COMPLETED", 0L);
+            result.put("PAUSED", 0L);
+
+            // Lấy dữ liệu thực tế từ database
+            List<Object[]> results = mangaRepository.countMangasByStatus();
+            for (Object[] row : results) {
+                String status = row[0].toString();
+                Long count = ((Number) row[1]).longValue();
+                result.put(status, count);
+            }
+
+            return result;
+        } catch (Exception e) {
+            log.error("Error getting manga statistics by status: {}", e.getMessage());
+            // Trả về map mặc định với tất cả status = 0
+            Map<String, Long> defaultResult = new LinkedHashMap<>();
+            defaultResult.put("ONGOING", 0L);
+            defaultResult.put("COMPLETED", 0L);
+            defaultResult.put("PAUSED", 0L);
+            return defaultResult;
+        }
     }
 
     public List<MangaQuickSearchResponse> quickSearchManga(String keyword, int limit) {

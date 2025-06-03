@@ -90,7 +90,16 @@ public class StatisticController {
             @RequestParam(defaultValue = "10") int limit
     ) {
         List<MangaViewsResponse> viewsByManga;
-        viewsByManga = statisticService.getViewsByMangaDateRange(startDate, endDate, limit);
+
+        if (startDate != null && endDate != null) {
+            // Sử dụng date range nếu có startDate và endDate
+            viewsByManga = statisticService.getViewsByMangaDateRange(startDate, endDate, limit);
+        } else {
+            // Sử dụng days parameter (mặc định là 0 = toàn thời gian)
+            int daysToUse = days != null ? days : 0;
+            viewsByManga = statisticService.getViewsByManga(daysToUse, limit);
+        }
+
         return ApiResponse.<List<MangaViewsResponse>>builder()
                 .message("Views by manga retrieved successfully")
                 .result(viewsByManga)

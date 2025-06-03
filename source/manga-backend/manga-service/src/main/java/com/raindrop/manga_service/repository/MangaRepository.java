@@ -114,6 +114,13 @@ public interface MangaRepository extends JpaRepository<Manga, String>, JpaSpecif
     @Query("SELECT m FROM Manga m WHERE LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.author) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY m.views DESC")
     Page<Manga> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
+    // Statistics queries
+    @Query("SELECT g.name, COUNT(m) FROM Manga m JOIN m.genres g WHERE m.deleted = false GROUP BY g.name ORDER BY COUNT(m) DESC")
+    List<Object[]> countMangasByGenre();
+
+    @Query("SELECT m.status, COUNT(m) FROM Manga m WHERE m.deleted = false GROUP BY m.status")
+    List<Object[]> countMangasByStatus();
+
     @Query("SELECT m FROM Manga m WHERE m.deleted = false AND m.createdBy = :createdBy " +
            "AND (LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.author) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "ORDER BY m.views DESC")

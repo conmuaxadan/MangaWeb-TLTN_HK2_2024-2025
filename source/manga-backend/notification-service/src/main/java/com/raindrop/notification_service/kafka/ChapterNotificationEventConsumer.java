@@ -62,13 +62,10 @@ public class ChapterNotificationEventConsumer {
                         "<p style='color: #2e7d32; margin: 5px 0; font-size: 16px;'><strong>Truyện:</strong> %s</p>" +
                         "<p style='color: #2e7d32; margin: 5px 0; font-size: 16px;'><strong>Chapter %.1f:</strong> %s</p>" +
                         "<div style='text-align: center; margin-top: 15px;'>" +
-                        "<a href='http://localhost:3000/mangas/%s/chapters/%s' style='background-color: #4CAF50; color: white; padding: 10px 25px; text-decoration: none; border-radius: 20px; font-weight: bold; display: inline-block;'>Đọc ngay 📖</a>" +
+                        "<a href='http://localhost:5713/mangas/%s/chapters/%s' style='background-color: #4CAF50; color: white; padding: 10px 25px; text-decoration: none; border-radius: 20px; font-weight: bold; display: inline-block;'>Đọc ngay 📖</a>" +
                         "</div>" +
                         "</div>" +
                         "<p style='color: #555; font-size: 16px; line-height: 1.6;'>Chúc bạn đọc truyện vui vẻ và có những trải nghiệm thú vị!</p>" +
-                        "<div style='background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 20px; margin: 20px 0; border-radius: 5px;'>" +
-                        "<p style='color: #6c757d; margin: 0; font-size: 14px; line-height: 1.6;'>💡 <strong>Mẹo:</strong> Nếu bạn không muốn nhận thông báo này nữa, vui lòng truy cập <a href='http://localhost:3000/profile/settings' style='color: #6c757d;'>cài đặt tài khoản</a> của bạn.</p>" +
-                        "</div>" +
                         "<hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;'>" +
                         "<p style='color: #666; font-size: 0.9em; text-align: center;'>Trân trọng,<br><strong>Đội ngũ Raindrop Manga</strong></p>" +
                         "</div>" +

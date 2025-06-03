@@ -137,6 +137,14 @@ public class MangaController {
                 .build();
     }
 
+    @GetMapping("/latest-updates")
+    ApiResponse<Page<MangaSummaryResponse>> getLatestUpdates(Pageable pageable) {
+        return ApiResponse.<Page<MangaSummaryResponse>>builder()
+                .message("Latest updated mangas retrieved successfully")
+                .result(mangaService.getLatestUpdates(pageable))
+                .build();
+    }
+
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT')")
     ApiResponse<MangaResponse> updateManga(
@@ -236,11 +244,11 @@ public class MangaController {
 
 
     @PostMapping("/search/advanced")
-    ApiResponse<Page<MangaResponse>> advancedSearch(
+    ApiResponse<Page<MangaSummaryResponse>> advancedSearch(
             @RequestBody AdvancedSearchRequest searchRequest,
             @PageableDefault(size = 10) Pageable pageable
     ) {
-        return ApiResponse.<Page<MangaResponse>>builder()
+        return ApiResponse.<Page<MangaSummaryResponse>>builder()
                 .message("Advanced search results retrieved successfully")
                 .result(mangaService.advancedSearch(searchRequest, pageable))
                 .build();

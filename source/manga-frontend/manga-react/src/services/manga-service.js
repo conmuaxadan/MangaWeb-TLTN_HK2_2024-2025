@@ -59,23 +59,6 @@ class MangaService {
         }
     }
 
-    async getSessionId() {
-        logApiCall('getSessionId');
-        try {
-            const apiResponse = await mangaHttpClient.post(`/chapters/sessions`);
-
-            if (apiResponse.code !== 200) {
-                console.error(`Lỗi khi lấy session ID:`, apiResponse.message);
-                return null;
-            }
-
-            return apiResponse.result;
-        } catch (error) {
-            console.error(`Lỗi khi lấy session ID:`, error);
-            return null;
-        }
-    }
-
     async getAllGenres() {
         logApiCall('getAllGenres');
         try {
@@ -137,7 +120,6 @@ class MangaService {
     async advancedSearch(searchRequest, page = 0, size = 10, sort = 'lastChapterAddedAt,desc') {
         logApiCall('advancedSearch');
         try {
-            console.log('Advanced search request:', JSON.stringify(searchRequest, null, 2));
             const apiResponse = await mangaHttpClient.post(
                 `/mangas/search/advanced?page=${page}&size=${size}&sort=${encodeURIComponent(sort)}`,
                 searchRequest
@@ -209,6 +191,30 @@ class MangaService {
             return apiResponse.result;
         } catch (error) {
             console.error("Lỗi lấy danh sách tóm tắt manga:", error);
+            return null;
+        }
+    }
+
+    async getLatestUpdates(page = 0, size = 10) {
+        logApiCall('getLatestUpdates');
+        try {
+            const url = `/mangas/latest-updates?page=${page}&size=${size}`;
+            const apiResponse = await mangaHttpClient.get(url);
+
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Không thể lấy danh sách truyện mới cập nhật", { position: "top-right" });
+                return null;
+            }
+
+            apiResponse.result.content.forEach(manga => {
+                if (!manga.coverUrl) {
+                    manga.coverUrl = '/images/default-manga-cover.jpg';
+                }
+            });
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error("Lỗi lấy danh sách truyện mới cập nhật:", error);
             return null;
         }
     }

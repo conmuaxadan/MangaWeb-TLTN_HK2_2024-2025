@@ -43,7 +43,7 @@ public class UserEventConsumer {
                         "</div>" +
                         "<h2 style='color: #333; text-align: center; margin-bottom: 20px;'>🎉 Chào mừng bạn đến với cộng đồng!</h2>" +
                         "<p style='font-size: 16px; line-height: 1.6; color: #555;'>Xin chào <strong>%s</strong>,</p>" +
-                        "<p style='font-size: 16px; line-height: 1.6; color: #555;'>Chúc mừng bạn đã tham gia thành công vào <strong>Raindrop Manga</strong> - nơi hội tụ những câu chuyện manga tuyệt vời nhất!</p>" +
+                        "<p style='font-size: 16px; line-height: 1.6; color: #555;'>Chúc mừng bạn đã tham gia thành công vào <strong>Raindrop Manga</strong></p>" +
                         "<div style='background-color: #e8f5e8; border-left: 4px solid #4CAF50; padding: 20px; margin: 20px 0; border-radius: 5px;'>" +
                         "<h4 style='color: #2e7d32; margin: 0 0 15px 0;'>🎉 Bạn đã sẵn sàng khám phá!</h4>" +
                         "<p style='color: #2e7d32; margin: 0; line-height: 1.6;'>Hãy bắt đầu hành trình khám phá thế giới manga đầy màu sắc cùng chúng tôi.</p>" +

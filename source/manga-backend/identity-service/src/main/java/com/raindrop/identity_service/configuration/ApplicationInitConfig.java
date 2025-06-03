@@ -57,14 +57,6 @@ public class ApplicationInitConfig {
                         .description("Quản trị viên hệ thống")
                         .build());
             }
-
-            if (!roleRepository.existsByName("MODERATOR")) {
-                roleRepository.save(Role.builder().name("MODERATOR")
-                        .permissions(Set.of(permissionRepository.findByName("MANGA_MANAGEMENT")))
-                        .description("Cộng tác viên")
-                        .build());
-            }
-
             // Thêm role mới cho translator
             if (!roleRepository.existsByName("TRANSLATOR")) {
                 roleRepository.save(Role.builder().name("TRANSLATOR")

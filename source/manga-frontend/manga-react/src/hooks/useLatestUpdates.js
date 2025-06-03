@@ -33,12 +33,12 @@ export const useLatestUpdates = (pageSize = 20) => {
     }, []);
 
     // Fetch dữ liệu manga mới cập nhật
-    const fetchMangaSummaries = useCallback(async () => {
+    const fetchLatestUpdates = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
 
-            const result = await mangaService.getMangaSummaries(currentPage, pageSize, "lastChapterAddedAt,desc");
+            const result = await mangaService.getLatestUpdates(currentPage, pageSize);
 
             if (result && result.content) {
                 // Sử dụng trực tiếp MangaSummaryResponse từ API
@@ -46,11 +46,11 @@ export const useLatestUpdates = (pageSize = 20) => {
                 setTotalPages(result.totalPages);
                 setTotalElements(result.totalElements);
             } else {
-                setError("Không thể tải danh sách manga");
+                setError("Không thể tải danh sách truyện mới cập nhật");
             }
         } catch (err) {
-            console.error("Lỗi khi tải danh sách manga:", err);
-            setError("Đã xảy ra lỗi khi tải danh sách manga");
+            console.error("Lỗi khi tải danh sách truyện mới cập nhật:", err);
+            setError("Đã xảy ra lỗi khi tải danh sách truyện mới cập nhật");
         } finally {
             setLoading(false);
         }
@@ -58,13 +58,13 @@ export const useLatestUpdates = (pageSize = 20) => {
 
     // Load dữ liệu khi component mount hoặc currentPage thay đổi
     useEffect(() => {
-        fetchMangaSummaries();
-    }, [fetchMangaSummaries]);
+        fetchLatestUpdates();
+    }, [fetchLatestUpdates]);
 
     // Hàm refresh dữ liệu
     const refreshData = useCallback(() => {
-        fetchMangaSummaries();
-    }, [fetchMangaSummaries]);
+        fetchLatestUpdates();
+    }, [fetchLatestUpdates]);
 
     return {
         // Data
