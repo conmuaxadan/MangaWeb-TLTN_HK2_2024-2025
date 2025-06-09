@@ -351,10 +351,10 @@ public class ChapterService {
 
             // Tính toán index bắt đầu cho các trang mới
             int startIndex = currentPages.isEmpty() ? 0 :
-                            currentPages.stream()
-                                .mapToInt(Page::getIndex)
-                                .max()
-                                .orElse(-1) + 1;
+                    currentPages.stream()
+                            .mapToInt(Page::getIndex)
+                            .max()
+                            .orElse(-1) + 1;
 
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             var header = attributes.getRequest().getHeader("Authorization");
@@ -398,15 +398,38 @@ public class ChapterService {
                 .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
 
         validatePageIndex(chapter, pageIndex);
-        Page pageToDelete = findPageByIndex(id, pageIndex);
 
-        List<Page> pages = chapter.getPages();
-        pages.remove(pageToDelete);
-        pageRepository.delete(pageToDelete);
-        batchUpdatePageIndexesAfterDeletion(pages, pageIndex);
-        chapter = chapterRepository.save(chapter);
+        // Find the page to delete from the chapter's managed collection
+        Page pageToDelete = null;
+        for (Page p : chapter.getPages()) {
+            if (p.getIndex() == pageIndex) {
+                pageToDelete = p;
+                break;
+            }
+        }
 
-        return buildChapterResponseForModification(chapter);
+        if (pageToDelete == null) {
+            // Should have been caught by validatePageIndex if pageIndex was out of initial bounds,
+            // or indicates an inconsistency if pageIndex was valid but page not found by value.
+            throw new AppException(ErrorCode.PAGE_NOT_FOUND);
+        }
+
+        // Remove the page from the chapter's collection.
+        // Hibernate will handle the actual deletion from the DB due to orphanRemoval=true
+        // when the chapter is saved.
+        chapter.getPages().remove(pageToDelete);
+
+        // The 'pages' list for batchUpdatePageIndexesAfterDeletion
+        // is chapter.getPages(), which now has pageToDelete removed.
+        // The deletedIndex is the original index of the page that was removed.
+        batchUpdatePageIndexesAfterDeletion(chapter.getPages(), pageIndex);
+
+        // Save the chapter. This persists changes to the pages collection (including the removal)
+        // and triggers deletion of the orphaned page.
+        // It also saves changes to indices of other pages if batchUpdatePageIndexesAfterDeletion modified them.
+        Chapter updatedChapter = chapterRepository.save(chapter);
+
+        return buildChapterResponseForModification(updatedChapter);
     }
 
     @Transactional
@@ -430,10 +453,10 @@ public class ChapterService {
                     log.error("Error deleting page file: {}", e.getMessage(), e);
                 }
             }
-            pageRepository.deleteByChapterId(id);
+            // pageRepository.deleteByChapterId(id); // Loại bỏ dòng này để tránh xóa kép
         }
 
-        chapterRepository.delete(chapter);
+        chapterRepository.delete(chapter); // Việc này nên cascade để xóa các Page liên quan
 
         if (isLatestChapter) {
             updateMangaLatestChapter(manga);
@@ -469,3 +492,4 @@ public class ChapterService {
         return chapters.map(this::buildChapterResponse);
     }
 }
+

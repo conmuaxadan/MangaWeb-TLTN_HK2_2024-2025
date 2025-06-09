@@ -167,9 +167,9 @@ const ChapterForm = ({
 
           // Kiểm tra xem preview có phải là URL object không
           const preview = pagePreviews[index];
-          if (preview && preview.startsWith('blob:')) {
+          if (preview && preview.url && preview.url.startsWith('blob:')) { // Sửa ở đây
             // Nếu là URL object, revoke để tránh memory leak
-            URL.revokeObjectURL(preview);
+            URL.revokeObjectURL(preview.url); // Sửa ở đây
           }
 
           // Xóa preview tại vị trí index
@@ -327,21 +327,19 @@ const ChapterForm = ({
 
               // Cập nhật mảng pagePreviews
               setPagePreviews(prev => {
-                const newPreviews = [...prev];
-                newPreviews[index] = {
+                const newPreviewsArray = [...prev];
+                newPreviewsArray[index] = {
                   url: newPreviewUrl,
                   fileName: file.name,
                   fileNumber: extractPageNumber(file.name)
                 };
-                return newPreviews;
+                return newPreviewsArray;
               });
 
-              // Cập nhật mảng pageFiles
-              setPageFiles(prev => {
-                const newFiles = [...prev];
-                newFiles[index] = file;
-                return newFiles;
-              });
+              // KHÔNG CẬP NHẬT `pageFiles` ở đây khi chỉ thay thế một trang đã tồn tại trên server.
+              // Việc thay thế đã được xử lý bởi API `updateChapterPage`.
+              // `pageFiles` chỉ nên chứa các file mới hoàn toàn sẽ được append
+              // khi submit toàn bộ form (thông qua `handlePageFilesChange` hoặc khi tạo chapter mới).
 
               // Đóng thông báo loading và hiển thị thông báo thành công
               toast.dismiss(loadingToast);

@@ -144,7 +144,7 @@ public class ChapterController {
 
 
     @PutMapping(value = "/{id}/pages/{pageIndex}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT')")
     ApiResponse<ChapterResponse> updateChapterPage(
             @PathVariable String id,
             @PathVariable int pageIndex,
@@ -168,7 +168,7 @@ public class ChapterController {
     }
 
     @DeleteMapping("/{id}/pages/{pageIndex}")
-    @PreAuthorize("hasAuthority('MANGA_MANAGEMENT')")
+    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT')")
     ApiResponse<ChapterResponse> deleteChapterPage(
             @PathVariable String id,
             @PathVariable int pageIndex

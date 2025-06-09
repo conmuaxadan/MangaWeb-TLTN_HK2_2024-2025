@@ -167,7 +167,7 @@ class MangaService {
         }
     }
 
-    async getMangaSummaries(page = 0, size = 10, sort = "lastChapterAddedAt,desc") {
+    async getMangaSummaries(page = 0, size = 10, sort) {
         logApiCall('getMangaSummaries');
         try {
             let url = `/mangas/summaries?page=${page}&size=${size}`;
@@ -198,7 +198,8 @@ class MangaService {
     async getLatestUpdates(page = 0, size = 10) {
         logApiCall('getLatestUpdates');
         try {
-            const url = `/mangas/latest-updates?page=${page}&size=${size}`;
+            // Thêm các tham số đầy đủ theo chuẩn Spring Pageable
+            const url = `/mangas/latest-updates?page=${page}&size=${size}&sort=lastChapterAddedAt,desc`;
             const apiResponse = await mangaHttpClient.get(url);
 
             if (apiResponse.code !== 200) {

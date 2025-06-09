@@ -6,8 +6,9 @@ export const useStatistics = () => {
   const [activeTab, setActiveTab] = useState('users');
 
   // State cho date range
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [_startDate, _setStartDateInternal] = useState('');
+  const [_endDate, _setEndDateInternal] = useState('');
+  const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
 
   // State cho manga views limit
   const [mangaViewsLimit, setMangaViewsLimit] = useState(10);
@@ -23,12 +24,6 @@ export const useStatistics = () => {
   // State cho thống kê lượt xem theo truyện
   const [viewsByManga, setViewsByManga] = useState([]);
   const [isLoadingViewsByManga, setIsLoadingViewsByManga] = useState(false);
-
-  // State cho date range picker (legacy)
-  const [dateRange, setDateRange] = useState({
-    startDate: '',
-    endDate: ''
-  });
 
   // State cho số ngày hiển thị
   const [daysToShow, setDaysToShow] = useState(7);
@@ -50,14 +45,16 @@ export const useStatistics = () => {
   }, []);
 
   // Lấy thống kê lượt xem theo ngày
-  const fetchViewsByDay = useCallback(async (days = daysToShow, startDate = '', endDate = '') => {
+  const fetchViewsByDay = useCallback(async (days = 0, startDate = '', endDate = '') => { // Default days to 0 for clarity when range is used
     setIsLoadingViewsByDay(true);
     try {
       let data;
       if (startDate && endDate) {
         data = await statisticsService.getViewsByDateRange(startDate, endDate);
-      } else {
+      } else if (days > 0) { // Only fetch by days if days is positive
         data = await statisticsService.getViewsByDay(days);
+      } else {
+        data = []; // Default to empty if no valid parameters
       }
       setViewsByDay(data || []);
     } catch (error) {
@@ -69,14 +66,16 @@ export const useStatistics = () => {
   }, [daysToShow]);
 
   // Lấy thống kê lượt xem theo truyện
-  const fetchViewsByManga = useCallback(async (days = 0, limit = mangaLimit, startDate = '', endDate = '') => {
+  const fetchViewsByManga = useCallback(async (days = 0, limit = mangaLimit, startDate = '', endDate = '') => { // Default days to 0
     setIsLoadingViewsByManga(true);
     try {
       let data;
       if (startDate && endDate) {
         data = await statisticsService.getViewsByMangaDateRange(startDate, endDate, limit);
-      } else {
+      } else if (days > 0) { // Only fetch by days if days is positive
         data = await statisticsService.getViewsByManga(days, limit);
+      } else {
+        data = []; // Default to empty
       }
       setViewsByManga(data || []);
     } catch (error) {
@@ -90,18 +89,36 @@ export const useStatistics = () => {
   // Xử lý thay đổi số ngày
   const handleDaysChange = (newDays) => {
     setDaysToShow(newDays);
-    // Reset date range khi thay đổi số ngày
+    // Reset date range when changing number of days explicitly
+    _setStartDateInternal('');
+    _setEndDateInternal('');
     setDateRange({ startDate: '', endDate: '' });
   };
 
-  // Xử lý thay đổi date range
-  const handleDateRangeChange = (newStartDate, newEndDate) => {
-    setDateRange({ startDate: newStartDate, endDate: newEndDate });
-    setStartDate(newStartDate);
-    setEndDate(newEndDate);
-    // Reset số ngày khi sử dụng date range
-    setDaysToShow(0);
-  };
+  // Hàm mới cho setStartDate được export ra
+  const setStartDate = useCallback((newDate) => {
+    _setStartDateInternal(newDate);
+    setDateRange(prevRange => ({ ...prevRange, startDate: newDate }));
+    if (newDate) { // If a start date is set, user is intending to use date range
+      setDaysToShow(0);
+    } else if (!_endDate) { // If start date is cleared AND end date is also clear
+      // Optionally revert daysToShow to a default to show "last N days"
+      // setDaysToShow(7); // This would trigger a fetch for 7 days via useEffect
+    }
+  }, [_endDate, setDaysToShow]);
+
+  // Hàm mới cho setEndDate được export ra
+  const setEndDate = useCallback((newDate) => {
+    _setEndDateInternal(newDate);
+    setDateRange(prevRange => ({ ...prevRange, endDate: newDate }));
+    if (newDate) { // If an end date is set, user is intending to use date range
+      setDaysToShow(0);
+    } else if (!_startDate) { // If end date is cleared AND start date is also clear
+      // Optionally revert daysToShow to a default
+      // setDaysToShow(7);
+    }
+  }, [_startDate, setDaysToShow]);
+
 
   // Xử lý thay đổi số lượng truyện
   const handleMangaLimitChange = (newLimit) => {
@@ -112,12 +129,18 @@ export const useStatistics = () => {
   // Làm mới tất cả dữ liệu
   const refreshAllData = useCallback(() => {
     fetchOverviewStats();
+    // Logic làm mới dựa trên state hiện tại của dateRange và daysToShow
     if (dateRange.startDate && dateRange.endDate) {
       fetchViewsByDay(0, dateRange.startDate, dateRange.endDate);
       fetchViewsByManga(0, mangaLimit, dateRange.startDate, dateRange.endDate);
-    } else {
+    } else if (daysToShow > 0) {
       fetchViewsByDay(daysToShow);
       fetchViewsByManga(daysToShow, mangaLimit);
+    } else {
+      // Fallback or default fetch if neither range nor positive daysToShow is set
+      // e.g., fetch for default days or clear data
+      fetchViewsByDay(7); // Example: default to 7 days if no range
+      fetchViewsByManga(7, mangaLimit); // Example
     }
   }, [fetchOverviewStats, fetchViewsByDay, fetchViewsByManga, daysToShow, mangaLimit, dateRange]);
 
@@ -140,16 +163,18 @@ export const useStatistics = () => {
     } else if (daysToShow > 0) {
       fetchViewsByDay(daysToShow);
     }
-  }, [fetchViewsByDay, daysToShow, dateRange]);
+    // Consider what to do if neither condition is met (e.g., daysToShow is 0, and range is incomplete)
+    // Maybe fetch nothing or a default. Current fetchViewsByDay handles days=0 by defaulting to empty.
+  }, [fetchViewsByDay, daysToShow, dateRange]); // dateRange is the key
 
   // Load thống kê theo truyện khi thay đổi tham số
   useEffect(() => {
     if (dateRange.startDate && dateRange.endDate) {
       fetchViewsByManga(0, mangaLimit, dateRange.startDate, dateRange.endDate);
-    } else {
+    } else if (daysToShow > 0) { // Ensure manga views also respect daysToShow > 0
       fetchViewsByManga(daysToShow, mangaLimit);
     }
-  }, [fetchViewsByManga, daysToShow, mangaLimit, dateRange]);
+  }, [fetchViewsByManga, daysToShow, mangaLimit, dateRange]); // dateRange is the key
 
   // Tạo stats object theo format mà Statistics page expect
   const stats = {
@@ -184,21 +209,21 @@ export const useStatistics = () => {
   const loading = isLoadingOverview || isLoadingViewsByDay || isLoadingViewsByManga;
 
   // Refresh function
-  const refreshData = () => {
+  const refreshData = () => { // Ensure this function is correctly defined or uses refreshAllData
     refreshAllData();
   };
 
   return {
     // Interface mà Statistics page expect
     activeTab,
-    startDate,
-    endDate,
+    startDate: _startDate, // Use the renamed internal state for display value
+    endDate: _endDate,     // Use the renamed internal state for display value
     mangaViewsLimit,
     stats,
     loading,
     setActiveTab,
-    setStartDate,
-    setEndDate,
+    setStartDate, // Export the new wrapped setStartDate
+    setEndDate,   // Export the new wrapped setEndDate
     setMangaViewsLimit,
     refreshData,
 
@@ -214,7 +239,6 @@ export const useStatistics = () => {
     dateRange,
     handleDaysChange,
     handleMangaLimitChange,
-    handleDateRangeChange,
     refreshAllData,
     fetchOverviewStats,
     fetchViewsByDay,

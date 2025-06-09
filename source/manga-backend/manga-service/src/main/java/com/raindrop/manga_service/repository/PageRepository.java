@@ -24,6 +24,14 @@ public interface PageRepository extends JpaRepository<Page, String> {
     Optional<Page> findByChapterIdAndIndex(@Param("chapterId") String chapterId, @Param("index") int index);
 
     /**
+     * Xóa tất cả các page thuộc về một chapter ID cụ thể.
+     * @param chapterId ID của chapter cần xóa pages.
+     */
+    @Modifying
+    @Query("DELETE FROM Page p WHERE p.chapter.id = :chapterId")
+    void deleteByChapterId(@Param("chapterId") String chapterId);
+
+    /**
      * Batch update page indexes
      * @param pageIds Danh sách page IDs
      * @param newIndexes Danh sách indexes mới tương ứng
@@ -61,13 +69,4 @@ public interface PageRepository extends JpaRepository<Page, String> {
      */
     @Query("SELECT COUNT(p) FROM Page p WHERE p.chapter.id = :chapterId")
     int countByChapterId(@Param("chapterId") String chapterId);
-
-    /**
-     * Xóa tất cả pages của chapter
-     * @param chapterId ID của chapter
-     */
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM Page p WHERE p.chapter.id = :chapterId")
-    void deleteByChapterId(@Param("chapterId") String chapterId);
 }
