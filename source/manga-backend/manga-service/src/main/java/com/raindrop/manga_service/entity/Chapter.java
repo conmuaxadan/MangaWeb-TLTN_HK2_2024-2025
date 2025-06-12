@@ -1,6 +1,7 @@
 package com.raindrop.manga_service.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.CreatedDate;
@@ -17,11 +18,13 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
-public class Chapter {
-    @Id
+public class Chapter {    @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
+    
+    @Min(value = 0, message = "Chapter number must be greater than or equal to 0")
     double chapterNumber;
+    
     String title;
     int views;
     int comments;

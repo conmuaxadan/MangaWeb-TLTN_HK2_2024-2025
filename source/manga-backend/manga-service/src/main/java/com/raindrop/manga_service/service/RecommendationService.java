@@ -159,11 +159,10 @@ public class RecommendationService {
                     return response;
                 })
                 .collect(Collectors.toList());
-    }
-
-    private Map<String, Double> getLastChapterNumbers(List<String> mangaIds) {
+    }    private Map<String, Double> getLastChapterNumbers(List<String> mangaIds) {
         try {
             return mangaRepository.findLastChapterNumbersByMangaIds(mangaIds).stream()
+                    .filter(row -> row[1] != null) // Filter out null chapter numbers
                     .collect(Collectors.toMap(row -> (String) row[0], row -> (Double) row[1]));
         } catch (Exception e) {
             log.warn("Lỗi lấy lastChapterNumber: {}", e.getMessage());

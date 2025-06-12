@@ -17,6 +17,10 @@ import java.util.Set;
 public interface ChapterRepository extends JpaRepository<Chapter, String> {
     Chapter findByTitle(String title);
     Optional<Chapter> findByMangaAndChapterNumber(Manga manga, double chapterNumber);
+    
+    // Check if chapter number already exists for a manga
+    boolean existsByMangaAndChapterNumber(Manga manga, double chapterNumber);
+    
     Set<Chapter> findByManga(Manga manga);
     List<Chapter> findByMangaId(String mangaId);
     Page<Chapter> findAll(Pageable pageable);
@@ -60,6 +64,11 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
             "WHERE c.manga.id = :mangaId " +
             "ORDER BY c.chapterNumber ASC")
     List<Chapter> findByMangaIdWithPages(@Param("mangaId") String mangaId);
+
+    @Query("SELECT DISTINCT c FROM Chapter c " +
+            "LEFT JOIN FETCH c.pages p " +
+            "WHERE c.manga.id = :mangaId")
+    Page<Chapter> findByMangaIdWithPagesPaginated(@Param("mangaId") String mangaId, Pageable pageable);
 
     @Query("SELECT c FROM Chapter c " +
             "LEFT JOIN FETCH c.pages p " +

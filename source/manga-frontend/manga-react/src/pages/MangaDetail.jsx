@@ -7,6 +7,7 @@ import {formatDistanceToNow} from 'date-fns';
 import {vi} from 'date-fns/locale';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {getMangaImageUrl} from '../utils/file-utils.js';
+import Pagination from '../components/Pagination.jsx';
 import {
     faStar,
     faHeart as faHeartSolid,
@@ -24,15 +25,16 @@ import {useAuth} from '../contexts/AuthContext.jsx';
 
 const MangaDetail = () => {
     const {id} = useParams();
-    const {isLogin} = useAuth();
-    const [manga, setManga] = useState(null);
+    const {isLogin} = useAuth();    const [manga, setManga] = useState(null);
     const [chapters, setChapters] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
     const [isFavorite, setIsFavorite] = useState(false);
     const [favoriteLoading, setFavoriteLoading] = useState(false);
-    const chaptersPerPage = 20;
+    const chaptersPerPage = 10;
 
     useEffect(() => {
         const fetchMangaDetails = async () => {
@@ -48,18 +50,10 @@ const MangaDetail = () => {
                 if (!mangaData) {
                     setError('Không thể tải thông tin manga');
                     return;
-                }
-                setManga(mangaData);
+                }                setManga(mangaData);
 
-                // Lấy danh sách chapter
-                const chaptersData = await mangaService.getChaptersByMangaId(id);
-                if (chaptersData) {
-                    // Sắp xếp chapter theo số chapter giảm dần (mới nhất lên đầu)
-                    const sortedChapters = [...chaptersData].sort((a, b) =>
-                        b.chapterNumber - a.chapterNumber
-                    );
-                    setChapters(sortedChapters);
-                }
+                // Lấy danh sách chapter với pagination
+                await fetchChapters(id, 1); // Trang đầu tiên (1-based)
                 setError(null);
             } catch (err) {
                 console.error('Lỗi khi tải thông tin manga:', err);
@@ -83,19 +77,29 @@ const MangaDetail = () => {
             } catch (error) {
                 console.error('Lỗi khi kiểm tra trạng thái yêu thích:', error);
             }
-        };
-
-        checkFavoriteStatus();
+        };        checkFavoriteStatus();
     }, [id, isLogin]);
 
-    // Tính toán các chapter hiển thị trên trang hiện tại
-    const indexOfLastChapter = currentPage * chaptersPerPage;
-    const indexOfFirstChapter = indexOfLastChapter - chaptersPerPage;
-    const currentChapters = chapters.slice(indexOfFirstChapter, indexOfLastChapter);
-    const totalPages = Math.ceil(chapters.length / chaptersPerPage);
+    // Hàm fetch chapters với pagination
+    const fetchChapters = async (mangaId, page) => {
+        try {
+            const chaptersData = await mangaService.getChaptersByMangaIdPaginated(mangaId, page - 1, chaptersPerPage); // Spring page 0-based
+            if (chaptersData) {
+                setChapters(chaptersData.content);
+                setTotalPages(chaptersData.totalPages);
+                setTotalElements(chaptersData.totalElements);
+            }
+        } catch (error) {
+            console.error('Lỗi khi tải danh sách chapters:', error);
+        }
+    };
 
     // Xử lý chuyển trang
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    const handlePageChange = async (pageNumber) => {
+        if (!id) return;
+        setCurrentPage(pageNumber);
+        await fetchChapters(id, pageNumber);
+    };
 
     // Xử lý thêm/xóa yêu thích
     const handleToggleFavorite = async () => {
@@ -400,11 +404,10 @@ const MangaDetail = () => {
                             <div className="no-wrap hidden md:block">Tên chương</div>
                             <div className="no-wrap hidden md:block text-center">Cập nhật</div>
                             <div className="no-wrap hidden md:block text-right">Lượt xem</div>
-                        </div>
-                        <nav>
+                        </div>                        <nav>
                             <ul className="flex flex-col gap-2 py-2 text-sm">
-                                {currentChapters.length > 0 ? (
-                                    currentChapters.map((chapter) => (
+                                {chapters.length > 0 ? (
+                                    chapters.map((chapter) => (
                                         <li key={chapter.chapterNumber}
                                             className="grid grid-cols-1 md:grid-cols-[5fr_4fr_3fr] gap-2 py-3 border-b border-gray-200 last:border-0 hover:bg-gray-100 rounded transition-colors">
                                             <div>
@@ -439,92 +442,15 @@ const MangaDetail = () => {
                                 )}
                             </ul>
                         </nav>
-                    </div>
-
-                    {/* Pagination */}
+                    </div>                    {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6">
-                            <div className="pagination-outter w-full md:w-auto">
-                                <ul className="pagination flex flex-wrap justify-center md:justify-start gap-2"
-                                    role="navigation" aria-label="Pagination">
-                                    <li className={`text-center ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                        <button
-                                            onClick={() => currentPage > 1 && paginate(currentPage - 1)}
-                                            disabled={currentPage === 1}
-                                            className="px-3 py-2 rounded border border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                            aria-label="Previous page"
-                                        >
-                                            &lt;
-                                        </button>
-                                    </li>
-
-                                    {Array.from({length: totalPages}, (_, i) => i + 1)
-                                        .filter(page =>
-                                            page === 1 ||
-                                            page === totalPages ||
-                                            (page >= currentPage - 1 && page <= currentPage + 1)
-                                        )
-                                        .map((page, index, array) => {
-                                            // Add ellipsis
-                                            if (index > 0 && array[index - 1] !== page - 1) {
-                                                return (
-                                                    <React.Fragment key={`ellipsis-${page}`}>
-                                                        <li className="text-center opacity-50 cursor-not-allowed">
-                                                            <span className="px-3 py-2 text-gray-500">...</span>
-                                                        </li>
-                                                        <li>
-                                                            <button
-                                                                onClick={() => paginate(page)}
-                                                                className={`px-3 py-2 rounded border ${
-                                                                    currentPage === page
-                                                                        ? 'bg-blue-600 text-white border-blue-700'
-                                                                        : 'border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                                }`}
-                                                                aria-label={`Page ${page}`}
-                                                                aria-current={currentPage === page ? 'page' : undefined}
-                                                            >
-                                                                {page}
-                                                            </button>
-                                                        </li>
-                                                    </React.Fragment>
-                                                );
-                                            }
-
-                                            return (
-                                                <li key={page}>
-                                                    <button
-                                                        onClick={() => paginate(page)}
-                                                        className={`px-3 py-2 rounded border ${
-                                                            currentPage === page
-                                                                ? 'bg-blue-600 text-white border-blue-700'
-                                                                : 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                                        }`}
-                                                        aria-label={`Page ${page}`}
-                                                        aria-current={currentPage === page ? 'page' : undefined}
-                                                    >
-                                                        {page}
-                                                    </button>
-                                                </li>
-                                            );
-                                        })}
-
-                                    <li className={`text-center ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                        <button
-                                            onClick={() => currentPage < totalPages && paginate(currentPage + 1)}
-                                            disabled={currentPage === totalPages}
-                                            className="px-3 py-2 rounded border border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                            aria-label="Next page"
-                                        >
-                                            &gt;
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-                            <p className="mb-0 py-2 text-gray-500 text-sm">
-                                Đã hiển thị <span
-                                className="text-gray-900 font-medium">{currentChapters.length} / {chapters.length}</span> chương
-                            </p>
-                        </div>
+                        <Pagination
+                            currentPage={currentPage - 1} // Convert to 0-based for Pagination component
+                            totalPages={totalPages}
+                            totalElements={totalElements}
+                            pageSize={chaptersPerPage}
+                            onPageChange={(page) => handlePageChange(page + 1)} // Convert back to 1-based
+                        />
                     )}
                 </div>
             </article>

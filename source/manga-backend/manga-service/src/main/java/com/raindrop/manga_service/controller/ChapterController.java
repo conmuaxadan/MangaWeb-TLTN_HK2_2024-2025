@@ -11,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -99,6 +100,16 @@ public class ChapterController {
                 .build();
     }
 
+    @GetMapping("/manga/{mangaId}/paginated")
+    ApiResponse<Page<ChapterResponse>> getChaptersByMangaIdPaginated(
+            @PathVariable String mangaId,
+            @PageableDefault(size = 10, sort = "chapterNumber", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ApiResponse.<Page<ChapterResponse>>builder()
+                .message("Paginated chapters for manga retrieved successfully")
+                .result(chapterService.getChaptersByMangaIdPaginated(mangaId, pageable))
+                .build();
+    }
+
 
     @GetMapping("/{id}/info")
     ApiResponse<ChapterInfoResponse> getChapterInfo(@PathVariable String id) {
@@ -128,10 +139,12 @@ public class ChapterController {
     ApiResponse<ChapterResponse> updateChapter(
             @PathVariable String id,
             @RequestParam(value = "title", required = false, defaultValue = "") String title,
+            @RequestParam(value = "chapterNumber", required = false) String chapterNumber,
             @RequestParam(value = "pages", required = false) List<MultipartFile> pages
     ) {
         ChapterRequest request = ChapterRequest.builder()
                 .title(title)
+                .chapterNumber(chapterNumber != null && !chapterNumber.isEmpty() ? Double.parseDouble(chapterNumber) : 0)
                 .pages(pages)
                 .build();
 

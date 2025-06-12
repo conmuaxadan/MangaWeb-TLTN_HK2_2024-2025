@@ -224,16 +224,24 @@ public class ChapterService {
                 log.warn("Failed to cleanup page: {}", e.getMessage());
             }
         }
-    }
-
-    @Transactional
+    }    @Transactional
     public ChapterResponse createChapter(ChapterRequest request) {
         if (request.getPages() == null || request.getPages().isEmpty()) {
             throw new AppException(ErrorCode.CHAPTER_NO_PAGES);
         }
 
+        // Validate chapter number >= 0
+        if (request.getChapterNumber() < 0) {
+            throw new AppException(ErrorCode.CHAPTER_INVALID_DATA);
+        }
+
         Manga manga = mangaRepository.findById(request.getMangaId())
                 .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
+
+        // Check for duplicate chapter number
+        if (chapterRepository.existsByMangaAndChapterNumber(manga, request.getChapterNumber())) {
+            throw new AppException(ErrorCode.CHAPTER_ALREADY_EXISTS);
+        }
 
         // Lấy thông tin người dùng hiện tại
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -322,18 +330,39 @@ public class ChapterService {
         return chapters.stream()
                 .map(this::buildChapterResponse)
                 .toList();
+    }    public org.springframework.data.domain.Page<ChapterResponse> getChaptersByMangaIdPaginated(String mangaId, Pageable pageable) {
+        // Validate manga exists
+        mangaRepository.findById(mangaId)
+                .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
+
+        org.springframework.data.domain.Page<Chapter> chapters = chapterRepository.findByMangaIdWithPagesPaginated(mangaId, pageable);
+        return chapters.map(this::buildChapterResponse);
     }
 
     public ChapterInfoResponse getChapterInfo(String id) {
         Chapter chapter = chapterRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
         return buildChapterInfoResponse(chapter);
-    }
-
-    @Transactional
+    }    @Transactional
     public ChapterResponse updateChapter(String id, ChapterRequest request) {
         Chapter chapter = chapterRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
+
+        // Validate and update chapter number if provided
+        if (request.getChapterNumber() > 0) { // Assuming chapterNumber > 0 means it was provided in request
+            // Validate chapter number >= 0
+            if (request.getChapterNumber() < 0) {
+                throw new AppException(ErrorCode.CHAPTER_INVALID_DATA);
+            }
+
+            // Check for duplicate chapter number only if it's different from current
+            if (request.getChapterNumber() != chapter.getChapterNumber()) {
+                if (chapterRepository.existsByMangaAndChapterNumber(chapter.getManga(), request.getChapterNumber())) {
+                    throw new AppException(ErrorCode.CHAPTER_ALREADY_EXISTS);
+                }
+                chapter.setChapterNumber(request.getChapterNumber());
+            }
+        }
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
             chapter.setTitle(request.getTitle());

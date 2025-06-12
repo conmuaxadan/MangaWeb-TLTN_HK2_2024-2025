@@ -49,6 +49,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/manga/mangas",
             "/manga/mangas/paginated",
             "/manga/mangas/summaries",
+            "/manga/mangas/latest-updates", // Added missing endpoint
             "/manga/mangas/{id}",
             "/manga/mangas/search/**",       // Cho phép tìm kiếm manga
             "/manga/mangas/search/advanced", // Cho phép tìm kiếm nâng cao
@@ -60,6 +61,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/manga/chapters/{id}/views/increment",
             "/manga/chapters/{id}/info",
             "/manga/chapters/byManga/{mangaId}",
+            "/manga/chapters/manga/{mangaId}/paginated",
             "/manga/genres",
             "/manga/mangas/genre/{genreName}",
 

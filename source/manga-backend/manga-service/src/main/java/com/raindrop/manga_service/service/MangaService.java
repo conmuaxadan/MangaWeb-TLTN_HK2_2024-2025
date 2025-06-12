@@ -78,11 +78,10 @@ public class MangaService {
             log.warn("Error creating search hash: {}", e.getMessage());
             return searchRequest.toString().hashCode() + "";
         }
-    }
-
-    private Map<String, Double> getLastChapterNumbersMap(List<String> mangaIds) {
+    }    private Map<String, Double> getLastChapterNumbersMap(List<String> mangaIds) {
         if (mangaIds.isEmpty()) return Collections.emptyMap();
         return mangaRepository.findLastChapterNumbersByMangaIds(mangaIds).stream()
+                .filter(row -> row[1] != null) // Filter out null chapter numbers
                 .collect(Collectors.toMap(row -> (String) row[0], row -> (Double) row[1]));
     }
 

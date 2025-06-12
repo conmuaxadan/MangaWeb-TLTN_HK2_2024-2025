@@ -42,6 +42,24 @@ class MangaService {
         }
     }
 
+    async getChaptersByMangaIdPaginated(mangaId, page = 0, size = 10) {
+        logApiCall('getChaptersByMangaIdPaginated');
+        try {
+            const url = `/chapters/manga/${mangaId}/paginated?page=${page}&size=${size}`;
+            const apiResponse = await mangaHttpClient.get(url);
+
+            if (apiResponse.code !== 200) {
+                toast.error(apiResponse.message || "Không thể lấy danh sách chapter", { position: "top-right" });
+                return null;
+            }
+
+            return apiResponse.result;
+        } catch (error) {
+            console.error(`Lỗi lấy danh sách chapter phân trang của manga ID ${mangaId}:`, error);
+            return null;
+        }
+    }
+
     async getChapterById(id) {
         logApiCall('getChapterById');
         try {
@@ -170,6 +188,7 @@ class MangaService {
     async getMangaSummaries(page = 0, size = 10, sort) {
         logApiCall('getMangaSummaries');
         try {
+            // Modified to use Spring's standard Pageable parameter format
             let url = `/mangas/summaries?page=${page}&size=${size}`;
             if (sort) {
                 url += `&sort=${sort}`;
@@ -195,10 +214,10 @@ class MangaService {
         }
     }
 
-    async getLatestUpdates(page = 0, size = 10) {
+    async getLatestUpdates(page = 0, size = 20) {
         logApiCall('getLatestUpdates');
         try {
-            // Thêm các tham số đầy đủ theo chuẩn Spring Pageable
+            // Fixed: Corrected URL format to match Spring's Pageable expectations
             const url = `/mangas/latest-updates?page=${page}&size=${size}&sort=lastChapterAddedAt,desc`;
             const apiResponse = await mangaHttpClient.get(url);
 
