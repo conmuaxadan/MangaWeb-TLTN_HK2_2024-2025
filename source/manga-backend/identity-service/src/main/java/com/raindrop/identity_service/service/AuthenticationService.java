@@ -17,7 +17,6 @@ import com.raindrop.identity_service.exception.AppException;
 import com.raindrop.identity_service.enums.ErrorCode;
 import com.raindrop.identity_service.repository.LinkedAccountRepository;
 import com.raindrop.identity_service.repository.UserRepository;
-import com.raindrop.identity_service.service.TokenRedisService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -28,12 +27,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.client.RestClient;
 
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -56,7 +53,7 @@ public class AuthenticationService {
     private static final long ACCESS_TOKEN_EXPIRATION = 60 * 60; // 1 giờ tính bằng giây
 
     // Thời gian sống của refresh token (7 ngày)
-    private static final long REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60; // 7 ngày tính bằng giây
+    private static final long REFRESH_TOKEN_EXPIRATION = 24 * 60 * 60;
 
     // Prefix cho key trong Redis
     private static final String RESET_CODE_PREFIX = "password_reset_code:";
@@ -311,12 +308,7 @@ public class AuthenticationService {
         }
 
         User localUser = localUserOpt.get();
-
-        // Tạo mã xác nhận 6 số
         String resetCode = generateRandomCode();
-
-        // Lưu mã vào Redis với thời gian hết hạn
-        // Sử dụng email và username của tài khoản local làm key để đảm bảo tính nhất quán
         String redisKey = RESET_CODE_PREFIX + email + ":" + localUser.getUsername();
         redisTemplate.opsForValue().set(redisKey, resetCode, Duration.ofSeconds(CODE_EXPIRY_SECONDS));
 

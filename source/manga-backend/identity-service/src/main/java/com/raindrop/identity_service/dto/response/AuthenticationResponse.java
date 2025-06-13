@@ -14,5 +14,5 @@ public class AuthenticationResponse {
     String token;
     String refreshToken;
     boolean authenticated;
-    Long expiresIn; // Thời gian hết hạn của access token (tính bằng giây)
+    Long expiresIn;
 }

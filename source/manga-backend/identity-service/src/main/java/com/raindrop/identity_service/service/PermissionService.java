@@ -1,10 +1,8 @@
 package com.raindrop.identity_service.service;
 
 import com.raindrop.identity_service.dto.request.PermissionRequest;
-import com.raindrop.identity_service.dto.request.UserRequest;
 import com.raindrop.identity_service.dto.response.PermissionResponse;
 import com.raindrop.identity_service.entity.Permission;
-import com.raindrop.identity_service.entity.User;
 import com.raindrop.identity_service.mapper.PermissionMapper;
 import com.raindrop.identity_service.repository.PermissionRepository;
 import lombok.AccessLevel;

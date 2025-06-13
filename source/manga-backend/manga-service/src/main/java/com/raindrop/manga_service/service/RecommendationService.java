@@ -94,7 +94,6 @@ public class RecommendationService {
     }
 
     private List<String> calculateTopGenres(List<Manga> mangas, int topCount) {
-        // Tạo map để lưu trữ điểm số cho mỗi thể loại
         Map<String, Double> genreScores = new HashMap<>();
 
         for (int i = 0; i < mangas.size(); i++) {

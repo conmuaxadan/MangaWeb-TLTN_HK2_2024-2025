@@ -132,25 +132,11 @@ public class HistoryService {
         return result;
     }
 
-
-    /**
-     * Lấy tất cả mangaId đã đọc của người dùng
-     *
-     * @param userId ID của người dùng
-     * @return Danh sách tất cả mangaId đã đọc
-     */
     public List<String> getAllReadMangaIds(String userId) {
         List<String> allReadMangaIds = historyRepository.findAllMangaIdsByUserId(userId);
         return allReadMangaIds;
     }
 
-    /**
-     * Bổ sung thông tin truyện và chapter từ Manga Service vào HistoryResponse
-     *
-     * @param response  Đối tượng HistoryResponse cần bổ sung thông tin
-     * @param mangaId   ID của manga
-     * @param chapterId ID của chapter
-     */
     private void enrichHistoryResponse(HistoryResponse response, String mangaId, String chapterId) {
         try {
             var mangaResponse = mangaClient.getMangaById(mangaId);

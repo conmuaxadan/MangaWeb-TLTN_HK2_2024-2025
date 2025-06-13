@@ -25,11 +25,6 @@ public class StatisticService {
     AnonymousHistoryRepository anonymousHistoryRepository;
     MangaClient mangaClient;
 
-    /**
-     * Lấy thống kê tổng hợp về lượt xem
-     *
-     * @return Thống kê tổng hợp về lượt xem
-     */
     public ViewStatisticsResponse getViewStatistics() {
         // Đếm lượt xem của người dùng đã đăng nhập
         Long registeredUserViews = historyRepository.countTotalViews();
@@ -55,12 +50,6 @@ public class StatisticService {
                 .build();
     }
 
-    /**
-     * Lấy số lượt xem theo loại thống kê
-     *
-     * @param type Loại thống kê: "total", "today", "week", "month"
-     * @return Số lượt xem theo loại thống kê
-     */
     public Long getViewsByType(String type) {
         return switch (type) {
             case "total" -> {
@@ -83,26 +72,12 @@ public class StatisticService {
         };
     }
 
-    /**
-     * Lấy thống kê lượt xem theo truyện
-     *
-     * @param days  Số ngày cần lấy (0 = toàn thời gian)
-     * @param limit Số lượng truyện cần lấy
-     * @return Danh sách thống kê lượt xem theo truyện
-     */
     public List<MangaViewsResponse> getViewsByManga(int days, int limit) {
         return days > 0
                 ? getViewsByMangaInPeriod(days, limit)
                 : getViewsByManga(limit);
     }
 
-    /**
-     * Lấy thống kê lượt xem theo truyện trong khoảng thời gian
-     *
-     * @param days  Số ngày cần lấy (7, 30, 90)
-     * @param limit Số lượng truyện cần lấy (mặc định là 10)
-     * @return Danh sách thống kê lượt xem theo truyện
-     */
     private List<MangaViewsResponse> getViewsByMangaInPeriod(int days, int limit) {
         // Tính toán ngày bắt đầu và ngày kết thúc
         LocalDate endDate = LocalDate.now();
@@ -115,12 +90,6 @@ public class StatisticService {
         return processViewsByManga(registeredUserViews, anonymousViews, limit);
     }
 
-    /**
-     * Lấy thống kê lượt xem theo truyện (toàn thời gian)
-     *
-     * @param limit Số lượng truyện cần lấy (mặc định là 10)
-     * @return Danh sách thống kê lượt xem theo truyện
-     */
     private List<MangaViewsResponse> getViewsByManga(int limit) {
         // Lấy danh sách truyện có lượt xem nhiều nhất (tổng hợp cả 2 loại người dùng)
         List<Object[]> registeredUserViews = historyRepository.countViewsByManga();
@@ -129,14 +98,6 @@ public class StatisticService {
         return processViewsByManga(registeredUserViews, anonymousViews, limit);
     }
 
-    /**
-     * Xử lý dữ liệu lượt xem theo truyện
-     *
-     * @param registeredUserViews Lượt xem của người dùng đã đăng nhập
-     * @param anonymousViews      Lượt xem của người dùng không đăng nhập
-     * @param limit               Số lượng truyện cần lấy
-     * @return Danh sách thống kê lượt xem theo truyện
-     */
     private List<MangaViewsResponse> processViewsByManga(
             List<Object[]> registeredUserViews,
             List<Object[]> anonymousViews,
@@ -186,12 +147,6 @@ public class StatisticService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Lấy tiêu đề truyện từ Manga Service
-     *
-     * @param mangaId ID của truyện
-     * @return Tiêu đề truyện
-     */
     private String getMangaTitle(String mangaId) {
         try {
             var mangaResponse = mangaClient.getMangaById(mangaId);

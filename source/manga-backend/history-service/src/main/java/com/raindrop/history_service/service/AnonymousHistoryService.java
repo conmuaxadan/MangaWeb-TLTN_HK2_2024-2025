@@ -69,12 +69,6 @@ public class AnonymousHistoryService {
         });
     }
 
-    /**
-     * Lấy lịch sử đọc của một manga cụ thể cho người dùng không đăng nhập
-     * @param sessionId ID phiên của người dùng
-     * @param mangaId ID của manga
-     * @return Thông tin lịch sử đọc
-     */
     public AnonymousHistoryResponse getMangaReadingHistory(String sessionId, String mangaId) {
         // Lấy lịch sử đọc gần nhất của manga
         AnonymousHistory readingHistory = anonymousHistoryRepository
@@ -109,12 +103,6 @@ public class AnonymousHistoryService {
         return anonymousHistoryRepository.countTodayViews();
     }
 
-    /**
-     * Bổ sung thông tin truyện và chapter từ Manga Service vào AnonymousHistoryResponse
-     * @param response Đối tượng AnonymousHistoryResponse cần bổ sung thông tin
-     * @param mangaId ID của manga
-     * @param chapterId ID của chapter
-     */
     private void enrichAnonymousHistoryResponse(AnonymousHistoryResponse response, String mangaId, String chapterId) {
         try {
             var mangaResponse = mangaClient.getMangaById(mangaId);

@@ -65,7 +65,6 @@ class AuthService {
                     console.log('AuthService: Đăng xuất thành công trên server');
                 } catch (apiError) {
                     console.error('AuthService: Lỗi khi gọi API đăng xuất:', apiError);
-                    // Tiếp tục xử lý ngay cả khi API thất bại
                 }
             }
 

@@ -26,8 +26,8 @@ public class SecurityConfig {
             "/auth/logout",
             "/auth/google/login",
             "/auth/refresh",
-            "/auth/forgot-password",    // Thêm endpoint quên mật khẩu
-            "/auth/reset-password",     // Thêm endpoint đặt lại mật khẩu
+            "/auth/forgot-password",
+            "/auth/reset-password",
             "/users/me/accounts/google",
             "/users/me/accounts/local",
             "/users/comment/{userId}",

@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {useParams, Link} from 'react-router-dom';
 import mangaService from '../services/manga-service.js';
 import favoriteService from '../services/favorite-service.js';
-import {MangaStatusDisplayNames} from '../interfaces/models/manga.js';
+import {MangaStatusDisplayNames} from '../interfaces/manga.js';
 import {formatDistanceToNow} from 'date-fns';
 import {vi} from 'date-fns/locale';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';

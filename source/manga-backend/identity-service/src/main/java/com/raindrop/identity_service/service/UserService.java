@@ -249,10 +249,6 @@ public class UserService {
             userId = jwt.getSubject(); // Subject trong JWT là ID của user
         }
 
-        if (userId == null) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
-        }
-
         User user = userRepository.findById(userId).orElseThrow(() -> {
             return new AppException(ErrorCode.USER_NOT_EXISTED);
         });
@@ -445,7 +441,7 @@ public class UserService {
 
             // Xóa ảnh cũ nếu có và không phải ảnh mặc định
             String oldAvatarUrl = user.getAvatarUrl();
-            if (oldAvatarUrl != null && !oldAvatarUrl.isEmpty() && !oldAvatarUrl.contains("i.pinimg.com")) {
+            if (oldAvatarUrl != null && !oldAvatarUrl.isEmpty() && !oldAvatarUrl.contains("http")) {
                 try {
                     // Lấy tên file từ URL
                     String fileName = oldAvatarUrl.substring(oldAvatarUrl.lastIndexOf("/") + 1);
@@ -495,7 +491,7 @@ public class UserService {
             String oldAvatarUrl = user.getAvatarUrl();
             if (oldAvatarUrl != null && !oldAvatarUrl.isEmpty() &&
                     !oldAvatarUrl.equals("default.jpg") &&
-                    !oldAvatarUrl.contains("i.pinimg.com")) {
+                    !oldAvatarUrl.contains("http")) {
                 try {
                     // Lấy tên file từ URL
                     String fileName = oldAvatarUrl.substring(oldAvatarUrl.lastIndexOf("/") + 1);

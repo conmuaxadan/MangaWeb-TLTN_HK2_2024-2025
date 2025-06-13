@@ -6,7 +6,7 @@ import {
     faChevronDown,
     faChevronUp
 } from '@fortawesome/free-solid-svg-icons';
-import { MangaStatus, MangaStatusDisplayNames } from '../interfaces/models/manga.js';
+import { MangaStatus, MangaStatusDisplayNames } from '../interfaces/manga.js';
 
 const SearchForm = ({
     filters,

@@ -232,6 +232,5 @@ export const mangaHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFI
 export const historyHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.HISTORY_SERVICE}`);
 export const commentHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.COMMENT_SERVICE}`);
 export const favoriteHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.FAVORITE_SERVICE}`);
-export const uploadHttpClient = new HttpClient(`${API_CONFIG.BASE_URL}${API_CONFIG.UPLOAD_SERVICE}`);
 
 export default HttpClient;

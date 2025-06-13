@@ -16,13 +16,21 @@ import {
     faKey
 } from '@fortawesome/free-solid-svg-icons';
 import {useAuth} from '../../contexts/AuthContext.jsx';
-import { getAvatarUrl } from '../../utils/file-utils.js';
+import {getAvatarUrl} from '../../utils/file-utils.js';
 
 const AdminLayout = ({children}) => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const location = useLocation();
     const navigate = useNavigate();
-    const {user, userProfile, logout, hasMangaManagement, hasSystemManagement, hasTranslatorManagement, getRedirectPath} = useAuth();
+    const {
+        user,
+        userProfile,
+        logout,
+        hasMangaManagement,
+        hasSystemManagement,
+        hasTranslatorManagement,
+        getRedirectPath
+    } = useAuth();
 
     const handleLogout = async () => {
         await logout();
@@ -41,7 +49,12 @@ const AdminLayout = ({children}) => {
         {path: '/admin/comments', icon: faComments, label: 'Quản lý bình luận', permission: 'SYSTEM_MANAGEMENT'},
         {path: '/admin/statistics', icon: faChartBar, label: 'Thống kê chi tiết', permission: 'SYSTEM_MANAGEMENT'},
         {path: '/translator/my-mangas', icon: faBook, label: 'Truyện của tôi', permission: 'TRANSLATOR_MANAGEMENT'},
-        {path: '/translator/my-chapters', icon: faBookOpen, label: 'Chương của tôi', permission: 'TRANSLATOR_MANAGEMENT'},
+        {
+            path: '/translator/my-chapters',
+            icon: faBookOpen,
+            label: 'Chương của tôi',
+            permission: 'TRANSLATOR_MANAGEMENT'
+        },
     ];
 
     // Lọc menu items dựa trên quyền
@@ -53,11 +66,6 @@ const AdminLayout = ({children}) => {
         // Nếu có quyền SYSTEM_MANAGEMENT (Super Admin), hiển thị tất cả các menu admin
         if (hasSystemManagement) {
             return allMenuItems.filter(item => item.permission !== 'TRANSLATOR_MANAGEMENT');
-        }
-
-        // Nếu chỉ có quyền MANGA_MANAGEMENT, chỉ hiển thị các menu liên quan đến quản lý truyện
-        if (hasMangaManagement) {
-            return allMenuItems.filter(item => item.permission === 'MANGA_MANAGEMENT');
         }
 
         // Nếu chỉ có quyền TRANSLATOR_MANAGEMENT, chỉ hiển thị các menu translator
@@ -136,11 +144,6 @@ const AdminLayout = ({children}) => {
                                     <span
                                         className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
                     Admin
-                  </span>
-                                ) : hasMangaManagement ? (
-                                    <span
-                                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                    Quản lý truyện
                   </span>
                                 ) : hasTranslatorManagement ? (
                                     <span

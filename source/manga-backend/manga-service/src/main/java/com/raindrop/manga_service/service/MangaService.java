@@ -442,7 +442,7 @@ public class MangaService {
         manga.setYearOfRelease(request.getYearOfRelease());
         manga.setStatus(request.getStatus());
 
-        // Xử lý genres - xóa tất cả genres hiện tại và thêm lại các genres mới
+        // Xử lý genres
         manga.getGenres().clear(); // Xóa tất cả genres hiện tại
         if (request.getGenres() != null && !request.getGenres().isEmpty()) {
             List<Genre> newGenres = new ArrayList<>();
@@ -744,16 +744,6 @@ public class MangaService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Tìm kiếm và lọc manga chưa bị xóa theo nhiều tiêu chí
-     *
-     * @param keyword       Từ khóa tìm kiếm (title hoặc author)
-     * @param genreName     Tên thể loại cần lọc (null nếu không lọc theo thể loại)
-     * @param status        Trạng thái manga cần lọc (null nếu không lọc theo trạng thái)
-     * @param yearOfRelease Năm phát hành cần lọc (null nếu không lọc theo năm)
-     * @param pageable      Thông tin phân trang
-     * @return Danh sách manga chưa bị xóa đã được lọc
-     */
     public Page<MangaManagementResponse> searchAndFilterActiveMangas(
             String keyword,
             String genreName,
@@ -774,16 +764,6 @@ public class MangaService {
         return mangas.map(manga -> enrichManagementResponse(manga, chapterCountsMap));
     }
 
-    /**
-     * Tìm kiếm và lọc manga đã bị xóa theo nhiều tiêu chí
-     *
-     * @param keyword       Từ khóa tìm kiếm (title hoặc author)
-     * @param genreName     Tên thể loại cần lọc (null nếu không lọc theo thể loại)
-     * @param status        Trạng thái manga cần lọc (null nếu không lọc theo trạng thái)
-     * @param yearOfRelease Năm phát hành cần lọc (null nếu không lọc theo năm)
-     * @param pageable      Thông tin phân trang
-     * @return Danh sách manga đã bị xóa đã được lọc
-     */
     public Page<MangaManagementResponse> searchAndFilterDeletedMangas(
             String keyword,
             String genreName,
