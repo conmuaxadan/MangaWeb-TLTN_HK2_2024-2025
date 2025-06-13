@@ -35,6 +35,8 @@ const Header = React.memo(() => {
       e.preventDefault();
       try {
         await logout();
+        // Chuyển hướng về trang chủ sau khi đăng xuất
+        window.location.href = '/';
       } catch (error) {
         console.error('Header: Lỗi khi logout:', error);
       }

@@ -66,18 +66,28 @@ const RoleManagement = () => {
   const handleAddRole = () => {
     setCurrentRole(undefined);
     setIsModalOpen(true);
-  };
-
-  // Xử lý mở modal sửa vai trò
+  };  // Xử lý mở modal sửa vai trò
   const handleEditRole = async (role) => {
+    console.log('Bắt đầu chỉnh sửa vai trò:', role);
+    
+    if (!role || !role.id) {
+      toast.error('Thông tin vai trò không hợp lệ', { position: "top-right" });
+      return;
+    }
+
     try {
       const roleDetail = await getRoleDetails(role);
+      console.log('Chi tiết vai trò nhận được:', roleDetail);
+      
       if (roleDetail) {
         setCurrentRole(roleDetail);
         setIsModalOpen(true);
+      } else {
+        toast.error(`Không thể tải thông tin chi tiết vai trò ${role.name}. Vui lòng thử lại.`, { position: "top-right" });
       }
     } catch (error) {
-      toast.error(`Không thể tải thông tin chi tiết vai trò ${role.name}`, { position: "top-right" });
+      console.error('Lỗi khi tải thông tin vai trò:', error);
+      toast.error(`Lỗi khi tải thông tin chi tiết vai trò ${role.name}: ${error.message || 'Lỗi không xác định'}`, { position: "top-right" });
     }
   };
 
@@ -86,12 +96,12 @@ const RoleManagement = () => {
     setIsModalOpen(false);
     setCurrentRole(undefined);
   };
-
   // Xử lý submit form
   const handleSubmitForm = async (data) => {
     const result = await saveRole(data, currentRole);
     if (result) {
       setIsModalOpen(false);
+      setCurrentRole(undefined);
     }
   };
 

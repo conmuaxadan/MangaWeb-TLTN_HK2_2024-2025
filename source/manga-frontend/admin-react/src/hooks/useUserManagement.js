@@ -130,9 +130,9 @@ export const useUserManagement = () => {
     setCurrentUser(undefined);
     setIsModalOpen(true);
   };
-
   // Handle edit user
   const handleEditUser = (user) => {
+    console.log('handleEditUser called with user:', user);
     setCurrentUser(user);
     setIsModalOpen(true);
   };
@@ -141,29 +141,39 @@ export const useUserManagement = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setCurrentUser(undefined);
-  };
-
-  // Handle submit form
-  const handleSubmitForm = async (data) => {
+  };  // Handle submit form
+  const handleSubmitForm = async (data, userToUpdate = null) => {
     setIsSubmitting(true);
     try {
-      if (currentUser) {
+      const effectiveCurrentUser = userToUpdate || currentUser;
+      console.log('handleSubmitForm - currentUser:', currentUser);
+      console.log('handleSubmitForm - effectiveCurrentUser:', effectiveCurrentUser);
+      console.log('handleSubmitForm - data:', data);
+      
+      if (effectiveCurrentUser) {
         // Update user
-        const response = await userService.updateUser({ ...data, id: currentUser.id });
+        console.log('Updating user with id:', effectiveCurrentUser.id);
+        const response = await userService.updateUser({ ...data, id: effectiveCurrentUser.id });
         if (response) {
-          setUsers(users.map(user => user.id === currentUser.id ? response : user));
+          setUsers(users.map(user => user.id === effectiveCurrentUser.id ? response : user));
           setIsModalOpen(false);
+          return true;
         }
+        return false;
       } else {
         // Create user
+        console.log('Creating new user');
         const response = await userService.createUser(data);
         if (response) {
           fetchUsers(currentPage); // Refresh current page
           setIsModalOpen(false);
+          return true;
         }
+        return false;
       }
     } catch (error) {
       console.error('Lỗi khi lưu người dùng:', error);
+      return false;
     } finally {
       setIsSubmitting(false);
     }

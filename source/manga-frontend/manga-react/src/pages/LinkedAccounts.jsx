@@ -242,6 +242,14 @@ const LinkedAccounts = () => {
       return null;
     }
 
+    // Kiểm tra xem đã liên kết với tài khoản Local chưa
+    const hasLocalLinked = linkedAccounts.some(account => account.provider === 'LOCAL');
+
+    // Nếu đã liên kết với tài khoản Local rồi, không hiển thị form
+    if (hasLocalLinked) {
+      return null;
+    }
+
     // Tiêu đề và mô tả cho form liên kết tài khoản Local
     const title = 'Tạo tài khoản Local mới';
     const description = 'Tạo tài khoản local để có thể đăng nhập bằng tên đăng nhập và mật khẩu.';

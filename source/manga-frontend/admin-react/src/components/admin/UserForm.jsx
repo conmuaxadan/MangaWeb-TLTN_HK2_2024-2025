@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import userService from '../../services/user-service.js';
-import uploadService from '../../services/upload-service.js';
 import { getAvatarUrl } from '../../utils/file-utils.js';
 
 const UserForm = ({
@@ -25,9 +24,9 @@ const UserForm = ({
   const [isUploading, setIsUploading] = useState(false);
   const [oldAvatarUrl, setOldAvatarUrl] = useState('');
   const fileInputRef = useRef(null);
-
   // Cập nhật formData khi initialData thay đổi
   useEffect(() => {
+    console.log('UserForm useEffect - initialData:', initialData);
     if (initialData) {
       setFormData({
         username: initialData.username,
@@ -191,9 +190,11 @@ const UserForm = ({
       }
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    console.log('UserForm handleSubmit - initialData:', initialData);
+    console.log('UserForm handleSubmit - formData:', formData);
 
     if (!validateForm()) {
       return;
@@ -220,13 +221,18 @@ const UserForm = ({
           setAvatarFile(null);
           if (fileInputRef.current) {
             fileInputRef.current.value = '';
-          }
-
-          // Submit form với avatarUrl mới
-          onSubmit({
+          }          // Submit form với avatarUrl mới
+          const submitData = {
             ...formData,
             avatarUrl: response.avatarUrl
-          });
+          };
+          
+          // Nếu đang update (có initialData) và password rỗng, không gửi trường password
+          if (initialData && !formData.password.trim()) {
+            delete submitData.password;
+          }
+          
+          onSubmit(submitData);
           return;
         }
       } catch (error) {
@@ -236,10 +242,16 @@ const UserForm = ({
       } finally {
         setIsUploading(false);
       }
+    }    // Nếu không có file avatar mới hoặc upload thất bại, submit form với dữ liệu hiện tại
+    // Tạo data để submit, loại bỏ password nếu rỗng khi update
+    const submitData = { ...formData };
+    
+    // Nếu đang update (có initialData) và password rỗng, không gửi trường password
+    if (initialData && !formData.password.trim()) {
+      delete submitData.password;
     }
-
-    // Nếu không có file avatar mới hoặc upload thất bại, submit form với dữ liệu hiện tại
-    onSubmit(formData);
+    
+    onSubmit(submitData);
   };
 
   return (

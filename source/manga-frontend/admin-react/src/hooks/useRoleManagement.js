@@ -169,7 +169,6 @@ const useRoleManagement = () => {
   const resetSearch = () => {
     setSearchTerm('');
   };
-
   return {
     // Data
     roles,
@@ -190,16 +189,105 @@ const useRoleManagement = () => {
     currentPage,
     itemsPerPage,
 
-    // Actions
+    // Search
     setSearchTerm,
+    resetSearch,
+
+    // Pagination
+    pageSize: itemsPerPage,
+    paginate,
+    handlePageSizeChange,    // CRUD operations
+    getRoleDetails: async (role) => {
+      console.log('Hook: Bắt đầu lấy chi tiết vai trò:', role);
+      
+      if (!role || !role.id) {
+        const errorMsg = 'Không thể lấy chi tiết vai trò - thông tin vai trò không hợp lệ';
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      try {
+        console.log(`Hook: Gọi API lấy chi tiết vai trò ID ${role.id} (${role.name})`);
+        const detailedRole = await roleService.getRoleById(role.id);
+        console.log('Hook: Kết quả từ API:', detailedRole);
+        
+        if (detailedRole) {
+          return detailedRole;
+        } else {
+          const errorMsg = `Không thể lấy thông tin chi tiết của vai trò ${role.name} (ID: ${role.id})`;
+          console.error(errorMsg);
+          throw new Error(errorMsg);
+        }
+      } catch (error) {
+        const errorMsg = `Lỗi khi lấy thông tin chi tiết vai trò ${role.name} (ID: ${role.id}): ${error.message || 'Lỗi không xác định'}`;
+        console.error(errorMsg, error);
+        throw new Error(errorMsg);
+      }
+    },
+    saveRole: async (data, currentRole = null) => {
+      setIsSubmitting(true);
+      try {
+        if (currentRole?.id) {
+          // Cập nhật vai trò
+          const response = await roleService.updateRole(currentRole.id, currentRole.name, data);
+          if (response) {
+            setRoles(
+              roles.map(role =>
+                role.id === currentRole.id
+                  ? response
+                  : role
+              )
+            );
+            setIsModalOpen(false);
+            return true;
+          }
+          return false;
+        } else {
+          // Tạo vai trò mới
+          // Kiểm tra trùng tên
+          if (roles.some(role => role.name.toLowerCase() === data.name.toLowerCase())) {
+            alert('Vai trò này đã tồn tại');
+            return false;
+          }
+
+          const response = await roleService.createRole(data);
+          if (response) {
+            setRoles([...roles, response]);
+            setIsModalOpen(false);
+            return true;
+          }
+          return false;
+        }
+      } catch (error) {
+        console.error('Lỗi khi lưu vai trò:', error);
+        return false;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    deleteRole: async (id, name) => {
+      if (window.confirm(`Bạn có chắc chắn muốn xóa vai trò "${name}"?`)) {
+        try {
+          const success = await roleService.deleteRole(id, name);
+          if (success) {
+            setRoles(roles.filter(role => role.id !== id));
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error(`Lỗi khi xóa vai trò ${name} (ID: ${id}):`, error);
+          return false;
+        }
+      }
+      return false;
+    },
+    
+    // Legacy methods for backward compatibility
     handleAddRole,
     handleEditRole,
     handleDeleteRole,
     handleCloseModal,
     handleSubmitForm,
-    paginate,
-    handlePageSizeChange,
-    resetSearch,
     fetchRoles,
     fetchPermissions
   };

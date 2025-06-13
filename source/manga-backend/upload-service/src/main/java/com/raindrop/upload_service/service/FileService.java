@@ -52,24 +52,50 @@ public class FileService {
         return FileInfoResponse.builder()
                 .fileName(fileName)
                 .build();
-    }
-
-    public FileInfoResponse uploadUserFile(MultipartFile file) throws IOException {
+    }    public FileInfoResponse uploadUserFile(MultipartFile file) throws IOException {
+        log.info("Starting uploadUserFile - file name: {}, content type: {}, size: {}", 
+            file.getOriginalFilename(), file.getContentType(), file.getSize());
+            
         String fileExtension = StringUtils.getFilenameExtension(Objects.requireNonNull(file.getOriginalFilename()));
         String fileName = Objects.isNull(fileExtension)
                 ? UUID.randomUUID().toString()
                 : UUID.randomUUID().toString() + "." + fileExtension;
 
-        FileInfo fileData = fileDataRepository.save(FileInfo.builder()
-                .name(fileName)
-                .filePath(USER_FOLDER_PATH + fileName)
-                        .fileType(file.getContentType())
-                .build());
+        log.info("Generated filename: {}, extension: {}", fileName, fileExtension);
+        
+        String fullFilePath = USER_FOLDER_PATH + fileName;
+        log.info("Full file path: {}", fullFilePath);
 
-        file.transferTo(new File(fileData.getFilePath()));
-        return FileInfoResponse.builder()
-                .fileName(fileName)
-                .build();
+        try {
+            FileInfo fileData = fileDataRepository.save(FileInfo.builder()
+                    .name(fileName)
+                    .filePath(fullFilePath)
+                    .fileType(file.getContentType())
+                    .build());
+            log.info("FileInfo saved to database with ID: {}", fileData.getId());
+
+            File targetFile = new File(fileData.getFilePath());
+            log.info("Target file: {}, parent directory exists: {}", 
+                targetFile.getAbsolutePath(), targetFile.getParentFile().exists());
+                
+            // Ensure directory exists
+            if (!targetFile.getParentFile().exists()) {
+                boolean created = targetFile.getParentFile().mkdirs();
+                log.info("Created parent directories: {}", created);
+            }
+
+            file.transferTo(targetFile);
+            log.info("File transferred successfully to: {}", targetFile.getAbsolutePath());
+
+            FileInfoResponse response = FileInfoResponse.builder()
+                    .fileName(fileName)
+                    .build();
+            log.info("Returning response with fileName: {}", fileName);
+            return response;
+        } catch (Exception e) {
+            log.error("Error in uploadUserFile: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     public FileData read(String fileName) throws IOException {

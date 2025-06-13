@@ -3,10 +3,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faTrash, faLock, faLockOpen, faSync } from '@fortawesome/free-solid-svg-icons';
 import { formatDate } from '../../utils/date-utils.js';
 import Pagination from '../../components/common/Pagination.jsx';
-import { Link } from 'react-router-dom';
 import { truncateText } from '../../utils/string-utils.js';
 import { useCommentManagement } from '../../hooks/useCommentManagement.js';
 import BlockUserModal from '../../components/admin/BlockUserModal.jsx';
+import {getAvatarUrl} from "../../utils/file-utils.js";
 
 const CommentManagement = () => {
   // Block user modal state
@@ -147,7 +147,7 @@ const CommentManagement = () => {
                     <div className="flex items-center">
                       {comment.userAvatarUrl && (
                         <img
-                          src={"http://localhost:8888/api/v1/upload/files/"+comment.userAvatarUrl}
+                          src={getAvatarUrl(comment.userAvatarUrl)}
                           alt={comment.username}
                           className="h-8 w-8 rounded-full mr-2"
                         />
@@ -176,23 +176,23 @@ const CommentManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 dark:text-white">
-                      <Link
-                        to={`/admin/mangas/${comment.mangaId}`}
+                      <a
+                        href={`http://localhost:5173/mangas/${comment.mangaId}`}
                         className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
                       >
                         {comment.mangaTitle || 'N/A'}
-                      </Link>
+                      </a>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">{comment.mangaId}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 dark:text-white">
-                      <Link
-                        to={`/admin/chapters/${comment.chapterId}`}
+                      <a
+                        href={`http://localhost:5173/mangas/${comment.mangaId}/chapters/${comment.chapterId}`}
                         className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
                       >
                         {comment.chapterTitle || `Chương ${comment.chapterNumber}` || 'N/A'}
-                      </Link>
+                      </a>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">{comment.chapterId}</div>
                   </td>

@@ -20,6 +20,7 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,6 +47,7 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+@Slf4j
 public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
@@ -194,6 +196,65 @@ public class UserService {
         user = userRepository.save(user);
 
         return user;
+    }
+
+    // Overload method for UserUpdateRequest
+    public User updateUser(UserUpdateRequest request) {
+        User user = userRepository.findById(request.getId()).orElseThrow(() ->
+                new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Lưu trữ email hiện tại để đảm bảo không bị thay đổi
+        String currentEmail = user.getEmail();
+
+        // Cập nhật thông tin cơ bản (trừ username và email)
+        userMapper.updateUserFromUpdateRequest(user, request);
+
+        // Khôi phục email ban đầu
+        user.setEmail(currentEmail);
+
+        // Cập nhật mật khẩu nếu có và không rỗng
+        if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        // Cập nhật displayName nếu có
+        if (request.getDisplayName() != null) {
+            String newDisplayName = request.getDisplayName();
+
+            // Validate displayName length
+            if (newDisplayName.trim().isEmpty()) {
+                throw new AppException(ErrorCode.VALIDATION_ERROR);
+            }
+
+            if (newDisplayName.length() < 6) {
+                throw new AppException(ErrorCode.DISPLAYNAME_TOO_SHORT);
+            }
+
+            if (newDisplayName.length() > 16) {
+                throw new AppException(ErrorCode.DISPLAYNAME_TOO_LONG);
+            }
+
+            // Kiểm tra trùng lặp displayName (chỉ khi thay đổi)
+            if (!newDisplayName.equals(user.getDisplayName()) &&
+                    userRepository.existsByDisplayName(newDisplayName)) {
+                throw new AppException(ErrorCode.DISPLAYNAME_EXISTED);
+            }
+
+            user.setDisplayName(newDisplayName);
+        }
+
+        // Cập nhật avatarUrl nếu có
+        if (request.getAvatarUrl() != null) {
+            user.setAvatarUrl(request.getAvatarUrl());
+        }
+
+        // Cập nhật roles nếu có
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+            var roles = roleRepository.findAllById(request.getRoles());
+            user.setRoles(new HashSet<>(roles));
+        }
+
+        return userRepository.save(user);
     }
 
     public UserResponse getUserById(String id) {
@@ -410,63 +471,85 @@ public class UserService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         linkedAccountRepository.delete(linkedAccount);
-    }
-
-    @Transactional
+    }    @Transactional
     public UserResponse updateAvatar(String userId, MultipartFile file) {
+        log.info("Starting avatar update for user: {}", userId);
+        
         // Kiểm tra file
         if (file == null || file.isEmpty()) {
+            log.error("File is null or empty for user: {}", userId);
             throw new AppException(ErrorCode.VALIDATION_ERROR);
         }
 
         // Kiểm tra loại file
         String contentType = file.getContentType();
+        log.info("File content type: {} for user: {}", contentType, userId);
         if (contentType == null || !contentType.startsWith("image/")) {
+            log.error("Invalid file content type: {} for user: {}", contentType, userId);
             throw new AppException(ErrorCode.VALIDATION_ERROR);
         }
 
         User user = userRepository.findById(userId).orElseThrow(() ->
                 new AppException(ErrorCode.USER_NOT_EXISTED));
 
+        log.info("User found: {}, current avatar: {}", user.getUsername(), user.getAvatarUrl());
+
         try {
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attributes == null) {
+                log.error("ServletRequestAttributes is null for user: {}", userId);
                 throw new AppException(ErrorCode.SERVER_ERROR);
             }
 
             var header = attributes.getRequest().getHeader("Authorization");
             if (header == null || header.isEmpty()) {
+                log.error("Authorization header is missing for user: {}", userId);
                 throw new AppException(ErrorCode.UNAUTHENTICATED);
             }
 
             // Xóa ảnh cũ nếu có và không phải ảnh mặc định
             String oldAvatarUrl = user.getAvatarUrl();
-            if (oldAvatarUrl != null && !oldAvatarUrl.isEmpty() && !oldAvatarUrl.contains("http")) {
+            log.info("Processing old avatar URL: {} for user: {}", oldAvatarUrl, userId);
+            if (oldAvatarUrl != null && !oldAvatarUrl.isEmpty() && !oldAvatarUrl.startsWith("http") && !oldAvatarUrl.equals("default.jpg")) {
                 try {
                     // Lấy tên file từ URL
                     String fileName = oldAvatarUrl.substring(oldAvatarUrl.lastIndexOf("/") + 1);
+                    log.info("Deleting old avatar file: {} for user: {}", fileName, userId);
                     uploadClient.deleteFile(header, fileName);
+                    log.info("Successfully deleted old avatar file for user: {}", userId);
                 } catch (Exception e) {
+                    log.warn("Failed to delete old avatar file for user: {}, error: {}", userId, e.getMessage());
                     // Tiếp tục xử lý ngay cả khi xóa ảnh cũ thất bại
                 }
+            } else {
+                log.info("Skipping old avatar deletion for user: {}, oldAvatarUrl: {}", userId, oldAvatarUrl);
             }
 
             // Upload ảnh mới
+            log.info("Starting upload to upload-service for user: {}", userId);
             var uploadResponse = uploadClient.uploadAvatar(header, file);
+            log.info("Upload response received for user: {}, code: {}", userId, uploadResponse != null ? uploadResponse.getCode() : "null");
+            
             if (uploadResponse.getCode() != 201 || uploadResponse.getResult() == null) {
+                log.error("Upload failed for user: {}, response code: {}, result: {}", userId, 
+                    uploadResponse.getCode(), uploadResponse.getResult());
                 throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
             }
 
             String newAvatarUrl = uploadResponse.getResult().getFileName();
+            log.info("New avatar URL: {} for user: {}", newAvatarUrl, userId);
             user.setAvatarUrl(newAvatarUrl);
 
             user = userRepository.save(user);
+            log.info("Avatar updated successfully for user: {}", userId);
 
             return userMapper.toUserResponse(user);
 
         } catch (AppException e) {
+            log.error("AppException during avatar update for user: {}, error: {}", userId, e.getMessage());
             throw e;
         } catch (Exception e) {
+            log.error("Unexpected exception during avatar update for user: {}, error: {}", userId, e.getMessage(), e);
             throw new AppException(ErrorCode.SERVER_ERROR);
         }
     }
@@ -491,7 +574,7 @@ public class UserService {
             String oldAvatarUrl = user.getAvatarUrl();
             if (oldAvatarUrl != null && !oldAvatarUrl.isEmpty() &&
                     !oldAvatarUrl.equals("default.jpg") &&
-                    !oldAvatarUrl.contains("http")) {
+                    !oldAvatarUrl.startsWith("http")) {
                 try {
                     // Lấy tên file từ URL
                     String fileName = oldAvatarUrl.substring(oldAvatarUrl.lastIndexOf("/") + 1);

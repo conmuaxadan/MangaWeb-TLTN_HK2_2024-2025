@@ -93,10 +93,8 @@ public class UserController {
                 .result(userService.getUserCommentById(userId))
                 .build();
     }
-
-
     @PutMapping()
-    ApiResponse<UserResponse> updateUser(@RequestBody UserRequest request) {
+    ApiResponse<UserResponse> updateUser(@RequestBody @Valid UserUpdateRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .message("User updated successfully")
                 .result(userMapper.toUserResponse(userService.updateUser(request)))

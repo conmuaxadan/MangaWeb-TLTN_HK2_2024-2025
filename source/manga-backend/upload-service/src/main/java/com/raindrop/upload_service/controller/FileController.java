@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 
 @RestController
@@ -37,11 +38,17 @@ public class FileController {
 
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<FileInfoResponse> uploadAvatarFile(@RequestPart("image") MultipartFile file) throws IOException {
-        FileInfoResponse uploadImage = fileService.uploadUserFile(file);
-        return ApiResponse.<FileInfoResponse>builder()
-                .code(201)
-                .result(uploadImage)
-                .build();
+        try {
+            FileInfoResponse uploadImage = fileService.uploadUserFile(file);
+
+            ApiResponse<FileInfoResponse> response = ApiResponse.<FileInfoResponse>builder()
+                    .code(201)
+                    .result(uploadImage)
+                    .build();
+            return response;
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     @GetMapping("/{fileName}")
@@ -54,7 +61,7 @@ public class FileController {
     }
 
     @DeleteMapping("/{fileName}")
-    @PreAuthorize("hasAnyAuthority('MANGA_MANAGEMENT', 'TRANSLATOR_MANAGEMENT', 'SYSTEM_MANAGEMENT')")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<Void> deleteImageFromFileSystem(@PathVariable String fileName) throws IOException {
         fileService.deleteFile(fileName);
         return ApiResponse.<Void>builder()

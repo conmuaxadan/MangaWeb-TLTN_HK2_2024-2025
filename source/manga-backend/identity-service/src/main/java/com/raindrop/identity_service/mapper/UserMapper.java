@@ -1,6 +1,7 @@
 package com.raindrop.identity_service.mapper;
 
 import com.raindrop.identity_service.dto.request.UserRequest;
+import com.raindrop.identity_service.dto.request.UserUpdateRequest;
 import com.raindrop.identity_service.dto.response.UserResponse;
 import com.raindrop.identity_service.entity.User;
 import org.mapstruct.Mapper;
@@ -9,12 +10,12 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface UserMapper {
-    @Mapping(target = "id", ignore = true)
+public interface UserMapper {    @Mapping(target = "id", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "authProvider", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "enabled", ignore = true)
     User toUser(UserRequest request);
 
     @Mapping(target = "id", source = "id")
@@ -24,9 +25,7 @@ public interface UserMapper {
     @Mapping(target = "avatarUrl", source = "avatarUrl")
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "enabled", source = "enabled")
-    UserResponse toUserResponse(User user);
-
-    @Mapping(target = "id", ignore = true)
+    UserResponse toUserResponse(User user);    @Mapping(target = "id", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "authProvider", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
@@ -34,5 +33,15 @@ public interface UserMapper {
     @Mapping(target = "password", ignore = true) // Xử lý riêng trong service
     @Mapping(target = "email", ignore = true) // Không cho phép cập nhật email
     @Mapping(target = "username", ignore = true) // Không cho phép cập nhật username
-    void updateUser(@MappingTarget User user, UserRequest request);
+    @Mapping(target = "enabled", ignore = true)
+    void updateUser(@MappingTarget User user, UserRequest request);    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "authProvider", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "password", ignore = true) // Xử lý riêng trong service
+    @Mapping(target = "email", ignore = true) // Không cho phép cập nhật email
+    @Mapping(target = "username", ignore = true) // Không cho phép cập nhật username
+    @Mapping(target = "enabled", ignore = true)
+    void updateUserFromUpdateRequest(@MappingTarget User user, UserUpdateRequest request);
 }

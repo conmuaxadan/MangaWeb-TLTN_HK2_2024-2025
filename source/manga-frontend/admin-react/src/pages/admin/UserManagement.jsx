@@ -73,12 +73,15 @@ const UserManagement = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setCurrentUser(undefined);
-  };
-
-  // Handle form submission
+  };  // Handle form submission
   const handleSubmitFormLocal = async (data) => {
-    await handleSubmitForm(data);
-    setIsModalOpen(false);
+    console.log('handleSubmitFormLocal - currentUser:', currentUser);
+    console.log('handleSubmitFormLocal - data:', data);
+    
+    const success = await handleSubmitForm(data, currentUser); // Truyền currentUser trực tiếp
+    if (success !== false) { // Chỉ đóng modal nếu submit thành công
+      setIsModalOpen(false);
+    }
   };
 
   // Handle toggle user status with modal for blocking

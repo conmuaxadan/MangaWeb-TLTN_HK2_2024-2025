@@ -74,7 +74,6 @@ export const useFavoriteList = (pageSize = 18) => {
         try {
             const success = await favoriteService.removeFavorite(mangaId);
             if (success) {
-                toast.success('Đã xóa khỏi danh sách yêu thích', { position: 'top-right' });
 
                 // Cập nhật lại danh sách yêu thích
                 const updatedFavorites = favorites.filter(fav => fav.mangaId !== mangaId);
