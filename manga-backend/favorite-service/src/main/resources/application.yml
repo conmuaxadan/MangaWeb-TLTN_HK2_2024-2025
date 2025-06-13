@@ -1,0 +1,42 @@
+server:
+  port: 8086
+  servlet:
+    context-path: /favorite
+
+spring:
+  application:
+    name: favorite-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/favorite_service
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      group-id: favorite-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.raindrop.common.event
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+app:
+  services:
+    manga: http://localhost:8082/manga
+    identity: http://localhost:8080/identity
+
+logging:
+  level:
+    com.raindrop.favorite_service: DEBUG
+    org.springframework.security: DEBUG
