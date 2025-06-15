@@ -46,7 +46,7 @@ const CommentManagement = () => {
       setIsBlockModalOpen(true);
     } else {
       // Mở khóa tài khoản - thực hiện trực tiếp
-      if (window.confirm(`Bạn có chắc chắn muốn mở khóa tài khoản ${username}?`)) {
+      if (window.confirm(`Bạn có chắc chắn muốn mở khóa tài khoản này?`)) {
         await handleToggleUserStatus(username, userId);
       }
     }

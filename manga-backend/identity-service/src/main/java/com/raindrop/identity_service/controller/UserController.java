@@ -175,7 +175,6 @@ public class UserController {
     ApiResponse<UserResponse> toggleUserStatus(
             @PathVariable String userId,
             @RequestBody @Valid ToggleUserStatusRequest request) {
-        // Đảm bảo userId từ path và request body khớp nhau
         request.setUserId(userId);
         return ApiResponse.<UserResponse>builder()
                 .message("User status updated successfully")

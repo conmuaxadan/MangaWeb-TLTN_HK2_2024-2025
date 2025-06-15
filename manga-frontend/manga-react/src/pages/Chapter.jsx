@@ -84,13 +84,6 @@ const Chapter = () => {
         // Đảm bảo có sessionId bằng cách lấy từ nhiều nguồn
         let currentSessionId = sessionId || localStorage.getItem('manga_session_id') || sessionService.getSessionId();
 
-        console.log('Using sessionId for anonymous reading history:', {
-          'sessionId from state': sessionId,
-          'sessionId from localStorage': localStorage.getItem('manga_session_id'),
-          'sessionId from service': sessionService.getSessionId(),
-          'final sessionId used': currentSessionId
-        });
-
         // Xử lý lưu lịch sử đọc
         if (isLogin) {
           // Người dùng đã đăng nhập
@@ -137,8 +130,6 @@ const Chapter = () => {
 
         if (visiblePage !== currentPage) {
           setCurrentPage(visiblePage);
-          // Đã loại bỏ việc gọi markAsRead khi cuộn trang
-          // Vì chúng ta sẽ chỉ gọi markAsRead một lần khi mở chapter
         }
       }
 
@@ -159,15 +150,9 @@ const Chapter = () => {
   // Lưu trữ tất cả các chapter để sử dụng cho nút "Chương đầu tiên"
   const [chapters, setChapters] = useState([]);
 
-  // Đã loại bỏ việc gọi API tăng lượt xem khi người dùng cuộn trang
-  // Vì chúng ta sẽ chỉ gọi API tăng lượt xem một lần khi mở chapter
-
   // Cuộn lên đầu trang và reset trạng thái khi chuyển giữa các chapter
   useEffect(() => {
-    // Tự động cuộn lên đầu trang khi chapterId thay đổi
     window.scrollTo(0, 0);
-
-    // Reset trạng thái đã ghi lịch sử đọc khi chuyển chapter
     setHasRecordedHistory(false);
   }, [chapterId]);
 
@@ -271,8 +256,6 @@ const Chapter = () => {
           }
           setPages(chapterData.pages || []);
 
-          // Đánh dấu đã đọc chapter (sẽ tự động tăng lượt xem qua Kafka)
-          // Đảm bảo có sessionId bằng cách lấy từ nhiều nguồn
           let currentSessionId = sessionId;
 
           // Nếu không có trong state, thử lấy từ localStorage

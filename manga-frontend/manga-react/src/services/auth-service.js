@@ -199,7 +199,7 @@ class AuthService {
             localStorage.removeItem(TOKEN_STORAGE.ACCESS_TOKEN);
             localStorage.removeItem(TOKEN_STORAGE.REFRESH_TOKEN);
             localStorage.removeItem(TOKEN_STORAGE.TOKEN_EXPIRY);
-            return true; // Vẫn trả về true vì người dùng đã đăng xuất khỏi client
+            return true;
         }
     }
 

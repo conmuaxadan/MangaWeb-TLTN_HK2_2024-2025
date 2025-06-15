@@ -40,8 +40,6 @@ const ChapterForm = ({
       setTitle(initialData.title || '');
       setMangaId(initialData.mangaId || '');
 
-      // For existing chapters, we can't show the actual pages because we don't have the files
-      // We can only show the URLs
       if (initialData.pages) {
         // Sắp xếp các trang theo index trước khi hiển thị
         const sortedPages = [...initialData.pages].sort((a, b) => a.index - b.index);
@@ -81,7 +79,7 @@ const ChapterForm = ({
     if (match) {
       return parseInt(match[0], 10);
     }
-    return 0; // Mặc định nếu không tìm thấy số
+    return 0;
   };
 
   // Handle page files change
@@ -192,9 +190,6 @@ const ChapterForm = ({
         console.error('Lỗi khi xóa trang:', error);
       }
     } else {
-      // Nếu đang tạo chapter mới hoặc không có initialData
-      // Chỉ xóa trang khỏi state
-
       // Xóa file tại vị trí index
       setPageFiles(prev => prev.filter((_, i) => i !== index));
 
@@ -267,9 +262,6 @@ const ChapterForm = ({
           console.error('Lỗi khi xóa các trang:', error);
         }
       } else {
-        // Nếu đang tạo chapter mới hoặc không có initialData
-        // Chỉ xóa các trang khỏi state
-
         // Revoke tất cả các URL object để tránh memory leak
         pagePreviews.forEach(preview => {
           if (preview && preview.url && preview.url.startsWith('blob:')) {
@@ -336,11 +328,6 @@ const ChapterForm = ({
                 return newPreviewsArray;
               });
 
-              // KHÔNG CẬP NHẬT `pageFiles` ở đây khi chỉ thay thế một trang đã tồn tại trên server.
-              // Việc thay thế đã được xử lý bởi API `updateChapterPage`.
-              // `pageFiles` chỉ nên chứa các file mới hoàn toàn sẽ được append
-              // khi submit toàn bộ form (thông qua `handlePageFilesChange` hoặc khi tạo chapter mới).
-
               // Đóng thông báo loading và hiển thị thông báo thành công
               toast.dismiss(loadingToast);
               toast.success(`Đã cập nhật trang ${index + 1}`, {
@@ -357,9 +344,6 @@ const ChapterForm = ({
             console.error('Lỗi khi cập nhật trang:', error);
           }
         } else {
-          // Nếu đang tạo chapter mới hoặc không có initialData
-          // Chỉ cập nhật preview và file trong state
-
           // Nếu có preview cũ, revoke nó
           if (pagePreviews[index] && pagePreviews[index].url && pagePreviews[index].url.startsWith('blob:')) {
             URL.revokeObjectURL(pagePreviews[index].url);

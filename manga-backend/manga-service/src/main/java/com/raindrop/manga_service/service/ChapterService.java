@@ -238,7 +238,6 @@ public class ChapterService {
         Manga manga = mangaRepository.findById(request.getMangaId())
                 .orElseThrow(() -> new AppException(ErrorCode.MANGA_NOT_FOUND));
 
-        // Check for duplicate chapter number
         if (chapterRepository.existsByMangaAndChapterNumber(manga, request.getChapterNumber())) {
             throw new AppException(ErrorCode.CHAPTER_ALREADY_EXISTS);
         }
@@ -285,10 +284,6 @@ public class ChapterService {
         // Cập nhật thời gian thêm chapter mới nhất của manga
         manga.setLastChapterAddedAt(LocalDateTime.now());
         mangaRepository.save(manga);
-
-        // Cập nhật tổng số lượt xem và comment của manga
-//        mangaStatsService.updateMangaTotalViews(manga.getId());
-//        mangaStatsService.updateMangaTotalComments(manga.getId());
 
         // Gửi sự kiện chapter mới để thông báo cho người dùng đã yêu thích truyện
         newChapterEventProducer.sendNewChapterEvent(

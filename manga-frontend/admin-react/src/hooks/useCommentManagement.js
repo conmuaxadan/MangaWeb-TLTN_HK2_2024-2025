@@ -81,7 +81,7 @@ export const useCommentManagement = () => {
     const isEnabled = comment.userEnabled !== false;
     const action = isEnabled ? "khóa" : "mở khóa";
 
-    if (window.confirm(`Bạn có chắc chắn muốn ${action} tài khoản ${username}?`)) {
+    if (window.confirm(`Bạn có chắc chắn muốn ${action} tài khoản này?`)) {
       try {
         // Gọi API để thay đổi trạng thái
         const updatedUser = await userService.toggleUserStatus(userId, !isEnabled);

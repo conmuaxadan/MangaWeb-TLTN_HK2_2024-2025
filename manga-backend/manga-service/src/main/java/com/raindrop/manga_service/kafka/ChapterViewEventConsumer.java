@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ChapterViewEventConsumer {
     ChapterRepository chapterRepository;
-    MangaRepository mangaRepository;
     MangaStatsService mangaStatsService;
 
     @KafkaListener(topics = "chapter-views", groupId = "manga-service")
@@ -35,13 +34,6 @@ public class ChapterViewEventConsumer {
                 chapterId, mangaId, userId != null ? userId : "anonymous");
         
         try {
-            // Tìm chapter
-            Chapter chapter = chapterRepository.findById(chapterId)
-                    .orElseThrow(() -> {
-                        log.error("Chapter not found with ID: {}", chapterId);
-                        return new AppException(ErrorCode.CHAPTER_NOT_FOUND);
-                    });
-            
             // Tăng lượt xem của chapter
             chapterRepository.incrementViews(chapterId);
             log.info("Incremented views for chapter: {}", chapterId);

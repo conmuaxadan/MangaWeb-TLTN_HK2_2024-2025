@@ -303,7 +303,6 @@ public class MangaController {
                     .build();
         }
 
-        // Admin hoặc manga manager - tìm tất cả
         return ApiResponse.<List<MangaQuickSearchResponse>>builder()
                 .message("Quick search results retrieved successfully")
                 .result(mangaService.quickSearchManga(keyword, limit))

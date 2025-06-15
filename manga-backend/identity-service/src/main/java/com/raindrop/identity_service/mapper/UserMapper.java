@@ -10,7 +10,8 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface UserMapper {    @Mapping(target = "id", ignore = true)
+public interface UserMapper {
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "authProvider", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
@@ -25,7 +26,9 @@ public interface UserMapper {    @Mapping(target = "id", ignore = true)
     @Mapping(target = "avatarUrl", source = "avatarUrl")
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "enabled", source = "enabled")
-    UserResponse toUserResponse(User user);    @Mapping(target = "id", ignore = true)
+    UserResponse toUserResponse(User user);
+
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "authProvider", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
@@ -34,7 +37,9 @@ public interface UserMapper {    @Mapping(target = "id", ignore = true)
     @Mapping(target = "email", ignore = true) // Không cho phép cập nhật email
     @Mapping(target = "username", ignore = true) // Không cho phép cập nhật username
     @Mapping(target = "enabled", ignore = true)
-    void updateUser(@MappingTarget User user, UserRequest request);    @Mapping(target = "id", ignore = true)
+    void updateUser(@MappingTarget User user, UserRequest request);
+
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "authProvider", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

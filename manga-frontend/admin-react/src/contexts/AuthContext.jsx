@@ -149,7 +149,6 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            // Gọi API logout để revoke token trên server
             await authService.logout();
         } catch (error) {
             console.error('AuthContext: Lỗi khi gọi API logout:', error);
@@ -172,7 +171,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const getRedirectPath = () => {
-        if (hasSystemManagement || hasMangaManagement) {
+        if (hasSystemManagement) {
             return '/admin/dashboard';
         } else if (hasTranslatorManagement) {
             return '/translator/my-mangas';

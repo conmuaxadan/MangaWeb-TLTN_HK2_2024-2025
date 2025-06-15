@@ -100,13 +100,12 @@ const UserManagement = () => {
       }
     }
   };
-
   // Handle block user with reason
   const handleBlockUser = async (reason) => {
     if (!userToBlock) return;
 
     // Gọi API với reason thông qua hook
-    await handleToggleUserStatus(userToBlock);
+    await handleToggleUserStatus(userToBlock, reason);
 
     setIsBlockModalOpen(false);
     setUserToBlock(null);

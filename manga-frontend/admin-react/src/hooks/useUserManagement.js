@@ -188,13 +188,17 @@ export const useUserManagement = () => {
       }
     }
   };
-
   // Handle toggle user status
-  const handleToggleUserStatus = (user) => {
+  const handleToggleUserStatus = (user, reason = '') => {
     setUserToToggle(user);
     if (user.enabled) {
-      // Nếu đang mở khóa, hiển thị modal để nhập lý do khóa
-      setIsLockModalOpen(true);
+      // Nếu đang mở khóa, hiển thị modal để nhập lý do khóa (nếu chưa có reason)
+      if (!reason) {
+        setIsLockModalOpen(true);
+      } else {
+        // Nếu đã có reason, thực hiện khóa luôn
+        performToggleUserStatus(user, false, reason);
+      }
     } else {
       // Nếu đang khóa, mở khóa luôn không cần lý do
       performToggleUserStatus(user, true);

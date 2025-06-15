@@ -34,8 +34,7 @@ public class WebClientConfiguration {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
         corsConfig.setAllowedOrigins(Arrays.asList(
-            "http://localhost:5173", // manga-react dev
-            "http://localhost:4173", // manga-react preview
+            "http://localhost:5173", // manga-react
             "http://localhost:3000"  // admin-react
         ));
         corsConfig.setMaxAge(3600L);

@@ -56,6 +56,7 @@ public class UserService {
     LinkedAccountRepository linkedAccountRepository;
     GoogleAuthService googleAuthService;
     UploadClient uploadClient;
+    TokenRedisService tokenRedisService;
 
     UserEventProducer userEventProducer;
     UserBlockEventProducer userBlockEventProducer;
@@ -117,13 +118,13 @@ public class UserService {
         return userMapper.toUserResponse(user);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public List<UserResponse> getAllUsers() {
         List<UserResponse> users = userRepository.findAll().stream().map(userMapper::toUserResponse).collect(Collectors.toList());
         return users;
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public Page<UserResponse> getAllUsersPaginated(Pageable pageable) {
         Page<User> usersPage = userRepository.findAll(pageable);
         Page<UserResponse> userResponsePage = usersPage.map(userMapper::toUserResponse);
@@ -270,7 +271,7 @@ public class UserService {
                 .build();
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public void deleteUserByUsername(String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() ->
                 new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -278,7 +279,7 @@ public class UserService {
         userRepository.delete(user);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     @Transactional
     public UserResponse toggleUserStatus(ToggleUserStatusRequest request) {
         User user = userRepository.findById(request.getUserId()).orElseThrow(() ->
@@ -290,6 +291,7 @@ public class UserService {
 
         if (!request.isEnabled()) {
             userBlockEventProducer.sendBlockUserEvent(user.getEmail(), user.getDisplayName(), request.getReason());
+            tokenRedisService.revokeAllUserRefreshTokens(user.getId());
         } else {
             userBlockEventProducer.sendUnblockUserEvent(user.getEmail(), user.getDisplayName(), request.getReason());
         }
@@ -647,7 +649,7 @@ public class UserService {
                 .build();
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SYSTEM_MANAGEMENT')")
     public Page<UserResponse> searchAndFilterUsers(
             String keyword,
             Integer roleId,

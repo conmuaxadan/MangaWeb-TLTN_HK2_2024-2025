@@ -49,10 +49,6 @@ public class TokenRedisService {
     }
 
     public String getRefreshToken(String token) {
-        // Trong trường hợp này, token là giá trị của refresh token, không phải tokenId
-        // Chúng ta cần tìm tokenId tương ứng với token này
-        // Nhưng hiện tại chúng ta chỉ cần kiểm tra xem token có tồn tại không
-        // Và trả về chính token đó nếu tồn tại
         String tokenUserKey = TOKEN_USER_PREFIX + token;
         Object userId = redisTemplate.opsForValue().get(tokenUserKey);
         return userId != null ? token : null;
